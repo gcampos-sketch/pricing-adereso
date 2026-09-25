@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Adereso - Pricing a tu medida</title>
+<style>
+  :root{
+    --brand:#FFD540; --brand-hover:#FFE37A; --brand-active:#E6C039;
+    --bg1:#0E0F12; --surface:#1B1D22; --elevated:#2E3036;
+    --glass:rgba(255,255,255,0.02);
+    --b-subtle:rgba(255,255,255,0.06); --b-default:rgba(255,255,255,0.10);
+    --success:#52CE5E; --danger:#FF4040; --warning:#F5B942; --info:#186EFA; --wa:#25D366;
+    --white:#FFFFFF; --z300:#d4d4d8; --z400:#a1a1aa; --z500:#71717a; --z600:#52525b;
+    --e1:0 10px 30px rgba(0,0,0,0.35); --e2:0 20px 60px rgba(0,0,0,0.45);
+    --glow:0 0 20px rgba(255,213,64,0.28);
+    --ease:cubic-bezier(0.2,0.8,0.2,1);
+    --r2:10px; --r3:14px; --r4:18px; --r5:24px; --r6:999px;
+    --font-head:"Outfit",-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;
+    --font-body:"Work Sans",-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{
+    font-family:var(--font-body);color:var(--z300);
+    line-height:1.5;font-size:16px;min-height:100vh;
+    background-color:#0E0F12;
+    background-image:
+      radial-gradient(1200px 640px at 50% -14%, rgba(255,255,255,0.07), transparent 60%),
+      linear-gradient(180deg,#1B1D23 0%,#141519 44%,#0D0E11 100%),
+      radial-gradient(rgba(255,255,255,0.022) 1px,transparent 1px);
+    background-size:auto,auto,22px 22px;
+    background-attachment:fixed,fixed,scroll;
+    background-repeat:no-repeat,no-repeat,repeat;
+    padding-bottom:64px;
+  }
+  h1,h2,h3,h4{font-family:var(--font-head);font-weight:500;letter-spacing:-0.01em;color:var(--white);line-height:1.15}
+  ::selection{background:rgba(255,213,64,0.3);color:#fff}
+  .ds-focus:focus-visible{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 5px rgba(255,213,64,0.16)}
+  button{font-family:var(--font-body);cursor:pointer;border:none;background:none;color:inherit}
+  svg{display:block;flex:none}
+  a{color:var(--brand);text-decoration:none}
+
+  /* ---- top bar ---- */
+  .topbar{position:sticky;top:0;z-index:40;background:rgba(14,15,18,0.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--b-subtle)}
+  .topbar-in{max-width:1152px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px}
+  .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:500;color:#fff;font-size:19px;letter-spacing:-0.02em}
+  .logo .dot{width:9px;height:9px;border-radius:999px;background:var(--brand);box-shadow:var(--glow)}
+  .logo small{font-family:var(--font-body);font-weight:400;color:var(--z500);font-size:12px;margin-left:2px}
+  .topbar .tag{margin-left:auto;font-size:12px;color:var(--z500);border:1px solid var(--b-default);padding:5px 12px;border-radius:var(--r6)}
+  .btn-reset{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--z400);background:none;border:1px solid var(--b-default);border-radius:var(--r6);padding:5px 12px;cursor:pointer;font-family:inherit;transition:all .18s var(--ease)}
+  .btn-reset:hover{color:var(--danger);border-color:rgba(255,64,64,0.45)}
+  .topbtn{position:fixed;right:22px;bottom:22px;z-index:60;width:44px;height:44px;border-radius:999px;background:var(--brand);color:#000;border:none;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease)}
+  .topbtn.show{opacity:1;transform:none;pointer-events:auto}
+  .topbtn:hover{filter:brightness(1.06)}
+  @media print{.topbtn,.btn-reset{display:none!important}}
+  .help-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--b-default);border-radius:var(--r6);padding:6px 14px 6px 7px;font-size:13px;color:#fff;font-weight:500;transition:all .15s var(--ease)}
+  .help-btn:hover{background:rgba(255,255,255,0.05);border-color:var(--brand)}
+  .help-btn .q{width:20px;height:20px;border-radius:999px;background:var(--brand);color:#000;display:grid;place-items:center;font-size:13px;font-weight:600;font-family:var(--font-head)}
+  @media(max-width:560px){.help-btn span:not(.q){display:none}.help-btn{padding:6px}}
+  .progress{height:2px;background:transparent;position:relative}
+  .progress .fill{position:absolute;left:0;top:0;height:100%;background:var(--brand);width:20%;transition:width .35s var(--ease);box-shadow:var(--glow)}
+
+  /* section nav */
+  .secnav{max-width:1152px;margin:0 auto;padding:12px 24px 2px;display:flex;gap:6px;flex-wrap:wrap;max-height:160px;overflow:hidden;transition:max-height .28s var(--ease),opacity .2s var(--ease),padding .28s var(--ease)}
+  .topbar-in{transition:padding .28s var(--ease)}
+  .topbar.scrolled .secnav{max-height:0;opacity:0;padding-top:0;padding-bottom:0;pointer-events:none}
+  .topbar.scrolled .topbar-in{padding-top:9px;padding-bottom:9px}
+  .snav{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--z500);padding:6px 4px;transition:color .22s var(--ease);background:none}
+  .snav .num{width:22px;height:22px;border-radius:999px;border:1px solid var(--b-default);display:grid;place-items:center;font-size:12px;color:var(--z500);transition:all .22s var(--ease);flex:none}
+  .snav.active{color:#fff}
+  .snav.active .num{background:var(--brand);color:#000;border-color:var(--brand)}
+  .snav .bar{width:22px;height:1px;background:var(--b-default)}
+  .snav:last-child .bar{display:none}
+
+  /* ---- layout ---- */
+  .wrap{max-width:920px;margin:0 auto;padding:20px 24px 40px;display:block}
+
+  section.lvl{scroll-margin-top:130px;padding:26px 0 8px;border-top:1px solid var(--b-subtle);transition:opacity .4s var(--ease),filter .4s var(--ease)}
+  section.lvl.dim{opacity:.32;filter:blur(2px)}
+  @media(prefers-reduced-motion:reduce){section.lvl.dim{filter:none;opacity:.5}}
+  section.lvl:first-of-type{border-top:none;padding-top:8px}
+  .hero{padding:12px 0 26px;margin-bottom:4px}
+  .hero h1{font-size:clamp(32px,6vw,56px);line-height:1.06;letter-spacing:-0.02em}
+  .hero .hero-accent{color:var(--brand)}
+  .level-head{margin-bottom:20px}
+  .level-kicker{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);font-weight:500;margin-bottom:8px}
+  .level-head h2{font-size:28px}
+  @media(min-width:768px){.level-head h2{font-size:34px}}
+  .level-head p{color:var(--z400);margin-top:10px;max-width:58ch;font-size:15px}
+
+  /* ---- module grid (replica cotizador) ---- */
+  .modgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  @media(min-width:560px){.modgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(min-width:820px){.modgrid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+  .modcard{position:relative;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:18px 12px 16px;display:flex;flex-direction:column;align-items:center;gap:13px;text-align:center;transition:all .2s var(--ease);min-height:132px;justify-content:center}
+  .modcard:not(.soon):not(.locked):hover{border-color:rgba(255,255,255,0.22)}
+  .modcard .mod-ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
+    background:radial-gradient(120% 120% at 32% 22%,rgba(255,255,255,0.16),rgba(255,255,255,0.02) 62%),var(--elevated);
+    border:1px solid var(--b-default);box-shadow:inset 0 1px 0 rgba(255,255,255,0.14);transition:filter .2s var(--ease)}
+  .modcard .mod-label{font-size:14px;font-weight:500;color:var(--z400)}
+  .modcard .mod-txt{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .modcard .mod-desc{font-size:11px;color:var(--z600);line-height:1.2}
+  .modcard.on .mod-desc{color:var(--z400)}
+  .modcard .mod-tag{position:absolute;top:9px;left:9px;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--z600);border:1px solid var(--b-subtle);border-radius:var(--r6);padding:2px 7px}
+  .modcard .mtick{position:absolute;top:9px;right:9px;width:19px;height:19px;border-radius:999px;border:1px solid var(--b-default);display:grid;place-items:center;color:transparent;transition:all .2s var(--ease)}
+  .modcard.on{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .modcard.on .mod-label{color:var(--brand)}
+  .modcard.on .mtick{background:var(--brand);border-color:var(--brand);color:#000}
+  .modcard.off .mod-ico{filter:grayscale(1) opacity(.45)}
+  .modcard.off .mod-label{color:var(--z500)}
+  .modcard.locked{cursor:default;border-color:var(--brand)}
+  .modcard.locked .mod-label{color:var(--brand)}
+  .modcard.locked .mod-tag{color:var(--brand);border-color:rgba(255,213,64,0.4)}
+  .modcard.soon{cursor:not-allowed;background:var(--bg1)}
+  .modcard.soon .mod-ico{filter:grayscale(1) opacity(.35)}
+  .modcard.soon .mod-label{color:var(--z600)}
+  .modfoot{font-size:12.5px;color:var(--z500);margin-top:14px;display:flex;gap:8px;align-items:flex-start}
+  .modfoot svg{color:var(--z600);margin-top:1px;flex:none}
+  .optwa{margin-top:14px;width:100%;display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:14px 16px;text-align:left;transition:all .2s var(--ease)}
+  .optwa:hover{border-color:rgba(255,255,255,0.2)}
+  .optwa.on{border-color:var(--wa);background:linear-gradient(0deg,rgba(37,211,102,0.05),rgba(37,211,102,0.05)),var(--surface)}
+  .optwa .ow-ico{width:38px;height:38px;border-radius:var(--r2);display:grid;place-items:center;color:var(--z500);background:var(--glass);border:1px solid var(--b-subtle);flex:none}
+  .optwa.on .ow-ico{color:var(--wa)}
+  .optwa .ow-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .optwa .ow-txt b{font-size:14px;color:#fff;font-weight:500}
+  .optwa .ow-txt small{font-size:12px;color:var(--z500)}
+  .optwa .ow-tog{width:42px;height:24px;border-radius:999px;background:var(--elevated);border:1px solid var(--b-default);flex:none;position:relative;transition:all .2s var(--ease)}
+  .optwa.on .ow-tog{background:var(--wa);border-color:var(--wa)}
+  .optwa .ow-knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:999px;background:#fff;transition:transform .2s var(--ease)}
+  .optwa.on .ow-knob{transform:translateX(18px)}
+  /* channels section */
+  .chan-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:20px 0 12px}
+  .chan-title{font-family:var(--font-head);font-size:15px;color:#fff;font-weight:500}
+  .chan-hint{font-size:12px;color:var(--z500)}
+  .chan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  @media(min-width:560px){.chan-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media(min-width:820px){.chan-grid{grid-template-columns:repeat(8,minmax(0,1fr))}}
+  .out-block{margin-top:20px;padding-top:18px;border-top:1px solid var(--b-subtle)}
+  .out-head{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin-bottom:5px}
+  .out-note{font-size:13px;color:var(--z400);margin-bottom:13px;line-height:1.45}
+  /* ROI */
+  .roi-macro{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);font-weight:600;margin:22px 0 12px}
+  .roi-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:6px}
+  @media(min-width:720px){.roi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .roi-card{background:rgba(255,255,255,0.02);border:1px solid var(--b-default);border-radius:var(--r3);overflow:hidden;transition:border-color .2s var(--ease)}
+  .roi-card.on{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.04),rgba(255,213,64,0.04)),var(--surface)}
+  .roi-head{display:flex;align-items:center;gap:12px;width:100%;padding:14px 15px;text-align:left;background:none;cursor:pointer}
+  .roi-check{flex:none;width:22px;height:22px;border-radius:6px;border:1.5px solid var(--b-default);display:grid;place-items:center;font-size:13px;color:#000;transition:all .2s var(--ease)}
+  .roi-card.on .roi-check{background:var(--brand);border-color:var(--brand)}
+  .roi-hmeta{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+  .roi-name{font-size:14.5px;color:#fff;font-weight:500}
+  .roi-tag{font-size:11.5px;color:var(--z500)}
+  .roi-badge{flex:none;font-size:13px;font-weight:600;color:var(--success);font-family:var(--font-head)}
+  .roi-body{padding:0 15px 15px;border-top:1px solid var(--b-subtle)}
+  .roi-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:13px}
+  .roi-f label{display:block;font-size:11.5px;color:var(--z500);margin-bottom:5px}
+  .roi-f input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:9px 11px;color:#fff;font-family:var(--font-body);font-size:14px}
+  .roi-extra{font-size:12px;color:var(--brand);margin-top:11px}
+  .roi-cnote{font-size:11.5px;color:var(--z600);margin-top:9px;line-height:1.45}
+  .roi-panel{margin-top:26px;background:linear-gradient(0deg,rgba(82,206,94,0.05),rgba(82,206,94,0.05)),var(--surface);border:1px solid rgba(82,206,94,0.3);border-radius:var(--r4);padding:22px}
+  .roi-panel-head{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:18px;color:var(--success);font-weight:500}
+  .roi-panel-sub{font-size:13px;color:var(--z400);margin:6px 0 18px}
+  .roi-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  @media(min-width:720px){.roi-stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .roi-stat{background:rgba(0,0,0,0.2);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:14px}
+  .roi-stat.hero{border-color:rgba(82,206,94,0.4)}
+  .rs-l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--z500);margin-bottom:8px}
+  .rs-v{font-family:var(--font-head);font-size:26px;color:#fff;font-weight:600;line-height:1.1}
+  .roi-stat.hero .rs-v{color:var(--success)}
+  .rs-v.neg{color:var(--danger)}
+  .roi-veces{display:block;font-size:12px;font-weight:600;margin-top:4px;opacity:.85}
+  #roiCost{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:8px 10px;color:#fff;font-family:var(--font-head);font-size:20px;font-weight:600}
+  .roi-usecot{display:inline-block;margin-top:7px;font-size:11.5px;color:var(--info);background:none;text-decoration:underline;cursor:pointer}
+  .roi-fee{font-size:12px;color:var(--z400);margin-top:14px}
+  .roi-empty{font-size:12.5px;color:var(--z500);font-style:italic;margin-top:14px}
+  .roi-cta{margin-top:18px}
+  /* Proceso comercial */
+  .proc{margin-top:10px}
+  .proc-track{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;position:relative}
+  .proc-track::before{content:'';position:absolute;top:28px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,rgba(255,213,64,0.45),var(--brand));border-radius:2px;z-index:0}
+  .proc-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
+  .proc-ico{width:56px;height:56px;border-radius:999px;background:var(--brand);color:#000;display:grid;place-items:center;box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18)}
+  .proc-n{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);font-weight:600}
+  .proc-txt{font-size:12px;color:var(--z300);line-height:1.35}
+  @media(max-width:760px){
+    .proc-track{grid-template-columns:1fr;gap:0}
+    .proc-track::before{top:14px;bottom:14px;left:27px;right:auto;width:3px;height:auto}
+    .proc-step{flex-direction:row;text-align:left;gap:15px;padding:10px 0;align-items:center}
+    .proc-ico{width:48px;height:48px;flex:none}
+    .proc-txt{font-size:13.5px;color:#fff}
+  }
+  /* Portal cliente (mockup) */
+  .portal{border:1px solid var(--b-default);border-radius:var(--r4);overflow:hidden;background:#0f1013;box-shadow:0 24px 60px rgba(0,0,0,0.45)}
+  .portal-bar{display:flex;align-items:center;gap:10px;padding:11px 14px;background:#17181c;border-bottom:1px solid var(--b-subtle)}
+  .portal-dots{display:flex;gap:6px}
+  .portal-dot{width:11px;height:11px;border-radius:999px;background:#3a3d44}
+  .portal-url{font-size:12px;color:var(--z500);background:rgba(255,255,255,0.04);border:1px solid var(--b-subtle);border-radius:999px;padding:4px 14px}
+  .portal-body{display:grid;grid-template-columns:186px 1fr;min-height:340px}
+  .portal-nav{border-right:1px solid var(--b-subtle);padding:16px 12px;display:flex;flex-direction:column;gap:3px;background:rgba(0,0,0,0.18)}
+  .portal-brand{display:flex;align-items:center;gap:9px;font-family:var(--font-head);font-weight:500;color:#fff;font-size:15px;margin-bottom:14px;padding:0 6px}
+  .logo-badge{width:22px;height:22px;border-radius:6px;background:#fff;color:#000;display:grid;place-items:center;font-weight:700;font-size:13px}
+  .pnav{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13px;color:var(--z400);width:100%;text-align:left;background:none;cursor:pointer;font-family:inherit;transition:all .15s var(--ease)}
+  .pnav:hover{color:#fff;background:rgba(255,255,255,0.03)}
+  .pnav.active{background:rgba(255,213,64,0.1);color:var(--brand)}
+  .pnav .pdot{width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.55;flex:none}
+  .portal-main{padding:20px 22px}
+  .portal-mhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+  .portal-mtitle{font-family:var(--font-head);font-size:19px;color:#fff;font-weight:500}
+  .portal-msub{font-size:12.5px;color:var(--z500);margin-top:3px}
+  .portal-plan{flex:none;font-size:11.5px;color:var(--brand);border:1px solid rgba(255,213,64,0.35);border-radius:999px;padding:5px 12px;background:rgba(255,213,64,0.06)}
+  .portal-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+  .pstat{background:rgba(255,255,255,0.03);border:1px solid var(--b-subtle);border-radius:var(--r2);padding:12px}
+  .ps-n{font-family:var(--font-head);font-size:22px;color:#fff;font-weight:600}
+  .ps-l{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--z500);margin-top:3px}
+  .portal-phases{display:flex;flex-direction:column;gap:2px}
+  .pphase{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;font-size:13.5px;color:var(--z300);background:rgba(255,255,255,0.015)}
+  .pphase .pp-ic{width:20px;height:20px;border-radius:999px;display:grid;place-items:center;font-size:11px;flex:none;border:1px solid var(--b-default);color:var(--z500)}
+  .pphase.done .pp-ic{background:var(--success);border-color:var(--success);color:#04210a}
+  .pphase.now .pp-ic{background:var(--brand);border-color:var(--brand);color:#000}
+  .pphase .pp-tag{margin-left:auto;font-size:11px;color:var(--z500)}
+  .pphase.done .pp-tag{color:var(--success)}
+  .pphase.now{background:rgba(255,213,64,0.06)}
+  .pphase.now .pp-tag{color:var(--brand)}
+  /* onboarding wizard */
+  .wiz-bar{height:6px;border-radius:999px;background:rgba(255,255,255,0.06);overflow:hidden;margin-bottom:14px}
+  .wiz-fill{height:100%;background:linear-gradient(90deg,var(--brand),#ffe06b);border-radius:999px}
+  .wiz-steps{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+  .wiz-step{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--z400);background:rgba(255,255,255,0.03);border:1px solid var(--b-subtle);border-radius:999px;padding:6px 11px;cursor:pointer;transition:all .15s var(--ease)}
+  .wiz-step:hover{border-color:var(--brand)}
+  .wiz-step.sel{border-color:var(--brand);color:#fff;background:rgba(255,213,64,0.08)}
+  .wiz-ic{width:17px;height:17px;border-radius:999px;display:grid;place-items:center;font-size:10px;border:1px solid var(--b-default);color:var(--z500);flex:none}
+  .wiz-step.done .wiz-ic{background:var(--success);border-color:var(--success);color:#04210a}
+  .wiz-step.now .wiz-ic{background:var(--brand);border-color:var(--brand);color:#000}
+  .wiz-current{background:rgba(255,255,255,0.02);border:1px solid var(--b-default);border-radius:var(--r3);padding:15px 16px}
+  .wiz-cur-h{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--brand);font-weight:600;margin-bottom:6px}
+  .wiz-cur-b{font-size:13.5px;color:#fff;line-height:1.4}
+  .wiz-drop{margin-top:12px;border:1.5px dashed var(--b-default);border-radius:var(--r2);padding:16px;text-align:center;font-size:12px;color:var(--z500)}
+  /* gantt */
+  .gantt{display:flex;flex-direction:column;gap:7px}
+  .gantt-head{display:grid;grid-template-columns:190px repeat(3,1fr);gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--z500);padding-bottom:4px}
+  .gantt-head span:first-child{grid-column:1}
+  .gantt-row{display:grid;grid-template-columns:190px 1fr;gap:10px;align-items:center}
+  .g-lbl{font-size:12.5px;color:var(--z300)}
+  .g-track{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;position:relative}
+  .g-track::before,.g-track::after{content:'';position:absolute;top:0;bottom:0;width:1px;background:var(--b-subtle)}
+  .g-track::before{left:33.33%}.g-track::after{left:66.66%}
+  .g-bar{height:22px;border-radius:6px;display:flex;align-items:center;padding:0 9px;font-size:10.5px;font-weight:600;color:#000;position:relative;z-index:1}
+  .g-bar.done{background:var(--success)}
+  .g-bar.now{background:var(--brand)}
+  .g-bar.pend{background:rgba(255,255,255,0.08);color:var(--z400)}
+  /* placeholder */
+  .portal-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;min-height:240px;color:var(--z500)}
+  .pe-ic{width:46px;height:46px;border-radius:999px;background:rgba(255,255,255,0.04);display:grid;place-items:center;color:var(--z500)}
+  .pe-t{font-family:var(--font-head);font-size:17px;color:#fff}
+  .pe-s{font-size:12.5px;color:var(--z500);max-width:280px}
+  /* onboarding cards */
+  .wiz-cur-h{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--brand);font-weight:600;margin-top:2px}
+  .wiz-cur-b{font-size:13.5px;color:#fff;line-height:1.4;margin-top:5px}
+  .oc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .oc{border:1px solid var(--b-default);border-radius:var(--r3);padding:15px 13px;background:rgba(255,255,255,0.02);min-height:110px;display:flex;flex-direction:column;gap:7px}
+  .oc-ic{width:34px;height:34px;border-radius:9px;background:rgba(255,213,64,0.12);color:var(--brand);display:grid;place-items:center;flex:none}
+  .oc-t{font-size:13px;color:#fff;font-weight:500}
+  .oc-h{font-size:11px;color:var(--z500);line-height:1.35}
+  .oc-drop{border-style:dashed;border-color:rgba(255,213,64,0.4);background:rgba(255,213,64,0.04);align-items:center;justify-content:center;text-align:center;gap:8px;transition:all .15s var(--ease)}
+  .oc-drop:hover{border-color:var(--brand);background:rgba(255,213,64,0.07)}
+  .oc-field{justify-content:space-between}
+  .oc-field .oc-lbl{font-size:11.5px;color:var(--z500)}
+  .oc-field .oc-input{border:1px solid var(--b-default);border-radius:var(--r2);padding:9px 11px;font-size:12.5px;color:var(--z600);background:rgba(255,255,255,0.03)}
+  .oc-tile{align-items:center;justify-content:center;text-align:center;gap:8px}
+  @media(max-width:720px){.oc-grid{grid-template-columns:repeat(2,1fr)}}
+  /* QA cards */
+  .qa-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .qa-card{border:1px solid var(--b-default);border-radius:var(--r3);padding:14px;background:rgba(255,255,255,0.02);display:flex;flex-direction:column;gap:10px;transition:opacity .2s var(--ease)}
+  .qa-card.ok{opacity:.65}
+  .qa-top{display:flex}
+  .qa-chip{font-size:10px;font-weight:600;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+  .qa-chip.wip{background:rgba(245,185,66,0.14);color:var(--warning);border:1px solid rgba(245,185,66,0.3)}
+  .qa-chip.ok{background:rgba(82,206,94,0.14);color:var(--success);border:1px solid rgba(82,206,94,0.3)}
+  .qa-q{font-size:13px;color:#fff;line-height:1.4;flex:1}
+  .qa-fix{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#000;background:var(--brand);border-radius:999px;padding:6px 15px;cursor:pointer;font-family:inherit}
+  .qa-fix[disabled]{background:rgba(255,255,255,0.06);color:var(--z500);cursor:default}
+  @media(max-width:720px){.qa-grid{grid-template-columns:1fr}}
+  @media(max-width:720px){
+    .portal-body{grid-template-columns:1fr}
+    .portal-nav{flex-direction:row;flex-wrap:wrap;gap:6px;border-right:none;border-bottom:1px solid var(--b-subtle)}
+    .portal-brand{width:100%}
+    .portal-stats{grid-template-columns:repeat(2,1fr)}
+  }
+  /* Buenas prácticas */
+  .bp{margin-top:22px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:20px 22px}
+  .bp-kick{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);font-weight:600}
+  .bp h3{font-family:var(--font-head);font-size:17px;color:#fff;font-weight:500;margin-top:5px}
+  .bp-list{list-style:none;margin-top:15px;display:grid;gap:9px}
+  .bp-list li{display:flex;gap:11px;align-items:flex-start;font-size:13.5px;color:var(--z300);line-height:1.4}
+  .bp-list li::before{content:'✓';flex:none;width:20px;height:20px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);color:var(--z400);display:grid;place-items:center;font-size:11px;margin-top:1px}
+  .bp-list li.hl{color:#fff;font-weight:500}
+  .bp-list li.hl::before{background:var(--brand);border-color:var(--brand);color:#000}
+  .chan{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;background:rgba(255,255,255,0.015);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:16px 8px;opacity:.45;transition:all .22s var(--ease)}
+  .chan:hover{opacity:.75}
+  .chan.on,.chan.on:hover{opacity:1;background:var(--surface);border-color:var(--b-default);box-shadow:var(--e1)}
+  .chan-logo{display:grid;place-items:center;transition:filter .22s var(--ease)}
+  .chan:not(.on) .chan-logo{filter:grayscale(1) brightness(1.4)}
+  .chan-lbl{font-size:12px;color:var(--z500);font-weight:500}
+  .chan.on .chan-lbl{color:#fff}
+  .chan-pago{position:absolute;top:7px;right:7px;font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--warning);border:1px solid rgba(245,185,66,0.35);border-radius:var(--r6);padding:1px 5px}
+  .chan-free{position:absolute;top:7px;right:7px;font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--success);border:1px solid rgba(82,206,94,0.35);border-radius:var(--r6);padding:1px 5px}
+
+  /* included strip */
+  .included{margin-top:18px;background:var(--glass);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:16px 18px}
+  .included h4{font-size:13px;color:var(--z400);font-weight:500;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:12.5px;color:var(--z300);background:rgba(255,255,255,0.03);border:1px solid var(--b-subtle);padding:6px 11px;border-radius:var(--r6);display:inline-flex;gap:6px;align-items:center}
+  .chip svg{color:var(--z500)}
+
+  .note{display:flex;gap:10px;background:rgba(24,110,250,0.06);border:1px solid rgba(24,110,250,0.22);border-radius:var(--r3);padding:13px 15px;font-size:13.5px;color:var(--z300);margin-bottom:18px}
+  .note svg{color:var(--info);flex:none;margin-top:1px}
+  .note.warn{background:rgba(245,185,66,0.07);border-color:rgba(245,185,66,0.28)}
+  .note.warn svg{color:var(--warning)}
+
+  /* volume grid */
+  .vgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  @media(min-width:560px){.vgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(min-width:900px){.vgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .vtile{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:16px 14px;text-align:center;transition:all .2s var(--ease)}
+  .vtile:hover{border-color:rgba(255,255,255,0.2)}
+  .vtile.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .vtile .conv{font-family:var(--font-head);font-size:22px;color:#fff;font-weight:500}
+  .vtile .lbl{font-size:11px;color:var(--z500);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px}
+  .vtile .vp{font-size:15px;color:var(--brand);font-weight:500}
+  .vtile .vp small{color:var(--z500);font-size:11px}
+  .vcustom{margin-top:14px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:16px 18px;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;transition:all .2s var(--ease)}
+  .vcustom.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .vcustom .vc-field{flex:1;min-width:200px}
+  .vcustom label{display:block;font-size:13px;color:var(--z400);margin-bottom:8px}
+  .vcustom input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:10px 12px;color:#fff;font-family:var(--font-body);font-size:15px}
+  .vcustom input:focus{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 5px rgba(255,213,64,0.16)}
+  .vcustom input::-webkit-inner-spin-button{opacity:.4}
+  .vcustom .vc-price{text-align:right;flex:none}
+  .vcustom .vc-lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--z500);margin-bottom:4px}
+  .vcustom .vc-amt{font-family:var(--font-head);font-size:22px;color:var(--brand);font-weight:500}
+
+  /* setup rows */
+  .plans{display:grid;gap:12px}
+  .plan{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:16px 18px;transition:all .2s var(--ease);text-align:left;width:100%;display:flex;gap:16px;align-items:center}
+  .plan:hover{border-color:rgba(255,255,255,0.2)}
+  .plan.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .plan .ptick{width:20px;height:20px;border-radius:999px;border:1px solid var(--b-default);display:grid;place-items:center;color:transparent;flex:none;transition:all .2s var(--ease)}
+  .plan.sel .ptick{background:var(--brand);border-color:var(--brand);color:#000}
+  .plan-main{flex:1;min-width:0}
+  .plan-main h3{font-size:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .plan-main .pmeta{font-size:12.5px;color:var(--z500);margin-top:5px;display:flex;flex-wrap:wrap;gap:4px 14px}
+  .plan-main .pmeta b{color:var(--z300);font-weight:500}
+  .plan .pprice{font-family:var(--font-head);font-size:19px;color:#fff;font-weight:500;text-align:right;flex:none}
+  .plan .pprice small{display:block;font-size:11px;color:var(--z500);font-family:var(--font-body);font-weight:400}
+  .plan.free .pprice{color:var(--success)}
+
+  /* wa form */
+  .toggle-wrap{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .tg{flex:1;min-width:150px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:16px;text-align:center;transition:all .2s var(--ease)}
+  .tg:hover{border-color:rgba(255,255,255,0.2)}
+  .tg.sel{border-color:var(--wa);background:linear-gradient(0deg,rgba(37,211,102,0.06),rgba(37,211,102,0.06)),var(--surface)}
+  .tg h3{font-size:16px;display:flex;gap:8px;align-items:center;justify-content:center}
+  .tg.sel h3 svg{color:var(--wa)}
+  .tg p{font-size:12.5px;color:var(--z500);margin-top:4px}
+  .linkbtn{background:none;border:none;color:var(--brand);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;padding:2px 0;text-decoration:underline;text-underline-offset:2px}
+  .linkbtn:hover{color:var(--brand-hover)}
+  .wa-form{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:20px;display:grid;gap:18px}
+  .field label{display:block;font-size:13px;color:var(--z400);margin-bottom:7px}
+  .field label .u{color:var(--z600);font-size:12px}
+  .msg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .pl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:760px}
+  .pl-card{background:rgba(255,255,255,0.03);border:1px solid var(--b-default);border-radius:var(--r3);padding:13px 14px;display:flex;flex-direction:column;gap:8px}
+  .pl-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .pl-name{font-size:13.5px;color:#fff;font-weight:500}
+  .pl-price{font-family:var(--font-head);font-size:19px;color:var(--brand);font-weight:600;white-space:nowrap}
+  .pl-price small{font-size:11px;color:var(--z500);font-weight:400;margin-left:2px}
+  .pl-desc{font-size:11px;color:var(--z500);line-height:1.4;min-height:31px}
+  .pl-card input[type=number]{margin-top:auto}
+  .pl-price.ok{color:var(--success)}
+  .wa-block-lbl{display:block;font-size:13px;color:var(--z400);margin-bottom:9px}
+  .wa-block-lbl .u{color:var(--z600);font-size:12px}
+  .wa-form>.field>input[type=number]{max-width:220px}
+  @media(max-width:640px){.pl-grid{grid-template-columns:1fr;max-width:none}}
+  @media(max-width:560px){.wa-form>.field>input[type=number]{max-width:none}}
+  input[type=number]{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:10px 12px;color:#fff;font-family:var(--font-body);font-size:15px}
+  input[type=number]:focus{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 5px rgba(255,213,64,0.16)}
+  input[type=number]::-webkit-inner-spin-button{opacity:.4}
+  .wallet-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .wallet{background:rgba(255,255,255,0.03);border:1px solid var(--b-default);border-radius:var(--r2);padding:13px 14px;text-align:left;transition:all .2s var(--ease)}
+  .wallet.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),rgba(255,255,255,0.03)}
+  .cty-row{display:flex;flex-wrap:wrap;gap:7px}
+  .wa-countries{margin-bottom:16px}
+  .wa-c-label{font-size:13px;color:var(--z400);margin-bottom:9px}
+  .wa-c-label .u{color:var(--z600);font-size:12px}
+  .wa-formula{background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface);border:1px solid rgba(255,213,64,0.28);border-radius:var(--r3);padding:16px 18px;margin-bottom:16px}
+  .wf-title{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--brand);font-weight:600;margin-bottom:13px}
+  .wf-row{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap}
+  .wf-pill{flex:1;min-width:118px;display:flex;flex-direction:column;gap:3px;background:rgba(255,255,255,0.03);border:1px solid var(--b-default);border-radius:var(--r2);padding:11px 13px;font-size:13.5px;color:#fff;font-weight:500}
+  .wf-pill small{font-size:10.5px;color:var(--z500);font-weight:400}
+  .wf-pill.total{background:rgba(255,213,64,0.1);border-color:rgba(255,213,64,0.4);color:var(--brand)}
+  .wf-op{display:flex;align-items:center;font-family:var(--font-head);font-size:19px;color:var(--z500);font-weight:600}
+  .wf-note{font-size:12px;color:var(--z400);line-height:1.45;margin-top:12px}
+  .cty{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;background:rgba(255,255,255,0.03);border:1px solid var(--b-default);border-radius:var(--r6);padding:7px 11px;color:var(--z300);font-family:var(--font-body);font-size:13px;cursor:pointer;transition:all .2s var(--ease)}
+  .cty:hover{border-color:var(--brand)}
+  .cty.sel{border-color:var(--brand);color:#fff;background:linear-gradient(0deg,rgba(255,213,64,0.06),rgba(255,213,64,0.06)),rgba(255,255,255,0.03)}
+  .cty-flag{font-size:15px;line-height:1}
+  .cty.todo{opacity:.6}
+  .cty-tag{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--z500);border:1px solid var(--b-default);border-radius:999px;padding:2px 6px}
+  .cty.sel .cty-tag{color:var(--brand);border-color:rgba(255,213,64,0.4)}
+  .wa-live{margin-top:16px;background:rgba(255,213,64,0.05);border:1px solid rgba(255,213,64,0.22);border-radius:var(--r3);padding:14px 16px}
+  .wl-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--z300);padding:5px 0}
+  .wl-row b{color:#fff;font-size:14px}
+  .wl-row.total{border-top:1px solid rgba(255,213,64,0.22);margin-top:4px;padding-top:9px}
+  .wl-row.total span{color:var(--brand);font-weight:500}
+  .wl-row.total b{color:var(--brand);font-size:16px}
+  .wl-note{font-size:11.5px;color:var(--z500);margin-top:8px;line-height:1.4}
+  .wallet .wt{font-size:14px;color:#fff;font-weight:500;display:flex;justify-content:space-between;align-items:center}
+  .wallet .wfee{color:var(--brand);font-family:var(--font-head)}
+  .wallet .wd{font-size:12px;color:var(--z500);margin-top:4px}
+  .divider{height:1px;background:var(--b-subtle);margin:2px 0}
+  .wa-reset-row{margin-top:2px;display:flex;justify-content:flex-end}
+  @media(max-width:560px){.wallet-opts{grid-template-columns:1fr}}
+
+  /* summary */
+  .sumcard{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4);overflow:hidden;box-shadow:var(--e1)}
+  .sum-block{padding:22px 24px;border-bottom:1px solid var(--b-subtle)}
+  .sum-block:last-child{border-bottom:none}
+  .sum-block .sk{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--z500);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .sum-line{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:9px}
+  .sum-line .l{font-size:14px;color:var(--z300)}
+  .sum-line .l small{display:block;color:var(--z600);font-size:12px}
+  .sum-line .v{font-family:var(--font-head);font-size:16px;color:#fff;font-weight:500;white-space:nowrap}
+  .sum-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px}
+  .sum-total .bigk{font-size:13px;color:var(--z400)}
+  .sum-total .bigv{font-family:var(--font-head);font-size:32px;color:var(--brand);font-weight:500}
+  .final-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+
+  /* setup segmented toggle */
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+  @media(max-width:520px){.seg{grid-template-columns:1fr}}
+  .seg-opt{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:13px 15px;text-align:left;transition:all .2s var(--ease)}
+  .seg-opt:hover{border-color:rgba(255,255,255,0.2)}
+  .seg-opt.on{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .seg-ico{width:36px;height:36px;border-radius:var(--r2);display:grid;place-items:center;color:var(--z400);background:var(--glass);border:1px solid var(--b-subtle);flex:none}
+  .seg-opt.on .seg-ico{color:var(--brand)}
+  .seg-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .seg-txt b{font-size:14px;color:#fff;font-weight:500}
+  .seg-txt small{font-size:12px;color:var(--z500)}
+
+  /* option cards (setup mode) */
+  .opts{display:grid;gap:14px}
+  .opts.two{grid-template-columns:1fr}
+  @media(min-width:640px){.opts.two{grid-template-columns:1fr 1fr}}
+  .opt{position:relative;text-align:left;width:100%;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:20px;transition:all .2s var(--ease);display:flex;flex-direction:column;gap:12px;color:var(--z300)}
+  .opt:hover{border-color:rgba(255,255,255,0.2)}
+  .opt.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .opt .tick{position:absolute;top:16px;right:16px;width:22px;height:22px;border-radius:999px;border:1px solid var(--b-default);display:grid;place-items:center;color:transparent;transition:all .2s var(--ease)}
+  .opt.sel .tick{background:var(--brand);border-color:var(--brand);color:#000}
+  .opt-top{display:flex;align-items:center;gap:12px}
+  .opt-ico{width:42px;height:42px;border-radius:var(--r2);background:var(--glass);border:1px solid var(--b-subtle);display:grid;place-items:center;color:var(--brand);flex:none}
+  .opt h3{font-size:17px}
+  .opt .sub{font-size:13px;color:var(--z500);margin-top:2px}
+  .opt ul{list-style:none;display:grid;gap:7px;font-size:13.5px;color:var(--z400)}
+  .opt li{display:flex;gap:8px;align-items:flex-start}
+  .opt li svg{color:var(--brand);margin-top:2px}
+
+  /* rail recap */
+  .rv.rtxt{font-family:var(--font-body);font-size:14px;color:var(--white);font-weight:500;text-align:right;max-width:60%}
+  .rail-hint{font-size:11.5px;color:var(--z600);margin-top:12px;text-align:center}
+
+  /* result cards */
+  .result-cards{display:grid;grid-template-columns:1fr;gap:18px;margin-top:8px}
+  @media(min-width:760px){.result-cards{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}}
+  .rcard{position:relative;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4);padding:28px 22px 22px;box-shadow:var(--e1);display:flex;flex-direction:column}
+  .rcard .rlabel{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--elevated);border:1px solid var(--b-default);border-radius:var(--r6);padding:5px 14px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--z300);display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .rcard .rlabel svg{color:var(--brand)}
+  .rcard .rsub{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--z500);text-align:center;margin-bottom:12px}
+  .rcard .rtitle{font-family:var(--font-head);font-size:19px;color:var(--brand);font-weight:500;text-align:center;display:flex;gap:8px;align-items:center;justify-content:center}
+  .rcard .rtitle svg{color:var(--brand)}
+  .rcard .rdesc{font-size:12.5px;color:var(--z400);text-align:center;margin:8px auto 18px;max-width:32ch;line-height:1.45}
+  .rcard .rbig{text-align:center;font-family:var(--font-head);font-weight:500;color:#fff;line-height:1;margin-bottom:18px}
+  .rcard .rbig .n{font-size:42px}
+  .rcard .rbig .u{font-size:13px;color:var(--z500);margin-left:5px}
+  .rtable{border-top:1px solid var(--b-subtle);padding-top:14px;display:grid;gap:9px}
+  .rtable .rr{display:flex;justify-content:space-between;gap:12px;font-size:12.5px}
+  .rtable .rr .k{color:var(--z500)}
+  .rtable .rr .v{color:#e4e4e7;font-weight:500;text-align:right}
+  .redit{margin-top:16px;background:var(--glass);border:1px solid var(--b-subtle);border-radius:var(--r2);padding:11px 12px}
+  .redit label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--z500);display:flex;align-items:center;gap:5px;margin-bottom:8px}
+  .redit label svg{color:var(--brand)}
+  .redit input,.redit select{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:9px 10px;color:#fff;font-family:var(--font-body);font-size:14px}
+  .redit input:focus,.redit select:focus{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 5px rgba(255,213,64,0.16)}
+  .redit select option{background:#131415;color:#fff}
+  .redit .pills{display:flex;gap:8px}
+  .redit .pill{flex:1;text-align:center;border:1px solid var(--b-default);border-radius:var(--r6);padding:8px 6px;font-size:11.5px;color:var(--z400);background:rgba(255,255,255,0.03);transition:all .2s var(--ease)}
+  .redit .pill.on{border-color:var(--brand);color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.06),rgba(255,213,64,0.06)),rgba(255,255,255,0.03)}
+  .rfoot{margin-top:16px;display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:var(--z500);border-top:1px dashed var(--b-subtle);padding-top:12px}
+  .rfoot svg{color:var(--z600);flex:none;margin-top:1px}
+  .result-total{margin-top:20px;background:var(--glass);border:1px solid var(--b-default);border-radius:var(--r4);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+  .result-total .rt-k{display:block;font-size:12px;color:var(--z400);margin-bottom:4px}
+  .result-total .rt-v{font-family:var(--font-head);font-size:34px;color:var(--brand);font-weight:500;line-height:1}
+  .result-total .rt-second{text-align:right}
+  .result-total .rt-v2{font-family:var(--font-head);font-size:20px;color:#fff;font-weight:500}
+  .result-total .rt-second small{display:block;font-size:11px;color:var(--z600);margin-top:3px}
+
+  /* continue btn per section */
+  .continue{margin-top:20px}
+  .continue button{color:var(--z400);font-size:13px;display:inline-flex;align-items:center;gap:6px;padding:8px 2px}
+  .continue button:hover{color:#fff}
+
+  /* rail */
+  aside.rail{position:sticky;top:150px}
+  .rail-card{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4);padding:20px;box-shadow:var(--e1)}
+  .rail-card h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--z500);margin-bottom:16px}
+  .rstat{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--b-subtle)}
+  .rstat:last-of-type{border-bottom:none}
+  .rstat .rl{font-size:13px;color:var(--z400)}
+  .rstat .rl small{display:block;color:var(--z600);font-size:11px}
+  .rstat .rv{font-family:var(--font-head);font-size:18px;color:#fff;font-weight:500}
+  .rstat.hero .rv{color:var(--brand);font-size:24px}
+  .rstat .rv small{font-size:12px;color:var(--z500);font-family:var(--font-body)}
+  .rail-actions{margin-top:18px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:var(--r6);font-size:14px;font-weight:500;transition:all .15s var(--ease);min-height:44px}
+  .btn-primary{background:var(--brand);color:#000;box-shadow:var(--glow)}
+  .btn-primary:hover{background:var(--brand-hover)}
+  .btn-primary:active{background:var(--brand-active)}
+  .btn-ghost{border:1px solid var(--b-default);color:#fff}
+  .btn-ghost:hover{background:rgba(255,255,255,0.05)}
+  .btn-block{width:100%}
+
+  .mrail{display:none}
+  @media(max-width:979px){
+    aside.rail{display:none}
+    .mrail{display:block;position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(19,20,21,0.96);backdrop-filter:blur(14px);border-top:1px solid var(--b-default);padding:12px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,0.5)}
+    body{padding-bottom:140px}
+    .mrail-row{display:flex;align-items:center;gap:12px}
+    .mrail-sum{flex:1;min-width:0;cursor:pointer}
+    .mrail-sum .ms1{font-size:11px;color:var(--z500);text-transform:uppercase;letter-spacing:.05em}
+    .mrail-sum .ms2{font-family:var(--font-head);font-size:19px;color:var(--brand);font-weight:500}
+    .mrail-sum .ms2 span{color:var(--z400);font-size:13px;font-family:var(--font-body)}
+    .mrail .btn{padding:11px 18px;flex:none}
+    .mrail-detail{max-height:0;overflow:hidden;transition:max-height .32s var(--ease)}
+    .mrail-detail.open{max-height:220px;margin-top:12px}
+    .mrail-detail .rstat{padding:8px 0}
+  }
+
+  .hidden{display:none!important}
+
+  /* scroll reveal */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s var(--ease),transform .55s var(--ease);will-change:opacity,transform}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+  /* popup links */
+  .pop-link{background:none;border:none;color:var(--brand);font-family:var(--font-body);font-size:13.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:4px 0}
+  .pop-link:hover{color:var(--brand-hover)}
+  .head-links{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px}
+  .included-compact{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--glass);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:13px 16px;font-size:13.5px;color:var(--z400)}
+  .included-compact>span[data-i]{color:var(--brand);flex:none}
+  .included-compact .ic-txt{flex:1;min-width:160px}
+  .included-compact .pop-link{margin-left:auto}
+
+  /* modal */
+  .modal-back{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.62);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .28s var(--ease)}
+  .modal-back.open{opacity:1;pointer-events:auto}
+  .modal{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4);box-shadow:var(--e2);max-width:520px;width:100%;max-height:85vh;overflow:auto;transform:translateY(14px) scale(.985);transition:transform .32s var(--ease)}
+  .modal-back.open .modal{transform:none}
+  .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 24px 0}
+  .modal-head h3{font-size:20px}
+  .modal-x{width:34px;height:34px;border-radius:999px;border:1px solid var(--b-default);display:grid;place-items:center;color:var(--z400);flex:none;font-size:15px}
+  .modal-x:hover{background:rgba(255,255,255,0.05);color:#fff}
+  .modal-body{padding:16px 24px 24px;font-size:14px;color:var(--z300);line-height:1.55}
+  .mrow{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--b-subtle)}
+  .mrow:last-child{border-bottom:none}
+  .mrow .mn{width:30px;height:30px;border-radius:8px;background:var(--brand);color:#000;font-family:var(--font-head);font-weight:500;display:grid;place-items:center;flex:none;font-size:13px}
+  .mrow.plain .mn{background:var(--glass);border:1px solid var(--b-subtle);color:var(--brand)}
+  .mrow .mt{font-weight:500;color:#fff;font-size:14px;margin-bottom:3px}
+  .mrow .md{font-size:13px;color:var(--z400)}
+  .mgrid2{display:grid;grid-template-columns:1fr;gap:12px;margin:4px 0}
+  @media(min-width:480px){.mgrid2{grid-template-columns:1fr 1fr}}
+  .mbox{border:1px solid var(--b-default);border-radius:var(--r3);padding:14px}
+  .mbox h4{font-size:14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+  .mbox .mfee{color:var(--brand);font-family:var(--font-head);font-size:16px}
+  .mbox ul{list-style:none;margin-top:8px;display:grid;gap:6px;font-size:12.5px;color:var(--z400)}
+  /* chat mock (explicador conversación) */
+  .chatmock{background:var(--bg1);border:1px solid var(--b-default);border-radius:var(--r3);padding:14px 14px 12px;margin-bottom:18px}
+  .cm-head{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--z500);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+  .cm-dot{width:8px;height:8px;border-radius:999px;background:var(--wa)}
+  .bubble{max-width:80%;padding:8px 11px;border-radius:13px;font-size:12.5px;line-height:1.35;margin-bottom:8px}
+  .bubble .who{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .bubble.cli{background:var(--elevated);color:#e4e4e7;border-bottom-left-radius:4px;margin-right:auto}
+  .bubble.cli .who{color:var(--z500)}
+  .bubble.emp{background:rgba(255,213,64,0.12);border:1px solid rgba(255,213,64,0.3);color:#fff;border-bottom-right-radius:4px;margin-left:auto}
+  .bubble.emp .who{color:var(--brand)}
+  .cm-hand{display:flex;align-items:center;gap:8px;justify-content:center;font-size:10px;color:var(--z500);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 10px}
+  .cm-hand::before,.cm-hand::after{content:'';height:1px;flex:1;background:var(--b-subtle)}
+  .cm-foot{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:var(--brand);font-weight:500;border-top:1px dashed var(--b-subtle);padding-top:10px;margin-top:4px}
+  .idx-item{display:block;width:100%;text-align:left;background:var(--glass);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:14px 40px 14px 16px;margin-bottom:10px;transition:all .15s var(--ease);position:relative}
+  .idx-item:hover{border-color:var(--brand);background:rgba(255,213,64,0.04)}
+  .idx-item .mt{color:#fff;font-weight:500;font-size:14px}
+  .idx-item .md{color:var(--z500);font-size:12.5px;margin-top:2px}
+  .idx-item::after{content:'';position:absolute;right:16px;top:50%;width:8px;height:8px;border-top:1.5px solid var(--brand);border-right:1.5px solid var(--brand);transform:translateY(-50%) rotate(45deg)}
+  @media print{
+    .topbar,.secnav,aside.rail,.mrail,.final-cta,.continue,.progress,.modal-back{display:none!important}
+    .reveal{opacity:1!important;transform:none!important}
+    body{padding:0}
+    .wrap{display:block;padding:24px}
+    section.lvl:not(#s5){display:none!important}
+  }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-in">
+      <div class="logo"><span class="dot"></span>Adereso</div>
+      <div class="tag">Borrador · valores en USD</div>
+      <button class="btn-reset" id="resetBtn" title="Reiniciar cotización"><span data-i="reset" data-sz="14"></span>Reset</button>
+    </div>
+    <div class="progress"><div class="fill" id="pfill"></div></div>
+    <nav class="secnav" id="secnav"></nav>
+  </header>
+
+  <div class="wrap">
+    <main>
+      <div class="hero reveal">
+        <h1>Pricing basado en conversaciones.<br><span class="hero-accent">No en usuarios.</span></h1>
+      </div>
+      <!-- 1 · MÓDULOS -->
+      <section class="lvl" id="s1" data-title="Servicios">
+        <div class="level-head reveal">
+          <div class="level-kicker">Nivel 1 · Servicios</div>
+          <h2>Selecciona los servicios a cotizar</h2>
+        </div>
+        <div class="modgrid" id="modgrid"></div>
+        <div class="modfoot hidden" id="cassperFoot"><span data-i="info"></span><div>Cassper se cotiza con planes de créditos; al activarlo se agrega al resultado. <button class="pop-link" data-pop="cassper">Ver planes</button></div></div>
+        <div class="continue reveal"><button data-next="sc">Continuar a canales <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 2 · CANALES -->
+      <section class="lvl" id="sc" data-title="Canales">
+        <div class="level-head reveal">
+          <div class="level-kicker">Nivel 2 · Canales</div>
+          <h2>¿Por qué canales recibirás mensajes?</h2>
+          <p>Estos son los canales de entrada (inbound). Conectarlos es gratis; solo se cobra el consumo de WhatsApp y X.</p>
+        </div>
+        <div id="optWa"></div>
+        <div class="continue reveal"><button data-next="s2">Continuar al volumen <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 3 · VOLUMEN -->
+      <section class="lvl" id="s2" data-title="Volumen">
+        <div class="level-head reveal">
+          <div class="level-kicker">Nivel 2 · Volumen</div>
+          <h2>¿Cuántas conversaciones al mes?</h2>
+          <p>La bolsa son las conversaciones iniciadas por el cliente (inbound) al mes. Ese volumen define el valor del servicio.</p>
+          <div class="head-links"><button class="pop-link" data-pop="conversacion"><span data-i="info" data-sz="16"></span> ¿Qué es una conversación?</button></div>
+        </div>
+        <div id="volArea"></div>
+        <div class="continue reveal"><button data-next="s3">Continuar a implementación <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 3 · IMPLEMENTACIÓN -->
+      <section class="lvl" id="s3" data-title="Implementación">
+        <div class="level-head reveal">
+          <div class="level-kicker">Nivel 3 · Implementación</div>
+          <h2>¿Cómo implementamos el agente?</h2>
+        </div>
+        <div id="setupArea"></div>
+        <div class="continue reveal"><button data-next="s4">Continuar a WhatsApp <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 4 · WHATSAPP -->
+      <section class="lvl" id="s4" data-title="Billetera">
+        <div class="level-head reveal">
+          <div class="level-kicker">Nivel 4 · Billetera Adereso–Meta</div>
+          <h2>Billetera Adereso–Meta</h2>
+          <p>El consumo de WhatsApp es prepago: <b>costo de Meta</b> (según el país) <b>+ fee de Adereso</b>.</p>
+          <div class="head-links"><button class="pop-link" data-pop="billetera"><span data-i="info" data-sz="16"></span> ¿Cómo funciona la billetera?</button></div>
+        </div>
+        <div id="waArea"></div>
+        <div class="continue reveal"><button data-next="s5">Ver resumen <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 5 · RESUMEN -->
+      <section class="lvl" id="s5" data-title="Resumen">
+        <div class="level-head reveal">
+          <div class="level-kicker">Resumen</div>
+          <h2>Resumen de la inversión</h2>
+          <p>Propuesta armada con el cliente. Valores en USD, contrato anual.</p>
+        </div>
+        <div id="sumCard"></div>
+        <div class="final-cta reveal">
+          <button class="btn btn-primary" id="copyBtn"><span data-i="copy"></span>Copiar resumen</button>
+          <button class="btn btn-ghost" onclick="window.print()"><span data-i="print"></span>Imprimir / PDF</button>
+        </div>
+        <div class="continue reveal"><button data-next="s6">Ver el retorno de la inversión <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 6 · ROI -->
+      <section class="lvl" id="s6" data-title="ROI">
+        <div class="level-head reveal">
+          <div class="level-kicker">ROI · Caso de negocio</div>
+          <h2>Mídelo por lo que retorna. No por lo que cuesta.</h2>
+          <p>Arma el caso de negocio: activa los casos de uso y compara la ganancia mensual contra la inversión en Adereso.</p>
+        </div>
+        <div id="roiArea"></div>
+        <div class="continue reveal"><button data-next="s7">Ver el proceso comercial <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 7 · PROCESO COMERCIAL -->
+      <section class="lvl" id="s7" data-title="Proceso">
+        <div class="level-head reveal">
+          <div class="level-kicker">Proceso comercial</div>
+          <h2>Del sí al valor, paso a paso</h2>
+          <p>Qué ocurre una vez que avanzamos: desde la firma hasta el acompañamiento continuo.</p>
+        </div>
+        <div class="proc reveal">
+          <div class="proc-track">
+            <div class="proc-step"><span class="proc-ico"><span data-i="edit" data-sz="26"></span></span><span class="proc-n">Paso 1</span><span class="proc-txt">Firma de propuesta y acceso a tu portal cliente</span></div>
+            <div class="proc-step"><span class="proc-ico"><span data-i="doc" data-sz="26"></span></span><span class="proc-n">Paso 2</span><span class="proc-txt">Traspaso de documentación para implementación</span></div>
+            <div class="proc-step"><span class="proc-ico"><span data-i="coin" data-sz="26"></span></span><span class="proc-n">Paso 3</span><span class="proc-txt">Facturación y pago de setup</span></div>
+            <div class="proc-step"><span class="proc-ico"><span data-i="tool" data-sz="26"></span></span><span class="proc-n">Paso 4</span><span class="proc-txt">Kick off, desarrollo y onboarding</span></div>
+            <div class="proc-step"><span class="proc-ico"><span data-i="edit" data-sz="26"></span></span><span class="proc-n">Paso 5</span><span class="proc-txt">Firma de contrato</span></div>
+            <div class="proc-step"><span class="proc-ico"><span data-i="chart" data-sz="26"></span></span><span class="proc-n">Paso 6</span><span class="proc-txt">Inicio de servicio y facturación MRR</span></div>
+            <div class="proc-step"><span class="proc-ico"><span data-i="users" data-sz="26"></span></span><span class="proc-n">Paso 7</span><span class="proc-txt">Acompañamiento continuo</span></div>
+          </div>
+        </div>
+        <div class="continue reveal"><button data-next="s8">Conocer el portal cliente <span data-i="down"></span></button></div>
+      </section>
+
+      <!-- 8 · PORTAL CLIENTE -->
+      <section class="lvl" id="s8" data-title="Portal">
+        <div class="level-head reveal">
+          <div class="level-kicker">Portal clientes</div>
+          <h2>Al firmar, accedes directo a tu portal.</h2>
+          <p>Ahí cargas tus datos fiscales y documentación, y sigues todo el proyecto en un solo lugar: onboarding, avance de la implementación, cronograma, QA y solicitudes.</p>
+        </div>
+        <div class="portal reveal">
+          <div class="portal-bar">
+            <div class="portal-dots"><span class="portal-dot"></span><span class="portal-dot"></span><span class="portal-dot"></span></div>
+            <div class="portal-url" id="portalUrl">portal.adereso.ai · Onboarding</div>
+          </div>
+          <div class="portal-body">
+            <div class="portal-nav" id="portalNav">
+              <div class="portal-brand"><span class="logo-badge">A</span> Portal clientes</div>
+              <button class="pnav" data-portal-view="onboarding"><span class="pdot"></span>Onboarding</button>
+              <button class="pnav" data-portal-view="status"><span class="pdot"></span>Status</button>
+              <button class="pnav" data-portal-view="cronograma"><span class="pdot"></span>Cronograma</button>
+              <button class="pnav" data-portal-view="qa"><span class="pdot"></span>QA</button>
+              <button class="pnav" data-portal-view="bots"><span class="pdot"></span>Bots</button>
+              <button class="pnav" data-portal-view="sops"><span class="pdot"></span>SOPs</button>
+              <button class="pnav" data-portal-view="equipo"><span class="pdot"></span>Equipo</button>
+            </div>
+            <div class="portal-main" id="portalMain"></div>
+          </div>
+        </div>
+        <div class="head-links" style="justify-content:center;margin-top:16px"><button class="pop-link" data-pop="buenaspracticas"><span data-i="info" data-sz="16"></span> Buenas prácticas para iniciar el desarrollo</button></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="mrail" id="mrail">
+    <div class="mrail-row">
+      <div class="mrail-sum" id="mSum"><div class="ms1">Selección</div><div class="ms2" id="mMonthly">Desk + Studio</div></div>
+      <button class="btn btn-primary" data-next="s5">Ver resultado</button>
+    </div>
+    <div class="mrail-detail" id="mDetail"></div>
+  </div>
+
+  <div class="modal-back" id="modalBack">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head"><h3 id="modalTitle"></h3><button class="modal-x ds-focus" id="modalX" aria-label="Cerrar">✕</button></div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <button class="topbtn" id="topBtn" aria-label="Volver arriba"><span data-i="up" data-sz="20"></span></button>
+
+<script>
+const ICONS={
+  robot:'<path d="M12 3v2M9 13v-1M15 13v-1"/><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 16h6"/>',
+  msg:'<path d="M8 9h8M8 13h5"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/>',
+  mega:'<path d="M18 8a3 3 0 0 1 0 6"/><path d="M3 10v4a1 1 0 0 0 1 1h3l7 5V4L7 9H4a1 1 0 0 0-1 1z"/>',
+  search:'<circle cx="10" cy="10" r="6"/><path d="M20 20l-5.5-5.5"/>',
+  chart:'<path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-3"/>',
+  cpu:'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 3v2M15 3v2M9 19v2M15 19v2M3 9h2M3 15h2M19 9h2M19 15h2"/>',
+  check:'<path d="M5 12l5 5L20 7"/>',
+  wa:'<path d="M3 21l1.65-3.8a9 9 0 1 1 3.4 2.9L3 21"/><path d="M9 10a.5.5 0 0 0 1 0V9a.5.5 0 0 0-1 0v1a5 5 0 0 0 5 5h1a.5.5 0 0 0 0-1h-1a.5.5 0 0 0 0 1"/>',
+  users:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/>',
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  print:'<path d="M17 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2"/><path d="M17 9V3H7v6M7 13h10v8H7z"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
+  tool:'<path d="M7 10h3V7L6.5 3.5a6 6 0 0 1 8 8l6 6a2 2 0 0 1-3 3l-6-6a6 6 0 0 1-8-8z"/>',
+  bolt:'<path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 10a2.5 1.8 0 0 1 5 0M14.5 14a2.5 1.8 0 0 1-5 0"/>',
+  bill:'<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.2"/><path d="M6 12h.01M18 12h.01"/>',
+  edit:'<path d="M4 20h4l10-10a2 2 0 0 0-3-3L5 17z"/>',
+  doc:'<path d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M13 2v6h5M8 13h8M8 17h6"/>',
+  reset:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/>',
+  up:'<path d="M18 15l-6-6-6 6"/>'
+};
+function paintIcons(root=document){
+  root.querySelectorAll('[data-i]').forEach(el=>{
+    const k=el.getAttribute('data-i');if(!ICONS[k]||el.dataset.painted)return;
+    const sz=el.getAttribute('data-sz')||20;
+    el.innerHTML='<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+ICONS[k]+'</svg>';
+    el.dataset.painted='1';
+  });
+}
+
+const BAG=[{c:2000,p:558},{c:3000,p:752},{c:4000,p:945},{c:5000,p:1058},{c:10000,p:1915},{c:15000,p:2558},{c:20000,p:3340},{c:50000,p:7492},{c:100000,p:14827},{c:500000,p:64970}];
+const TILES=[2000,3000,4000,5000,10000,15000,20000,30000];
+function priceForVolume(v){
+  v=Math.max(2000,Math.round(v||0));const t=BAG;
+  const exact=t.find(b=>b.c===v);if(exact)return exact.p;
+  if(v<=t[0].c)return t[0].p;
+  if(v>=t[t.length-1].c){const a=t[t.length-2],b=t[t.length-1];return b.p+(b.p-a.p)/(b.c-a.c)*(v-b.c);}
+  for(let i=0;i<t.length-1;i++){const a=t[i],b=t[i+1];if(v>=a.c&&v<=b.c)return a.p+(v-a.c)/(b.c-a.c)*(b.p-a.p);}
+  return t[0].p;
+}
+const SETUP={
+ estandar:{name:'Empaquetado Estándar',price:0,tag:'Rápido · 1 semana',hh:'Autogestionable',endpoints:'Preconfigurado',ses:'Adereso Academy',mant:'—'},
+ esencial:{name:'Plan 1 · Esencial',price:558,hh:'20 HH',endpoints:'Sin integración',sesDev:4,sesPost:1,mant:'2HH/mes'},
+ inteligente:{name:'Plan 2 · Inteligente',price:990,rec:true,hh:'30 HH',endpoints:'4 endpoints (API REST)',sesDev:6,sesPost:3,mant:'2HH/mes'},
+ avanzado:{name:'Plan 3 · Avanzado',price:1600,hh:'40 HH',endpoints:'Hasta 8 (BFF)',sesDev:10,sesPost:8,mant:'2HH/mes'},
+ enterprise:{name:'Plan 4 · Enterprise',price:2700,hh:'60 HH',endpoints:'Hasta 16 (BFF)',sesDev:4,sesPost:1,mant:'2HH/mes'}
+};
+const SETUP_ORDER=['esencial','inteligente','avanzado','enterprise'];
+/* Tarifas de Meta por país — plantillas outbound (USD por mensaje). Región LatAm & España, vigente oct 2025.
+   Service (conversaciones iniciadas por el cliente) es GRATIS en el modelo por mensaje de Meta.
+   Minuto de llamada: por confirmar (no viene en la tabla de plantillas). */
+const WA_PRICES={
+ CL:{name:'Chile',          flag:'🇨🇱', marketing:0.0889, utility:0.0200, authentication:0.0200, call:0.0121},
+ AR:{name:'Argentina',      flag:'🇦🇷', marketing:0.0618, utility:0.0260, authentication:0.0260, call:0.0101},
+ BR:{name:'Brasil',         flag:'🇧🇷', marketing:0.0625, utility:0.0068, authentication:0.0068, call:0.0108},
+ CO:{name:'Colombia',       flag:'🇨🇴', marketing:0.0125, utility:0.0008, authentication:0.0008, call:0.0111},
+ MX:{name:'México',         flag:'🇲🇽', marketing:0.0305, utility:0.0085, authentication:0.0085, call:0.0094},
+ PE:{name:'Perú',           flag:'🇵🇪', marketing:0.0703, utility:0.0200, authentication:0.0200, call:0.0121},
+ ES:{name:'España',         flag:'🇪🇸', marketing:0.0615, utility:0.0200, authentication:0.0200, call:null},
+ XL:{name:'Resto de LatAm', flag:'🌎', marketing:0.0740, utility:0.0113, authentication:0.0113, call:0.0116}
+};
+const WA_COUNTRIES=['CL','AR','BR','CO','MX','PE','ES','XL'];
+const WA_SERVICE_FREE=true;   /* service inbound gratis (modelo por mensaje) */
+/* Chile: tarifa de llamada por tramos (USD/min), vigente 1 abr 2026. Otros países: rate base plano. */
+const CL_CALL_TIERS=[{max:50000,rate:0.0121},{max:250000,rate:0.0098},{max:1000000,rate:0.0086},{max:2500000,rate:0.0074},{max:5000000,rate:0.0066},{max:Infinity,rate:0.0055}];
+function waP(){return WA_PRICES[(state.wa&&state.wa.country)||'CL']||WA_PRICES.CL;}
+function waConfirmed(){return waP().marketing!=null;}
+function callConfirmed(){return waP().call!=null;}
+function callCost(min){
+  const p=waP();if(p.call==null)return 0;let m=Math.max(0,min||0);
+  if(state.wa.country==='CL'){let cost=0,prev=0;for(const t of CL_CALL_TIERS){const span=t.max-prev,q=Math.min(m-prev>0?m-prev:0,span);if(q<=0)break;cost+=q*t.rate;prev=t.max;if(m<=prev)break;}return cost;}
+  return m*p.call;
+}
+/* ===== CASSPER · planes de créditos + success fee ===== */
+const CASSPER_PLACEHOLDER=false;
+const CASSPER_PLANS=[
+ {k:'free',name:'Free',credits:500,price:0,desc:'Validar el valor de Cassper antes de contratar.'},
+ {k:'starter',name:'Starter',credits:2300,price:250,rec:true,desc:'Bajo volumen, ticket promedio alto.'},
+ {k:'growth',name:'Growth',credits:4800,price:500,desc:'Ventas recurrentes: recuperar más sin ampliar equipo.'}
+];
+const CASSPER_SUCCESS=null;/* % sobre lo recuperado — por confirmar */
+const CASSPER_EXCESS=null;/* % recargo créditos excedentes — por confirmar */
+function casspPlan(){return CASSPER_PLANS.find(p=>p.k===state.cassperPlan)||CASSPER_PLANS[1];}
+function casspM(){return state.cassper?casspPlan().price:0;}
+function casspSuccessEst(){return (state.cassper&&CASSPER_SUCCESS!=null)?Math.max(0,+state.cassperRecovered||0)*CASSPER_SUCCESS/100:0;}
+const WA_LABEL={marketing:'Marketing',utility:'Utilidad',authentication:'Autenticación',service:'Service'};
+const STUDIO_NO_DESK_SURCHARGE=null;/* % recargo Studio sin Desk — por confirmar */
+function hasService(){return state.desk||state.studio;}
+
+const MODULES=[
+ {k:'desk',label:'Desk',desc:'Mesa de ayuda',icon:'msg',color:'#FFFFFF'},
+ {k:'studio',label:'Studio',desc:'Agentes IA / Flows',icon:'robot',color:'#186EFA'},
+ {k:'engage',label:'Engage',desc:'Comunicación outbound',icon:'mega',color:'#25D366'},
+ {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}
+];
+
+const state={desk:true,studio:true,engage:false,cassper:false,whatsapp:false,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente'},roiActive:{},roiVals:{},roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{}};
+const INITIAL_STATE=JSON.parse(JSON.stringify(state));
+const CHANNELS=[
+ {k:'whatsapp',label:'WhatsApp',color:'#25D366',paid:true},
+ {k:'x',label:'X',color:'#FFFFFF',paid:true},
+ {k:'webchat',label:'Webchat',color:'#FFD540'},
+ {k:'correo',label:'Correo',color:'#FFD540'},
+ {k:'instagram',label:'Instagram',color:'#E1306C'},
+ {k:'facebook',label:'Facebook',color:'#1877F2'},
+ {k:'linkedin',label:'LinkedIn',color:'#0A66C2'},
+ {k:'tiktok',label:'TikTok',color:'#FFFFFF'}
+];
+const CHAN_SVG={
+ whatsapp:'M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1.1.3-3.7-.9-3.1-1.3-5-4.4-5.2-4.6-.1-.2-1.2-1.6-1.2-3s.8-2.1 1-2.4c.3-.3.6-.4.8-.4h.6c.2 0 .5-.1.7.5l.9 2.1c.1.2.1.4 0 .5l-.4.6c-.2.2-.4.4-.2.7.2.3.9 1.5 2 2.4 1.4 1.2 2.5 1.6 2.8 1.7.3.1.5.1.7-.1l.9-1c.2-.3.4-.2.7-.1l2 1c.3.1.5.2.5.3.1.2.1.9-.1 1.3z',
+ wacall:'M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2zm-2.9 4.6c.2 0 .4 0 .6.4l.8 2c.1.2.1.4-.1.6l-.6.7c-.1.2-.2.4-.1.6.5 1.1 1.5 2.1 2.6 2.6.2.1.4 0 .6-.1l.7-.6c.2-.2.4-.2.6-.1l2 .8c.4.2.4.4.4.6 0 1.2-1 2-2 2-3.7 0-7.4-3.7-7.4-7.4 0-1 .8-2 2-2z',
+ x:'M17.5 3h3l-6.6 7.5L21.8 21h-6.1l-4.8-6.2L5.4 21H2.4l7-8L2.2 3h6.2l4.3 5.7L17.5 3zm-1.1 16.1h1.7L7.7 4.8H5.9l10.5 14.3z',
+ webchat:'M5 3h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H10l-5 4v-4H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z',
+ correo:'M3 5.5A1.5 1.5 0 0 1 4.5 4h15A1.5 1.5 0 0 1 21 5.5v13A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-13zM5 7.2 12 11.7 19 7.2v-.4l-7 4.5L5 6.8v.4z',
+ instagram:'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM17.5 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z',
+ facebook:'M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z',
+ linkedin:'M20 3H4a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zM8.3 18.3H5.7V10h2.6v8.3zM7 8.8a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11.3 9.5h-2.6v-4c0-1-.4-1.6-1.3-1.6-.7 0-1.1.5-1.3 1v4.6h-2.6V10h2.5v1.1h.1c.3-.5 1-1.3 2.4-1.3 1.7 0 3 1.1 3 3.6v4.9z',
+ tiktok:'M14 3h2.5c.3 1.9 1.4 3.4 3.5 3.6V9c-1.3 0-2.5-.4-3.5-1.1v5.9a5.4 5.4 0 1 1-5.4-5.4c.3 0 .6 0 .9.1v2.6a2.8 2.8 0 1 0 2 2.7V3z'
+};
+const SECTIONS=['s1','sc','s2','s3','s4','s5','s6','s7','s8'];
+const usd=n=>'$'+Math.round(n).toLocaleString('en-US');
+const usd2=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* reveal on scroll */
+const prefersReduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const revealIO=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');revealIO.unobserve(en.target);}});},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
+function observeReveals(root=document){if(prefersReduced){root.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));return;}root.querySelectorAll('.reveal:not(.in)').forEach(el=>revealIO.observe(el));}
+function applyReveal(area,sel){const first=!area.dataset.revealed;area.querySelectorAll(sel).forEach((el,i)=>{el.classList.add('reveal');if(first&&!prefersReduced){el.style.transitionDelay=(i*55)+'ms';}else{el.classList.add('in');}});area.dataset.revealed='1';observeReveals(area);}
+
+function monthly(){
+  if(!hasService())return 0;
+  let base=state.studio?priceForVolume(state.volMode==='custom'?state.volCustom:state.vol):199;
+  if(state.studio&&!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)base=base*(1+STUDIO_NO_DESK_SURCHARGE/100);
+  return base;
+}
+function setupCost(){if(!state.studio||state.setupMode==='paquetizado')return 0;return SETUP[state.setup].price;}
+function waTemplates(){return state.engage&&state.out.whatsapp;}
+function waCalls(){return state.engage&&!!state.out.wacall;}
+function waActive(){return state.whatsapp||waTemplates()||waCalls();}
+function metaFeeRate(){return state.wa.wallet==='recurrente'?0.10:0.12;}
+function metaBase(){
+  if(!waActive())return 0;
+  if(!waConfirmed())return null;
+  const p=waP();let cost=0;
+  /* Plantillas (Engage por WhatsApp saliente): se paga la tarifa Meta desde el primer mensaje. */
+  if(waTemplates()){
+    ['authentication','utility','marketing'].forEach(k=>{cost+=Math.max(0,+state.wa[k]||0)*p[k];});
+  }
+  /* Service (Desk/Studio): 1.000 gratis/mes; el resto se cobra a la misma tarifa que Utilidad. */
+  if(state.whatsapp){cost+=Math.max(0,(+state.wa.service||0)-1000)*p.utility;}
+  /* Llamadas: solo si el canal WhatsApp Call está activo y hay tarifa confirmada. */
+  if(waCalls())cost+=callCost(+state.wa.minutes||0);
+  return cost;
+}
+function metaFee(){const b=metaBase();return b==null?null:b*metaFeeRate();}
+function metaEst(){const b=metaBase();return b==null?null:b*(1+metaFeeRate());}
+
+/* ---- module grid ---- */
+function renderMods(){
+  document.getElementById('modgrid').innerHTML=MODULES.map(m=>{
+    let cls='modcard';
+    if(m.locked)cls+=' on locked';
+    else if(m.soon)cls+=' soon';
+    else cls+=state[m.k]?' on':' off';
+    const tag=m.locked?'<span class="mod-tag">Base</span>':(m.soon?'<span class="mod-tag">A medida</span>':'');
+    const tick=(!m.soon)?'<span class="mtick">✓</span>':'';
+    return `<button class="${cls}" data-mod="${m.k}" ${m.soon||m.locked?'aria-disabled="true"':''}>
+      ${tag}${tick}
+      <span class="mod-ico"><span data-i="${m.icon}" data-sz="26" style="color:${m.color}"></span></span>
+      <span class="mod-txt"><span class="mod-label">${m.label}</span><span class="mod-desc">${m.desc}</span></span>
+    </button>`;
+  }).join('');
+  paintIcons(document.getElementById('modgrid'));
+  applyReveal(document.getElementById('modgrid'),'.modcard');
+  document.getElementById('cassperFoot').classList.toggle('hidden',!state.cassper);
+}
+
+function renderOpts(){
+  const el=document.getElementById('optWa');if(!el)return;
+  if(!hasService()){el.innerHTML='';return;}
+  const logo=(c)=>`<span class="chan-logo" style="color:${c.color}"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" fill-rule="evenodd"><path d="${CHAN_SVG[c.k]}"/></svg></span><span class="chan-lbl">${c.label}</span>`;
+  const inChip=(c)=>{const on=c.k==='whatsapp'?state.whatsapp:state.chan[c.k];
+    return `<button class="chan ${on?'on':''} ${c.paid?'paid':''}" data-chan="${c.k}" aria-pressed="${on}">
+      ${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</button>`;};
+  let html=`<div class="chan-grid">${CHANNELS.map(inChip).join('')}</div>`;
+  if(state.engage){
+    const outChans=[{k:'whatsapp',label:'WhatsApp',color:'#25D366',paid:true},{k:'wacall',label:'WhatsApp Call',color:'#25D366',paid:true},{k:'correo',label:'Correo',color:'#FFD540',paid:false}];
+    const outChip=(c)=>{const on=state.out[c.k];
+      return `<button class="chan ${on?'on':''} ${c.paid?'paid':''}" data-out="${c.k}" aria-pressed="${on}">
+        ${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</button>`;};
+    html+=`<div class="out-block">
+      <div class="out-head">¿Por qué canales enviarás comunicación saliente?</div>
+      <div class="out-note">Con Engage envías campañas y avisos proactivos. <b>Correo es gratis</b>; <b>WhatsApp</b> usa plantillas de pago (Meta + fee).</div>
+      <div class="chan-grid out-grid">${outChans.map(outChip).join('')}</div>
+    </div>`;
+  }
+  el.innerHTML=html;
+}
+
+function renderVol(){
+  const area=document.getElementById('volArea');
+  if(!state.studio){
+    area.innerHTML=`<div class="vgrid"><div class="vtile sel"><div class="conv">2.000</div><div class="lbl">conversaciones</div></div></div>
+      <div class="note warn" style="margin-top:18px"><span data-i="info"></span><div>Sin Studio se usa la bolsa base de 2.000 conversaciones. Para más volumen o IA, activa <b>Studio</b> en el Nivel 1.</div></div>`;
+  }else{
+    const cSel=state.volMode==='custom';
+    area.innerHTML=`<div class="vgrid">`+TILES.map(c=>`<button class="vtile ${(!cSel&&c===state.vol)?'sel':''}" data-vol="${c}"><div class="conv">${c.toLocaleString('es-CL')}</div><div class="lbl">conversaciones</div></button>`).join('')+`</div>
+      <div class="vcustom ${cSel?'sel':''}" id="vcustom">
+        <div class="vc-field"><label for="volInput">¿Otro volumen? Ingrésalo a mano</label>
+          <input type="number" id="volInput" min="2000" step="500" data-vol-custom value="${state.volCustom||''}" placeholder="Ej: 8.000"></div>
+        <div class="vc-price"><span class="vc-lbl">Conversaciones/mes</span><span class="vc-amt" id="customPrice">${cSel?state.volCustom.toLocaleString('es-CL'):'—'}</span></div>
+      </div>${!state.desk?`<div class="note warn" style="margin-top:16px"><span data-i="info"></span><div><b>Studio sin Desk:</b> el agente IA va sin la mesa de ayuda humana; aplica un recargo sobre la bolsa (por confirmar).</div></div>`:''}`;
+  }
+  paintIcons(area);
+  applyReveal(area,'.vtile,.vcustom');
+}
+
+function renderSetup(){
+  const area=document.getElementById('setupArea');
+  if(!state.studio){area.innerHTML=`<div class="note"><span data-i="info"></span><div>Sin agente de IA no hay proyecto de implementación. Desk se activa con el empaquetado estándar autogestionado, <b>sin acompañamiento</b>.</div></div>`;paintIcons(area);return;}
+  const acc=state.setupMode==='acompanada';
+  let html=`<div class="seg">
+    <button class="seg-opt ${acc?'on':''}" data-smode="acompanada"><span class="seg-ico" data-i="users"></span><span class="seg-txt"><b>Acompañada</b><small>Setup por planes de HH · con PM</small></span></button>
+    <button class="seg-opt ${!acc?'on':''}" data-smode="paquetizado"><span class="seg-ico" data-i="bolt"></span><span class="seg-txt"><b>Rápida</b><small>Sin costo · sin acompañamiento</small></span></button>
+  </div>`;
+  if(acc){
+    html+=`<div class="level-kicker" style="margin:22px 0 12px">Elige el plan de horas (HH)</div><div class="plans">`+SETUP_ORDER.map(k=>{const s=SETUP[k];return `<button class="plan ${k===state.setup?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="mod-tag" style="position:static;color:#000;background:var(--brand);border:none">Recomendado</span>':''}</h3><div class="pmeta"><span><b>${s.hh}</b></span><span>${s.endpoints}</span><span>Hasta ${s.sesDev} reuniones + ${s.sesPost} post</span><span>Mant. ${s.mant}</span></div></div></button>`;}).join('')+`</div>`;
+  }else{
+    html+=`<div class="note" style="margin-top:20px"><span data-i="info"></span><div><b>Rápida (paquetizado):</b> sin costo y sin acompañamiento. Autoservicio guiado, preconfigurado, listo en una semana.</div></div>`;
+  }
+  area.innerHTML=html;paintIcons(area);applyReveal(area,'.seg-opt,.plan');
+}
+
+function renderWa(){
+  const area=document.getElementById('waArea');
+  const p=waP();
+  const feePct=state.wa.wallet==='recurrente'?'10':'12';
+  let html=`<div class="wa-formula">
+    <div class="wf-title">Cómo se compone el cobro · billetera prepago (${p.flag} ${p.name})</div>
+    <div class="wf-row">
+      <span class="wf-pill">Valor Meta unitario<small>por mensaje · plantilla · minuto</small></span>
+      <span class="wf-op">+</span>
+      <span class="wf-pill">${feePct}% fee Adereso<small>por gestión</small></span>
+      <span class="wf-op">=</span>
+      <span class="wf-pill total">Costo por gestión</span>
+    </div>
+    <div class="wf-note">Prepago: se paga por adelantado cada mensaje, plantilla o minuto de Meta, más el fee de Adereso por gestión. Los mensajes service (Desk/Studio) incluyen 1.000 gratis/mes + 72 h de gratuidad desde Meta Ads.</div>
+  </div>
+  <div class="wa-form">
+    <div class="wa-countries">
+      <div class="wa-c-label">País de facturación de Meta <span class="u">— cambia las tarifas del cálculo</span></div>
+      <div class="cty-row">${WA_COUNTRIES.map(c=>{const cp=WA_PRICES[c],todo=cp.marketing==null;return `<button class="cty ${state.wa.country===c?'sel':''} ${todo?'todo':''}" data-cty="${c}"><span class="cty-flag">${cp.flag}</span>${cp.name}${todo?'<span class="cty-tag">por confirmar</span>':''}</button>`;}).join('')}</div>
+    </div>`;
+  if(state.whatsapp){
+    html+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd2(p.utility)}<small>c/u</small></span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 72 h desde Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
+  }
+  if(waTemplates()){
+    const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
+    html+=`<div><label class="wa-block-lbl">Engage · plantillas por WhatsApp saliente <span class="u">— precio Meta por mensaje</span></label><div class="pl-grid">
+      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd2(p[k])}<small>c/u</small></span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}
+    </div>
+    <div class="note warn" style="margin-top:12px"><span data-i="info"></span><div><b>¿Esperas respuestas a estas plantillas?</b> Cuando un cliente responde a una plantilla enviada, esa respuesta abre una conversación inbound y consume cupo de la <button class="linkbtn" data-goto="s2">bolsa de conversaciones contratada</button>.</div></div></div>`;
+  }else if(state.engage){
+    html+=`<div class="note warn"><span data-i="info"></span><div><b>Engage por Correo (gratis):</b> las plantillas de pago se envían por <b>WhatsApp saliente</b>. <button class="linkbtn" data-act="out-wa">Activar WhatsApp saliente →</button></div></div>`;
+  }else{
+    html+=`<div class="note warn"><span data-i="info"></span><div><b>Plantillas desactivadas:</b> el envío de marketing, utilidad y autenticación requiere <b>Engage</b> con WhatsApp saliente. <button class="linkbtn" data-act="engage">Activar Engage →</button></div></div>`;
+  }
+  if(waCalls()){
+    const callLbl=callConfirmed()?((state.wa.country==='CL'?'desde ':'')+usd2(waP().call))+'<small>/min</small>':'por confirmar';
+    html+=`<div><label class="wa-block-lbl">WhatsApp Call · minutos de llamada al mes <span class="u">— canal saliente de Engage</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}</span></div><div class="pl-desc">Llamadas por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div></div></div>`;
+  }
+  html+=`<div class="divider"></div>
+    <div class="field"><label>Tipo de billetera Adereso–Meta <span class="u">— define el fee de Adereso</span></label><div class="wallet-opts">
+      <button class="wallet ${state.wa.wallet==='recurrente'?'sel':''}" data-wallet="recurrente"><div class="wt">Recurrente <span class="wfee">+10%</span></div><div class="wd">Se renueva cada período. Saldo no usado se pierde. Consumo estable.</div></button>
+      <button class="wallet ${state.wa.wallet==='no_recurrente'?'sel':''}" data-wallet="no_recurrente"><div class="wt">No recurrente <span class="wfee">+12%</span></div><div class="wd">Saldo no vence, se acumula. Consumo variable o estacional.</div></button>
+    </div></div>
+    <div id="waLive"></div>
+    <div class="wa-reset-row"><button class="linkbtn" data-wa-reset><span data-i="reset" data-sz="13"></span> Reiniciar valores de la simulación</button></div>
+  </div>`;
+  area.innerHTML=html;paintIcons(area);applyReveal(area,'.wa-form');
+  renderWaLive();
+}
+function renderWaLive(){
+  const el=document.getElementById('waLive');if(!el)return;
+  const b=metaBase();
+  if(b==null||b<=0){el.innerHTML='';return;}
+  const r=Math.round(metaFeeRate()*100);
+  el.innerHTML=`<div class="wa-live">
+    <div class="wl-row"><span>Costo Meta (base)</span><b>${usd2(b)}</b></div>
+    <div class="wl-row"><span>Fee Adereso (+${r}%)</span><b>${usd2(metaFee())}</b></div>
+    <div class="wl-row total"><span>Total prepago estimado</span><b>${usd2(metaEst())}</b></div>
+    <div class="wl-note">Estimado mensual según lo que cargues arriba. El prepago va aparte del contrato.</div>
+  </div>`;
+}
+
+function selService(){return !hasService()?'—':(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk');}
+function selVol(){return !hasService()?'—':(!state.studio?'2.000 conv (base)':(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' conv':state.vol.toLocaleString('es-CL')+' conv'));}
+function selImpl(){return !state.studio?'Estándar (sin IA)':(state.setupMode==='paquetizado'?'Rápida · paquetizado':'Acompañada · '+SETUP[state.setup].name);}
+function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)parts.push('service');if(waTemplates())parts.push('plantillas');if(waCalls())parts.push('llamadas');return 'Sí · '+(state.wa.wallet==='recurrente'?'recurrente 10%':'no recurrente 12%')+' · '+parts.join(' + ');}
+function selCassper(){return state.cassper?('Sí · '+casspPlan().name):'No';}
+
+function renderRail(){
+  const rec=`
+    <div class="rstat"><div class="rl">Servicio</div><div class="rv rtxt">${selService()}</div></div>
+    <div class="rstat"><div class="rl">Volumen</div><div class="rv rtxt">${selVol()}</div></div>
+    <div class="rstat"><div class="rl">Implementación</div><div class="rv rtxt">${selImpl()}</div></div>
+    <div class="rstat"><div class="rl">WhatsApp</div><div class="rv rtxt">${selWa()}</div></div>
+    <div class="rstat"><div class="rl">Cassper</div><div class="rv rtxt">${selCassper()}</div></div>`;
+  const rc=document.getElementById('railCard');
+  if(rc){rc.innerHTML=`<h4>Tu selección</h4>${rec}
+    <div class="rail-actions"><button class="btn btn-primary btn-block" data-next="s5">Ver resultado <span data-i="down"></span></button></div>
+    <p class="rail-hint">El precio se revela en el resultado final.</p>`;paintIcons(rc);}
+  document.getElementById('mMonthly').innerHTML=hasService()?`${selService()} <span>· ${selVol()}</span>`:(state.cassper?`Cassper <span>· ${casspPlan().name}</span>`:'Sin servicios');
+  document.getElementById('mDetail').innerHTML=rec;
+}
+
+function renderSummary(){
+  const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
+  const cM=casspM(),cSucc=casspSuccessEst();
+  const withIA=state.studio;
+  const volNow=state.volMode==='custom'?state.volCustom:(withIA?state.vol:2000);
+  const isBase=withIA&&state.volMode!=='custom'&&state.vol===2000;
+
+  /* --- MENSUAL --- */
+  const soloStudio=state.studio&&!state.desk;
+  let mTable;
+  if(!state.studio){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div>`;}
+  else if(soloStudio){mTable=`<div class="rr"><span class="k">Studio · Agente IA (bolsa)</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div><div class="rr"><span class="k">Recargo sin Desk</span><span class="v">por confirmar</span></div>`;}
+  else if(isBase){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div><div class="rr"><span class="k">Add-on Studio · IA Generativa</span><span class="v">USD 359</span></div>`;}
+  else{mTable=`<div class="rr"><span class="k">Desk + Studio · bolsa mensual</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;}
+  const mTitle=!state.studio?'Mesa de ayuda':(soloStudio?'Agente IA (sin Desk)':'Bolsa de conversaciones');
+  const mDesc=!state.studio?'Plataforma omnicanal. Contrato anual.':(soloStudio?'Agente con IA, sin mesa de ayuda humana. Contrato anual.':'Plataforma omnicanal + agente con IA. Contrato anual.');
+  const mensualCard=`
+    <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>Mensual</span>
+      <div class="rsub">Servicio Adereso</div>
+      <div class="rtitle"><span data-i="${soloStudio?'robot':'msg'}" data-sz="18"></span>${mTitle}</div>
+      <div class="rdesc">${mDesc}</div>
+      <div class="rbig"><span class="n">${usd(m).replace('$','')}</span><span class="u">/mes</span></div>
+      <div class="rtable">${mTable}</div>
+      ${withIA?`<div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar volumen (conversaciones)</label><input type="number" min="2000" step="500" data-ed="vol" value="${volNow}"></div>`:''}
+    </div>`;
+
+  /* --- PREPAGO (Meta) --- */
+  let prepagoCard='';
+  if(waActive()){
+    const rec=state.wa.wallet==='recurrente';
+    prepagoCard=`
+    <div class="rcard"><span class="rlabel"><span data-i="card" data-sz="14"></span>Prepago</span>
+      <div class="rsub">Consumo de Meta</div>
+      <div class="rtitle"><span data-i="tool" data-sz="18"></span>Billetera ${rec?'recurrente':'no recurrente'}</div>
+      <div class="rdesc">${rec?'Se renueva cada período. El saldo no usado se pierde.':'Recarga variable. El saldo no vence y se acumula mes a mes.'}</div>
+      <div class="rbig"><span class="n">+${rec?'10':'12'}%</span><span class="u">fee Adereso</span></div>
+      <div class="rtable">
+        <div class="rr"><span class="k">País (Meta)</span><span class="v">${waP().flag} ${waP().name}</span></div>
+        <div class="rr"><span class="k">Cubre</span><span class="v">${(function(){const parts=[];if(state.whatsapp)parts.push('Service');if(waTemplates())parts.push('plantillas');return parts.join(' + ')||'—';})()}</span></div>
+        ${(function(){const b=metaBase();if(b==null)return `<div class="rr"><span class="k">Estimado</span><span class="v">Tarifa por confirmar</span></div>`;if(b<=0)return `<div class="rr"><span class="k">Fee Adereso</span><span class="v">${rec?'10':'12'}% sobre consumo</span></div>`;return `<div class="rr"><span class="k">Costo Meta (base)</span><span class="v">~${usd(b)}/mes</span></div><div class="rr"><span class="k">Fee Adereso (+${rec?'10':'12'}%)</span><span class="v">~${usd(metaFee())}/mes</span></div><div class="rr"><span class="k"><b>Total prepago</b></span><span class="v"><b>~${usd(metaEst())}/mes</b></span></div>`;})()}
+        <div class="rr"><span class="k">Vencimiento</span><span class="v">${rec?'Vence cada período':'No vence'}</span></div>
+      </div>
+      <div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar billetera</label><div class="pills"><button class="pill ${!rec?'on':''}" data-ed="wallet" data-val="no_recurrente">No recurrente +12%</button><button class="pill ${rec?'on':''}" data-ed="wallet" data-val="recurrente">Recurrente +10%</button></div></div>
+      <div class="rfoot"><span data-i="info" data-sz="14"></span><div>El servicio se corta al agotar el saldo.</div></div>
+    </div>`;
+  }
+
+  /* --- PAGO ÚNICO --- */
+  const paq=(!withIA)||state.setupMode==='paquetizado';
+  const impTitle=paq?'Empaquetado Estándar':sp.name;
+  const impBig=paq?'Gratis':usd(s).replace('$','');
+  const impU=paq?'':'USD estimado';
+  const impTable=paq
+    ?`<div class="rr"><span class="k">Desarrollo (setup)</span><span class="v">Autogestionable</span></div><div class="rr"><span class="k">Integración</span><span class="v">Preconfigurado</span></div><div class="rr"><span class="k">Tiempo</span><span class="v">1 semana</span></div>`
+    :`<div class="rr"><span class="k">Desarrollo (setup)</span><span class="v">${sp.hh}</span></div><div class="rr"><span class="k">Integración</span><span class="v">${sp.endpoints}</span></div><div class="rr"><span class="k">Reuniones</span><span class="v">Hasta ${sp.sesDev} en desarrollo · ${sp.sesPost} post-entrega</span></div><div class="rr"><span class="k">Mantención mensual</span><span class="v">${sp.mant}</span></div>`;
+  const planEditor=withIA?`<div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar implementación</label><select data-ed="plan">
+      <option value="paquetizado" ${paq?'selected':''}>Rápida · paquetizado (gratis)</option>
+      ${SETUP_ORDER.map(k=>`<option value="${k}" ${(!paq&&state.setup===k)?'selected':''}>Acompañada · ${SETUP[k].name}</option>`).join('')}
+    </select></div>`:'';
+  const pagoCard=`
+    <div class="rcard"><span class="rlabel"><span data-i="bill" data-sz="14"></span>Pago único</span>
+      <div class="rsub">Implementación</div>
+      <div class="rtitle"><span data-i="tool" data-sz="18"></span>${impTitle}</div>
+      <div class="rdesc">${paq?'Autogestionable, sin acompañamiento. Buenas prácticas del mercado.':'Setup inicial, integraciones y acompañamientos post-entrega.'}</div>
+      <div class="rbig"><span class="n">${impBig}</span>${impU?`<span class="u">${impU}</span>`:''}</div>
+      <div class="rtable">${impTable}</div>
+      ${planEditor}
+    </div>`;
+
+  /* --- CASSPER · créditos + success fee --- */
+  let cassperCard='';
+  if(state.cassper){
+    const cp=casspPlan();
+    cassperCard=`
+    <div class="rcard"><span class="rlabel"><span data-i="search" data-sz="14"></span>Créditos${CASSPER_PLACEHOLDER?' · placeholder':''}</span>
+      <div class="rsub">Cassper · Recuperación</div>
+      <div class="rtitle"><span data-i="search" data-sz="18"></span>${cp.name}</div>
+      <div class="rdesc">Cobranza y recuperación. Plan mensual de créditos + success fee.</div>
+      <div class="rbig"><span class="n">${usd(cM).replace('$','')}</span><span class="u">/mes</span></div>
+      <div class="rtable">
+        <div class="rr"><span class="k">Créditos incluidos</span><span class="v">${cp.credits.toLocaleString('es-CL')} CR/mes</span></div>
+        <div class="rr"><span class="k">Success fee</span><span class="v">${CASSPER_SUCCESS!=null?CASSPER_SUCCESS+'% recuperado':'por confirmar'}</span></div>
+        <div class="rr"><span class="k">Créditos excedentes</span><span class="v">${CASSPER_EXCESS!=null?'+'+CASSPER_EXCESS+'% recargo':'por confirmar'}</span></div>
+        ${cSucc>0?`<div class="rr"><span class="k">Success fee estimado</span><span class="v">~${usd(cSucc)}/mes</span></div>`:''}
+      </div>
+      <div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar plan de créditos</label>
+        <select data-ed="casspPlan">${CASSPER_PLANS.map(p=>`<option value="${p.k}" ${p.k===state.cassperPlan?'selected':''}>${p.name} · ${p.credits.toLocaleString('es-CL')} CR · ${p.price===0?'Gratis':usd(p.price)+'/mes'}</option>`).join('')}</select>
+        ${CASSPER_SUCCESS!=null?`<input type="number" min="0" step="100" data-ed="casspRec" value="${state.cassperRecovered||''}" placeholder="Monto recuperado estimado/mes (USD)" style="margin-top:8px">`:''}</div>
+      <div class="rfoot"><span data-i="info" data-sz="14"></span><div>Consumo por gestión; excedentes con recargo. Success fee variable, aparte del MRR.</div></div>
+    </div>`;
+  }
+
+  if(!hasService()&&!state.cassper){
+    document.getElementById('sumCard').innerHTML=`<div class="rcard" style="text-align:center;padding:40px 24px"><div class="rtitle" style="color:var(--z400)">Sin servicios seleccionados</div><div class="rdesc" style="margin:10px auto 0">Vuelve al Nivel 1 y activa al menos un servicio (Desk, Studio o Cassper) para ver la cotización.</div></div>`;
+    return;
+  }
+  document.getElementById('sumCard').innerHTML=`
+    <div class="result-cards">${hasService()?mensualCard:''}${cassperCard}${prepagoCard}${withIA?pagoCard:''}</div>`;
+  paintIcons(document.getElementById('sumCard'));
+  applyReveal(document.getElementById('sumCard'),'.rcard');
+}
+
+function renderAll(){renderOpts();renderVol();renderSetup();renderWa();renderRail();renderSummary();renderRoi();}
+
+/* ===== ROI · caso de negocio (reciclado del cotizador) ===== */
+const ROI_DIAS=22, ROI_HORAS=8, ROI_CASSPER_FEE=5;
+function roiVolume(){if(!hasService())return 0;return state.studio?(state.volMode==='custom'?state.volCustom:state.vol):2000;}
+const ROI_CASES={
+ carrito:{macro:'Ventas',name:'Recuperación de carrito',tag:'Engage',note:'Ganancia = carritos abandonados × % recuperación × ticket medio.',
+   fields:[{id:'carritos',label:'Carritos abandonados / mes',vol:true,value:1000},{id:'recup',label:'% de recuperación esperado',value:10},{id:'ticket',label:'Ticket medio (USD)',value:50}],
+   gain:v=>v.carritos*(v.recup/100)*v.ticket},
+ cassper:{macro:'Ventas',name:'Recuperación de venta perdida',tag:'Cassper',note:'Venta perdida recuperada de forma conversacional = ventas caídas × % recuperación × ticket medio. El success fee de Cassper (sobre lo recuperado) se descuenta como costo.',
+   fields:[{id:'perdidas',label:'Ventas perdidas / caídas / mes',vol:true,value:800},{id:'recup',label:'% de recuperación conversacional',value:12},{id:'ticket',label:'Ticket medio (USD)',value:55}],
+   gain:v=>v.perdidas*(v.recup/100)*v.ticket,
+   cost:v=>v.perdidas*(v.recup/100)*v.ticket*(ROI_CASSPER_FEE/100),
+   extra:v=>{const rec=v.perdidas*(v.recup/100)*v.ticket;return 'Success fee Cassper ('+ROI_CASSPER_FEE+'%): '+usd(rec*ROI_CASSPER_FEE/100)+'/mes';}},
+ ventaautonoma:{macro:'Ventas',name:'Venta autónoma del bot',tag:'Studio',note:'El bot cierra la venta completa. Ganancia = conversaciones de venta × % conversión × ticket medio.',
+   fields:[{id:'convs',label:'Conversaciones de venta / mes',vol:true,value:2000},{id:'conv',label:'% de conversión (cierre autónomo)',value:15},{id:'ticket',label:'Ticket medio (USD)',value:60}],
+   gain:v=>v.convs*(v.conv/100)*v.ticket},
+ calificacion:{macro:'Ventas',name:'Calificación de leads',tag:'Engage / Studio',note:'El bot solo califica; el cierre lo hace un humano. Ganancia = leads × % calificados × % de cierre × ticket × % atribuible al bot.',
+   fields:[{id:'leads',label:'Leads / mes',vol:true,value:2000},{id:'calif',label:'% calificados por el bot',value:40},{id:'cierre',label:'% de cierre (sobre calificados)',value:20},{id:'ticket',label:'Ticket medio (USD)',value:60},{id:'atribucion',label:'% atribuible al bot',value:30}],
+   gain:v=>v.leads*(v.calif/100)*(v.cierre/100)*v.ticket*(v.atribucion/100),
+   extra:v=>{const cal=v.leads*(v.calif/100),cer=cal*(v.cierre/100);return Math.round(cal).toLocaleString('es-CL')+' leads calificados · '+Math.round(cer).toLocaleString('es-CL')+' ventas cerradas/mes';}},
+ outbound:{macro:'Ventas',name:'Campañas outbound / re-engage',tag:'Engage',note:'Ganancia = mensajes enviados × % conversión × ticket medio.',
+   fields:[{id:'mensajes',label:'Mensajes outbound / mes',vol:true,value:10000},{id:'conv',label:'% de conversión',value:2},{id:'ticket',label:'Ticket medio (USD)',value:40}],
+   gain:v=>v.mensajes*(v.conv/100)*v.ticket},
+ atencion:{macro:'Postventa',name:'Automatización de consultas',tag:'Desk / Studio',note:'Horas ahorradas = consultas × % automatizado × (min ÷ 60). Ahorro = horas × costo hora del ejecutivo (costo empresa ÷ días hábiles × horas/día), topeado por la capacidad del equipo.',
+   fields:[{id:'consultas',label:'Consultas atendidas / mes',vol:true,value:5000},{id:'auto',label:'% automatizado por IA',value:60},{id:'minutos',label:'Tiempo por consulta (min)',value:15},{id:'ejecutivos',label:'Cantidad de ejecutivos',value:5},{id:'costoEmpresa',label:'Costo empresa ejecutivo (USD/mes)',value:800}],
+   gain:v=>{const dh=ROI_DIAS*ROI_HORAS,ch=v.costoEmpresa/dh,h=v.consultas*(v.auto/100)*(v.minutos/60),cap=Math.max(v.ejecutivos,1)*dh;return Math.min(h,cap)*ch;},
+   extra:v=>{const dh=ROI_DIAS*ROI_HORAS,h=v.consultas*(v.auto/100)*(v.minutos/60),cap=Math.max(v.ejecutivos,1)*dh,he=Math.min(h,cap),fte=he/dh,tope=h>cap?' · topeado por capacidad':'';return Math.round(he).toLocaleString('es-CL')+' h ahorradas/mes · ~'+fte.toFixed(1)+' de '+v.ejecutivos+' FTE liberados'+tope;}},
+ sla:{macro:'Postventa',name:'Mejora de SLA / respuesta',tag:'Desk / Studio',note:'Fuga evitada por respuestas más rápidas = interacciones × % de fuga evitada × valor por interacción.',
+   fields:[{id:'interacciones',label:'Interacciones con SLA crítico / mes',vol:true,value:3000},{id:'fuga',label:'% de fuga evitada (respuesta rápida)',value:5},{id:'valor',label:'Valor por interacción salvada (USD)',value:30}],
+   gain:v=>v.interacciones*(v.fuga/100)*v.valor},
+ retencion:{macro:'Postventa',name:'Retención / anti-churn',tag:'Desk / Engage',note:'Clientes salvados = clientes en riesgo × % retenidos por IA. Ganancia = clientes salvados × valor de vida (LTV).',
+   fields:[{id:'riesgo',label:'Clientes en riesgo de fuga / mes',value:200},{id:'retenidos',label:'% retenidos por atención IA',value:20},{id:'ltv',label:'Valor de vida del cliente / LTV (USD)',value:300}],
+   gain:v=>v.riesgo*(v.retenidos/100)*v.ltv,
+   extra:v=>Math.round(v.riesgo*(v.retenidos/100))+' cliente(s) salvado(s)/mes'},
+ escalamiento:{macro:'Postventa',name:'Ahorro de escalamiento (FTE)',tag:'Desk / Studio',note:'Al crecer el volumen sin sumar personas: ahorro = agentes que no se contratan × sueldo mensual del agente.',
+   fields:[{id:'agentes',label:'Agentes que NO se contratan',value:3},{id:'sueldo',label:'Sueldo mensual del agente (USD)',value:800}],
+   gain:v=>v.agentes*v.sueldo,
+   extra:v=>v.agentes+' contratación(es) evitada(s)'},
+ cobranza:{macro:'Postventa',name:'Recuperación de cobranza',tag:'Studio / Desk',note:'Ganancia = monto en mora gestionado × % recuperación.',
+   fields:[{id:'mora',label:'Monto en mora gestionado / mes (USD)',value:50000},{id:'recup',label:'% de recuperación',value:15}],
+   gain:v=>v.mora*(v.recup/100)}
+};
+const ROI_ORDER=['ventaautonoma','carrito','calificacion','cassper','outbound','atencion','sla','retencion','escalamiento','cobranza'];
+function roiFieldDefault(f){if(f.vol){const dv=roiVolume();return dv>0?dv:f.value;}return f.value;}
+function roiVals(key){const cfg=ROI_CASES[key],st=state.roiVals[key]||{},v={};cfg.fields.forEach(f=>{v[f.id]=(st[f.id]!==undefined)?st[f.id]:roiFieldDefault(f);});return v;}
+function roiParse(x){const n=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
+function roiDefaultCost(){return monthly()+casspM();}
+function roiCostValue(){return (state.roiCostTouched&&state.roiCost!=null)?state.roiCost:roiDefaultCost();}
+
+function renderRoi(){
+  const el=document.getElementById('roiArea');if(!el)return;
+  let html='';
+  ['Ventas','Postventa'].forEach(macro=>{
+    html+=`<div class="roi-macro">${macro}</div><div class="roi-grid">`;
+    ROI_ORDER.filter(k=>ROI_CASES[k].macro===macro).forEach(k=>{
+      const cfg=ROI_CASES[k],on=!!state.roiActive[k],v=roiVals(k);
+      html+=`<div class="roi-card ${on?'on':''}">
+        <button class="roi-head" data-roi-toggle="${k}" aria-pressed="${on}">
+          <span class="roi-check">${on?'✓':''}</span>
+          <span class="roi-hmeta"><span class="roi-name">${cfg.name}</span><span class="roi-tag">${cfg.tag}</span></span>
+          ${on?`<span class="roi-badge" id="roiBadge_${k}">${usd(cfg.gain(v))}/mes</span>`:''}
+        </button>`;
+      if(on){
+        html+=`<div class="roi-body"><div class="roi-fields">`+cfg.fields.map(f=>`<div class="roi-f"><label>${f.label}</label><input type="number" min="0" step="any" data-roi-in="${k}:${f.id}" value="${v[f.id]}"></div>`).join('')+`</div>`;
+        if(cfg.extra)html+=`<div class="roi-extra" id="roiExtra_${k}">${cfg.extra(v)}</div>`;
+        html+=`<div class="roi-cnote">${cfg.note}</div></div>`;
+      }
+      html+=`</div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`<div class="roi-panel">
+    <div class="roi-panel-head"><span data-i="coin" data-sz="16"></span> Caso de negocio consolidado</div>
+    <div class="roi-panel-sub">Suma de todas las fuentes de valor activadas vs. la inversión mensual en Adereso.</div>
+    <div class="roi-stats">
+      <div class="roi-stat"><div class="rs-l">Ganancia total / mes</div><div class="rs-v" id="roiGain">$0</div></div>
+      <div class="roi-stat"><div class="rs-l">Inversión Adereso / mes (USD)</div><input type="number" min="0" step="any" id="roiCost" value="${Math.round(roiCostValue())}"><button class="roi-usecot" id="roiUseCot">usar total cotizado</button></div>
+      <div class="roi-stat hero"><div class="rs-l">ROI mensual</div><div class="rs-v" id="roiValue">0%</div></div>
+      <div class="roi-stat"><div class="rs-l">Ganancia neta / mes</div><div class="rs-v" id="roiNet">$0</div></div>
+    </div>
+    <div class="roi-fee" id="roiFeeLine" style="display:none"></div>
+    <div class="roi-empty" id="roiEmpty">Activa al menos un caso de uso para construir el business case.</div>
+    <div class="roi-cta"><button class="btn btn-primary" id="roiCopyBtn"><span data-i="copy"></span>Copiar caso de negocio</button></div>
+  </div>`;
+  el.innerHTML=html;paintIcons(el);applyReveal(el,'.roi-card,.roi-panel');
+  calcRoiNumbers();
+}
+function calcRoiNumbers(){
+  let totalGain=0,extraCost=0,active=false;
+  ROI_ORDER.forEach(k=>{if(!state.roiActive[k])return;active=true;const cfg=ROI_CASES[k],v=roiVals(k),g=cfg.gain(v);totalGain+=g;if(cfg.cost)extraCost+=cfg.cost(v);
+    const b=document.getElementById('roiBadge_'+k);if(b)b.textContent=usd(g)+'/mes';
+    if(cfg.extra){const ex=document.getElementById('roiExtra_'+k);if(ex)ex.textContent=cfg.extra(v);}
+  });
+  const cost=roiCostValue()+extraCost,net=totalGain-cost,roi=cost>0?(net/cost)*100:0,veces=cost>0?totalGain/cost:0;
+  const gEl=document.getElementById('roiGain');if(gEl)gEl.textContent=usd(totalGain);
+  const nEl=document.getElementById('roiNet');if(nEl){nEl.textContent=usd(net);nEl.classList.toggle('neg',net<0);}
+  const rEl=document.getElementById('roiValue');if(rEl){rEl.innerHTML=Math.round(roi).toLocaleString('es-CL')+'%'+((cost>0&&veces>0)?`<span class="roi-veces">${veces.toLocaleString('es-CL',{maximumFractionDigits:1})}× lo invertido</span>`:'');rEl.classList.toggle('neg',roi<0);}
+  const fee=document.getElementById('roiFeeLine');if(fee){if(extraCost>0){fee.style.display='';fee.textContent='Incluye success fee de Cassper: '+usd(extraCost)+'/mes (descontado de la ganancia).';}else fee.style.display='none';}
+  const emp=document.getElementById('roiEmpty');if(emp)emp.style.display=active?'none':'';
+}
+function roiCopy(){
+  const L=['CASO DE NEGOCIO · ROI Adereso',''];let totalGain=0,extraCost=0;
+  ROI_ORDER.forEach(k=>{if(!state.roiActive[k])return;const cfg=ROI_CASES[k],v=roiVals(k),g=cfg.gain(v);totalGain+=g;if(cfg.cost)extraCost+=cfg.cost(v);L.push('• '+cfg.name+' ('+cfg.tag+'): '+usd(g)+'/mes');});
+  const cost=roiCostValue()+extraCost,net=totalGain-cost,roi=cost>0?(net/cost)*100:0;
+  L.push('','Ganancia total: '+usd(totalGain)+'/mes','Inversión Adereso: '+usd(roiCostValue())+'/mes'+(extraCost>0?' (+ success fee '+usd(extraCost)+')':''),'ROI mensual: '+Math.round(roi)+'%','Ganancia neta: '+usd(net)+'/mes');
+  navigator.clipboard.writeText(L.join('\n')).then(()=>{const b=document.getElementById('roiCopyBtn'),o=b.innerHTML;b.innerHTML='<span data-i="check"></span>Copiado';paintIcons(b);setTimeout(()=>{b.innerHTML=o;paintIcons(b);},1600);});
+}
+document.getElementById('roiArea').addEventListener('click',e=>{
+  const t=e.target.closest('[data-roi-toggle]');
+  if(t){const k=t.dataset.roiToggle;state.roiActive[k]=!state.roiActive[k];renderRoi();return;}
+  if(e.target.closest('#roiUseCot')){state.roiCostTouched=false;state.roiCost=null;const ci=document.getElementById('roiCost');if(ci)ci.value=Math.round(roiDefaultCost());calcRoiNumbers();return;}
+  if(e.target.closest('#roiCopyBtn')){roiCopy();return;}
+});
+document.getElementById('roiArea').addEventListener('input',e=>{
+  const inp=e.target.closest('[data-roi-in]');
+  if(inp){const parts=inp.dataset.roiIn.split(':'),k=parts[0],fid=parts[1];if(!state.roiVals[k])state.roiVals[k]={};state.roiVals[k][fid]=roiParse(inp.value);calcRoiNumbers();return;}
+  if(e.target.closest('#roiCost')){state.roiCostTouched=true;state.roiCost=roiParse(e.target.value);calcRoiNumbers();return;}
+});
+
+/* nav */
+const KICK={s1:'Servicios',sc:'Canales',s2:'Volumen',s3:'Implementación',s4:'Billetera Adereso–Meta'};
+const NEXTLABEL={sc:'Continuar a canales',s2:'Continuar al volumen',s3:'Continuar a implementación',s4:'Continuar a la billetera',s5:'Ver resumen',s6:'Ver el retorno de la inversión',s7:'Ver el proceso comercial',s8:'Conocer el portal cliente'};
+function activeSections(){return SECTIONS.filter(id=>(id!=='sc'||hasService())&&(id!=='s2'||hasService())&&(id!=='s3'||state.studio)&&(id!=='s4'||waActive()));}
+function buildNav(){
+  const secs=activeSections();
+  document.getElementById('secnav').innerHTML=secs.map((id,i)=>{const t=document.getElementById(id).dataset.title;return `<button class="snav" data-goto="${id}"><span class="num">${i+1}</span>${t}<span class="bar"></span></button>`;}).join('');
+}
+function refreshFlow(){
+  document.getElementById('sc').classList.toggle('hidden',!hasService());
+  document.getElementById('s2').classList.toggle('hidden',!hasService());
+  document.getElementById('s3').classList.toggle('hidden',!state.studio);
+  document.getElementById('s4').classList.toggle('hidden',!waActive());
+  const secs=activeSections();
+  buildNav();
+  secs.forEach((id,i)=>{const sec=document.getElementById(id);const k=sec.querySelector('.level-kicker');if(k&&KICK[id])k.textContent='Nivel '+(i+1)+' · '+KICK[id];
+    const btn=sec.querySelector('.continue button');const nx=secs[i+1];if(btn&&nx){btn.dataset.next=nx;btn.innerHTML=(NEXTLABEL[nx]||'Continuar')+' <span data-i="down"></span>';paintIcons(btn);}});
+}
+function setActive(id){
+  const secs=activeSections();const i=secs.indexOf(id);if(i<0)return;
+  document.querySelectorAll('.snav').forEach(el=>el.classList.toggle('active',el.dataset.goto===id));
+  document.getElementById('pfill').style.width=((i+1)/secs.length*100)+'%';
+  document.querySelectorAll('section.lvl').forEach(s=>s.classList.toggle('dim',s.id!==id));
+}
+function nextVisibleFrom(id){const secs=activeSections();if(secs.includes(id))return id;const all=SECTIONS.indexOf(id);for(let j=all+1;j<SECTIONS.length;j++){if(secs.includes(SECTIONS[j]))return SECTIONS[j];}return 's5';}
+
+/* events */
+document.getElementById('modgrid').addEventListener('click',e=>{
+  const c=e.target.closest('[data-mod]');if(!c)return;
+  const k=c.dataset.mod,m=MODULES.find(x=>x.k===k);
+  if(m.locked||m.soon)return;
+  state[k]=!state[k];
+  if(k==='desk'&&!state.desk){state.whatsapp=false;state.engage=false;}
+  if(k==='engage'&&state.engage&&!state.out.correo&&!state.out.whatsapp)state.out.correo=true;
+  if(k==='studio'&&state.studio&&!SETUP[state.setup])state.setup='inteligente';
+  renderMods();renderAll();refreshFlow();
+});
+document.getElementById('optWa').addEventListener('click',e=>{
+  const o=e.target.closest('[data-out]');
+  if(o){state.out[o.dataset.out]=!state.out[o.dataset.out];renderAll();refreshFlow();return;}
+  const b=e.target.closest('[data-chan]');if(!b)return;
+  const k=b.dataset.chan;
+  if(k==='whatsapp'){state.whatsapp=!state.whatsapp;}
+  else{state.chan[k]=!state.chan[k];}
+  renderMods();renderAll();refreshFlow();
+});
+document.getElementById('volArea').addEventListener('click',e=>{const t=e.target.closest('[data-vol]');if(!t)return;state.vol=+t.dataset.vol;state.volMode='tile';state.volCustom=0;renderVol();renderRail();renderSummary();});
+document.getElementById('volArea').addEventListener('input',e=>{
+  const inp=e.target.closest('[data-vol-custom]');if(!inp)return;
+  const raw=+inp.value||0;
+  if(raw>0){state.volMode='custom';state.volCustom=raw;}else{state.volMode='tile';state.volCustom=0;}
+  document.querySelectorAll('#volArea .vtile').forEach(t=>t.classList.toggle('sel',state.volMode==='tile'&&+t.dataset.vol===state.vol));
+  document.getElementById('vcustom')?.classList.toggle('sel',state.volMode==='custom');
+  const cp=document.getElementById('customPrice');if(cp)cp.textContent=state.volMode==='custom'?raw.toLocaleString('es-CL'):'—';
+  renderRail();renderSummary();
+});
+document.getElementById('setupArea').addEventListener('click',e=>{
+  const mode=e.target.closest('[data-smode]');
+  if(mode){state.setupMode=mode.dataset.smode;renderSetup();renderRail();renderSummary();return;}
+  const p=e.target.closest('[data-setup]');if(!p)return;state.setup=p.dataset.setup;renderSetup();renderRail();renderSummary();
+});
+document.getElementById('waArea').addEventListener('click',e=>{
+  if(e.target.closest('[data-wa-reset]')){state.wa.service=0;state.wa.marketing=0;state.wa.utility=0;state.wa.authentication=0;state.wa.minutes=0;renderWa();renderRail();renderSummary();return;}
+  const act=e.target.closest('[data-act]');
+  if(act){const a=act.dataset.act;
+    if(a==='engage'){state.engage=true;state.out.whatsapp=true;}
+    else if(a==='out-wa'){state.out.whatsapp=true;}
+    renderMods();renderOpts();renderWa();renderRail();renderSummary();refreshFlow();return;}
+  const cty=e.target.closest('[data-cty]');
+  if(cty){state.wa.country=cty.dataset.cty;renderWa();renderRail();renderSummary();return;}
+  const w=e.target.closest('[data-wallet]');if(!w)return;
+  state.wa.wallet=w.dataset.wallet;renderWa();renderRail();renderSummary();
+});
+document.getElementById('waArea').addEventListener('input',e=>{const inp=e.target.closest('[data-wa-in]');if(!inp)return;state.wa[inp.dataset.waIn]=Math.max(0,+inp.value||0);renderWaLive();renderRail();renderSummary();});
+document.getElementById('mSum').addEventListener('click',()=>document.getElementById('mDetail').classList.toggle('open'));
+document.getElementById('sumCard').addEventListener('input',e=>{
+  const el=e.target.closest('[data-ed]');if(!el)return;const t=el.dataset.ed;
+  if(t==='vol'){const raw=+el.value||0;if(raw>0){state.volMode='custom';state.volCustom=raw;}renderVol();renderRail();renderSummary();const n=document.querySelector('#sumCard [data-ed="vol"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
+  else if(t==='plan'){const val=el.value;if(val==='paquetizado'){state.setupMode='paquetizado';}else{state.setupMode='acompanada';state.setup=val;}renderSetup();renderRail();renderSummary();}
+  else if(t==='casspPlan'){state.cassperPlan=el.value;renderRail();renderSummary();}
+  else if(t==='casspRec'){state.cassperRecovered=Math.max(0,+el.value||0);renderSummary();const n=document.querySelector('#sumCard [data-ed="casspRec"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
+});
+document.getElementById('sumCard').addEventListener('click',e=>{
+  const w=e.target.closest('[data-ed="wallet"]');if(!w)return;
+  state.wa.wallet=w.dataset.val;renderWa();renderRail();renderSummary();
+});
+document.body.addEventListener('click',e=>{const b=e.target.closest('[data-next],[data-goto]');if(!b)return;const id=nextVisibleFrom(b.dataset.next||b.dataset.goto);document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});});
+
+document.getElementById('copyBtn').addEventListener('click',()=>{
+  const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
+  const cM=casspM(),cSucc=casspSuccessEst();
+  const impl=state.studio?(state.setupMode==='paquetizado'?'Rápida sin acompañamiento (paquetizado) — Gratis':SETUP[state.setup].name+' (acompañada) — '+usd(s)):'Estándar (sin IA) — Gratis';
+  const L=['COTIZACIÓN ADERESO','─────────────────────'];
+  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push('Mensual (contrato anual): '+usd(m)+'/mes');}
+  if(state.studio)L.push('Implementación: '+impl+' (pago único)');
+  if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
+  if(waActive())L.push('WhatsApp/Meta ('+waP().name+'): '+(meta==null?'tarifa por confirmar':'costo Meta ~'+usd(metaBase())+' + fee Adereso '+(state.wa.wallet==='recurrente'?'10':'12')+'% = ~'+usd(meta)+'/mes')+' · '+([state.whatsapp?'service':'',waTemplates()?'plantillas':'',waCalls()?'llamadas':''].filter(Boolean).join(' + ')));
+  L.push('─────────────────────','Inversión primer mes: '+usd(s+m+cM+(meta||0)+cSucc)+(meta==null?' (+ Meta por confirmar)':''),'Valor contrato 12 meses: '+usd((m+cM)*12+s));
+  navigator.clipboard.writeText(L.join('\n')).then(()=>{const b=document.getElementById('copyBtn'),o=b.innerHTML;b.innerHTML='<span data-i="check"></span>Copiado';paintIcons(b);setTimeout(()=>{b.innerHTML=o;paintIcons(b);},1600);});
+});
+
+/* scroll-spy + colapso de header (un solo listener) */
+const topbar=document.querySelector('.topbar');let _sc=false,_spy=false;
+function computeActive(){
+  const secs=activeSections();if(!secs.length)return;
+  const mid=window.innerHeight/2;let best=secs[0],bestD=Infinity;
+  secs.forEach(id=>{const el=document.getElementById(id);if(!el||el.classList.contains('hidden'))return;
+    const r=el.getBoundingClientRect();const c=r.top+r.height/2;const d=Math.abs(c-mid);
+    if(d<bestD){bestD=d;best=id;}});
+  setActive(best);
+}
+function onScroll(){
+  const s=window.scrollY>48;if(s!==_sc){_sc=s;topbar.classList.toggle('scrolled',s);}
+  const tb=document.getElementById('topBtn');if(tb)tb.classList.toggle('show',window.scrollY>420);
+  if(!_spy){_spy=true;requestAnimationFrame(()=>{_spy=false;computeActive();});}
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('resize',onScroll,{passive:true});
+
+/* popups para explicar pricing */
+const POPS={
+ conversacion:{title:'¿Qué contempla una conversación?',html:`
+   <div class="chatmock">
+     <div class="cm-head"><span class="cm-dot"></span>Chat · una conversación</div>
+     <div class="bubble cli"><span class="who">Cliente</span>Hola, ¿pueden ayudarme con mi pedido?</div>
+     <div class="bubble emp"><span class="who">Agente IA</span>¡Claro! ¿Me compartes tu número de orden?</div>
+     <div class="bubble cli"><span class="who">Cliente</span>Es el 4821, no me ha llegado.</div>
+     <div class="cm-hand">la IA deriva a un ejecutivo</div>
+     <div class="bubble emp"><span class="who">Ejecutivo</span>Soy Ana, ya estoy revisando tu caso.</div>
+     <div class="cm-foot">Todo dentro de 24 h = 1 sola conversación</div>
+   </div>
+   <div class="mrow"><span class="mn">01</span><div><div class="mt">Interacciones ilimitadas</div><div class="md">Todos los mensajes del agente IA y/o humano dentro del ticket. (Excepto WhatsApp.)</div></div></div>
+   <div class="mrow"><span class="mn">02</span><div><div class="mt">Derivación de IA a ejecutivo</div><div class="md">El traspaso a una persona sigue siendo la misma conversación.</div></div></div>
+   <div class="mrow"><span class="mn">03</span><div><div class="mt">Ventana de 24 horas</div><div class="md">Desde el último mensaje del cliente: todo lo que ocurra dentro de esa ventana es una sola conversación.</div></div></div>
+   <div class="mrow plain"><span class="mn">✓</span><div><div class="mt">Mínimo mensual: 2.000</div><div class="md">La bolsa inbound parte en 2.000 conversaciones al mes.</div></div></div>`},
+ billetera:{title:'Billetera Adereso–Meta',html:`
+   <p style="margin-bottom:14px;color:var(--z400)">Prepago, sin tarjeta de crédito, para la comunicación proactiva por WhatsApp. El fee de Adereso aplica al consumo de plantillas (Engage). Los mensajes service (Desk/Studio) incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads.</p>
+   <div class="mgrid2">
+     <div class="mbox"><h4>Recurrente <span class="mfee">10%</span></h4><ul><li>• Se renueva cada período</li><li>• Vence al final del período</li><li>• Saldo no usado se pierde</li><li>• Consumo estable y predecible</li></ul></div>
+     <div class="mbox"><h4>No recurrente <span class="mfee">12%</span></h4><ul><li>• No vence, se acumula mes a mes</li><li>• Servicio se corta al agotar saldo</li><li>• Mismo fee toda la billetera</li><li>• Consumo variable o estacional</li></ul></div>
+   </div>
+   <div class="mrow plain" style="margin-top:6px"><span class="mn">i</span><div><div class="md">Los mensajes service incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads. El costo de Meta por plantilla varía según el país; el fee de Adereso se suma según la billetera (10% recurrente / 12% no recurrente).</div></div></div>`},
+ incluido:{title:'Incluido siempre, sin costo extra',html:`
+   <p style="margin-bottom:14px;color:var(--z400)"><b>La conexión de todos los canales es gratuita:</b></p>
+   <div class="chips">`+['WhatsApp','Webchat','Correo','Instagram','Facebook','LinkedIn','TikTok','X','Licencias humanas ilimitadas','Experience · encuestas','Engage · plantillas','Métricas y analítica','Soporte básico'].map(c=>`<span class="chip">${c}</span>`).join('')+`</div>
+   <div class="mrow plain" style="margin-top:14px"><span class="mn">$</span><div><div class="mt">El uso de algunos canales se cobra aparte</div><div class="md">WhatsApp (billetera Adereso–Meta) y X tienen tarifa de uso según el proveedor. El resto de canales no tiene costo de uso.</div></div></div>`},
+ cassper:{title:'Cassper · planes de créditos',html:`
+   <p style="margin-bottom:14px;color:var(--z400)">Cobranza y recuperación con IA. Se cobra con un plan mensual de créditos (CR); cada gestión consume créditos.</p>
+   <div class="mrow plain"><span class="mn">F</span><div><div class="mt">Free · 500 CR · Gratis</div><div class="md">Validar el valor de Cassper antes de contratar.</div></div></div>
+   <div class="mrow plain"><span class="mn">S</span><div><div class="mt">Starter · 2.300 CR · US$250/mes</div><div class="md">Bajo volumen, ticket promedio alto.</div></div></div>
+   <div class="mrow plain"><span class="mn">G</span><div><div class="mt">Growth · 4.800 CR · US$500/mes</div><div class="md">Ventas recurrentes: recuperar más sin ampliar el equipo.</div></div></div>
+   <div class="mrow plain"><span class="mn">%</span><div><div class="md">Sobre este plan se aplica un success fee y un recargo por créditos excedentes (por confirmar).</div></div></div>`},
+ buenaspracticas:{title:'Buenas prácticas para iniciar el desarrollo',html:`
+   <p style="margin-bottom:14px;color:var(--z400)">Lo que el comercial siempre recomienda y alerta para que la implementación fluya.</p>
+   <div class="mrow"><span class="mn">01</span><div><div class="mt">Definir un encargado del proyecto</div><div class="md">Una contraparte responsable de coordinar de su lado.</div></div></div>
+   <div class="mrow"><span class="mn">02</span><div><div class="mt">Documentación, flujos y APIs listos antes de empezar</div><div class="md">Es lo que más acelera (o frena) el arranque.</div></div></div>
+   <div class="mrow"><span class="mn">03</span><div><div class="mt">Subir toda la documentación al portal</div><div class="md">Todo centralizado y accesible para el equipo.</div></div></div>
+   <div class="mrow"><span class="mn">04</span><div><div class="mt">Feedback y QA continuo del agente</div><div class="md">Liderado por el project manager durante el desarrollo.</div></div></div>
+   <div class="mrow"><span class="mn">05</span><div><div class="mt">Respetar el alcance pactado en la propuesta</div><div class="md">Lo fuera de alcance se cotiza aparte, después del inicio.</div></div></div>
+   <div class="mrow"><span class="mn">06</span><div><div class="mt">Medir los KPIs dentro del portal</div><div class="md">Seguimiento del éxito con las métricas definidas en el kick off.</div></div></div>`}
+};
+function openModal(key){const p=POPS[key];if(!p)return;document.getElementById('modalTitle').textContent=p.title;document.getElementById('modalBody').innerHTML=p.html;document.getElementById('modalBack').classList.add('open');}
+function closeModal(){document.getElementById('modalBack').classList.remove('open');}
+document.getElementById('modalX').addEventListener('click',closeModal);
+document.getElementById('modalBack').addEventListener('click',e=>{if(e.target.id==='modalBack')closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.body.addEventListener('click',e=>{const p=e.target.closest('[data-pop]');if(p){e.preventDefault();openModal(p.dataset.pop);}});
+
+/* ===== Portal cliente · mockup interactivo ===== */
+const WIZ_STEPS=[
+ {label:'Bienvenida',status:'done',desc:'Datos básicos para personalizar tu agente desde el día uno.',cards:[{type:'field',title:'Nombre de tu bot',hint:'Ej: Asistente de ventas'},{type:'field',title:'Sitio de tu empresa',hint:'https://tuempresa.com'}]},
+ {label:'Canales',status:'done',desc:'Marca los canales por donde va a atender tu agente.',cards:[{type:'tile',icon:'wa',title:'WhatsApp'},{type:'tile',icon:'msg',title:'Webchat'},{type:'tile',icon:'mega',title:'Instagram'}]},
+ {label:'Conocimiento',status:'now',desc:'De aquí saca las respuestas. Sube todo lo que tengas: mientras más, mejor responde.',cards:[{type:'drop',icon:'doc',title:'Documentos',hint:'Arrastra PDF, Word, Excel · hasta 20 MB c/u'},{type:'drop',icon:'search',title:'Tu sitio web',hint:'Pega la URL · lo leemos nosotros'},{type:'drop',icon:'edit',title:'Info del negocio',hint:'Políticas, horarios, cobertura'}]},
+ {label:'Flujos',status:'',desc:'Confirma los flujos que armamos desde tu propuesta comercial.',cards:[{type:'tile',icon:'check',title:'Confirmar flujos'},{type:'drop',icon:'doc',title:'Adjuntar diagrama',hint:'Imagen, PDF, Visio o Miro'}]},
+ {label:'APIs',status:'',desc:'Conecta tus sistemas para que el bot consulte pedidos, agende o cree tickets.',cards:[{type:'drop',icon:'tool',title:'Postman / Swagger',hint:'Arrastra .json, .yaml, .pdf'},{type:'field',title:'Describir la API',hint:'Alternativa en simple'}]},
+ {label:'Métricas',status:'',desc:'Elige los KPIs de éxito que revisaremos juntos en el proyecto.',cards:[{type:'tile',icon:'chart',title:'Resolución automática'},{type:'tile',icon:'chart',title:'CSAT'},{type:'tile',icon:'chart',title:'Tiempo de respuesta'}]},
+ {label:'Inicio de desarrollo',status:'',desc:'Confirma el alcance y acepta términos para que el equipo arranque.',cards:[{type:'tile',icon:'check',title:'Confirmar alcance'},{type:'tile',icon:'info',title:'Aceptar términos'}]},
+ {label:'QA',status:'',desc:'Revisa y valida el agente antes del go live.',cards:[{type:'tile',icon:'robot',title:'Revisar agente'},{type:'tile',icon:'check',title:'Aprobar'}]},
+ {label:'Go Live',status:'',desc:'Puesta en marcha del agente en producción.',cards:[{type:'tile',icon:'bolt',title:'Puesta en marcha'}]}
+];
+const QA_ITEMS=[
+ {q:'El bot no reconoce el horario de despacho a regiones',status:'proceso'},
+ {q:'La respuesta de política de devolución quedaba incompleta',status:'resuelto'},
+ {q:'Usar un tono más cercano en el saludo inicial',status:'proceso'},
+ {q:'Confundía "boleta" con "factura"',status:'resuelto'},
+ {q:'Debe derivar a un humano en reclamos formales',status:'proceso'},
+ {q:'El link de seguimiento de pedido llegaba roto',status:'resuelto'}
+];
+const PORTAL_VIEWS={
+ onboarding:()=>{
+   const wi=Math.min(state.portalWiz,WIZ_STEPS.length-1),cur=WIZ_STEPS[wi];
+   const done=WIZ_STEPS.filter(s=>s.status==='done').length,pct=Math.round((done+0.5)/WIZ_STEPS.length*100);
+   const chips=WIZ_STEPS.map((s,i)=>`<button class="wiz-step ${s.status} ${i===wi?'sel':''}" data-wiz="${i}"><span class="wiz-ic">${s.status==='done'?'✓':(s.status==='now'?'●':(i+1))}</span>${s.label}</button>`).join('');
+   const cards=(cur.cards||[]).map(c=>{
+     if(c.type==='drop')return `<div class="oc oc-drop"><span class="oc-ic"><span data-i="${c.icon}" data-sz="18"></span></span><div class="oc-t">${c.title}</div><div class="oc-h">${c.hint}</div></div>`;
+     if(c.type==='field')return `<div class="oc oc-field"><div class="oc-lbl">${c.title}</div><div class="oc-input">${c.hint}</div></div>`;
+     return `<div class="oc oc-tile"><span class="oc-ic"><span data-i="${c.icon}" data-sz="18"></span></span><div class="oc-t">${c.title}</div></div>`;
+   }).join('');
+   return `<div class="portal-mhead"><div><div class="portal-mtitle">Onboarding de tu agente</div><div class="portal-msub">Mientras más nos cuentes, más rápido queda respondiendo por ti.</div></div><span class="portal-plan">${pct}% completado</span></div>
+     <div class="wiz-bar"><div class="wiz-fill" style="width:${pct}%"></div></div>
+     <div class="wiz-steps">${chips}</div>
+     <div class="wiz-cur-h">Fase · ${cur.label}</div>
+     <div class="wiz-cur-b">${cur.desc}</div>
+     <div class="oc-grid">${cards}</div>`;
+ },
+ qa:()=>{
+   const open=QA_ITEMS.filter((it,i)=>!(it.status==='resuelto'||state.qaFixed[i])).length;
+   const cards=QA_ITEMS.map((it,i)=>{
+     const ok=it.status==='resuelto'||state.qaFixed[i];
+     return `<div class="qa-card ${ok?'ok':''}"><div class="qa-top"><span class="qa-chip ${ok?'ok':'wip'}">${ok?'Resuelto':'En proceso de mejora'}</span></div><div class="qa-q">${it.q}</div><button class="qa-fix" data-qa-fix="${i}" ${ok?'disabled':''}><span data-i="tool" data-sz="13"></span>${ok?'Listo':'Fix'}</button></div>`;
+   }).join('');
+   return `<div class="portal-mhead"><div><div class="portal-mtitle">QA · solicitudes del cliente</div><div class="portal-msub">Ajustes y mejoras al agente, con seguimiento hasta resolverlos.</div></div><span class="portal-plan">${open} abiertas</span></div>
+     <div class="qa-grid">${cards}</div>`;
+ },
+ status:()=>`<div class="portal-mhead"><div><div class="portal-mtitle">Status del proyecto</div><div class="portal-msub">Así va tu setup, el progreso y lo que queda por consumir.</div></div><span class="portal-plan">Plan 2 · Inteligente</span></div>
+   <div class="portal-stats">
+     <div class="pstat"><div class="ps-n">12</div><div class="ps-l">Días desde kickoff</div></div>
+     <div class="pstat"><div class="ps-n">1/3</div><div class="ps-l">Reuniones</div></div>
+     <div class="pstat"><div class="ps-n">1/4</div><div class="ps-l">Endpoints</div></div>
+     <div class="pstat"><div class="ps-n">9/30</div><div class="ps-l">HH de setup</div></div>
+   </div>
+   <div class="portal-phases">
+     <div class="pphase done"><span class="pp-ic">✓</span>Kickoff & levantamiento<span class="pp-tag">Completado</span></div>
+     <div class="pphase done"><span class="pp-ic">✓</span>Carga de documentos<span class="pp-tag">Completado</span></div>
+     <div class="pphase now"><span class="pp-ic">●</span>Integración API REST<span class="pp-tag">En curso · 2/9 HH</span></div>
+     <div class="pphase"><span class="pp-ic">○</span>Configuración IA conversacional<span class="pp-tag">Pendiente</span></div>
+     <div class="pphase"><span class="pp-ic">○</span>QA & Go Live<span class="pp-tag">Pendiente</span></div>
+   </div>`,
+ cronograma:()=>`<div class="portal-mhead"><div><div class="portal-mtitle">Cronograma del proyecto</div><div class="portal-msub">Plazos por semana y avance en una vista.</div></div><span class="portal-plan">3 semanas</span></div>
+   <div class="gantt">
+     <div class="gantt-head"><span>Fase</span><span>Sem 1</span><span>Sem 2</span><span>Sem 3</span></div>
+     <div class="gantt-row"><span class="g-lbl">Kickoff & levantamiento</span><span class="g-track"><span class="g-bar done" style="grid-column:1/2">100%</span></span></div>
+     <div class="gantt-row"><span class="g-lbl">Base de conocimiento</span><span class="g-track"><span class="g-bar done" style="grid-column:1/3">100%</span></span></div>
+     <div class="gantt-row"><span class="g-lbl">Configuración IA conversacional</span><span class="g-track"><span class="g-bar now" style="grid-column:1/3">60%</span></span></div>
+     <div class="gantt-row"><span class="g-lbl">Integración APIs (BFF)</span><span class="g-track"><span class="g-bar now" style="grid-column:2/4">55%</span></span></div>
+     <div class="gantt-row"><span class="g-lbl">Validación y aprobación</span><span class="g-track"><span class="g-bar pend" style="grid-column:3/4">0%</span></span></div>
+     <div class="gantt-row"><span class="g-lbl">QA & Go Live</span><span class="g-track"><span class="g-bar pend" style="grid-column:3/4">0%</span></span></div>
+   </div>`,
+ placeholder:(name)=>`<div class="portal-empty"><span class="pe-ic"><span data-i="clock" data-sz="22"></span></span><div class="pe-t">${name}</div><div class="pe-s">Sección del portal · se habilita a medida que avanza tu proyecto.</div></div>`
+};
+const PORTAL_LABELS={onboarding:'Onboarding',status:'Status del proyecto',cronograma:'Cronograma',qa:'QA',bots:'Bots',sops:'SOPs',equipo:'Equipo'};
+function renderPortal(){
+  const main=document.getElementById('portalMain');if(!main)return;
+  const v=state.portalView||'onboarding';
+  document.querySelectorAll('#portalNav .pnav').forEach(b=>b.classList.toggle('active',b.dataset.portalView===v));
+  const urlEl=document.getElementById('portalUrl');if(urlEl)urlEl.textContent='portal.adereso.ai · '+(PORTAL_LABELS[v]||'');
+  main.innerHTML=PORTAL_VIEWS[v]?PORTAL_VIEWS[v]():PORTAL_VIEWS.placeholder(PORTAL_LABELS[v]||'Sección');
+  paintIcons(main);
+}
+document.getElementById('portalNav').addEventListener('click',e=>{
+  const b=e.target.closest('[data-portal-view]');if(!b)return;
+  state.portalView=b.dataset.portalView;renderPortal();
+});
+document.getElementById('portalMain').addEventListener('click',e=>{
+  const qf=e.target.closest('[data-qa-fix]');
+  if(qf){state.qaFixed[qf.dataset.qaFix]=true;renderPortal();return;}
+  const w=e.target.closest('[data-wiz]');if(!w)return;
+  state.portalWiz=+w.dataset.wiz;renderPortal();
+});
+
+/* reset + volver arriba */
+function resetAll(){
+  Object.assign(state,JSON.parse(JSON.stringify(INITIAL_STATE)));
+  renderMods();renderAll();refreshFlow();renderPortal();paintIcons();setActive('s1');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('resetBtn').addEventListener('click',resetAll);
+document.getElementById('topBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+/* init */
+buildNav();renderMods();renderAll();refreshFlow();paintIcons();setActive('s1');observeReveals();renderPortal();
+</script>
+</body>
+</html>
