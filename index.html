@@ -178,14 +178,28 @@
   /* Proceso comercial */
   .proc{margin-top:10px}
   .proc-track{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;position:relative}
-  .proc-track::before{content:'';position:absolute;top:28px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,rgba(255,213,64,0.45),var(--brand));border-radius:2px;z-index:0}
+  .proc-track::before{content:'';position:absolute;top:28px;left:7%;right:7%;height:3px;background:rgba(255,213,64,0.18);border-radius:2px;z-index:0}
+  .proc-track::after{content:'';position:absolute;top:28px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,rgba(255,213,64,0.55),var(--brand));border-radius:2px;z-index:0;transform-origin:left center;transform:scaleX(0);transition:transform 2.6s var(--ease)}
+  .proc-track.lit::after{transform:scaleX(1)}
   .proc-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
-  .proc-ico{width:56px;height:56px;border-radius:999px;background:var(--brand);color:#000;display:grid;place-items:center;box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18)}
+  .proc-ico{width:56px;height:56px;border-radius:999px;background:var(--brand);color:#000;display:grid;place-items:center;box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18);opacity:.38;filter:saturate(.25)}
+  .proc-track.lit .proc-ico{animation:procLight .75s var(--ease) both}
+  .proc-track.lit .proc-step:nth-child(1) .proc-ico{animation-delay:0s}
+  .proc-track.lit .proc-step:nth-child(2) .proc-ico{animation-delay:.3s}
+  .proc-track.lit .proc-step:nth-child(3) .proc-ico{animation-delay:.6s}
+  .proc-track.lit .proc-step:nth-child(4) .proc-ico{animation-delay:.9s}
+  .proc-track.lit .proc-step:nth-child(5) .proc-ico{animation-delay:1.2s}
+  .proc-track.lit .proc-step:nth-child(6) .proc-ico{animation-delay:1.5s}
+  .proc-track.lit .proc-step:nth-child(7) .proc-ico{animation-delay:1.8s}
+  @keyframes procLight{0%{opacity:.38;filter:saturate(.25);transform:scale(.92)}60%{opacity:1;filter:none;transform:scale(1.06);box-shadow:0 0 0 5px #0C0C0D,0 0 16px 3px rgba(255,213,64,0.5)}100%{opacity:1;filter:none;transform:scale(1);box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18)}}
+  @media(prefers-reduced-motion:reduce){.proc-ico{opacity:1;filter:none}.proc-track::after{transition:none;transform:scaleX(1)}.proc-track.lit .proc-ico{animation:none}}
   .proc-n{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);font-weight:600}
   .proc-txt{font-size:12px;color:var(--z300);line-height:1.35}
   @media(max-width:760px){
     .proc-track{grid-template-columns:1fr;gap:0}
     .proc-track::before{top:14px;bottom:14px;left:27px;right:auto;width:3px;height:auto}
+    .proc-track::after{top:14px;bottom:14px;left:27px;right:auto;width:3px;height:auto;background:linear-gradient(180deg,rgba(255,213,64,0.55),var(--brand));transform-origin:top center;transform:scaleY(0)}
+    .proc-track.lit::after{transform:scaleY(1)}
     .proc-step{flex-direction:row;text-align:left;gap:15px;padding:10px 0;align-items:center}
     .proc-ico{width:48px;height:48px;flex:none}
     .proc-txt{font-size:13.5px;color:#fff}
@@ -420,6 +434,7 @@
   .wallet .wd{font-size:12px;color:var(--z500);margin-top:4px}
   .divider{height:1px;background:var(--b-subtle);margin:2px 0}
   .wa-reset-row{margin-top:2px;display:flex;justify-content:flex-end}
+  .wa-reset-row .linkbtn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
   @media(max-width:560px){.wallet-opts{grid-template-columns:1fr}}
 
   /* summary */
@@ -1057,8 +1072,8 @@ function renderWa(){
   }
   html+=`<div class="divider"></div>
     <div class="field"><label>Tipo de billetera Adereso–Meta <span class="u">— define el fee de Adereso</span></label><div class="wallet-opts">
-      <button class="wallet ${state.wa.wallet==='recurrente'?'sel':''}" data-wallet="recurrente"><div class="wt">Recurrente <span class="wfee">+10%</span></div><div class="wd">Se renueva cada período. Saldo no usado se pierde. Consumo estable.</div></button>
-      <button class="wallet ${state.wa.wallet==='no_recurrente'?'sel':''}" data-wallet="no_recurrente"><div class="wt">No recurrente <span class="wfee">+12%</span></div><div class="wd">Saldo no vence, se acumula. Consumo variable o estacional.</div></button>
+      <button class="wallet ${state.wa.wallet==='recurrente'?'sel':''}" data-wallet="recurrente"><div class="wt">Recurrente <span class="wfee">+10%</span></div><div class="wd">Se renueva cada período. Consumo estable. No vence de inmediato: puedes usarlo hasta tu último período de facturación.</div></button>
+      <button class="wallet ${state.wa.wallet==='no_recurrente'?'sel':''}" data-wallet="no_recurrente"><div class="wt">Spot <span class="wfee">+12%</span></div><div class="wd">Saldo no vence, se acumula. Consumo variable o estacional.</div></button>
     </div></div>
     <div id="waLive"></div>
     <div class="wa-reset-row"><button class="linkbtn" data-wa-reset><span data-i="reset" data-sz="13"></span> Reiniciar valores de la simulación</button></div>
@@ -1082,7 +1097,7 @@ function renderWaLive(){
 function selService(){return !hasService()?'—':(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk');}
 function selVol(){return !hasService()?'—':(!state.studio?'2.000 conv (base)':(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' conv':state.vol.toLocaleString('es-CL')+' conv'));}
 function selImpl(){return !state.studio?'Estándar (sin IA)':(state.setupMode==='paquetizado'?'Rápida · paquetizado':'Acompañada · '+SETUP[state.setup].name);}
-function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)parts.push('service');if(waTemplates())parts.push('plantillas');if(waCalls())parts.push('llamadas');return 'Sí · '+(state.wa.wallet==='recurrente'?'recurrente 10%':'no recurrente 12%')+' · '+parts.join(' + ');}
+function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)parts.push('service');if(waTemplates())parts.push('plantillas');if(waCalls())parts.push('llamadas');return 'Sí · '+(state.wa.wallet==='recurrente'?'recurrente 10%':'spot 12%')+' · '+parts.join(' + ');}
 function selCassper(){return state.cassper?('Sí · '+casspPlan().name):'No';}
 
 function renderRail(){
@@ -1133,8 +1148,8 @@ function renderSummary(){
     prepagoCard=`
     <div class="rcard"><span class="rlabel"><span data-i="card" data-sz="14"></span>Prepago</span>
       <div class="rsub">Consumo de Meta</div>
-      <div class="rtitle"><span data-i="tool" data-sz="18"></span>Billetera ${rec?'recurrente':'no recurrente'}</div>
-      <div class="rdesc">${rec?'Se renueva cada período. El saldo no usado se pierde.':'Recarga variable. El saldo no vence y se acumula mes a mes.'}</div>
+      <div class="rtitle"><span data-i="tool" data-sz="18"></span>Billetera ${rec?'recurrente':'spot'}</div>
+      <div class="rdesc">${rec?'Se renueva cada período. No vence de inmediato: puedes usarlo hasta tu último período de facturación.':'Recarga variable. El saldo no vence y se acumula mes a mes.'}</div>
       <div class="rbig"><span class="n">+${rec?'10':'12'}%</span><span class="u">fee Adereso</span></div>
       <div class="rtable">
         <div class="rr"><span class="k">País (Meta)</span><span class="v">${waP().flag} ${waP().name}</span></div>
@@ -1142,7 +1157,7 @@ function renderSummary(){
         ${(function(){const b=metaBase();if(b==null)return `<div class="rr"><span class="k">Estimado</span><span class="v">Tarifa por confirmar</span></div>`;if(b<=0)return `<div class="rr"><span class="k">Fee Adereso</span><span class="v">${rec?'10':'12'}% sobre consumo</span></div>`;return `<div class="rr"><span class="k">Costo Meta (base)</span><span class="v">~${usd(b)}/mes</span></div><div class="rr"><span class="k">Fee Adereso (+${rec?'10':'12'}%)</span><span class="v">~${usd(metaFee())}/mes</span></div><div class="rr"><span class="k"><b>Total prepago</b></span><span class="v"><b>~${usd(metaEst())}/mes</b></span></div>`;})()}
         <div class="rr"><span class="k">Vencimiento</span><span class="v">${rec?'Vence cada período':'No vence'}</span></div>
       </div>
-      <div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar billetera</label><div class="pills"><button class="pill ${!rec?'on':''}" data-ed="wallet" data-val="no_recurrente">No recurrente +12%</button><button class="pill ${rec?'on':''}" data-ed="wallet" data-val="recurrente">Recurrente +10%</button></div></div>
+      <div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar billetera</label><div class="pills"><button class="pill ${!rec?'on':''}" data-ed="wallet" data-val="no_recurrente">Spot +12%</button><button class="pill ${rec?'on':''}" data-ed="wallet" data-val="recurrente">Recurrente +10%</button></div></div>
       <div class="rfoot"><span data-i="info" data-sz="14"></span><div>El servicio se corta al agotar el saldo.</div></div>
     </div>`;
   }
@@ -1460,10 +1475,10 @@ const POPS={
  billetera:{title:'Billetera Adereso–Meta',html:`
    <p style="margin-bottom:14px;color:var(--z400)">Prepago, sin tarjeta de crédito, para la comunicación proactiva por WhatsApp. El fee de Adereso aplica al consumo de plantillas (Engage). Los mensajes service (Desk/Studio) incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads.</p>
    <div class="mgrid2">
-     <div class="mbox"><h4>Recurrente <span class="mfee">10%</span></h4><ul><li>• Se renueva cada período</li><li>• Vence al final del período</li><li>• Saldo no usado se pierde</li><li>• Consumo estable y predecible</li></ul></div>
-     <div class="mbox"><h4>No recurrente <span class="mfee">12%</span></h4><ul><li>• No vence, se acumula mes a mes</li><li>• Servicio se corta al agotar saldo</li><li>• Mismo fee toda la billetera</li><li>• Consumo variable o estacional</li></ul></div>
+     <div class="mbox"><h4>Recurrente <span class="mfee">10%</span></h4><ul><li>• Se renueva cada período</li><li>• No vence de inmediato</li><li>• Usable hasta tu último período de facturación</li><li>• Consumo estable y predecible</li></ul></div>
+     <div class="mbox"><h4>Spot <span class="mfee">12%</span></h4><ul><li>• No vence, se acumula mes a mes</li><li>• Servicio se corta al agotar saldo</li><li>• Mismo fee toda la billetera</li><li>• Consumo variable o estacional</li></ul></div>
    </div>
-   <div class="mrow plain" style="margin-top:6px"><span class="mn">i</span><div><div class="md">Los mensajes service incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads. El costo de Meta por plantilla varía según el país; el fee de Adereso se suma según la billetera (10% recurrente / 12% no recurrente).</div></div></div>`},
+   <div class="mrow plain" style="margin-top:6px"><span class="mn">i</span><div><div class="md">Los mensajes service incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads. El costo de Meta por plantilla varía según el país; el fee de Adereso se suma según la billetera (10% recurrente / 12% spot).</div></div></div>`},
  incluido:{title:'Incluido siempre, sin costo extra',html:`
    <p style="margin-bottom:14px;color:var(--z400)"><b>La conexión de todos los canales es gratuita:</b></p>
    <div class="chips">`+['WhatsApp','Webchat','Correo','Instagram','Facebook','LinkedIn','TikTok','X','Licencias humanas ilimitadas','Experience · encuestas','Engage · plantillas','Métricas y analítica','Soporte básico'].map(c=>`<span class="chip">${c}</span>`).join('')+`</div>
@@ -1593,6 +1608,10 @@ document.getElementById('topBtn').addEventListener('click',()=>window.scrollTo({
 
 /* init */
 buildNav();renderMods();renderAll();refreshFlow();paintIcons();setActive('s1');observeReveals();renderPortal();
+/* Proceso comercial: cascada de iluminación izq→der al entrar en vista */
+(function(){const pt=document.querySelector('.proc-track');if(!pt)return;if(prefersReduced){pt.classList.add('lit');return;}
+  const io=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){pt.classList.remove('lit');void pt.offsetWidth;pt.classList.add('lit');}else{pt.classList.remove('lit');}});},{threshold:0.35});
+  io.observe(pt);})();
 </script>
 </body>
 </html>
