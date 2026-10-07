@@ -434,6 +434,9 @@
   .wallet .wd{font-size:12px;color:var(--z500);margin-top:4px}
   .divider{height:1px;background:var(--b-subtle);margin:2px 0}
   .wa-reset-row{margin-top:2px;display:flex;justify-content:flex-end}
+  .rr.xrow{border-top:1px dashed rgba(255,213,64,0.25);padding-top:9px;margin-top:4px}
+  .rr.xrow .v{color:var(--brand);text-align:right}
+  .xsplit{display:block;font-size:11px;font-weight:400;color:var(--t-muted,#9a9ca3);margin-top:2px}
   .wa-reset-row .linkbtn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
   @media(max-width:560px){.wallet-opts{grid-template-columns:1fr}}
 
@@ -935,6 +938,20 @@ function monthly(){
   return base;
 }
 function setupCost(){if(!state.studio||state.setupMode==='paquetizado')return 0;return SETUP[state.setup].price;}
+/* Ticket extra fuera de bolsa = extraRate del tramo activo × 1,15 (lógica del cotizador).
+   Tramo activo = último tramo cuyo cap ≤ volumen. La mantención de bot (160) no entra en el unitario. */
+const EXTRA_MARKUP=1.15;
+const DESK_TIERS=[{cap:2000,extraRate:0.0874},{cap:5000,extraRate:0.0773},{cap:15000,extraRate:0.0706},{cap:45000,extraRate:0.0662},{cap:135000,extraRate:0.0612}];
+const STUDIO_AGENT_TIERS=[{cap:2000,extraRate:0.1063},{cap:5000,extraRate:0.0940},{cap:15000,extraRate:0.0858},{cap:45000,extraRate:0.0805}];
+function tierRate(tiers,q){let t=tiers[0];for(const x of tiers){if(q>=x.cap)t=x;}return t.extraRate*EXTRA_MARKUP;}
+function extraTicket(){
+  if(!hasService())return null;
+  const vol=state.studio?Math.max(2000,state.volMode==='custom'?state.volCustom:state.vol):2000;
+  const desk=state.desk?tierRate(DESK_TIERS,vol):null;
+  const studio=state.studio?tierRate(STUDIO_AGENT_TIERS,vol):null;
+  return {total:(desk||0)+(studio||0),desk,studio,split:desk!=null&&studio!=null};
+}
+const usd3=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
 function waTemplates(){return state.engage&&state.out.whatsapp;}
 function waCalls(){return state.engage&&!!state.out.wacall;}
 function waActive(){return state.whatsapp||waTemplates()||waCalls();}
@@ -1130,6 +1147,11 @@ function renderSummary(){
   else if(isBase){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div><div class="rr"><span class="k">Add-on Studio · IA Generativa</span><span class="v">USD 359</span></div>`;}
   else{mTable=`<div class="rr"><span class="k">Desk + Studio · bolsa mensual</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;}
   const mTitle=!state.studio?'Mesa de ayuda':(soloStudio?'Agente IA (sin Desk)':'Bolsa de conversaciones');
+  const xt=extraTicket();
+  if(xt){
+    const xv=xt.split?`${usd3(xt.total)} c/u <small class="xsplit">(Desk ${usd3(xt.desk)} + Studio ${usd3(xt.studio)})</small>`:`${usd3(xt.total)} c/u <small class="xsplit">(${xt.desk!=null?'Desk':'Studio'})</small>`;
+    mTable+=`<div class="rr xrow"><span class="k">Ticket extra · fuera de bolsa</span><span class="v">${xv}</span></div>`;
+  }
   const mDesc=!state.studio?'Plataforma omnicanal. Contrato anual.':(soloStudio?'Agente con IA, sin mesa de ayuda humana. Contrato anual.':'Plataforma omnicanal + agente con IA. Contrato anual.');
   const mensualCard=`
     <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>Mensual</span>
@@ -1430,7 +1452,8 @@ document.getElementById('copyBtn').addEventListener('click',()=>{
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=state.studio?(state.setupMode==='paquetizado'?'Rápida sin acompañamiento (paquetizado) — Gratis':SETUP[state.setup].name+' (acompañada) — '+usd(s)):'Estándar (sin IA) — Gratis';
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
-  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push('Mensual (contrato anual): '+usd(m)+'/mes');}
+  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push('Mensual (contrato anual): '+usd(m)+'/mes');
+    const xt=extraTicket();if(xt)L.push('Ticket extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
   if(state.studio)L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
   if(waActive())L.push('WhatsApp/Meta ('+waP().name+'): '+(meta==null?'tarifa por confirmar':'costo Meta ~'+usd(metaBase())+' + fee Adereso '+(state.wa.wallet==='recurrente'?'10':'12')+'% = ~'+usd(meta)+'/mes')+' · '+([state.whatsapp?'service':'',waTemplates()?'plantillas':'',waCalls()?'llamadas':''].filter(Boolean).join(' + ')));
