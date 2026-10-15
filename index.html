@@ -53,6 +53,17 @@
   .topbtn{position:fixed;right:22px;bottom:22px;z-index:60;width:44px;height:44px;border-radius:999px;background:var(--brand);color:#000;border:none;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,0.4);opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease)}
   .topbtn.show{opacity:1;transform:none;pointer-events:auto}
   .topbtn:hover{filter:brightness(1.06)}
+  /* fin de página: estiramiento líquido al seguir bajando en el tope */
+  html{overscroll-behavior-y:none}
+  .wrap{will-change:transform;transform-origin:50% 100%}
+  .wrap.spring{transition:transform .65s cubic-bezier(.34,1.56,.64,1)}
+  .endcap{position:fixed;left:0;right:0;bottom:0;z-index:55;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+  .endcap-txt{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;margin-bottom:14px;opacity:0;transform:translateY(16px)}
+  .endcap-txt b{font-family:var(--font-head);font-size:20px;color:#fff;font-weight:500}
+  .endcap-txt span{font-size:13.5px;color:var(--brand)}
+  .endcap-drop{width:90px;height:0;background:radial-gradient(120% 90% at 50% 100%,var(--brand) 0%,rgba(255,213,64,0.55) 45%,rgba(255,213,64,0) 75%);border-radius:50% 50% 0 0/100% 100% 0 0;filter:blur(.5px)}
+  .endcap.spring .endcap-txt,.endcap.spring .endcap-drop{transition:all .65s cubic-bezier(.34,1.56,.64,1)}
+  @media print{.endcap{display:none}}
   @media print{.topbtn,.btn-reset{display:none!important}}
   .help-btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--b-default);border-radius:var(--r6);padding:6px 14px 6px 7px;font-size:13px;color:#fff;font-weight:500;transition:all .15s var(--ease)}
   .help-btn:hover{background:rgba(255,255,255,0.05);border-color:var(--brand)}
@@ -79,6 +90,10 @@
   section.lvl{scroll-margin-top:130px;padding:26px 0 8px;border-top:1px solid var(--b-subtle);transition:opacity .4s var(--ease),filter .4s var(--ease)}
   section.lvl.dim{opacity:.32;filter:blur(2px)}
   @media(prefers-reduced-motion:reduce){section.lvl.dim{filter:none;opacity:.5}}
+  /* asentamiento tipo líquido al acomodarse en un nivel */
+  section.lvl.settle{animation:lvlSettle .7s cubic-bezier(.34,1.45,.64,1) both;transform-origin:top center}
+  @keyframes lvlSettle{0%{transform:translateY(14px) scaleY(1.012)}55%{transform:translateY(-3px) scaleY(.997)}100%{transform:none}}
+  @media(prefers-reduced-motion:reduce){section.lvl.settle{animation:none}}
   section.lvl:first-of-type{border-top:none;padding-top:8px}
   .hero{padding:12px 0 26px;margin-bottom:4px}
   .hero h1{font-size:clamp(32px,6vw,56px);line-height:1.06;letter-spacing:-0.02em}
@@ -157,12 +172,19 @@
   .roi-f label{display:block;font-size:11.5px;color:var(--z500);margin-bottom:5px}
   .roi-f input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:9px 11px;color:#fff;font-family:var(--font-body);font-size:14px}
   .roi-extra{font-size:12px;color:var(--brand);margin-top:11px}
+  .roi-card.lock:not(.on) .roi-tag{color:var(--warning)}
+  .roi-auto{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:12px;color:var(--success);background:rgba(82,206,94,0.08);border:1px solid rgba(82,206,94,0.25);border-radius:var(--r2);padding:7px 10px;margin-top:12px}
+  .roi-auto.warn{color:var(--warning);background:rgba(245,185,66,0.08);border-color:rgba(245,185,66,0.28)}
+  .roi-auto .linkbtn{font-size:12px}
   .roi-cnote{font-size:11.5px;color:var(--z600);margin-top:9px;line-height:1.45}
   .roi-panel{margin-top:26px;background:linear-gradient(0deg,rgba(82,206,94,0.05),rgba(82,206,94,0.05)),var(--surface);border:1px solid rgba(82,206,94,0.3);border-radius:var(--r4);padding:22px}
   .roi-panel-head{display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:18px;color:var(--success);font-weight:500}
   .roi-panel-sub{font-size:13px;color:var(--z400);margin:6px 0 18px}
   .roi-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-  @media(min-width:720px){.roi-stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @media(min-width:720px){.roi-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.roi-stats.five{grid-template-columns:repeat(5,minmax(0,1fr))}}
+  .roi-stat.var{border-style:dashed;border-color:rgba(245,185,66,0.35)}
+  .roi-stat.var .rs-v{color:var(--warning)}
+  .rs-sub{font-size:11px;color:var(--z500);margin-top:6px;line-height:1.35}
   .roi-stat{background:rgba(0,0,0,0.2);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:14px}
   .roi-stat.hero{border-color:rgba(82,206,94,0.4)}
   .rs-l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--z500);margin-bottom:8px}
@@ -175,30 +197,62 @@
   .roi-fee{font-size:12px;color:var(--z400);margin-top:14px}
   .roi-empty{font-size:12.5px;color:var(--z500);font-style:italic;margin-top:14px}
   .roi-cta{margin-top:18px}
+  /* caso de negocio: pagas vs recibes */
+  .roi-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:680px){.roi-cols{grid-template-columns:1fr}}
+  .roi-col{background:rgba(0,0,0,0.22);border:1px solid var(--b-subtle);border-radius:var(--r3);padding:16px 18px;display:flex;flex-direction:column}
+  .rc-h{display:flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:600;color:var(--z400);margin-bottom:10px}
+  .rc-dot{width:8px;height:8px;border-radius:999px;background:var(--z500)}
+  .roi-col.pay .rc-dot{background:var(--warning)}
+  .roi-col.get .rc-dot{background:var(--success)}
+  .rc-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--b-subtle);font-size:14px;color:var(--z300)}
+  .rc-row small{display:block;font-size:11.5px;color:var(--z500);margin-top:1px}
+  .rc-row b{font-family:var(--font-head);font-size:17px;color:#fff;font-weight:500;white-space:nowrap}
+  .rc-row.muted b{color:var(--z400)}
+  .rc-in{display:inline-flex;align-items:center;gap:2px;font-family:var(--font-head);font-size:17px;color:#fff}
+  .rc-in #roiCost{width:96px;font-size:17px;font-weight:500;padding:5px 8px;text-align:right}
+  .rc-total{display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;margin-top:auto}
+  .rc-total span{font-size:14px;color:#fff;font-weight:500}
+  .rc-total b{font-family:var(--font-head);font-size:24px;font-weight:600;color:#fff}
+  .roi-col.pay .rc-total b{color:var(--warning)}
+  .roi-col.get .rc-total b{color:var(--success)}
+  .rc-total b.neg{color:var(--danger)}
+  .roi-col .roi-usecot{align-self:flex-start;margin-top:8px}
+  .roi-verdict{margin-top:14px;display:flex;align-items:center;gap:18px;background:rgba(82,206,94,0.08);border:1px solid rgba(82,206,94,0.35);border-radius:var(--r3);padding:16px 20px}
+  .rv-big{font-family:var(--font-head);font-size:40px;font-weight:600;color:var(--success);line-height:1}
+  .rv-big.neg{color:var(--danger)}
+  .rv-txt{display:flex;flex-direction:column;gap:3px}
+  .rv-txt b{font-size:13px;color:#fff;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+  .rv-txt span{font-size:14.5px;color:var(--z300)}
   /* Proceso comercial */
   .proc{margin-top:10px}
   .proc-track{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;position:relative}
-  .proc-track::before{content:'';position:absolute;top:28px;left:7%;right:7%;height:3px;background:rgba(255,213,64,0.18);border-radius:2px;z-index:0}
-  .proc-track::after{content:'';position:absolute;top:28px;left:7%;right:7%;height:3px;background:linear-gradient(90deg,rgba(255,213,64,0.55),var(--brand));border-radius:2px;z-index:0;transform-origin:left center;transform:scaleX(0);transition:transform 2.6s var(--ease)}
-  .proc-track.lit::after{transform:scaleX(1)}
+  /* La línea va exactamente del centro del dot 1 al centro del dot 7 (7 columnas, gap 12px)
+     y avanza a velocidad constante: toca cada dot justo cuando se enciende (0,6 s por tramo). */
+  .proc-track::before,.proc-track::after{content:'';position:absolute;top:27px;left:calc(7.142857% - 5.15px);right:calc(7.142857% - 5.15px);height:3px;border-radius:2px;z-index:0}
+  .proc-track::before{background:rgba(255,255,255,0.08)}
+  .proc-track::after{background:var(--brand);transform-origin:left center;transform:scaleX(0)}
+  .proc-track.lit::after{transition:transform 3.6s linear;transform:scaleX(1)}
   .proc-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
-  .proc-ico{width:56px;height:56px;border-radius:999px;background:var(--brand);color:#000;display:grid;place-items:center;box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18);opacity:.38;filter:saturate(.25)}
-  .proc-track.lit .proc-ico{animation:procLight .75s var(--ease) both}
+  .proc-ico{position:relative;z-index:2;width:56px;height:56px;border-radius:999px;background:#1F2025;color:var(--z500);border:1.5px solid rgba(255,255,255,0.10);display:grid;place-items:center;box-shadow:0 0 0 5px #0C0C0D}
+  .proc-track.lit .proc-ico{animation:procLight .6s cubic-bezier(.34,1.5,.64,1) both}
   .proc-track.lit .proc-step:nth-child(1) .proc-ico{animation-delay:0s}
-  .proc-track.lit .proc-step:nth-child(2) .proc-ico{animation-delay:.3s}
-  .proc-track.lit .proc-step:nth-child(3) .proc-ico{animation-delay:.6s}
-  .proc-track.lit .proc-step:nth-child(4) .proc-ico{animation-delay:.9s}
-  .proc-track.lit .proc-step:nth-child(5) .proc-ico{animation-delay:1.2s}
-  .proc-track.lit .proc-step:nth-child(6) .proc-ico{animation-delay:1.5s}
-  .proc-track.lit .proc-step:nth-child(7) .proc-ico{animation-delay:1.8s}
-  @keyframes procLight{0%{opacity:.38;filter:saturate(.25);transform:scale(.92)}60%{opacity:1;filter:none;transform:scale(1.06);box-shadow:0 0 0 5px #0C0C0D,0 0 16px 3px rgba(255,213,64,0.5)}100%{opacity:1;filter:none;transform:scale(1);box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18)}}
-  @media(prefers-reduced-motion:reduce){.proc-ico{opacity:1;filter:none}.proc-track::after{transition:none;transform:scaleX(1)}.proc-track.lit .proc-ico{animation:none}}
+  .proc-track.lit .proc-step:nth-child(2) .proc-ico{animation-delay:.6s}
+  .proc-track.lit .proc-step:nth-child(3) .proc-ico{animation-delay:1.2s}
+  .proc-track.lit .proc-step:nth-child(4) .proc-ico{animation-delay:1.8s}
+  .proc-track.lit .proc-step:nth-child(5) .proc-ico{animation-delay:2.4s}
+  .proc-track.lit .proc-step:nth-child(6) .proc-ico{animation-delay:3s}
+  .proc-track.lit .proc-step:nth-child(7) .proc-ico{animation-delay:3.6s}
+  @keyframes procLight{0%{background:#1F2025;color:var(--z500);border-color:rgba(255,255,255,0.10);transform:scale(1)}
+    50%{background:var(--brand);color:#000;border-color:var(--brand);transform:scale(1.1);box-shadow:0 0 0 5px #0C0C0D,0 0 18px 4px rgba(255,213,64,0.45)}
+    100%{background:var(--brand);color:#000;border-color:var(--brand);transform:scale(1);box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18)}}
+  @media(prefers-reduced-motion:reduce){.proc-ico{background:var(--brand);color:#000;border-color:var(--brand)}.proc-track.lit::after{transition:none}.proc-track::after{transform:scaleX(1)}.proc-track.lit .proc-ico{animation:none}}
   .proc-n{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);font-weight:600}
   .proc-txt{font-size:12px;color:var(--z300);line-height:1.35}
   @media(max-width:760px){
     .proc-track{grid-template-columns:1fr;gap:0}
-    .proc-track::before{top:14px;bottom:14px;left:27px;right:auto;width:3px;height:auto}
-    .proc-track::after{top:14px;bottom:14px;left:27px;right:auto;width:3px;height:auto;background:linear-gradient(180deg,rgba(255,213,64,0.55),var(--brand));transform-origin:top center;transform:scaleY(0)}
+    .proc-track::before{top:34px;bottom:34px;left:22.5px;right:auto;width:3px;height:auto}
+    .proc-track::after{top:34px;bottom:34px;left:22.5px;right:auto;width:3px;height:auto;transform-origin:top center;transform:scaleY(0)}
     .proc-track.lit::after{transform:scaleY(1)}
     .proc-step{flex-direction:row;text-align:left;gap:15px;padding:10px 0;align-items:center}
     .proc-ico{width:48px;height:48px;flex:none}
@@ -353,6 +407,29 @@
   .vcustom .vc-price{text-align:right;flex:none}
   .vcustom .vc-lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--z500);margin-bottom:4px}
   .vcustom .vc-amt{font-family:var(--font-head);font-size:22px;color:var(--brand);font-weight:500}
+  .spot{margin-top:10px;background:var(--surface);border:1px dashed rgba(255,213,64,0.35);border-radius:var(--r3);padding:16px 18px;transition:all .2s var(--ease)}
+  .spot.sel{border-style:solid;border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .spot-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .spot-tag{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:#000;background:var(--brand);border-radius:999px;padding:3px 10px}
+  .spot-t{font-size:13.5px;color:#fff;font-weight:500}
+  .spot-row{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+  .spot-row .vc-field{flex:1;min-width:180px}
+  .spot-row label{display:block;font-size:13px;color:var(--z400);margin-bottom:8px}
+  .spot-meta{display:flex;flex-direction:column;flex:none}
+  .spot-meta.r{text-align:right}
+  .spot-meta .vc-lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--z500);margin-bottom:4px}
+  .spot-u{font-family:var(--font-head);font-size:20px;color:#fff;font-weight:500}
+  .spot-meta .vc-amt{font-family:var(--font-head);font-size:22px;color:var(--brand);font-weight:500}
+  .spot-meta small{font-size:11px;color:var(--z500);margin-top:3px}
+  @media(max-width:560px){.spot-meta.r{text-align:left}}
+  .spot-toggle{margin-top:16px;display:inline-flex;align-items:center;gap:9px;background:none;border:0;padding:4px 0;color:var(--brand);font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+  .spot-toggle small{color:var(--z500);font-size:12.5px;font-weight:400}
+  .spot-toggle:hover{filter:brightness(1.12)}
+  .spot-plus{width:20px;height:20px;border-radius:999px;border:1.5px solid var(--brand);display:grid;place-items:center;font-size:14px;line-height:1;transition:transform .3s var(--ease)}
+  .spot-toggle.open .spot-plus{transform:rotate(180deg);background:var(--brand);color:#000}
+  .spot-acc{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease),opacity .3s var(--ease);opacity:0}
+  .spot-acc.open{grid-template-rows:1fr;opacity:1}
+  .spot-acc-in{overflow:hidden;min-height:0}
 
   /* setup rows */
   .plans{display:grid;gap:12px}
@@ -389,6 +466,7 @@
   .pl-name{font-size:13.5px;color:#fff;font-weight:500}
   .pl-price{font-family:var(--font-head);font-size:19px;color:var(--brand);font-weight:600;white-space:nowrap}
   .pl-price small{font-size:11px;color:var(--z500);font-weight:400;margin-left:2px}
+  .pl-fee{font-style:normal;font-family:var(--font-body,inherit);font-size:11px;font-weight:600;color:#000;background:var(--brand);border-radius:999px;padding:2px 7px;margin-left:7px;vertical-align:3px}
   .pl-desc{font-size:11px;color:var(--z500);line-height:1.4;min-height:31px}
   .pl-card input[type=number]{margin-top:auto}
   .pl-price.ok{color:var(--success)}
@@ -709,10 +787,6 @@
           <p>Propuesta armada con el cliente. Valores en USD, contrato anual.</p>
         </div>
         <div id="sumCard"></div>
-        <div class="final-cta reveal">
-          <button class="btn btn-primary" id="copyBtn"><span data-i="copy"></span>Copiar resumen</button>
-          <button class="btn btn-ghost" onclick="window.print()"><span data-i="print"></span>Imprimir / PDF</button>
-        </div>
         <div class="continue reveal"><button data-next="s6">Ver el retorno de la inversión <span data-i="down"></span></button></div>
       </section>
 
@@ -795,6 +869,10 @@
   </div>
 
   <button class="topbtn" id="topBtn" aria-label="Volver arriba"><span data-i="up" data-sz="20"></span></button>
+  <div class="endcap" id="endCap" aria-hidden="true">
+    <div class="endcap-txt"><b>Llegaste al final.</b><span>Lo que sigue lo construimos juntos.</span></div>
+    <div class="endcap-drop" id="endDrop"></div>
+  </div>
 
 <script>
 const ICONS={
@@ -898,7 +976,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}
 ];
 
-const state={desk:true,studio:true,engage:false,cassper:false,whatsapp:false,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente'},roiActive:{},roiVals:{},roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{}};
+const state={desk:true,studio:true,engage:false,cassper:false,whatsapp:false,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente'},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{}};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 const CHANNELS=[
  {k:'whatsapp',label:'WhatsApp',color:'#25D366',paid:true},
@@ -944,6 +1022,13 @@ const EXTRA_MARKUP=1.15;
 const DESK_TIERS=[{cap:2000,extraRate:0.0874},{cap:5000,extraRate:0.0773},{cap:15000,extraRate:0.0706},{cap:45000,extraRate:0.0662},{cap:135000,extraRate:0.0612}];
 const STUDIO_AGENT_TIERS=[{cap:2000,extraRate:0.1063},{cap:5000,extraRate:0.0940},{cap:15000,extraRate:0.0858},{cap:45000,extraRate:0.0805}];
 function tierRate(tiers,q){let t=tiers[0];for(const x of tiers){if(q>=x.cap)t=x;}return t.extraRate*EXTRA_MARKUP;}
+/* Bolsa spot (upsell): conversaciones adicionales a la tarifa normal del tramo (sin +15% y sin mantención). */
+function spotUnit(){
+  if(!hasService())return null;
+  const d=extraTicket();
+  return {desk:d.desk!=null?d.desk/EXTRA_MARKUP:null,studio:d.studio!=null?d.studio/EXTRA_MARKUP:null,total:d.total/EXTRA_MARKUP,extra:d.total};
+}
+function spotCost(){const u=spotUnit();return (u&&state.spotQty>0)?state.spotQty*u.total:0;}
 function extraTicket(){
   if(!hasService())return null;
   const vol=state.studio?Math.max(2000,state.volMode==='custom'?state.volCustom:state.vol):2000;
@@ -1029,9 +1114,33 @@ function renderVol(){
         <div class="vc-price"><span class="vc-lbl">Conversaciones/mes</span><span class="vc-amt" id="customPrice">${cSel?state.volCustom.toLocaleString('es-CL'):'—'}</span></div>
       </div>${!state.desk?`<div class="note warn" style="margin-top:16px"><span data-i="info"></span><div><b>Studio sin Desk:</b> el agente IA va sin la mesa de ayuda humana; aplica un recargo sobre la bolsa (por confirmar).</div></div>`:''}`;
   }
+  area.innerHTML+=spotBlock();
   paintIcons(area);
   applyReveal(area,'.vtile,.vcustom');
 }
+
+function spotBlock(){
+  const u=spotUnit();if(!u)return '';
+  const split=u.desk!=null&&u.studio!=null?`Desk ${usd3(u.desk)} + Studio ${usd3(u.studio)}`:(u.desk!=null?'Desk':'Studio');
+  const open=state.spotOpen||state.spotQty>0;
+  return `<button class="spot-toggle ${open?'open':''}" data-spot-toggle aria-expanded="${open}"><span class="spot-plus">${open?'−':'+'}</span>Activar bolsa spot <small>para temporadas altas</small></button>
+  <div class="spot-acc ${open?'open':''}"><div class="spot-acc-in">
+  <div class="spot ${state.spotQty>0?'sel':''}" id="spotBox">
+    <div class="spot-head"><span class="spot-tag">Bolsa spot</span><span class="spot-t">¿Temporada alta? Compra conversaciones adicionales al valor normal</span></div>
+    <div class="spot-row">
+      <div class="vc-field"><label for="spotInput">Conversaciones spot</label><input type="number" id="spotInput" min="0" step="500" data-spot value="${state.spotQty||''}" placeholder="Ej: 3.000"></div>
+      <div class="spot-meta"><span class="vc-lbl">Valor por conversación</span><span class="spot-u">${usd3(u.total)}</span><small>${split}</small></div>
+      <div class="spot-meta r"><span class="vc-lbl">Total bolsa spot</span><span class="vc-amt" id="spotTotal">${state.spotQty>0?usd(spotCost()):'—'}</span><small id="spotSave">${spotSaveTxt()}</small></div>
+    </div>
+  </div></div></div>`;
+}
+function spotSaveTxt(){const u=spotUnit();if(!u||!(state.spotQty>0))return 'Sin el recargo del ticket extra';return 'Ahorro vs ticket extra: '+usd(state.spotQty*(u.extra-u.total));}
+function updateSpot(){const box=document.getElementById('spotBox');if(!box)return;const u=spotUnit();if(!u)return;
+  box.classList.toggle('sel',state.spotQty>0);
+  const t=document.getElementById('spotTotal');if(t)t.textContent=state.spotQty>0?usd(spotCost()):'—';
+  const s=document.getElementById('spotSave');if(s)s.textContent=spotSaveTxt();
+  const uu=box.querySelector('.spot-u');if(uu)uu.textContent=usd3(u.total);
+  const sm=box.querySelector('.spot-meta small');if(sm)sm.textContent=u.desk!=null&&u.studio!=null?`Desk ${usd3(u.desk)} + Studio ${usd3(u.studio)}`:(u.desk!=null?'Desk':'Studio');}
 
 function renderSetup(){
   const area=document.getElementById('setupArea');
@@ -1053,29 +1162,19 @@ function renderWa(){
   const area=document.getElementById('waArea');
   const p=waP();
   const feePct=state.wa.wallet==='recurrente'?'10':'12';
-  let html=`<div class="wa-formula">
-    <div class="wf-title">Cómo se compone el cobro · billetera prepago (${p.flag} ${p.name})</div>
-    <div class="wf-row">
-      <span class="wf-pill">Valor Meta unitario<small>por mensaje · plantilla · minuto</small></span>
-      <span class="wf-op">+</span>
-      <span class="wf-pill">${feePct}% fee Adereso<small>por gestión</small></span>
-      <span class="wf-op">=</span>
-      <span class="wf-pill total">Costo por gestión</span>
-    </div>
-    <div class="wf-note">Prepago: se paga por adelantado cada mensaje, plantilla o minuto de Meta, más el fee de Adereso por gestión. Los mensajes service (Desk/Studio) incluyen 1.000 gratis/mes + 72 h de gratuidad desde Meta Ads.</div>
-  </div>
-  <div class="wa-form">
+  const fee=`<em class="pl-fee">+${feePct}% fee</em>`;
+  let html=`<div class="wa-form">
     <div class="wa-countries">
       <div class="wa-c-label">País de facturación de Meta <span class="u">— cambia las tarifas del cálculo</span></div>
       <div class="cty-row">${WA_COUNTRIES.map(c=>{const cp=WA_PRICES[c],todo=cp.marketing==null;return `<button class="cty ${state.wa.country===c?'sel':''} ${todo?'todo':''}" data-cty="${c}"><span class="cty-flag">${cp.flag}</span>${cp.name}${todo?'<span class="cty-tag">por confirmar</span>':''}</button>`;}).join('')}</div>
     </div>`;
   if(state.whatsapp){
-    html+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd2(p.utility)}<small>c/u</small></span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 72 h desde Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
+    html+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd2(p.utility)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 1 semana gratis si el lead viene de Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
   }
   if(waTemplates()){
     const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
     html+=`<div><label class="wa-block-lbl">Engage · plantillas por WhatsApp saliente <span class="u">— precio Meta por mensaje</span></label><div class="pl-grid">
-      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd2(p[k])}<small>c/u</small></span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}
+      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd2(p[k])}<small>c/u</small>${fee}</span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}
     </div>
     <div class="note warn" style="margin-top:12px"><span data-i="info"></span><div><b>¿Esperas respuestas a estas plantillas?</b> Cuando un cliente responde a una plantilla enviada, esa respuesta abre una conversación inbound y consume cupo de la <button class="linkbtn" data-goto="s2">bolsa de conversaciones contratada</button>.</div></div></div>`;
   }else if(state.engage){
@@ -1085,7 +1184,7 @@ function renderWa(){
   }
   if(waCalls()){
     const callLbl=callConfirmed()?((state.wa.country==='CL'?'desde ':'')+usd2(waP().call))+'<small>/min</small>':'por confirmar';
-    html+=`<div><label class="wa-block-lbl">WhatsApp Call · minutos de llamada al mes <span class="u">— canal saliente de Engage</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}</span></div><div class="pl-desc">Llamadas por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div></div></div>`;
+    html+=`<div><label class="wa-block-lbl">WhatsApp Call · minutos de llamada al mes <span class="u">— canal saliente de Engage</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div></div></div>`;
   }
   html+=`<div class="divider"></div>
     <div class="field"><label>Tipo de billetera Adereso–Meta <span class="u">— define el fee de Adereso</span></label><div class="wallet-opts">
@@ -1151,6 +1250,9 @@ function renderSummary(){
   if(xt){
     const xv=xt.split?`${usd3(xt.total)} c/u <small class="xsplit">(Desk ${usd3(xt.desk)} + Studio ${usd3(xt.studio)})</small>`:`${usd3(xt.total)} c/u <small class="xsplit">(${xt.desk!=null?'Desk':'Studio'})</small>`;
     mTable+=`<div class="rr xrow"><span class="k">Ticket extra · fuera de bolsa</span><span class="v">${xv}</span></div>`;
+  }
+  if(state.spotQty>0&&spotUnit()){
+    mTable+=`<div class="rr xrow"><span class="k">Bolsa spot · ${state.spotQty.toLocaleString('es-CL')} conv <small class="xsplit">compra única · ${usd3(spotUnit().total)} c/u</small></span><span class="v">${usd(spotCost())}</span></div>`;
   }
   const mDesc=!state.studio?'Plataforma omnicanal. Contrato anual.':(soloStudio?'Agente con IA, sin mesa de ayuda humana. Contrato anual.':'Plataforma omnicanal + agente con IA. Contrato anual.');
   const mensualCard=`
@@ -1247,7 +1349,9 @@ function roiVolume(){if(!hasService())return 0;return state.studio?(state.volMod
 const ROI_CASES={
  carrito:{macro:'Ventas',name:'Recuperación de carrito',tag:'Engage',note:'Ganancia = carritos abandonados × % recuperación × ticket medio.',
    fields:[{id:'carritos',label:'Carritos abandonados / mes',vol:true,value:1000},{id:'recup',label:'% de recuperación esperado',value:10},{id:'ticket',label:'Ticket medio (USD)',value:50}],
-   gain:v=>v.carritos*(v.recup/100)*v.ticket},
+   gain:v=>v.carritos*(v.recup/100)*v.ticket,
+   cost:v=>roiTplCost(v.carritos),
+   extra:v=>roiTplTxt(v.carritos,'recordatorio')},
  cassper:{macro:'Ventas',name:'Recuperación de venta perdida',tag:'Cassper',note:'Venta perdida recuperada de forma conversacional = ventas caídas × % recuperación × ticket medio. El success fee de Cassper (sobre lo recuperado) se descuenta como costo.',
    fields:[{id:'perdidas',label:'Ventas perdidas / caídas / mes',vol:true,value:800},{id:'recup',label:'% de recuperación conversacional',value:12},{id:'ticket',label:'Ticket medio (USD)',value:55}],
    gain:v=>v.perdidas*(v.recup/100)*v.ticket,
@@ -1262,7 +1366,9 @@ const ROI_CASES={
    extra:v=>{const cal=v.leads*(v.calif/100),cer=cal*(v.cierre/100);return Math.round(cal).toLocaleString('es-CL')+' leads calificados · '+Math.round(cer).toLocaleString('es-CL')+' ventas cerradas/mes';}},
  outbound:{macro:'Ventas',name:'Campañas outbound / re-engage',tag:'Engage',note:'Ganancia = mensajes enviados × % conversión × ticket medio.',
    fields:[{id:'mensajes',label:'Mensajes outbound / mes',vol:true,value:10000},{id:'conv',label:'% de conversión',value:2},{id:'ticket',label:'Ticket medio (USD)',value:40}],
-   gain:v=>v.mensajes*(v.conv/100)*v.ticket},
+   gain:v=>v.mensajes*(v.conv/100)*v.ticket,
+   cost:v=>state.out.whatsapp?roiTplCost(v.mensajes):0,
+   extra:v=>state.out.whatsapp?roiTplTxt(v.mensajes,'envío'):'Enviado por Correo: sin costo de plantillas'},
  atencion:{macro:'Postventa',name:'Automatización de consultas',tag:'Desk / Studio',note:'Horas ahorradas = consultas × % automatizado × (min ÷ 60). Ahorro = horas × costo hora del ejecutivo (costo empresa ÷ días hábiles × horas/día), topeado por la capacidad del equipo.',
    fields:[{id:'consultas',label:'Consultas atendidas / mes',vol:true,value:5000},{id:'auto',label:'% automatizado por IA',value:60},{id:'minutos',label:'Tiempo por consulta (min)',value:15},{id:'ejecutivos',label:'Cantidad de ejecutivos',value:5},{id:'costoEmpresa',label:'Costo empresa ejecutivo (USD/mes)',value:800}],
    gain:v=>{const dh=ROI_DIAS*ROI_HORAS,ch=v.costoEmpresa/dh,h=v.consultas*(v.auto/100)*(v.minutos/60),cap=Math.max(v.ejecutivos,1)*dh;return Math.min(h,cap)*ch;},
@@ -1283,9 +1389,24 @@ const ROI_CASES={
    gain:v=>v.mora*(v.recup/100)}
 };
 const ROI_ORDER=['ventaautonoma','carrito','calificacion','cassper','outbound','atencion','sla','retencion','escalamiento','cobranza'];
+/* Productos que habilitan cada caso (basta uno). Al activar el caso sin su producto, se enciende el primero. */
+const ROI_REQ={ventaautonoma:['studio'],carrito:['engage'],calificacion:['studio','engage'],cassper:['cassper'],outbound:['engage'],atencion:['studio','desk'],sla:['desk','studio'],retencion:['desk','engage'],escalamiento:['desk','studio'],cobranza:['studio','desk']};
+const ROI_PNAME={desk:'Desk',studio:'Studio',engage:'Engage',cassper:'Cassper'};
+const ROI_NEEDS_WA={carrito:true};
+function roiReqMet(k){const r=ROI_REQ[k];if(!r)return true;const ok=r.some(p=>state[p]);return ok&&(!ROI_NEEDS_WA[k]||state.out.whatsapp);}
+function roiEnableReq(k){const r=ROI_REQ[k];if(!r)return null;let on=null;
+  if(!r.some(p=>state[p])){on=r[0];state[on]=true;if(on==='engage'){state.out.whatsapp=true;}}
+  if(ROI_NEEDS_WA[k]&&!state.out.whatsapp){state.out.whatsapp=true;on=on||'wa';}
+  return on;}
+/* Plantillas de marketing por WhatsApp: tarifa Meta del país + fee Adereso de la billetera. */
+function roiTplUnit(){const m=waP().marketing;return m==null?null:m*(1+metaFeeRate());}
+function roiTplCost(n){const u=roiTplUnit();return u==null?0:Math.max(0,n||0)*u;}
+function roiTplTxt(n,w){const p=waP(),u=roiTplUnit();if(u==null)return 'Plantillas marketing ('+p.flag+' '+p.name+'): tarifa por confirmar';return 'Plantillas marketing '+p.flag+' '+p.name+': '+Math.round(n).toLocaleString('es-CL')+' × '+usd3(u)+' = '+usd(n*u)+'/mes (Meta + fee)';}
 function roiFieldDefault(f){if(f.vol){const dv=roiVolume();return dv>0?dv:f.value;}return f.value;}
 function roiVals(key){const cfg=ROI_CASES[key],st=state.roiVals[key]||{},v={};cfg.fields.forEach(f=>{v[f.id]=(st[f.id]!==undefined)?st[f.id]:roiFieldDefault(f);});return v;}
 function roiParse(x){const n=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
+/* Al cambiar la bolsa, los cuadros de volumen del ROI vuelven a igualarla. */
+function syncRoiVolume(){Object.keys(state.roiVals).forEach(k=>{const cfg=ROI_CASES[k];if(!cfg)return;cfg.fields.forEach(f=>{if(f.vol)delete state.roiVals[k][f.id];});});if(!state.roiCostTouched)state.roiCost=null;renderRoi();}
 function roiDefaultCost(){return monthly()+casspM();}
 function roiCostValue(){return (state.roiCostTouched&&state.roiCost!=null)?state.roiCost:roiDefaultCost();}
 
@@ -1295,15 +1416,19 @@ function renderRoi(){
   ['Ventas','Postventa'].forEach(macro=>{
     html+=`<div class="roi-macro">${macro}</div><div class="roi-grid">`;
     ROI_ORDER.filter(k=>ROI_CASES[k].macro===macro).forEach(k=>{
-      const cfg=ROI_CASES[k],on=!!state.roiActive[k],v=roiVals(k);
-      html+=`<div class="roi-card ${on?'on':''}">
+      const cfg=ROI_CASES[k],on=!!state.roiActive[k],v=roiVals(k),met=roiReqMet(k);
+      const reqTxt=(ROI_REQ[k]||[]).map(p=>ROI_PNAME[p]).join(' o ')+(ROI_NEEDS_WA[k]?' + WhatsApp saliente':'');
+      html+=`<div class="roi-card ${on?'on':''} ${!met?'lock':''}">
         <button class="roi-head" data-roi-toggle="${k}" aria-pressed="${on}">
           <span class="roi-check">${on?'✓':''}</span>
-          <span class="roi-hmeta"><span class="roi-name">${cfg.name}</span><span class="roi-tag">${cfg.tag}</span></span>
+          <span class="roi-hmeta"><span class="roi-name">${cfg.name}</span><span class="roi-tag">${met?cfg.tag:'Requiere '+reqTxt+' · se activa al elegirlo'}</span></span>
           ${on?`<span class="roi-badge" id="roiBadge_${k}">${usd(cfg.gain(v))}/mes</span>`:''}
         </button>`;
       if(on){
-        html+=`<div class="roi-body"><div class="roi-fields">`+cfg.fields.map(f=>`<div class="roi-f"><label>${f.label}</label><input type="number" min="0" step="any" data-roi-in="${k}:${f.id}" value="${v[f.id]}"></div>`).join('')+`</div>`;
+        html+=`<div class="roi-body">`;
+        if(state.roiAuto&&state.roiAuto[k])html+=`<div class="roi-auto"><span data-i="check" data-sz="13"></span> Activamos ${state.roiAuto[k]} en la cotización para este caso.</div>`;
+        if(!met)html+=`<div class="roi-auto warn"><span data-i="info" data-sz="13"></span> Este caso requiere ${reqTxt}. <button class="linkbtn" data-roi-req="${k}">Activar</button></div>`;
+        html+=`<div class="roi-fields">`+cfg.fields.map(f=>`<div class="roi-f"><label>${f.label}</label><input type="number" min="0" step="any" data-roi-in="${k}:${f.id}" value="${v[f.id]}"></div>`).join('')+`</div>`;
         if(cfg.extra)html+=`<div class="roi-extra" id="roiExtra_${k}">${cfg.extra(v)}</div>`;
         html+=`<div class="roi-cnote">${cfg.note}</div></div>`;
       }
@@ -1312,44 +1437,80 @@ function renderRoi(){
     html+=`</div>`;
   });
   html+=`<div class="roi-panel">
-    <div class="roi-panel-head"><span data-i="coin" data-sz="16"></span> Caso de negocio consolidado</div>
-    <div class="roi-panel-sub">Suma de todas las fuentes de valor activadas vs. la inversión mensual en Adereso.</div>
-    <div class="roi-stats">
-      <div class="roi-stat"><div class="rs-l">Ganancia total / mes</div><div class="rs-v" id="roiGain">$0</div></div>
-      <div class="roi-stat"><div class="rs-l">Inversión Adereso / mes (USD)</div><input type="number" min="0" step="any" id="roiCost" value="${Math.round(roiCostValue())}"><button class="roi-usecot" id="roiUseCot">usar total cotizado</button></div>
-      <div class="roi-stat hero"><div class="rs-l">ROI mensual</div><div class="rs-v" id="roiValue">0%</div></div>
-      <div class="roi-stat"><div class="rs-l">Ganancia neta / mes</div><div class="rs-v" id="roiNet">$0</div></div>
+    <div class="roi-panel-head"><span data-i="coin" data-sz="16"></span> Caso de negocio</div>
+    <div class="roi-panel-sub">Lo que pagas cada mes frente a lo que te devuelve.</div>
+    <div class="roi-cols">
+      <div class="roi-col pay">
+        <div class="rc-h"><span class="rc-dot"></span>Pagas / mes</div>
+        <div class="rc-row"><span>Servicio Adereso <small>mensualidad</small></span><span class="rc-in">$<input type="number" min="0" step="any" id="roiCost" value="${Math.round(roiCostValue())}"></span></div>
+        <div class="rc-row" id="roiVarBox" style="display:none"><span>Consumo variable <small id="roiVarSub">aparte del servicio</small></span><b id="roiVar">$0</b></div>
+        <div class="rc-total"><span>Total</span><b id="roiPayTotal">$0</b></div>
+        <button class="roi-usecot" id="roiUseCot">usar mensualidad cotizada</button>
+      </div>
+      <div class="roi-col get">
+        <div class="rc-h"><span class="rc-dot"></span>Recibes / mes</div>
+        <div class="rc-row"><span>Valor generado <small>suma de los casos activos</small></span><b id="roiGain">$0</b></div>
+        <div class="rc-row muted"><span>Menos lo que pagas</span><b id="roiLess">−$0</b></div>
+        <div class="rc-total"><span>Ganancia neta</span><b id="roiNet">$0</b></div>
+      </div>
+    </div>
+    <div class="roi-verdict">
+      <div class="rv-big" id="roiValue">0%</div>
+      <div class="rv-txt"><b>ROI mensual</b><span id="roiTimes">Activa un caso de uso para ver el retorno.</span></div>
     </div>
     <div class="roi-fee" id="roiFeeLine" style="display:none"></div>
-    <div class="roi-empty" id="roiEmpty">Activa al menos un caso de uso para construir el business case.</div>
+    <div class="roi-empty" id="roiEmpty">Activa al menos un caso de uso para construir el caso de negocio.</div>
     <div class="roi-cta"><button class="btn btn-primary" id="roiCopyBtn"><span data-i="copy"></span>Copiar caso de negocio</button></div>
   </div>`;
   el.innerHTML=html;paintIcons(el);applyReveal(el,'.roi-card,.roi-panel');
   calcRoiNumbers();
 }
 function calcRoiNumbers(){
-  let totalGain=0,extraCost=0,active=false;
-  ROI_ORDER.forEach(k=>{if(!state.roiActive[k])return;active=true;const cfg=ROI_CASES[k],v=roiVals(k),g=cfg.gain(v);totalGain+=g;if(cfg.cost)extraCost+=cfg.cost(v);
+  let totalGain=0,extraCost=0,active=false,tplCost=0,feeCost=0;
+  ROI_ORDER.forEach(k=>{if(!state.roiActive[k])return;active=true;const cfg=ROI_CASES[k],v=roiVals(k),g=cfg.gain(v);totalGain+=g;if(cfg.cost){const c=cfg.cost(v);extraCost+=c;if(k==='cassper')feeCost+=c;else tplCost+=c;}
     const b=document.getElementById('roiBadge_'+k);if(b)b.textContent=usd(g)+'/mes';
     if(cfg.extra){const ex=document.getElementById('roiExtra_'+k);if(ex)ex.textContent=cfg.extra(v);}
   });
   const cost=roiCostValue()+extraCost,net=totalGain-cost,roi=cost>0?(net/cost)*100:0,veces=cost>0?totalGain/cost:0;
   const gEl=document.getElementById('roiGain');if(gEl)gEl.textContent=usd(totalGain);
+  const vb=document.getElementById('roiVarBox');if(vb){vb.style.display=extraCost>0?'':'none';
+    const vv=document.getElementById('roiVar');if(vv)vv.textContent=usd(extraCost);
+    const vs=document.getElementById('roiVarSub');if(vs){const p=[];if(tplCost>0)p.push('plantillas Meta');if(feeCost>0)p.push('success fee Cassper');vs.textContent=p.join(' + ')+' · fuera de la mensualidad';}}
+  const pt=document.getElementById('roiPayTotal');if(pt)pt.textContent=usd(cost);
+  const ls=document.getElementById('roiLess');if(ls)ls.textContent='−'+usd(cost);
   const nEl=document.getElementById('roiNet');if(nEl){nEl.textContent=usd(net);nEl.classList.toggle('neg',net<0);}
-  const rEl=document.getElementById('roiValue');if(rEl){rEl.innerHTML=Math.round(roi).toLocaleString('es-CL')+'%'+((cost>0&&veces>0)?`<span class="roi-veces">${veces.toLocaleString('es-CL',{maximumFractionDigits:1})}× lo invertido</span>`:'');rEl.classList.toggle('neg',roi<0);}
-  const fee=document.getElementById('roiFeeLine');if(fee){if(extraCost>0){fee.style.display='';fee.textContent='Incluye success fee de Cassper: '+usd(extraCost)+'/mes (descontado de la ganancia).';}else fee.style.display='none';}
+  const rEl=document.getElementById('roiValue');if(rEl){rEl.textContent=active?Math.round(roi).toLocaleString('es-CL')+'%':'—';rEl.classList.toggle('neg',active&&roi<0);}
+  const tm=document.getElementById('roiTimes');if(tm)tm.textContent=!active?'Activa un caso de uso para ver el retorno.':(cost>0?'Por cada $1 que pagas, recibes $'+veces.toLocaleString('es-CL',{maximumFractionDigits:1}):'Ingresa la mensualidad para calcular el retorno.');
+  const fee=document.getElementById('roiFeeLine');if(fee)fee.style.display='none';
   const emp=document.getElementById('roiEmpty');if(emp)emp.style.display=active?'none':'';
 }
 function roiCopy(){
   const L=['CASO DE NEGOCIO · ROI Adereso',''];let totalGain=0,extraCost=0;
   ROI_ORDER.forEach(k=>{if(!state.roiActive[k])return;const cfg=ROI_CASES[k],v=roiVals(k),g=cfg.gain(v);totalGain+=g;if(cfg.cost)extraCost+=cfg.cost(v);L.push('• '+cfg.name+' ('+cfg.tag+'): '+usd(g)+'/mes');});
   const cost=roiCostValue()+extraCost,net=totalGain-cost,roi=cost>0?(net/cost)*100:0;
-  L.push('','Ganancia total: '+usd(totalGain)+'/mes','Inversión Adereso: '+usd(roiCostValue())+'/mes'+(extraCost>0?' (+ success fee '+usd(extraCost)+')':''),'ROI mensual: '+Math.round(roi)+'%','Ganancia neta: '+usd(net)+'/mes');
+  L.push('','Ganancia total: '+usd(totalGain)+'/mes','Inversión Adereso: '+usd(roiCostValue())+'/mes'+(extraCost>0?' (+ costos variables '+usd(extraCost)+')':''),'ROI mensual: '+Math.round(roi)+'%','Ganancia neta: '+usd(net)+'/mes');
   navigator.clipboard.writeText(L.join('\n')).then(()=>{const b=document.getElementById('roiCopyBtn'),o=b.innerHTML;b.innerHTML='<span data-i="check"></span>Copiado';paintIcons(b);setTimeout(()=>{b.innerHTML=o;paintIcons(b);},1600);});
 }
 document.getElementById('roiArea').addEventListener('click',e=>{
   const t=e.target.closest('[data-roi-toggle]');
-  if(t){const k=t.dataset.roiToggle;state.roiActive[k]=!state.roiActive[k];renderRoi();return;}
+  const rq=e.target.closest('[data-roi-req]');
+  if(t||rq){const k=(t||rq).dataset[t?'roiToggle':'roiReq'];
+    if(t)state.roiActive[k]=!state.roiActive[k];
+    if(state.roiActive[k]&&!roiReqMet(k)){const on=roiEnableReq(k);
+      if(on){state.roiAuto=state.roiAuto||{};state.roiAuto[k]=on==='wa'?'WhatsApp saliente':ROI_PNAME[on]+(on==='engage'?' con WhatsApp saliente':'');
+        state.roiAutoKey=state.roiAutoKey||{};state.roiAutoKey[k]=on;}
+      if(!state.roiCostTouched)state.roiCost=null;
+      renderMods();renderAll();refreshFlow();return;}
+    if(!state.roiActive[k]&&state.roiAutoKey&&state.roiAutoKey[k]){
+      /* el producto lo encendió este caso: se apaga, salvo que otro caso activo lo necesite */
+      const p=state.roiAutoKey[k];delete state.roiAutoKey[k];if(state.roiAuto)delete state.roiAuto[k];
+      const needed=ROI_ORDER.some(o=>state.roiActive[o]&&(p==='wa'?ROI_NEEDS_WA[o]:(ROI_REQ[o]||[]).includes(p)&&!(ROI_REQ[o]||[]).some(q=>q!==p&&state[q])));
+      if(!needed){if(p==='wa'){state.out.whatsapp=false;}else{state[p]=false;if(p==='engage')state.out.whatsapp=false;}
+        if(!state.roiCostTouched)state.roiCost=null;
+        renderMods();renderAll();refreshFlow();return;}
+    }
+    if(!state.roiActive[k]&&state.roiAuto)delete state.roiAuto[k];
+    renderRoi();return;}
   if(e.target.closest('#roiUseCot')){state.roiCostTouched=false;state.roiCost=null;const ci=document.getElementById('roiCost');if(ci)ci.value=Math.round(roiDefaultCost());calcRoiNumbers();return;}
   if(e.target.closest('#roiCopyBtn')){roiCopy();return;}
 });
@@ -1405,11 +1566,23 @@ document.getElementById('optWa').addEventListener('click',e=>{
   else{state.chan[k]=!state.chan[k];}
   renderMods();renderAll();refreshFlow();
 });
-document.getElementById('volArea').addEventListener('click',e=>{const t=e.target.closest('[data-vol]');if(!t)return;state.vol=+t.dataset.vol;state.volMode='tile';state.volCustom=0;renderVol();renderRail();renderSummary();});
+document.getElementById('volArea').addEventListener('click',e=>{
+  const st=e.target.closest('[data-spot-toggle]');
+  if(st){const open=!st.classList.contains('open');state.spotOpen=open;
+    if(!open&&state.spotQty>0){state.spotQty=0;updateSpot();renderRail();renderSummary();const si=document.getElementById('spotInput');if(si)si.value='';}
+    st.classList.toggle('open',open);st.setAttribute('aria-expanded',open);st.querySelector('.spot-plus').textContent=open?'−':'+';
+    st.nextElementSibling.classList.toggle('open',open);
+    if(open)setTimeout(()=>document.getElementById('spotInput')?.focus({preventScroll:true}),260);
+    return;}
+  const t=e.target.closest('[data-vol]');if(!t)return;state.vol=+t.dataset.vol;state.volMode='tile';state.volCustom=0;renderVol();renderRail();renderSummary();syncRoiVolume();});
 document.getElementById('volArea').addEventListener('input',e=>{
+  const sp=e.target.closest('[data-spot]');
+  if(sp){state.spotQty=Math.max(0,Math.round(+sp.value||0));updateSpot();renderRail();renderSummary();return;}
   const inp=e.target.closest('[data-vol-custom]');if(!inp)return;
   const raw=+inp.value||0;
   if(raw>0){state.volMode='custom';state.volCustom=raw;}else{state.volMode='tile';state.volCustom=0;}
+  updateSpot();
+  syncRoiVolume();
   document.querySelectorAll('#volArea .vtile').forEach(t=>t.classList.toggle('sel',state.volMode==='tile'&&+t.dataset.vol===state.vol));
   document.getElementById('vcustom')?.classList.toggle('sel',state.volMode==='custom');
   const cp=document.getElementById('customPrice');if(cp)cp.textContent=state.volMode==='custom'?raw.toLocaleString('es-CL'):'—';
@@ -1428,26 +1601,26 @@ document.getElementById('waArea').addEventListener('click',e=>{
     else if(a==='out-wa'){state.out.whatsapp=true;}
     renderMods();renderOpts();renderWa();renderRail();renderSummary();refreshFlow();return;}
   const cty=e.target.closest('[data-cty]');
-  if(cty){state.wa.country=cty.dataset.cty;renderWa();renderRail();renderSummary();return;}
+  if(cty){state.wa.country=cty.dataset.cty;renderWa();renderRail();renderSummary();calcRoiNumbers();return;}
   const w=e.target.closest('[data-wallet]');if(!w)return;
-  state.wa.wallet=w.dataset.wallet;renderWa();renderRail();renderSummary();
+  state.wa.wallet=w.dataset.wallet;renderWa();renderRail();renderSummary();calcRoiNumbers();
 });
 document.getElementById('waArea').addEventListener('input',e=>{const inp=e.target.closest('[data-wa-in]');if(!inp)return;state.wa[inp.dataset.waIn]=Math.max(0,+inp.value||0);renderWaLive();renderRail();renderSummary();});
 document.getElementById('mSum').addEventListener('click',()=>document.getElementById('mDetail').classList.toggle('open'));
 document.getElementById('sumCard').addEventListener('input',e=>{
   const el=e.target.closest('[data-ed]');if(!el)return;const t=el.dataset.ed;
-  if(t==='vol'){const raw=+el.value||0;if(raw>0){state.volMode='custom';state.volCustom=raw;}renderVol();renderRail();renderSummary();const n=document.querySelector('#sumCard [data-ed="vol"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
+  if(t==='vol'){const raw=+el.value||0;if(raw>0){state.volMode='custom';state.volCustom=raw;}renderVol();renderRail();renderSummary();syncRoiVolume();const n=document.querySelector('#sumCard [data-ed="vol"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
   else if(t==='plan'){const val=el.value;if(val==='paquetizado'){state.setupMode='paquetizado';}else{state.setupMode='acompanada';state.setup=val;}renderSetup();renderRail();renderSummary();}
   else if(t==='casspPlan'){state.cassperPlan=el.value;renderRail();renderSummary();}
   else if(t==='casspRec'){state.cassperRecovered=Math.max(0,+el.value||0);renderSummary();const n=document.querySelector('#sumCard [data-ed="casspRec"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
 });
 document.getElementById('sumCard').addEventListener('click',e=>{
   const w=e.target.closest('[data-ed="wallet"]');if(!w)return;
-  state.wa.wallet=w.dataset.val;renderWa();renderRail();renderSummary();
+  state.wa.wallet=w.dataset.val;renderWa();renderRail();renderSummary();calcRoiNumbers();
 });
 document.body.addEventListener('click',e=>{const b=e.target.closest('[data-next],[data-goto]');if(!b)return;const id=nextVisibleFrom(b.dataset.next||b.dataset.goto);document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});});
 
-document.getElementById('copyBtn').addEventListener('click',()=>{
+document.getElementById('copyBtn')?.addEventListener('click',()=>{
   const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=state.studio?(state.setupMode==='paquetizado'?'Rápida sin acompañamiento (paquetizado) — Gratis':SETUP[state.setup].name+' (acompañada) — '+usd(s)):'Estándar (sin IA) — Gratis';
@@ -1474,12 +1647,86 @@ function computeActive(){
 function onScroll(){
   const s=window.scrollY>48;if(s!==_sc){_sc=s;topbar.classList.toggle('scrolled',s);}
   const tb=document.getElementById('topBtn');if(tb)tb.classList.toggle('show',window.scrollY>420);
-  if(!_spy){_spy=true;requestAnimationFrame(()=>{_spy=false;computeActive();});}
+  if(!_spy&&!window._snapBusy){_spy=true;requestAnimationFrame(()=>{_spy=false;computeActive();});}
 }
 window.addEventListener('scroll',onScroll,{passive:true});
 window.addEventListener('resize',onScroll,{passive:true});
 
+/* Scroll magnético: el scroll es libre; al soltar cerca del inicio de un nivel, se acomoda solo
+   con un deslizamiento suave y el nivel "asienta" con un rebote leve (efecto líquido). */
+(function(){
+  const OFF=130,PULL=0.32,QUIET=170,DUR=560;
+  let tEnd=null,anim=null,gliding=false;
+  function secEls(){return activeSections().map(id=>document.getElementById(id)).filter(el=>el&&!el.classList.contains('hidden'));}
+  function blocked(t){return document.getElementById('modalBack')?.classList.contains('open')||(t&&t.closest&&t.closest('input,textarea,select,.modal'));}
+  function cancel(){if(anim){cancelAnimationFrame(anim);anim=null;}gliding=false;window._snapBusy=false;}
+  const ease=t=>1-Math.pow(1-t,3);
+  function settle(el){if(prefersReduced)return;el.classList.remove('settle');void el.offsetWidth;el.classList.add('settle');}
+  function glideTo(el,y){
+    cancel();const from=window.scrollY,dist=y-from;
+    if(Math.abs(dist)<2){settle(el);return;}
+    if(prefersReduced){window.scrollTo(0,y);return;}
+    gliding=true;window._snapBusy=true;setActive(el.id);
+    const t0=performance.now();
+    const tick=now=>{const p=Math.min(1,(now-t0)/DUR);window.scrollTo(0,from+dist*ease(p));
+      if(p<1)anim=requestAnimationFrame(tick);else{anim=null;gliding=false;window._snapBusy=false;settle(el);}};
+    anim=requestAnimationFrame(tick);
+  }
+  function topY(el){return window.scrollY+el.getBoundingClientRect().top-OFF+8;}
+  function magnet(){
+    if(gliding||document.getElementById('modalBack')?.classList.contains('open'))return;
+    const els=secEls();if(!els.length)return;
+    const vh=window.innerHeight;let best=null,bd=Infinity;
+    els.forEach(el=>{const d=el.getBoundingClientRect().top-OFF;if(Math.abs(d)<Math.abs(bd)){bd=d;best=el;}});
+    /* solo atrae si el borde del nivel está cerca; dentro de un nivel largo se queda donde dejaste */
+    if(best&&Math.abs(bd)<vh*PULL)glideTo(best,topY(best));
+  }
+  window.addEventListener('scroll',()=>{if(gliding)return;clearTimeout(tEnd);tEnd=setTimeout(magnet,QUIET);},{passive:true});
+  /* cualquier gesto nuevo interrumpe el deslizamiento: nunca pelea con el usuario */
+  ['wheel','touchstart','mousedown'].forEach(ev=>window.addEventListener(ev,()=>{if(gliding)cancel();clearTimeout(tEnd);},{passive:true}));
+  /* teclado: flechas / AvPág / espacio avanzan un nivel completo */
+  window.addEventListener('keydown',e=>{
+    if(blocked(e.target)||e.metaKey||e.ctrlKey||e.altKey)return;
+    const k=e.key;let dir=0;
+    if(k==='ArrowDown'||k==='PageDown'||(k===' '&&!e.shiftKey))dir=1;
+    else if(k==='ArrowUp'||k==='PageUp'||(k===' '&&e.shiftKey))dir=-1;
+    if(!dir)return;
+    const els=secEls();let i=0;els.forEach((el,n)=>{if(el.getBoundingClientRect().top<=OFF+40)i=n;});
+    const cur=els[i],r=cur.getBoundingClientRect();
+    if(dir>0&&r.bottom>window.innerHeight+6)return;   /* nivel largo: deja bajar normal */
+    if(dir<0&&r.top<OFF-6){e.preventDefault();glideTo(cur,topY(cur));return;}
+    const nx=els[i+dir];if(!nx)return;
+    e.preventDefault();glideTo(nx,topY(nx));
+  });
+})();
+
 /* popups para explicar pricing */
+/* Fin de página: si ya estás en el tope inferior y sigues bajando, el contenido se estira como líquido
+   y aparece la frase de cierre. Al soltar, vuelve con rebote. */
+(function(){
+  const wrap=document.querySelector('.wrap'),cap=document.getElementById('endCap');if(!wrap||!cap)return;
+  const drop=document.getElementById('endDrop'),txt=cap.querySelector('.endcap-txt');
+  const MAX=150,K=260;let acc=0,rel=null,ty=null;
+  const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
+  const blocked=()=>document.getElementById('modalBack')?.classList.contains('open');
+  function paint(p){
+    wrap.style.transform=p>0?`translateY(${-p*0.55}px) scaleY(${1+p/2600})`:'';
+    drop.style.height=p+'px';drop.style.width=(90+p*1.1)+'px';
+    const o=Math.min(1,Math.max(0,(p-28)/60));txt.style.opacity=o;txt.style.transform=`translateY(${16-16*o}px)`;
+  }
+  function pull(d){acc=Math.max(0,acc+d);const p=MAX*(1-Math.exp(-acc/K));wrap.classList.remove('spring');cap.classList.remove('spring');paint(p);}
+  function release(){acc=0;wrap.classList.add('spring');cap.classList.add('spring');paint(0);}
+  function arm(){clearTimeout(rel);rel=setTimeout(release,prefersReduced?0:140);}
+  window.addEventListener('wheel',e=>{
+    if(blocked()||e.ctrlKey)return;
+    if(e.deltaY>0&&atBottom()){e.preventDefault();pull(e.deltaY);arm();}
+    else if(acc>0){e.preventDefault();pull(e.deltaY);arm();}
+  },{passive:false});
+  window.addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
+  window.addEventListener('touchmove',e=>{if(ty==null||blocked())return;const y=e.touches[0].clientY,d=ty-y;ty=y;
+    if((d>0&&atBottom())||acc>0){if(e.cancelable)e.preventDefault();pull(d*1.4);}},{passive:false});
+  window.addEventListener('touchend',()=>{ty=null;if(acc>0)release();},{passive:true});
+})();
 const POPS={
  conversacion:{title:'¿Qué contempla una conversación?',html:`
    <div class="chatmock">
@@ -1496,12 +1743,12 @@ const POPS={
    <div class="mrow"><span class="mn">03</span><div><div class="mt">Ventana de 24 horas</div><div class="md">Desde el último mensaje del cliente: todo lo que ocurra dentro de esa ventana es una sola conversación.</div></div></div>
    <div class="mrow plain"><span class="mn">✓</span><div><div class="mt">Mínimo mensual: 2.000</div><div class="md">La bolsa inbound parte en 2.000 conversaciones al mes.</div></div></div>`},
  billetera:{title:'Billetera Adereso–Meta',html:`
-   <p style="margin-bottom:14px;color:var(--z400)">Prepago, sin tarjeta de crédito, para la comunicación proactiva por WhatsApp. El fee de Adereso aplica al consumo de plantillas (Engage). Los mensajes service (Desk/Studio) incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads.</p>
+   <p style="margin-bottom:14px;color:var(--z400)">Prepago, sin tarjeta de crédito, para la comunicación proactiva por WhatsApp. El fee de Adereso aplica al consumo de plantillas (Engage). Los mensajes service (Desk/Studio) incluyen 1.000 gratis/mes + 1 semana de gratuidad si el lead viene de Meta Ads.</p>
    <div class="mgrid2">
      <div class="mbox"><h4>Recurrente <span class="mfee">10%</span></h4><ul><li>• Se renueva cada período</li><li>• No vence de inmediato</li><li>• Usable hasta tu último período de facturación</li><li>• Consumo estable y predecible</li></ul></div>
      <div class="mbox"><h4>Spot <span class="mfee">12%</span></h4><ul><li>• No vence, se acumula mes a mes</li><li>• Servicio se corta al agotar saldo</li><li>• Mismo fee toda la billetera</li><li>• Consumo variable o estacional</li></ul></div>
    </div>
-   <div class="mrow plain" style="margin-top:6px"><span class="mn">i</span><div><div class="md">Los mensajes service incluyen 1.000 gratis/mes + 72 h de gratuidad para los que llegan desde Meta Ads. El costo de Meta por plantilla varía según el país; el fee de Adereso se suma según la billetera (10% recurrente / 12% spot).</div></div></div>`},
+   <div class="mrow plain" style="margin-top:6px"><span class="mn">i</span><div><div class="md">Los mensajes service incluyen 1.000 gratis/mes + 1 semana de gratuidad si el lead viene de Meta Ads. El costo de Meta por plantilla varía según el país; el fee de Adereso se suma según la billetera (10% recurrente / 12% spot).</div></div></div>`},
  incluido:{title:'Incluido siempre, sin costo extra',html:`
    <p style="margin-bottom:14px;color:var(--z400)"><b>La conexión de todos los canales es gratuita:</b></p>
    <div class="chips">`+['WhatsApp','Webchat','Correo','Instagram','Facebook','LinkedIn','TikTok','X','Licencias humanas ilimitadas','Experience · encuestas','Engage · plantillas','Métricas y analítica','Soporte básico'].map(c=>`<span class="chip">${c}</span>`).join('')+`</div>
