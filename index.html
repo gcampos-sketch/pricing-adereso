@@ -219,10 +219,11 @@
   .rc-total b.neg{color:var(--danger)}
   .roi-col .roi-usecot{align-self:flex-start;margin-top:8px}
   .roi-verdict{margin-top:14px;display:flex;align-items:center;gap:18px;background:rgba(82,206,94,0.08);border:1px solid rgba(82,206,94,0.35);border-radius:var(--r3);padding:16px 20px}
-  .rv-big{font-family:var(--font-head);font-size:40px;font-weight:600;color:var(--success);line-height:1}
+  .rv-big{font-family:var(--font-head);font-size:52px;letter-spacing:-0.02em;font-weight:600;color:var(--success);line-height:1}
   .rv-big.neg{color:var(--danger)}
   .rv-txt{display:flex;flex-direction:column;gap:3px}
   .rv-txt b{font-size:13px;color:#fff;font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+  .rv-pct{font-style:normal;text-transform:none;letter-spacing:0;font-weight:400;color:var(--success);margin-left:6px;white-space:nowrap}
   .rv-txt span{font-size:14.5px;color:var(--z300)}
   /* Proceso comercial */
   .proc{margin-top:10px}
@@ -422,11 +423,23 @@
   .spot-meta .vc-amt{font-family:var(--font-head);font-size:22px;color:var(--brand);font-weight:500}
   .spot-meta small{font-size:11px;color:var(--z500);margin-top:3px}
   @media(max-width:560px){.spot-meta.r{text-align:left}}
-  .spot-toggle{margin-top:16px;display:inline-flex;align-items:center;gap:9px;background:none;border:0;padding:4px 0;color:var(--brand);font:inherit;font-size:14px;font-weight:500;cursor:pointer}
-  .spot-toggle small{color:var(--z500);font-size:12.5px;font-weight:400}
-  .spot-toggle:hover{filter:brightness(1.12)}
-  .spot-plus{width:20px;height:20px;border-radius:999px;border:1.5px solid var(--brand);display:grid;place-items:center;font-size:14px;line-height:1;transition:transform .3s var(--ease)}
+  .spot-save{flex:1.3;min-width:240px;display:flex;align-items:center;gap:14px;background:rgba(82,206,94,0.09);border:1px solid rgba(82,206,94,0.35);border-radius:var(--r2);padding:12px 16px}
+  .ss-big{font-family:var(--font-head);font-size:30px;font-weight:600;color:var(--success);line-height:1;white-space:nowrap}
+  .ss-txt{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--z400);line-height:1.35}
+  .ss-txt b{font-size:14px;color:#fff;font-weight:500}
+  /* fila que abre la bolsa spot: pregunta a la izquierda, acción a la derecha */
+  .spot-toggle{margin-top:14px;width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:14px 18px;color:inherit;font:inherit;cursor:pointer;transition:border-color .2s var(--ease),background .2s var(--ease),border-radius .2s var(--ease)}
+  .spot-toggle:hover{border-color:rgba(255,213,64,0.45)}
+  .spot-toggle.open{border-color:var(--brand);border-bottom-left-radius:0;border-bottom-right-radius:0;background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  .st-ico{flex:none;width:38px;height:38px;border-radius:var(--r2);display:grid;place-items:center;color:var(--brand);background:rgba(255,213,64,0.1);border:1px solid rgba(255,213,64,0.25)}
+  .st-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .st-txt b{font-size:14.5px;color:#fff;font-weight:500}
+  .st-txt small{font-size:12.5px;color:var(--z500);line-height:1.4}
+  .st-cta{flex:none;display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:500;color:var(--brand);white-space:nowrap}
+  .spot-plus{width:22px;height:22px;border-radius:999px;border:1.5px solid var(--brand);display:grid;place-items:center;font-size:15px;line-height:1;transition:transform .3s var(--ease),background .2s var(--ease)}
   .spot-toggle.open .spot-plus{transform:rotate(180deg);background:var(--brand);color:#000}
+  @media(max-width:600px){.spot-toggle{flex-wrap:wrap}.st-cta{width:100%;justify-content:flex-end}}
+  .spot-acc .spot{margin-top:0;border-top:0;border-style:solid;border-color:var(--brand);border-top-left-radius:0;border-top-right-radius:0}
   .spot-acc{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease),opacity .3s var(--ease);opacity:0}
   .spot-acc.open{grid-template-rows:1fr;opacity:1}
   .spot-acc-in{overflow:hidden;min-height:0}
@@ -574,6 +587,7 @@
   .rcard .rsub{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--z500);text-align:center;margin-bottom:12px}
   .rcard .rtitle{font-family:var(--font-head);font-size:19px;color:var(--brand);font-weight:500;text-align:center;display:flex;gap:8px;align-items:center;justify-content:center}
   .rcard .rtitle svg{color:var(--brand)}
+  .rcard .rtitle .x-glyph{font-size:18px;line-height:1;color:#fff}
   .rcard .rdesc{font-size:12.5px;color:var(--z400);text-align:center;margin:8px auto 18px;max-width:32ch;line-height:1.45}
   .rcard .rbig{text-align:center;font-family:var(--font-head);font-weight:500;color:#fff;line-height:1;margin-bottom:18px}
   .rcard .rbig .n{font-size:42px}
@@ -941,7 +955,7 @@ const WA_PRICES={
  ES:{name:'España',         flag:'🇪🇸', marketing:0.0615, utility:0.0200, authentication:0.0200, call:null},
  XL:{name:'Resto de LatAm', flag:'🌎', marketing:0.0740, utility:0.0113, authentication:0.0113, call:0.0116}
 };
-const WA_COUNTRIES=['CL','AR','BR','CO','MX','PE','ES','XL'];
+const WA_COUNTRIES=['CL','PE','CO','AR','BR','MX','ES','XL'];
 const WA_SERVICE_FREE=true;   /* service inbound gratis (modelo por mensaje) */
 /* Chile: tarifa de llamada por tramos (USD/min), vigente 1 abr 2026. Otros países: rate base plano. */
 const CL_CALL_TIERS=[{max:50000,rate:0.0121},{max:250000,rate:0.0098},{max:1000000,rate:0.0086},{max:2500000,rate:0.0074},{max:5000000,rate:0.0066},{max:Infinity,rate:0.0055}];
@@ -1015,6 +1029,9 @@ function monthly(){
   if(state.studio&&!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)base=base*(1+STUDIO_NO_DESK_SURCHARGE/100);
   return base;
 }
+/* Canal X: bolsa fija de hasta 7.000 mensajes por USD 450/mes, se suma a la mensualidad. */
+const X_PRICE=450,X_MSGS=7000;
+function xCost(){return (hasService()&&state.chan.x)?X_PRICE:0;}
 function setupCost(){if(!state.studio||state.setupMode==='paquetizado')return 0;return SETUP[state.setup].price;}
 /* Ticket extra fuera de bolsa = extraRate del tramo activo × 1,15 (lógica del cotizador).
    Tramo activo = último tramo cuyo cap ≤ volumen. La mantención de bot (160) no entra en el unitario. */
@@ -1084,7 +1101,7 @@ function renderOpts(){
   const logo=(c)=>`<span class="chan-logo" style="color:${c.color}"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" fill-rule="evenodd"><path d="${CHAN_SVG[c.k]}"/></svg></span><span class="chan-lbl">${c.label}</span>`;
   const inChip=(c)=>{const on=c.k==='whatsapp'?state.whatsapp:state.chan[c.k];
     return `<button class="chan ${on?'on':''} ${c.paid?'paid':''}" data-chan="${c.k}" aria-pressed="${on}">
-      ${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</button>`;};
+      ${c.k==='x'?'<span class="chan-pago">USD 450</span>':c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</button>`;};
   let html=`<div class="chan-grid">${CHANNELS.map(inChip).join('')}</div>`;
   if(state.engage){
     const outChans=[{k:'whatsapp',label:'WhatsApp',color:'#25D366',paid:true},{k:'wacall',label:'WhatsApp Call',color:'#25D366',paid:true},{k:'correo',label:'Correo',color:'#FFD540',paid:false}];
@@ -1114,6 +1131,7 @@ function renderVol(){
         <div class="vc-price"><span class="vc-lbl">Conversaciones/mes</span><span class="vc-amt" id="customPrice">${cSel?state.volCustom.toLocaleString('es-CL'):'—'}</span></div>
       </div>${!state.desk?`<div class="note warn" style="margin-top:16px"><span data-i="info"></span><div><b>Studio sin Desk:</b> el agente IA va sin la mesa de ayuda humana; aplica un recargo sobre la bolsa (por confirmar).</div></div>`:''}`;
   }
+  area.innerHTML+=`<div class="note" style="margin-top:16px"><span data-i="info"></span><div><b>¿Y si te pasas de la bolsa?</b> No se corta el servicio: cada conversación adicional se cobra como <b>conversación extra</b>.</div></div>`;
   area.innerHTML+=spotBlock();
   paintIcons(area);
   applyReveal(area,'.vtile,.vcustom');
@@ -1121,26 +1139,21 @@ function renderVol(){
 
 function spotBlock(){
   const u=spotUnit();if(!u)return '';
-  const split=u.desk!=null&&u.studio!=null?`Desk ${usd3(u.desk)} + Studio ${usd3(u.studio)}`:(u.desk!=null?'Desk':'Studio');
   const open=state.spotOpen||state.spotQty>0;
-  return `<button class="spot-toggle ${open?'open':''}" data-spot-toggle aria-expanded="${open}"><span class="spot-plus">${open?'−':'+'}</span>Activar bolsa spot <small>para temporadas altas</small></button>
+  return `<button class="spot-toggle ${open?'open':''}" data-spot-toggle aria-expanded="${open}">
+    <span class="st-ico" data-i="bolt" data-sz="18"></span>
+    <span class="st-txt"><b>¿Tienes peaks de conversaciones en ciertas temporadas?</b><small>Cyber, Black Friday, fin de año… anticípate con una bolsa spot y paga menos que la conversación extra.</small></span>
+    <span class="st-cta"><span class="st-lbl">${open?'Quitar bolsa spot':'Activar bolsa spot'}</span><span class="spot-plus">${open?'−':'+'}</span></span>
+  </button>
   <div class="spot-acc ${open?'open':''}"><div class="spot-acc-in">
   <div class="spot ${state.spotQty>0?'sel':''}" id="spotBox">
-    <div class="spot-head"><span class="spot-tag">Bolsa spot</span><span class="spot-t">¿Temporada alta? Compra conversaciones adicionales al valor normal</span></div>
     <div class="spot-row">
-      <div class="vc-field"><label for="spotInput">Conversaciones spot</label><input type="number" id="spotInput" min="0" step="500" data-spot value="${state.spotQty||''}" placeholder="Ej: 3.000"></div>
-      <div class="spot-meta"><span class="vc-lbl">Valor por conversación</span><span class="spot-u">${usd3(u.total)}</span><small>${split}</small></div>
-      <div class="spot-meta r"><span class="vc-lbl">Total bolsa spot</span><span class="vc-amt" id="spotTotal">${state.spotQty>0?usd(spotCost()):'—'}</span><small id="spotSave">${spotSaveTxt()}</small></div>
+      <div class="vc-field"><label for="spotInput">¿Cuántas conversaciones adicionales?</label><input type="number" id="spotInput" min="0" step="500" data-spot value="${state.spotQty||''}" placeholder="Ej: 3.000"></div>
+      <div class="spot-save"><span class="ss-big">−15%</span><span class="ss-txt"><b>Más económica que la conversación extra</b>Pagas al valor normal de tu bolsa, sin el recargo por exceso.</span></div>
     </div>
   </div></div></div>`;
 }
-function spotSaveTxt(){const u=spotUnit();if(!u||!(state.spotQty>0))return 'Sin el recargo del ticket extra';return 'Ahorro vs ticket extra: '+usd(state.spotQty*(u.extra-u.total));}
-function updateSpot(){const box=document.getElementById('spotBox');if(!box)return;const u=spotUnit();if(!u)return;
-  box.classList.toggle('sel',state.spotQty>0);
-  const t=document.getElementById('spotTotal');if(t)t.textContent=state.spotQty>0?usd(spotCost()):'—';
-  const s=document.getElementById('spotSave');if(s)s.textContent=spotSaveTxt();
-  const uu=box.querySelector('.spot-u');if(uu)uu.textContent=usd3(u.total);
-  const sm=box.querySelector('.spot-meta small');if(sm)sm.textContent=u.desk!=null&&u.studio!=null?`Desk ${usd3(u.desk)} + Studio ${usd3(u.studio)}`:(u.desk!=null?'Desk':'Studio');}
+function updateSpot(){const box=document.getElementById('spotBox');if(box)box.classList.toggle('sel',state.spotQty>0);}
 
 function renderSetup(){
   const area=document.getElementById('setupArea');
@@ -1169,12 +1182,12 @@ function renderWa(){
       <div class="cty-row">${WA_COUNTRIES.map(c=>{const cp=WA_PRICES[c],todo=cp.marketing==null;return `<button class="cty ${state.wa.country===c?'sel':''} ${todo?'todo':''}" data-cty="${c}"><span class="cty-flag">${cp.flag}</span>${cp.name}${todo?'<span class="cty-tag">por confirmar</span>':''}</button>`;}).join('')}</div>
     </div>`;
   if(state.whatsapp){
-    html+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd2(p.utility)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 1 semana gratis si el lead viene de Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
+    html+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd3(p.utility)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 1 semana gratis si el lead viene de Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
   }
   if(waTemplates()){
     const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
     html+=`<div><label class="wa-block-lbl">Engage · plantillas por WhatsApp saliente <span class="u">— precio Meta por mensaje</span></label><div class="pl-grid">
-      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd2(p[k])}<small>c/u</small>${fee}</span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}
+      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd3(p[k])}<small>c/u</small>${fee}</span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}
     </div>
     <div class="note warn" style="margin-top:12px"><span data-i="info"></span><div><b>¿Esperas respuestas a estas plantillas?</b> Cuando un cliente responde a una plantilla enviada, esa respuesta abre una conversación inbound y consume cupo de la <button class="linkbtn" data-goto="s2">bolsa de conversaciones contratada</button>.</div></div></div>`;
   }else if(state.engage){
@@ -1183,7 +1196,7 @@ function renderWa(){
     html+=`<div class="note warn"><span data-i="info"></span><div><b>Plantillas desactivadas:</b> el envío de marketing, utilidad y autenticación requiere <b>Engage</b> con WhatsApp saliente. <button class="linkbtn" data-act="engage">Activar Engage →</button></div></div>`;
   }
   if(waCalls()){
-    const callLbl=callConfirmed()?((state.wa.country==='CL'?'desde ':'')+usd2(waP().call))+'<small>/min</small>':'por confirmar';
+    const callLbl=callConfirmed()?((state.wa.country==='CL'?'desde ':'')+usd3(waP().call))+'<small>/min</small>':'por confirmar';
     html+=`<div><label class="wa-block-lbl">WhatsApp Call · minutos de llamada al mes <span class="u">— canal saliente de Engage</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div></div></div>`;
   }
   html+=`<div class="divider"></div>
@@ -1249,10 +1262,7 @@ function renderSummary(){
   const xt=extraTicket();
   if(xt){
     const xv=xt.split?`${usd3(xt.total)} c/u <small class="xsplit">(Desk ${usd3(xt.desk)} + Studio ${usd3(xt.studio)})</small>`:`${usd3(xt.total)} c/u <small class="xsplit">(${xt.desk!=null?'Desk':'Studio'})</small>`;
-    mTable+=`<div class="rr xrow"><span class="k">Ticket extra · fuera de bolsa</span><span class="v">${xv}</span></div>`;
-  }
-  if(state.spotQty>0&&spotUnit()){
-    mTable+=`<div class="rr xrow"><span class="k">Bolsa spot · ${state.spotQty.toLocaleString('es-CL')} conv <small class="xsplit">compra única · ${usd3(spotUnit().total)} c/u</small></span><span class="v">${usd(spotCost())}</span></div>`;
+    mTable+=`<div class="rr xrow"><span class="k">Conversación extra · fuera de bolsa</span><span class="v">${xv}</span></div>`;
   }
   const mDesc=!state.studio?'Plataforma omnicanal. Contrato anual.':(soloStudio?'Agente con IA, sin mesa de ayuda humana. Contrato anual.':'Plataforma omnicanal + agente con IA. Contrato anual.');
   const mensualCard=`
@@ -1331,12 +1341,46 @@ function renderSummary(){
     </div>`;
   }
 
+  /* --- CANAL X · bolsa propia --- */
+  let xCard='';
+  if(xCost()>0){
+    xCard=`
+    <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>Mensual</span>
+      <div class="rsub">Canal adicional</div>
+      <div class="rtitle"><span class="x-glyph">𝕏</span>Canal X</div>
+      <div class="rdesc">Bolsa mensual de mensajes de X, aparte de la bolsa de conversaciones.</div>
+      <div class="rbig"><span class="n">${X_PRICE}</span><span class="u">/mes</span></div>
+      <div class="rtable">
+        <div class="rr"><span class="k">Incluye</span><span class="v">Hasta ${X_MSGS.toLocaleString('es-CL')} mensajes/mes</span></div>
+        <div class="rr"><span class="k">Cobro</span><span class="v">Recurrente</span></div>
+      </div>
+    </div>`;
+  }
+
+  /* --- BOLSA SPOT · compra única --- */
+  let spotCard='';
+  const su=spotUnit();
+  if(state.spotQty>0&&su){
+    spotCard=`
+    <div class="rcard"><span class="rlabel"><span data-i="bill" data-sz="14"></span>Compra única</span>
+      <div class="rsub">Temporada alta</div>
+      <div class="rtitle"><span data-i="bolt" data-sz="18"></span>Bolsa spot</div>
+      <div class="rdesc">Conversaciones adicionales al valor normal, sin recargo de conversación extra.</div>
+      <div class="rbig"><span class="n">${usd(spotCost()).replace('$','')}</span><span class="u">USD</span></div>
+      <div class="rtable">
+        <div class="rr"><span class="k">Conversaciones</span><span class="v">${state.spotQty.toLocaleString('es-CL')}</span></div>
+        <div class="rr"><span class="k">Valor por conversación</span><span class="v">${usd3(su.total)}${su.desk!=null&&su.studio!=null?`<small class="xsplit">(Desk ${usd3(su.desk)} + Studio ${usd3(su.studio)})</small>`:''}</span></div>
+        <div class="rr"><span class="k">Ahorro vs conversación extra</span><span class="v" style="color:var(--success)">${usd(state.spotQty*(su.extra-su.total))}</span></div>
+      </div>
+    </div>`;
+  }
+
   if(!hasService()&&!state.cassper){
     document.getElementById('sumCard').innerHTML=`<div class="rcard" style="text-align:center;padding:40px 24px"><div class="rtitle" style="color:var(--z400)">Sin servicios seleccionados</div><div class="rdesc" style="margin:10px auto 0">Vuelve al Nivel 1 y activa al menos un servicio (Desk, Studio o Cassper) para ver la cotización.</div></div>`;
     return;
   }
   document.getElementById('sumCard').innerHTML=`
-    <div class="result-cards">${hasService()?mensualCard:''}${cassperCard}${prepagoCard}${withIA?pagoCard:''}</div>`;
+    <div class="result-cards">${hasService()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${withIA?pagoCard:''}</div>`;
   paintIcons(document.getElementById('sumCard'));
   applyReveal(document.getElementById('sumCard'),'.rcard');
 }
@@ -1407,7 +1451,7 @@ function roiVals(key){const cfg=ROI_CASES[key],st=state.roiVals[key]||{},v={};cf
 function roiParse(x){const n=parseFloat(String(x).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
 /* Al cambiar la bolsa, los cuadros de volumen del ROI vuelven a igualarla. */
 function syncRoiVolume(){Object.keys(state.roiVals).forEach(k=>{const cfg=ROI_CASES[k];if(!cfg)return;cfg.fields.forEach(f=>{if(f.vol)delete state.roiVals[k][f.id];});});if(!state.roiCostTouched)state.roiCost=null;renderRoi();}
-function roiDefaultCost(){return monthly()+casspM();}
+function roiDefaultCost(){return monthly()+xCost()+casspM();}
 function roiCostValue(){return (state.roiCostTouched&&state.roiCost!=null)?state.roiCost:roiDefaultCost();}
 
 function renderRoi(){
@@ -1455,8 +1499,8 @@ function renderRoi(){
       </div>
     </div>
     <div class="roi-verdict">
-      <div class="rv-big" id="roiValue">0%</div>
-      <div class="rv-txt"><b>ROI mensual</b><span id="roiTimes">Activa un caso de uso para ver el retorno.</span></div>
+      <div class="rv-big" id="roiValue">—</div>
+      <div class="rv-txt"><b>Veces recuperada la inversión <em class="rv-pct" id="roiPct"></em></b><span id="roiTimes">Activa un caso de uso para ver el retorno.</span></div>
     </div>
     <div class="roi-fee" id="roiFeeLine" style="display:none"></div>
     <div class="roi-empty" id="roiEmpty">Activa al menos un caso de uso para construir el caso de negocio.</div>
@@ -1479,7 +1523,8 @@ function calcRoiNumbers(){
   const pt=document.getElementById('roiPayTotal');if(pt)pt.textContent=usd(cost);
   const ls=document.getElementById('roiLess');if(ls)ls.textContent='−'+usd(cost);
   const nEl=document.getElementById('roiNet');if(nEl){nEl.textContent=usd(net);nEl.classList.toggle('neg',net<0);}
-  const rEl=document.getElementById('roiValue');if(rEl){rEl.textContent=active?Math.round(roi).toLocaleString('es-CL')+'%':'—';rEl.classList.toggle('neg',active&&roi<0);}
+  const rEl=document.getElementById('roiValue');if(rEl){rEl.textContent=(active&&cost>0)?veces.toLocaleString('es-CL',{maximumFractionDigits:1})+'×':'—';rEl.classList.toggle('neg',active&&veces<1);}
+  const pEl=document.getElementById('roiPct');if(pEl)pEl.textContent=(active&&cost>0)?'(ROI mensual '+Math.round(roi).toLocaleString('es-CL')+'%)':'';
   const tm=document.getElementById('roiTimes');if(tm)tm.textContent=!active?'Activa un caso de uso para ver el retorno.':(cost>0?'Por cada $1 que pagas, recibes $'+veces.toLocaleString('es-CL',{maximumFractionDigits:1}):'Ingresa la mensualidad para calcular el retorno.');
   const fee=document.getElementById('roiFeeLine');if(fee)fee.style.display='none';
   const emp=document.getElementById('roiEmpty');if(emp)emp.style.display=active?'none':'';
@@ -1570,7 +1615,7 @@ document.getElementById('volArea').addEventListener('click',e=>{
   const st=e.target.closest('[data-spot-toggle]');
   if(st){const open=!st.classList.contains('open');state.spotOpen=open;
     if(!open&&state.spotQty>0){state.spotQty=0;updateSpot();renderRail();renderSummary();const si=document.getElementById('spotInput');if(si)si.value='';}
-    st.classList.toggle('open',open);st.setAttribute('aria-expanded',open);st.querySelector('.spot-plus').textContent=open?'−':'+';
+    st.classList.toggle('open',open);st.setAttribute('aria-expanded',open);st.querySelector('.spot-plus').textContent=open?'−':'+';const lb=st.querySelector('.st-lbl');if(lb)lb.textContent=open?'Quitar bolsa spot':'Activar bolsa spot';
     st.nextElementSibling.classList.toggle('open',open);
     if(open)setTimeout(()=>document.getElementById('spotInput')?.focus({preventScroll:true}),260);
     return;}
@@ -1625,8 +1670,8 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=state.studio?(state.setupMode==='paquetizado'?'Rápida sin acompañamiento (paquetizado) — Gratis':SETUP[state.setup].name+' (acompañada) — '+usd(s)):'Estándar (sin IA) — Gratis';
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
-  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push('Mensual (contrato anual): '+usd(m)+'/mes');
-    const xt=extraTicket();if(xt)L.push('Ticket extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
+  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push('Mensual (contrato anual): '+usd(m)+'/mes');if(xCost()>0)L.push('Canal X (hasta '+X_MSGS.toLocaleString('es-CL')+' mensajes): USD '+X_PRICE+'/mes');if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
+    const xt=extraTicket();if(xt)L.push('Conversación extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
   if(state.studio)L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
   if(waActive())L.push('WhatsApp/Meta ('+waP().name+'): '+(meta==null?'tarifa por confirmar':'costo Meta ~'+usd(metaBase())+' + fee Adereso '+(state.wa.wallet==='recurrente'?'10':'12')+'% = ~'+usd(meta)+'/mes')+' · '+([state.whatsapp?'service':'',waTemplates()?'plantillas':'',waCalls()?'llamadas':''].filter(Boolean).join(' + ')));
@@ -1751,7 +1796,7 @@ const POPS={
    <div class="mrow plain" style="margin-top:6px"><span class="mn">i</span><div><div class="md">Los mensajes service incluyen 1.000 gratis/mes + 1 semana de gratuidad si el lead viene de Meta Ads. El costo de Meta por plantilla varía según el país; el fee de Adereso se suma según la billetera (10% recurrente / 12% spot).</div></div></div>`},
  incluido:{title:'Incluido siempre, sin costo extra',html:`
    <p style="margin-bottom:14px;color:var(--z400)"><b>La conexión de todos los canales es gratuita:</b></p>
-   <div class="chips">`+['WhatsApp','Webchat','Correo','Instagram','Facebook','LinkedIn','TikTok','X','Licencias humanas ilimitadas','Experience · encuestas','Engage · plantillas','Métricas y analítica','Soporte básico'].map(c=>`<span class="chip">${c}</span>`).join('')+`</div>
+   <div class="chips">`+['WhatsApp','Webchat','Correo','Instagram','Facebook','LinkedIn','TikTok','Licencias humanas ilimitadas','Experience · encuestas','Engage · plantillas','Métricas y analítica','Soporte básico'].map(c=>`<span class="chip">${c}</span>`).join('')+`</div>
    <div class="mrow plain" style="margin-top:14px"><span class="mn">$</span><div><div class="mt">El uso de algunos canales se cobra aparte</div><div class="md">WhatsApp (billetera Adereso–Meta) y X tienen tarifa de uso según el proveedor. El resto de canales no tiene costo de uso.</div></div></div>`},
  cassper:{title:'Cassper · planes de créditos',html:`
    <p style="margin-bottom:14px;color:var(--z400)">Cobranza y recuperación con IA. Se cobra con un plan mensual de créditos (CR); cada gestión consume créditos.</p>
