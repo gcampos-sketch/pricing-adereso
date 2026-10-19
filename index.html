@@ -24,14 +24,16 @@
   body{
     font-family:var(--font-body);color:var(--z300);
     line-height:1.5;font-size:16px;min-height:100vh;
-    background-color:#0E0F12;
+    background-color:#15171C;
     background-image:
-      radial-gradient(1200px 640px at 50% -14%, rgba(255,255,255,0.07), transparent 60%),
-      linear-gradient(180deg,#1B1D23 0%,#141519 44%,#0D0E11 100%),
-      radial-gradient(rgba(255,255,255,0.022) 1px,transparent 1px);
-    background-size:auto,auto,22px 22px;
-    background-attachment:fixed,fixed,scroll;
-    background-repeat:no-repeat,no-repeat,repeat;
+      radial-gradient(900px 520px at 12% -8%, rgba(255,213,64,0.10), transparent 62%),
+      radial-gradient(820px 620px at 96% 18%, rgba(24,110,250,0.10), transparent 64%),
+      radial-gradient(1100px 700px at 50% 108%, rgba(37,211,102,0.05), transparent 60%),
+      linear-gradient(180deg,#22252C 0%,#1A1C22 42%,#14161A 100%),
+      radial-gradient(rgba(255,255,255,0.03) 1px,transparent 1px);
+    background-size:auto,auto,auto,auto,22px 22px;
+    background-attachment:fixed,fixed,fixed,fixed,scroll;
+    background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,repeat;
     padding-bottom:64px;
   }
   h1,h2,h3,h4{font-family:var(--font-head);font-weight:500;letter-spacing:-0.01em;color:var(--white);line-height:1.15}
@@ -42,7 +44,7 @@
   a{color:var(--brand);text-decoration:none}
 
   /* ---- top bar ---- */
-  .topbar{position:sticky;top:0;z-index:40;background:rgba(14,15,18,0.8);backdrop-filter:blur(14px);border-bottom:1px solid var(--b-subtle)}
+  .topbar{position:sticky;top:0;z-index:40;background:rgba(28,30,36,0.72);backdrop-filter:blur(14px);border-bottom:1px solid var(--b-subtle)}
   .topbar-in{max-width:1152px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:16px}
   .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-weight:500;color:#fff;font-size:19px;letter-spacing:-0.02em}
   .logo .dot{width:9px;height:9px;border-radius:999px;background:var(--brand);box-shadow:var(--glow)}
@@ -91,9 +93,6 @@
   section.lvl.dim{opacity:.32;filter:blur(2px)}
   @media(prefers-reduced-motion:reduce){section.lvl.dim{filter:none;opacity:.5}}
   /* asentamiento tipo líquido al acomodarse en un nivel */
-  section.lvl.settle{animation:lvlSettle .7s cubic-bezier(.34,1.45,.64,1) both;transform-origin:top center}
-  @keyframes lvlSettle{0%{transform:translateY(14px) scaleY(1.012)}55%{transform:translateY(-3px) scaleY(.997)}100%{transform:none}}
-  @media(prefers-reduced-motion:reduce){section.lvl.settle{animation:none}}
   section.lvl:first-of-type{border-top:none;padding-top:8px}
   .hero{padding:12px 0 26px;margin-bottom:4px}
   .hero h1{font-size:clamp(32px,6vw,56px);line-height:1.06;letter-spacing:-0.02em}
@@ -235,7 +234,7 @@
   .proc-track::after{background:var(--brand);transform-origin:left center;transform:scaleX(0)}
   .proc-track.lit::after{transition:transform 3.6s linear;transform:scaleX(1)}
   .proc-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px}
-  .proc-ico{position:relative;z-index:2;width:56px;height:56px;border-radius:999px;background:#1F2025;color:var(--z500);border:1.5px solid rgba(255,255,255,0.10);display:grid;place-items:center;box-shadow:0 0 0 5px #0C0C0D}
+  .proc-ico{position:relative;z-index:2;width:56px;height:56px;border-radius:999px;background:#1F2025;color:var(--z500);border:1.5px solid rgba(255,255,255,0.10);display:grid;place-items:center;box-shadow:0 0 0 5px #1B1D23}
   .proc-track.lit .proc-ico{animation:procLight .6s cubic-bezier(.34,1.5,.64,1) both}
   .proc-track.lit .proc-step:nth-child(1) .proc-ico{animation-delay:0s}
   .proc-track.lit .proc-step:nth-child(2) .proc-ico{animation-delay:.6s}
@@ -245,8 +244,8 @@
   .proc-track.lit .proc-step:nth-child(6) .proc-ico{animation-delay:3s}
   .proc-track.lit .proc-step:nth-child(7) .proc-ico{animation-delay:3.6s}
   @keyframes procLight{0%{background:#1F2025;color:var(--z500);border-color:rgba(255,255,255,0.10);transform:scale(1)}
-    50%{background:var(--brand);color:#000;border-color:var(--brand);transform:scale(1.1);box-shadow:0 0 0 5px #0C0C0D,0 0 18px 4px rgba(255,213,64,0.45)}
-    100%{background:var(--brand);color:#000;border-color:var(--brand);transform:scale(1);box-shadow:0 0 0 5px #0C0C0D,0 0 0 7px rgba(255,213,64,0.18)}}
+    50%{background:var(--brand);color:#000;border-color:var(--brand);transform:scale(1.1);box-shadow:0 0 0 5px #1B1D23,0 0 18px 4px rgba(255,213,64,0.45)}
+    100%{background:var(--brand);color:#000;border-color:var(--brand);transform:scale(1);box-shadow:0 0 0 5px #1B1D23,0 0 0 7px rgba(255,213,64,0.18)}}
   @media(prefers-reduced-motion:reduce){.proc-ico{background:var(--brand);color:#000;border-color:var(--brand)}.proc-track.lit::after{transition:none}.proc-track::after{transform:scaleX(1)}.proc-track.lit .proc-ico{animation:none}}
   .proc-n{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--brand);font-weight:600}
   .proc-txt{font-size:12px;color:var(--z300);line-height:1.35}
@@ -274,6 +273,82 @@
   .pnav.active{background:rgba(255,213,64,0.1);color:var(--brand)}
   .pnav .pdot{width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.55;flex:none}
   .portal-main{padding:20px 22px}
+  /* recorrido automático del portal */
+  .tour-bar{display:flex;align-items:center;gap:6px;margin-bottom:16px}
+  .tb-seg{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.10);overflow:hidden}
+  .tb-seg i{display:block;height:100%;width:0;background:var(--brand)}
+  .tb-seg.done i{width:100%}
+  .touring .tb-seg.now i{animation:tbFill var(--dur) linear forwards}
+  #portalMain:not(.touring) .tb-seg.now i{width:100%}
+  @keyframes tbFill{from{width:0}to{width:100%}}
+  .tb-btn{flex:none;margin-left:8px;font:inherit;font-size:11.5px;color:var(--z300);background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:999px;padding:4px 11px;cursor:pointer}
+  .tb-btn:hover{border-color:rgba(255,213,64,0.5);color:#fff}
+  .tour-replay{display:flex;justify-content:flex-end;margin:-6px 0 8px}
+  .tr-scene{animation:trIn .6s var(--ease) both}
+  @keyframes trIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .tr-k{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--brand);font-weight:600}
+  .tr-t{font-family:var(--font-head);font-size:20px;color:#fff;font-weight:500;margin:4px 0 16px}
+  .tr-scene [style*="--d"]{opacity:0;animation:trPop .55s var(--ease) var(--d) forwards}
+  @keyframes trPop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .tf-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tf{display:flex;flex-direction:column;gap:5px}
+  .tf-l{font-size:11.5px;color:var(--z500)}
+  .tf-v{display:flex;align-items:center;min-height:38px;border:1px solid var(--b-default);border-radius:var(--r2);padding:0 12px;background:rgba(255,255,255,0.03);font-size:13.5px;color:#fff}
+  .tf-type{display:inline-block;white-space:nowrap;clip-path:inset(0 100% 0 0);animation:tfType .8s steps(var(--n)) calc(var(--d) + .25s) forwards}
+  @keyframes tfType{to{clip-path:inset(0 0 0 0)}}
+  .tf-caret{width:1.5px;height:16px;background:var(--brand);margin-left:2px;opacity:0;animation:tfCaret 1.1s var(--d) 1 both}
+  @keyframes tfCaret{0%,90%{opacity:1}100%{opacity:0}}
+  .tr-ok,.tcta-ok{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--success);background:rgba(82,206,94,0.09);border:1px solid rgba(82,206,94,0.35);border-radius:999px;padding:6px 14px}
+  .tr-ok span,.tcta-ok span{font-weight:700}
+  .tr-drop{display:flex;align-items:center;gap:10px;justify-content:center;border:1.5px dashed rgba(255,213,64,0.4);background:rgba(255,213,64,0.04);border-radius:var(--r3);padding:16px;font-size:12.5px;color:var(--z400)}
+  .tr-drop [data-i]{color:var(--brand)}
+  .tr-files,.tr-eps{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .tfile{display:grid;grid-template-columns:auto 1fr 120px 20px;align-items:center;gap:12px;border:1px solid var(--b-default);border-radius:var(--r2);padding:9px 12px;background:rgba(255,255,255,0.03)}
+  .tfile-ic{color:var(--brand)}
+  .tfile-n{font-size:13px;color:#fff;display:flex;flex-direction:column;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tfile-n small{font-size:11px;color:var(--z500)}
+  .tfile-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.08);overflow:hidden}
+  .tfile-bar i{display:block;height:100%;width:0;background:var(--brand);animation:fileUp 1s cubic-bezier(.4,0,.2,1) calc(var(--d) + .3s) forwards}
+  @keyframes fileUp{to{width:100%;background:var(--success)}}
+  .tfile-ok{color:var(--success);font-weight:700;opacity:0;animation:trPop .3s var(--ease) calc(var(--d) + 1.3s) forwards}
+  .tep{display:grid;grid-template-columns:52px auto 1fr auto;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r2);background:rgba(255,255,255,0.025);border:1px solid var(--b-subtle)}
+  .tep-m{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-align:center;border-radius:6px;padding:3px 0}
+  .tep-m.get{color:var(--success);background:rgba(82,206,94,0.12)}
+  .tep-m.post{color:var(--warning);background:rgba(245,185,66,0.12)}
+  .tep code{font-size:12.5px;color:#fff;font-family:ui-monospace,Menlo,monospace}
+  .tep-d{font-size:12px;color:var(--z500)}
+  .tep-ok{font-size:11px;color:var(--success);border:1px solid rgba(82,206,94,0.35);border-radius:999px;padding:2px 9px}
+  .tr-slots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .tslot{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border:1px solid var(--b-default);border-radius:var(--r2);font-size:12.5px;color:var(--z400);background:rgba(255,255,255,0.03)}
+  .tslot b{font-size:11px;color:var(--z500);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .tslot.pick{animation:slotPick .5s var(--ease) 1.4s forwards}
+  @keyframes slotPick{to{border-color:var(--brand);background:rgba(255,213,64,0.12);color:#fff;box-shadow:0 0 0 4px rgba(255,213,64,0.12)}}
+  .tr-cta{position:relative;margin-top:16px;min-height:40px}
+  .tcta{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:14px;font-weight:600;color:#000;background:var(--brand);border:0;border-radius:999px;padding:10px 20px;pointer-events:none;animation:ctaPulse .6s var(--ease) 2.5s 2 alternate,ctaOut .35s var(--ease) 3.8s forwards}
+  @keyframes ctaPulse{to{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,213,64,0.16)}}
+  @keyframes ctaOut{to{opacity:0;transform:scale(.96)}}
+  .tcta-ok{position:absolute;left:0;top:0;margin-top:2px;opacity:0;animation:trPop .5s var(--ease) 4.1s forwards}
+  .jr{padding:6px 4px 2px}
+  .jr-line{position:relative;height:3px;margin:22px 36px 58px;background:rgba(255,255,255,0.10);border-radius:2px}
+  .jr-fill{position:absolute;left:0;top:0;height:100%;width:var(--to);background:linear-gradient(90deg,var(--success),var(--brand));border-radius:2px}
+  .jr.anim .jr-fill{width:0;animation:jrFill 2.6s cubic-bezier(.4,0,.2,1) .4s forwards}
+  @keyframes jrFill{to{width:var(--to)}}
+  .jr-pt{position:absolute;top:-8.5px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;width:110px}
+  .jr.anim .jr-pt{opacity:0;animation:jrPt .5s var(--ease) var(--d) forwards}
+  @keyframes jrPt{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}
+  .jr-dot{width:20px;height:20px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:700;background:#1F2025;border:1.5px solid rgba(255,255,255,0.18);color:#04210a}
+  .jr-pt.done .jr-dot{background:var(--success);border-color:var(--success)}
+  .jr-pt.now .jr-dot{background:var(--brand);border-color:var(--brand);box-shadow:0 0 0 5px rgba(255,213,64,0.16)}
+  .jr-t{font-size:12.5px;color:#fff;font-weight:500;white-space:nowrap}
+  .jr-pt:not(.done):not(.now) .jr-t{color:var(--z400)}
+  .jr-m{font-size:11px;color:var(--z500);margin-top:-4px}
+  .jr-pt.now .jr-m{color:var(--brand)}
+  .jr-kpis{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  .jk{font-size:12.5px;color:var(--z400);border:1px solid var(--b-default);border-radius:999px;padding:5px 12px;background:rgba(255,255,255,0.03)}
+  .jk b{color:#fff;font-weight:600;font-family:var(--font-head)}
+  .jr:not(.anim) [style*="--d"]{opacity:1;animation:none}
+  @media(max-width:720px){.tf-grid{grid-template-columns:1fr}.tfile{grid-template-columns:auto 1fr 70px 18px}.tep{grid-template-columns:46px 1fr auto}.tep-d{display:none}.tr-slots{grid-template-columns:repeat(3,1fr)}.jr-line{margin:22px 20px 58px}.jr-pt{width:70px}.jr-t{font-size:11px;white-space:normal;text-align:center}}
+  @media(prefers-reduced-motion:reduce){.tr-scene *{animation-duration:.01ms!important;animation-delay:0s!important}}
   .portal-mhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
   .portal-mtitle{font-family:var(--font-head);font-size:19px;color:#fff;font-weight:500}
   .portal-msub{font-size:12.5px;color:var(--z500);margin-top:3px}
@@ -398,16 +473,19 @@
   .vtile .lbl{font-size:11px;color:var(--z500);text-transform:uppercase;letter-spacing:.06em;margin:2px 0 10px}
   .vtile .vp{font-size:15px;color:var(--brand);font-weight:500}
   .vtile .vp small{color:var(--z500);font-size:11px}
-  .vcustom{margin-top:14px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:16px 18px;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;transition:all .2s var(--ease)}
-  .vcustom.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
-  .vcustom .vc-field{flex:1;min-width:200px}
-  .vcustom label{display:block;font-size:13px;color:var(--z400);margin-bottom:8px}
-  .vcustom input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:10px 12px;color:#fff;font-family:var(--font-body);font-size:15px}
-  .vcustom input:focus{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 5px rgba(255,213,64,0.16)}
+  .vcustom{margin-top:12px;display:inline-flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border:1px dashed var(--b-default);border-radius:999px;transition:all .2s var(--ease)}
+  .vcustom.sel{border-style:solid;border-color:var(--brand);background:rgba(255,213,64,0.06)}
+  .vcustom .vc-field{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .vcustom label{font-size:13px;color:var(--z400);margin:0;white-space:nowrap}
+  .vc-inwrap{display:flex;align-items:center;gap:8px}
+  .vcustom input{width:110px;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:999px;padding:6px 12px;color:#fff;font-family:var(--font-body);font-size:14px}
+  .vcustom.sel input{border-color:rgba(255,213,64,0.45)}
+  .vcustom input:focus{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 4px rgba(255,213,64,0.16)}
   .vcustom input::-webkit-inner-spin-button{opacity:.4}
-  .vcustom .vc-price{text-align:right;flex:none}
-  .vcustom .vc-lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--z500);margin-bottom:4px}
-  .vcustom .vc-amt{font-family:var(--font-head);font-size:22px;color:var(--brand);font-weight:500}
+  .vc-unit{font-size:12.5px;color:var(--z500);white-space:nowrap;padding-right:8px}
+  @media(max-width:520px){.vcustom{border-radius:var(--r3);display:flex}}
+  .spot-row input{width:100%;max-width:260px;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:var(--r2);padding:10px 12px;color:#fff;font-family:var(--font-body);font-size:15px}
+  .spot-row input:focus{outline:none;box-shadow:0 0 0 1px rgba(255,213,64,0.55),0 0 0 5px rgba(255,213,64,0.16)}
   .spot{margin-top:10px;background:var(--surface);border:1px dashed rgba(255,213,64,0.35);border-radius:var(--r3);padding:16px 18px;transition:all .2s var(--ease)}
   .spot.sel{border-style:solid;border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
   .spot-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -453,8 +531,30 @@
   .plan.sel .ptick{background:var(--brand);border-color:var(--brand);color:#000}
   .plan-main{flex:1;min-width:0}
   .plan-main h3{font-size:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .rec-chip{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-body);font-size:10.5px;font-weight:500;letter-spacing:.02em;color:var(--brand);background:rgba(255,213,64,0.10);border:1px solid rgba(255,213,64,0.35);border-radius:999px;padding:2px 8px;line-height:1.3}
   .plan-main .pmeta{font-size:12.5px;color:var(--z500);margin-top:5px;display:flex;flex-wrap:wrap;gap:4px 14px}
   .plan-main .pmeta b{color:var(--z300);font-weight:500}
+  .plan-main .pfit{font-size:13.5px;color:var(--z400);margin-top:4px}
+  .plan.sel .pfit{color:var(--z300)}
+  .plan.sel .pmeta{margin-top:9px;padding-top:9px;border-top:1px solid var(--b-subtle);animation:pmetaIn .3s var(--ease) both}
+  @keyframes pmetaIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .phh{flex:none;font-family:var(--font-head);font-size:15px;font-weight:500;color:var(--z300);background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:999px;padding:4px 12px;white-space:nowrap}
+  .plan.sel .phh{color:#000;background:var(--brand);border-color:var(--brand)}
+  /* selector de plan colapsable: se ve solo el elegido; el resto en un panel de vidrio */
+  .plans-more{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .42s cubic-bezier(.2,.8,.2,1),opacity .3s var(--ease)}
+  .plans-wrap.open .plans-more{grid-template-rows:1fr;opacity:1}
+  .plans-more-in{overflow:hidden;min-height:0}
+  .plans-glass{margin-top:10px;padding:12px;border-radius:var(--r4);background:linear-gradient(160deg,rgba(255,255,255,0.07),rgba(255,255,255,0.015) 60%);border:1px solid rgba(255,255,255,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 18px 40px rgba(0,0,0,0.35);-webkit-backdrop-filter:blur(18px) saturate(150%);backdrop-filter:blur(18px) saturate(150%);transform:translateY(-6px) scale(.985);transform-origin:top center;transition:transform .42s cubic-bezier(.34,1.3,.64,1)}
+  .plans-wrap.open .plans-glass{transform:none}
+  .pg-lbl{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--z500);font-weight:600;margin:0 4px 9px}
+  .plans-glass .plan{background:rgba(20,21,25,0.55)}
+  .plans-glass .plan:hover{border-color:rgba(255,213,64,0.45);background:rgba(28,29,34,0.75)}
+  .plans-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px}
+  .plans-switch{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font:inherit;font-size:13px;font-weight:500;color:#fff;cursor:pointer;background:linear-gradient(160deg,rgba(255,255,255,0.10),rgba(255,255,255,0.03));border:1px solid rgba(255,255,255,0.14);box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:border-color .2s var(--ease),background .2s var(--ease)}
+  .plans-switch:hover{border-color:rgba(255,213,64,0.5)}
+  .ps-chev{display:inline-block;font-size:15px;line-height:1;margin-top:-4px;color:var(--brand);transition:transform .35s var(--ease)}
+  .plans-wrap.open .ps-chev{transform:rotate(180deg) translateY(-3px)}
+  .plans-foot{font-size:12.5px;color:var(--z500)}
   .plan .pprice{font-family:var(--font-head);font-size:19px;color:#fff;font-weight:500;text-align:right;flex:none}
   .plan .pprice small{display:block;font-size:11px;color:var(--z500);font-family:var(--font-body);font-weight:400}
   .plan.free .pprice{color:var(--success)}
@@ -513,6 +613,43 @@
   .cty.todo{opacity:.6}
   .cty-tag{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--z500);border:1px solid var(--b-default);border-radius:999px;padding:2px 6px}
   .cty.sel .cty-tag{color:var(--brand);border-color:rgba(255,213,64,0.4)}
+  /* billetera v2: monto a recargar como protagonista */
+  .wa-v2{gap:16px}
+  .wa-top{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:620px){.wa-top{grid-template-columns:1fr}}
+  .wa-sel{display:flex;flex-direction:column;gap:6px}
+  .wa-sel label,.wa-amount label{font-size:12.5px;color:var(--z300);font-weight:500}
+  .wa-amount label small{display:block;font-weight:400;color:var(--z500);font-size:11.5px;margin-top:1px}
+  .sel-wrap{position:relative}
+  .sel-wrap::after{content:'⌄';position:absolute;right:14px;top:50%;transform:translateY(-62%);color:var(--brand);pointer-events:none;font-size:15px}
+  .sel-wrap select{width:100%;appearance:none;-webkit-appearance:none;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:999px;padding:9px 38px 9px 14px;color:#fff;font:inherit;font-size:14px;cursor:pointer}
+  .sel-wrap select:focus{outline:none;border-color:rgba(255,213,64,0.55);box-shadow:0 0 0 4px rgba(255,213,64,0.14)}
+  .sel-wrap select option{background:#16171b;color:#fff}
+  .wa-sel-help{font-size:11.5px;color:var(--z500);line-height:1.35}
+  .wa-amount{padding:16px;border-radius:var(--r3);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),rgba(0,0,0,0.18);border:1px solid rgba(255,213,64,0.35);display:flex;flex-direction:column;gap:10px}
+  .wa-amt-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .ex-money.big{height:48px;padding:0 16px}
+  .ex-money.big span{font-size:18px}
+  .ex-money.big input{width:150px;font-size:22px}
+  .wa-split{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ws-item{display:flex;flex-direction:column;gap:1px}
+  .ws-item span{font-size:11px;color:var(--z500);text-transform:uppercase;letter-spacing:.05em}
+  .ws-item b{font-family:var(--font-head);font-size:17px;color:#fff;font-weight:500}
+  .ws-op{color:var(--z500);font-size:16px}
+  .ws-tag{font-size:10.5px;color:var(--warning);border:1px solid rgba(245,185,66,0.35);border-radius:999px;padding:2px 8px}
+  .ws-empty{font-size:12.5px;color:var(--z500)}
+  .wa-calc-toggle{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:1px dashed var(--b-default);border-radius:var(--r3);padding:11px 14px;color:var(--z400);font:inherit;font-size:13px;cursor:pointer;transition:border-color .2s var(--ease)}
+  .wa-calc-toggle:hover{border-color:rgba(255,213,64,0.45)}
+  .wa-calc-toggle.open{border-style:solid;border-color:rgba(255,213,64,0.45);border-bottom-left-radius:0;border-bottom-right-radius:0}
+  .wa-calc-toggle [data-i]{color:var(--brand)}
+  .wct-txt{flex:1}
+  .wct-txt b{color:#fff;font-weight:500}
+  .wa-calc-toggle.open .ps-chev{transform:rotate(180deg) translateY(-3px)}
+  .wa-calc{display:grid;grid-template-rows:0fr;opacity:0;margin-top:-16px;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1),opacity .3s var(--ease)}
+  .wa-calc.open{grid-template-rows:1fr;opacity:1}
+  .wa-calc-in{overflow:hidden;min-height:0}
+  .wa-calc-body{display:grid;gap:16px;padding:16px;border:1px solid rgba(255,213,64,0.45);border-top:0;border-radius:0 0 var(--r3) var(--r3);background:rgba(0,0,0,0.14)}
+  .wl-use{margin-top:12px}
   .wa-live{margin-top:16px;background:rgba(255,213,64,0.05);border:1px solid rgba(255,213,64,0.22);border-radius:var(--r3);padding:14px 16px}
   .wl-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--z300);padding:5px 0}
   .wl-row b{color:#fff;font-size:14px}
@@ -546,16 +683,48 @@
   .final-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
 
   /* setup segmented toggle */
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
-  @media(max-width:520px){.seg{grid-template-columns:1fr}}
-  .seg-opt{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:13px 15px;text-align:left;transition:all .2s var(--ease)}
-  .seg-opt:hover{border-color:rgba(255,255,255,0.2)}
-  .seg-opt.on{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
-  .seg-ico{width:36px;height:36px;border-radius:var(--r2);display:grid;place-items:center;color:var(--z400);background:var(--glass);border:1px solid var(--b-subtle);flex:none}
+  /* toggle compacto Acompañada / Rápida con indicador deslizante */
+  .seg{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;gap:0;padding:4px;margin-bottom:20px;background:var(--surface);border:1px solid var(--b-default);border-radius:999px;max-width:100%}
+  .cust-row{margin-bottom:6px}
+  .cust-row .seg{margin-bottom:0}
+  /* panel cliente vigente (vidrio) */
+  .exist-panel{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1),opacity .3s var(--ease);margin-bottom:0}
+  .exist-panel.on{grid-template-rows:1fr;opacity:1;margin:12px 0 18px}
+  .exist-panel>.ex-grid{overflow:hidden;min-height:0}
+  .ex-grid{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 22px;padding:14px 16px;border-radius:var(--r4);background:linear-gradient(160deg,rgba(255,255,255,0.07),rgba(255,255,255,0.015) 60%);border:1px solid rgba(255,255,255,0.12);box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);-webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+  .exist-panel:not(.on) .ex-grid{padding:0;border:0}
+  .ex-f{display:flex;flex-direction:column;gap:7px}
+  .ex-f label{font-size:12.5px;color:var(--z300);font-weight:500}
+  .ex-f label small{display:block;font-weight:400;color:var(--z500);font-size:11px;margin-top:1px}
+  .ex-money{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:999px;padding:0 12px;height:38px}
+  .ex-money span{color:var(--z500);font-size:14px}
+  .ex-money input{width:110px;background:none;border:0;color:#fff;font-family:var(--font-head);font-size:16px;font-weight:500;outline:none}
+  .ex-money:focus-within{border-color:rgba(255,213,64,0.55);box-shadow:0 0 0 4px rgba(255,213,64,0.14)}
+  .seg.seg3{grid-template-columns:repeat(3,1fr);margin:0}
+  .seg.seg3::before{width:calc(33.333% - 2.67px)}
+  .seg.seg3.pos-1::before{transform:translateX(100%)}
+  .seg.seg3.pos-2::before{transform:translateX(200%)}
+  .seg.seg3 .seg-opt{padding:7px 14px 7px 10px}
+  .ex-step{display:flex;align-items:center;height:38px;border:1px solid var(--b-default);border-radius:999px;background:rgba(255,255,255,0.05);overflow:hidden}
+  .ex-step button{width:34px;height:100%;background:none;border:0;color:var(--brand);font-size:17px;cursor:pointer}
+  .ex-step button:hover{background:rgba(255,213,64,0.10)}
+  .ex-step input{width:44px;text-align:center;background:none;border:0;color:#fff;font-family:var(--font-head);font-size:16px;font-weight:500;outline:none;-moz-appearance:textfield}
+  .ex-step input::-webkit-inner-spin-button{display:none}
+  @media(max-width:640px){.seg.seg3{display:grid;width:100%}.seg.seg3 .seg-opt{white-space:normal}}
+  .hh-foot .hh-in{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .hh-foot label{font-size:13.5px;color:var(--z300)}
+  .hh-foot input{width:90px;background:rgba(255,255,255,0.05);border:1px solid var(--b-default);border-radius:999px;padding:6px 12px;color:#fff;font-size:14px}
+  .hh-foot input:focus{outline:none;border-color:rgba(255,213,64,0.55)}
+  .seg::before{content:"";position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);border-radius:999px;background:rgba(255,213,64,0.12);border:1px solid var(--brand);transition:transform .32s cubic-bezier(.34,1.3,.64,1);z-index:0}
+  .seg.right::before{transform:translateX(100%)}
+  .seg-opt{position:relative;z-index:1;display:flex;align-items:center;gap:9px;background:none;border:0;border-radius:999px;padding:8px 18px 8px 12px;text-align:left;color:inherit;font:inherit;cursor:pointer;white-space:nowrap}
+  .seg-ico{flex:none;display:grid;place-items:center;color:var(--z500);transition:color .2s var(--ease)}
   .seg-opt.on .seg-ico{color:var(--brand)}
-  .seg-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
-  .seg-txt b{font-size:14px;color:#fff;font-weight:500}
-  .seg-txt small{font-size:12px;color:var(--z500)}
+  .seg-txt{display:flex;flex-direction:column;gap:0;min-width:0;line-height:1.25}
+  .seg-txt b{font-size:13.5px;color:var(--z400);font-weight:500;transition:color .2s var(--ease)}
+  .seg-opt.on .seg-txt b{color:#fff}
+  .seg-txt small{font-size:11px;color:var(--z500)}
+  @media(max-width:560px){.seg{display:grid;width:100%}.seg-opt{white-space:normal;padding:8px 10px}}
 
   /* option cards (setup mode) */
   .opts{display:grid;gap:14px}
@@ -739,12 +908,15 @@
       </div>
       <!-- 1 · MÓDULOS -->
       <section class="lvl" id="s1" data-title="Servicios">
+        <div class="cust-row reveal"><div class="seg" id="custSeg"></div></div>
+        <div class="exist-panel" id="existPanel"></div>
         <div class="level-head reveal">
           <div class="level-kicker">Nivel 1 · Servicios</div>
           <h2>Selecciona los servicios a cotizar</h2>
         </div>
         <div class="modgrid" id="modgrid"></div>
         <div class="modfoot hidden" id="cassperFoot"><span data-i="info"></span><div>Cassper se cotiza con planes de créditos; al activarlo se agrega al resultado. <button class="pop-link" data-pop="cassper">Ver planes</button></div></div>
+        <div class="modfoot hh-foot hidden" id="hhFoot"><span data-i="clock"></span><div class="hh-in"><label for="hhInput">¿Cuántas HH custom necesitas?</label><input type="number" id="hhInput" min="1" step="1" data-hh placeholder="Ej: 10"><span class="vc-unit">horas</span></div></div>
         <div class="continue reveal"><button data-next="sc">Continuar a canales <span data-i="down"></span></button></div>
       </section>
 
@@ -852,8 +1024,7 @@
             <div class="portal-nav" id="portalNav">
               <div class="portal-brand"><span class="logo-badge">A</span> Portal clientes</div>
               <button class="pnav" data-portal-view="onboarding"><span class="pdot"></span>Onboarding</button>
-              <button class="pnav" data-portal-view="status"><span class="pdot"></span>Status</button>
-              <button class="pnav" data-portal-view="cronograma"><span class="pdot"></span>Cronograma</button>
+              <button class="pnav" data-portal-view="avance"><span class="pdot"></span>Avance</button>
               <button class="pnav" data-portal-view="qa"><span class="pdot"></span>QA</button>
               <button class="pnav" data-portal-view="bots"><span class="pdot"></span>Bots</button>
               <button class="pnav" data-portal-view="sops"><span class="pdot"></span>SOPs</button>
@@ -936,10 +1107,10 @@ function priceForVolume(v){
 }
 const SETUP={
  estandar:{name:'Empaquetado Estándar',price:0,tag:'Rápido · 1 semana',hh:'Autogestionable',endpoints:'Preconfigurado',ses:'Adereso Academy',mant:'—'},
- esencial:{name:'Plan 1 · Esencial',price:558,hh:'20 HH',endpoints:'Sin integración',sesDev:4,sesPost:1,mant:'2HH/mes'},
- inteligente:{name:'Plan 2 · Inteligente',price:990,rec:true,hh:'30 HH',endpoints:'4 endpoints (API REST)',sesDev:6,sesPost:3,mant:'2HH/mes'},
- avanzado:{name:'Plan 3 · Avanzado',price:1600,hh:'40 HH',endpoints:'Hasta 8 (BFF)',sesDev:10,sesPost:8,mant:'2HH/mes'},
- enterprise:{name:'Plan 4 · Enterprise',price:2700,hh:'60 HH',endpoints:'Hasta 16 (BFF)',sesDev:4,sesPost:1,mant:'2HH/mes'}
+ esencial:{name:'Plan 1 · Esencial',fit:'Partir rápido, sin integraciones',price:558,hh:'20 HH',endpoints:'Sin integración',sesDev:4,sesPost:1,mant:'2HH/mes'},
+ inteligente:{name:'Plan 2 · Inteligente',fit:'Conecta el agente a tus sistemas clave',price:990,rec:true,hh:'30 HH',endpoints:'4 endpoints (API REST)',sesDev:6,sesPost:3,mant:'2HH/mes'},
+ avanzado:{name:'Plan 3 · Avanzado',fit:'Varias integraciones y flujos más complejos',price:1600,hh:'40 HH',endpoints:'Hasta 8 (BFF)',sesDev:10,sesPost:8,mant:'2HH/mes'},
+ enterprise:{name:'Plan 4 · Enterprise',fit:'Arquitectura a medida para operaciones grandes',price:2700,hh:'60 HH',endpoints:'Hasta 16 (BFF)',sesDev:4,sesPost:1,mant:'2HH/mes'}
 };
 const SETUP_ORDER=['esencial','inteligente','avanzado','enterprise'];
 /* Tarifas de Meta por país — plantillas outbound (USD por mensaje). Región LatAm & España, vigente oct 2025.
@@ -987,10 +1158,10 @@ const MODULES=[
  {k:'desk',label:'Desk',desc:'Mesa de ayuda',icon:'msg',color:'#FFFFFF'},
  {k:'studio',label:'Studio',desc:'Agentes IA / Flows',icon:'robot',color:'#186EFA'},
  {k:'engage',label:'Engage',desc:'Comunicación outbound',icon:'mega',color:'#25D366'},
- {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}
+ {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={desk:true,studio:true,engage:false,cassper:false,whatsapp:false,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente'},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{}};
+const state={existing:false,scope:'bolsa',currentPay:0,bots:1,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',amount:0,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{}};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 const CHANNELS=[
  {k:'whatsapp',label:'WhatsApp',color:'#25D366',paid:true},
@@ -1023,16 +1194,53 @@ const revealIO=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersectin
 function observeReveals(root=document){if(prefersReduced){root.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));return;}root.querySelectorAll('.reveal:not(.in)').forEach(el=>revealIO.observe(el));}
 function applyReveal(area,sel){const first=!area.dataset.revealed;area.querySelectorAll(sel).forEach((el,i)=>{el.classList.add('reveal');if(first&&!prefersReduced){el.style.transitionDelay=(i*55)+'ms';}else{el.classList.add('in');}});area.dataset.revealed='1';observeReveals(area);}
 
+/* Cliente vigente: ya paga la mantención de bot (160/mes), así que la bolsa con Studio no la vuelve a cobrar. */
+const BOT_MANT=160;
+function mantDiscount(){return (state.existing&&state.studio&&scopeBag())?BOT_MANT:0;}
+function renderCust(){const el=document.getElementById('custSeg');if(!el)return;const ex=state.existing;
+  el.className='seg'+(ex?' right':'');
+  el.innerHTML=`<button class="seg-opt ${!ex?'on':''}" data-cust="new"><span class="seg-ico" data-i="gift" data-sz="16"></span><span class="seg-txt"><b>Cliente nuevo</b><small>Primera contratación</small></span></button>
+    <button class="seg-opt ${ex?'on':''}" data-cust="existing"><span class="seg-ico" data-i="users" data-sz="16"></span><span class="seg-txt"><b>Ya soy cliente</b><small>Amplío o sumo servicios</small></span></button>`;
+  paintIcons(el);
+  const ep=document.getElementById('existPanel');if(!ep)return;
+  if(!ex){ep.innerHTML='';ep.classList.remove('on');return;}
+  ep.classList.add('on');
+  const sc=state.scope,opt=(k,ico,t,s)=>`<button class="seg-opt ${sc===k?'on':''}" data-scope="${k}"><span class="seg-ico" data-i="${ico}" data-sz="16"></span><span class="seg-txt"><b>${t}</b><small>${s}</small></span></button>`;
+  const focus=document.activeElement&&ep.contains(document.activeElement)?document.activeElement.dataset.ex:null;
+  ep.innerHTML=`<div class="ex-grid">
+      <div class="ex-f"><label for="exPay">¿Cuánto paga hoy? <small>USD/mes · bolsa sin mantención de bot</small></label>
+        <div class="ex-money"><span>$</span><input type="number" id="exPay" min="0" step="1" data-ex="pay" value="${state.currentPay||''}" placeholder="Ej: 398"></div></div>
+      <div class="ex-f"><label>¿Qué quiere cotizar?</label>
+        <div class="seg seg3 pos-${['bolsa','bot','ambas'].indexOf(sc)}">${opt('bolsa','chart','Ampliar bolsa','Mantiene sus bots')}${opt('bot','robot','Bot nuevo','Mantiene su bolsa')}${opt('ambas','bolt','Ambas','Bolsa + bot')}</div></div>
+      ${sc!=='bolsa'?`<div class="ex-f ex-bots"><label for="exBots">Bots nuevos <small>+USD ${BOT_MANT}/mes c/u</small></label>
+        <div class="ex-step"><button data-ex-step="-1" aria-label="Menos">−</button><input type="number" id="exBots" min="1" step="1" data-ex="bots" value="${botsN()}"><button data-ex-step="1" aria-label="Más">+</button></div></div>`:''}
+    </div>`;
+  paintIcons(ep);
+  if(focus){const f=ep.querySelector(`[data-ex="${focus}"]`);if(f){f.focus();const v=f.value;f.value='';f.value=v;}}
+}
 function monthly(){
+  if(!hasService())return 0;
+  if(state.existing)return upsellMonthly();
+  return bagPrice();
+}
+/* Precio de la bolsa elegida (para cliente vigente con Studio, sin la mantención de bot que ya paga). */
+function bagPrice(){
   if(!hasService())return 0;
   let base=state.studio?priceForVolume(state.volMode==='custom'?state.volCustom:state.vol):199;
   if(state.studio&&!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)base=base*(1+STUDIO_NO_DESK_SURCHARGE/100);
-  return base;
+  return base-mantDiscount();
 }
+/* Cliente vigente: qué amplía (bolsa, bot nuevo o ambos) y cuánto paga hoy. */
+function scopeBag(){return !state.existing||state.scope!=='bot';}
+function scopeBot(){return !state.existing||state.scope!=='bolsa';}
+function botsN(){return Math.max(1,Math.round(+state.bots||1));}
+function newBotsMant(){return (state.existing&&state.scope!=='bolsa')?BOT_MANT*botsN():0;}
+function bagDelta(){return scopeBag()?Math.max(0,bagPrice()-(+state.currentPay||0)):0;}
+function upsellMonthly(){return bagDelta()+newBotsMant();}
 /* Canal X: bolsa fija de hasta 7.000 mensajes por USD 450/mes, se suma a la mensualidad. */
 const X_PRICE=450,X_MSGS=7000;
 function xCost(){return (hasService()&&state.chan.x)?X_PRICE:0;}
-function setupCost(){if(!state.studio||state.setupMode==='paquetizado')return 0;return SETUP[state.setup].price;}
+function setupCost(){if(!state.studio||state.setupMode==='paquetizado'||!scopeBot())return 0;return SETUP[state.setup].price;}
 /* Ticket extra fuera de bolsa = extraRate del tramo activo × 1,15 (lógica del cotizador).
    Tramo activo = último tramo cuyo cap ≤ volumen. La mantención de bot (160) no entra en el unitario. */
 const EXTRA_MARKUP=1.15;
@@ -1054,9 +1262,9 @@ function extraTicket(){
   return {total:(desk||0)+(studio||0),desk,studio,split:desk!=null&&studio!=null};
 }
 const usd3=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
-function waTemplates(){return state.engage&&state.out.whatsapp;}
-function waCalls(){return state.engage&&!!state.out.wacall;}
-function waActive(){return state.whatsapp||waTemplates()||waCalls();}
+function waService(){return state.whatsapp||state.walletOnly;}function waTemplates(){return (state.engage&&state.out.whatsapp)||state.walletOnly;}
+function waCalls(){return (state.engage&&!!state.out.wacall)||state.walletOnly;}
+function waActive(){return waService()||waTemplates()||waCalls();}
 function metaFeeRate(){return state.wa.wallet==='recurrente'?0.10:0.12;}
 function metaBase(){
   if(!waActive())return 0;
@@ -1067,7 +1275,7 @@ function metaBase(){
     ['authentication','utility','marketing'].forEach(k=>{cost+=Math.max(0,+state.wa[k]||0)*p[k];});
   }
   /* Service (Desk/Studio): 1.000 gratis/mes; el resto se cobra a la misma tarifa que Utilidad. */
-  if(state.whatsapp){cost+=Math.max(0,(+state.wa.service||0)-1000)*p.utility;}
+  if(waService()){cost+=Math.max(0,(+state.wa.service||0)-1000)*p.utility;}
   /* Llamadas: solo si el canal WhatsApp Call está activo y hay tarifa confirmada. */
   if(waCalls())cost+=callCost(+state.wa.minutes||0);
   return cost;
@@ -1077,7 +1285,7 @@ function metaEst(){const b=metaBase();return b==null?null:b*(1+metaFeeRate());}
 
 /* ---- module grid ---- */
 function renderMods(){
-  document.getElementById('modgrid').innerHTML=MODULES.map(m=>{
+  document.getElementById('modgrid').innerHTML=MODULES.filter(m=>!m.existingOnly||state.existing).map(m=>{
     let cls='modcard';
     if(m.locked)cls+=' on locked';
     else if(m.soon)cls+=' soon';
@@ -1092,7 +1300,7 @@ function renderMods(){
   }).join('');
   paintIcons(document.getElementById('modgrid'));
   applyReveal(document.getElementById('modgrid'),'.modcard');
-  document.getElementById('cassperFoot').classList.toggle('hidden',!state.cassper);
+  document.getElementById('cassperFoot').classList.toggle('hidden',!state.cassper);  const hf=document.getElementById('hhFoot');if(hf){hf.classList.toggle('hidden',!(state.existing&&state.hhCustom));const hi=hf.querySelector('input');if(hi&&document.activeElement!==hi)hi.value=state.hhQty||'';}
 }
 
 function renderOpts(){
@@ -1127,8 +1335,7 @@ function renderVol(){
     area.innerHTML=`<div class="vgrid">`+TILES.map(c=>`<button class="vtile ${(!cSel&&c===state.vol)?'sel':''}" data-vol="${c}"><div class="conv">${c.toLocaleString('es-CL')}</div><div class="lbl">conversaciones</div></button>`).join('')+`</div>
       <div class="vcustom ${cSel?'sel':''}" id="vcustom">
         <div class="vc-field"><label for="volInput">¿Otro volumen? Ingrésalo a mano</label>
-          <input type="number" id="volInput" min="2000" step="500" data-vol-custom value="${state.volCustom||''}" placeholder="Ej: 8.000"></div>
-        <div class="vc-price"><span class="vc-lbl">Conversaciones/mes</span><span class="vc-amt" id="customPrice">${cSel?state.volCustom.toLocaleString('es-CL'):'—'}</span></div>
+          <div class="vc-inwrap"><input type="number" id="volInput" min="2000" step="500" data-vol-custom value="${state.volCustom||''}" placeholder="Ej: 8.000"><span class="vc-unit">conversaciones/mes</span></div></div>
       </div>${!state.desk?`<div class="note warn" style="margin-top:16px"><span data-i="info"></span><div><b>Studio sin Desk:</b> el agente IA va sin la mesa de ayuda humana; aplica un recargo sobre la bolsa (por confirmar).</div></div>`:''}`;
   }
   area.innerHTML+=`<div class="note" style="margin-top:16px"><span data-i="info"></span><div><b>¿Y si te pasas de la bolsa?</b> No se corta el servicio: cada conversación adicional se cobra como <b>conversación extra</b>.</div></div>`;
@@ -1159,73 +1366,105 @@ function renderSetup(){
   const area=document.getElementById('setupArea');
   if(!state.studio){area.innerHTML=`<div class="note"><span data-i="info"></span><div>Sin agente de IA no hay proyecto de implementación. Desk se activa con el empaquetado estándar autogestionado, <b>sin acompañamiento</b>.</div></div>`;paintIcons(area);return;}
   const acc=state.setupMode==='acompanada';
-  let html=`<div class="seg">
-    <button class="seg-opt ${acc?'on':''}" data-smode="acompanada"><span class="seg-ico" data-i="users"></span><span class="seg-txt"><b>Acompañada</b><small>Setup por planes de HH · con PM</small></span></button>
-    <button class="seg-opt ${!acc?'on':''}" data-smode="paquetizado"><span class="seg-ico" data-i="bolt"></span><span class="seg-txt"><b>Rápida</b><small>Sin costo · sin acompañamiento</small></span></button>
+  let html=`<div class="seg ${acc?"":"right"}">
+    <button class="seg-opt ${acc?'on':''}" data-smode="acompanada"><span class="seg-ico" data-i="users" data-sz="16"></span><span class="seg-txt"><b>Acompañada</b><small>Setup por planes de HH · con PM</small></span></button>
+    <button class="seg-opt ${!acc?'on':''}" data-smode="paquetizado"><span class="seg-ico" data-i="bolt" data-sz="16"></span><span class="seg-txt"><b>Rápida</b><small>Sin costo · sin acompañamiento</small></span></button>
   </div>`;
   if(acc){
-    html+=`<div class="level-kicker" style="margin:22px 0 12px">Elige el plan de horas (HH)</div><div class="plans">`+SETUP_ORDER.map(k=>{const s=SETUP[k];return `<button class="plan ${k===state.setup?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="mod-tag" style="position:static;color:#000;background:var(--brand);border:none">Recomendado</span>':''}</h3><div class="pmeta"><span><b>${s.hh}</b></span><span>${s.endpoints}</span><span>Hasta ${s.sesDev} reuniones + ${s.sesPost} post</span><span>Mant. ${s.mant}</span></div></div></button>`;}).join('')+`</div>`;
+    const planCard=(k)=>{const s=SETUP[k],sel=k===state.setup;return `<button class="plan ${sel?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="rec-chip">★ Recomendado</span>':''}</h3><div class="pfit">${s.fit}</div>${sel?`<div class="pmeta"><span>${s.endpoints}</span><span>Hasta ${s.sesDev} reuniones + ${s.sesPost} post-entrega</span></div>`:''}</div><span class="phh">${s.hh}</span></button>`;};
+    const others=SETUP_ORDER.filter(k=>k!==state.setup),po=!!state.plansOpen;
+    html+=`<div class="level-kicker" style="margin:22px 0 12px">Plan de horas (HH)</div>
+      <div class="plans-wrap ${po?'open':''}" id="plansWrap">
+        <div class="plans">${planCard(state.setup)}</div>
+        <div class="plans-more"><div class="plans-more-in"><div class="plans-glass"><div class="pg-lbl">Otros planes</div><div class="plans">${others.map(planCard).join('')}</div></div></div></div>
+        <div class="plans-bar"><button class="plans-switch" data-plans-toggle aria-expanded="${po}"><span class="ps-lbl">${po?'Ocultar planes':'Cambiar plan'}</span><span class="ps-chev">⌄</span></button><span class="plans-foot">Todos incluyen 2 HH/mes de mantención.</span></div>
+      </div>`;
   }else{
     html+=`<div class="note" style="margin-top:20px"><span data-i="info"></span><div><b>Rápida (paquetizado):</b> sin costo y sin acompañamiento. Autoservicio guiado, preconfigurado, listo en una semana.</div></div>`;
   }
   area.innerHTML=html;paintIcons(area);applyReveal(area,'.seg-opt,.plan');
 }
 
+/* Monto final de la billetera: lo que el cliente decide recargar (ya incluye el fee).
+   Si no ingresa monto, se usa el estimado de la calculadora como referencia. */
+function walletAmount(){const a=+state.wa.amount||0;if(a>0)return a;const e=metaEst();return e>0?e:0;}
+function walletIsEstimate(){return !(+state.wa.amount>0)&&walletAmount()>0;}
+function walletSplit(){const t=walletAmount(),r=metaFeeRate();const meta=t/(1+r);return {total:t,meta,fee:t-meta};}
 function renderWa(){
   const area=document.getElementById('waArea');
   const p=waP();
   const feePct=state.wa.wallet==='recurrente'?'10':'12';
   const fee=`<em class="pl-fee">+${feePct}% fee</em>`;
-  let html=`<div class="wa-form">
-    <div class="wa-countries">
-      <div class="wa-c-label">País de facturación de Meta <span class="u">— cambia las tarifas del cálculo</span></div>
-      <div class="cty-row">${WA_COUNTRIES.map(c=>{const cp=WA_PRICES[c],todo=cp.marketing==null;return `<button class="cty ${state.wa.country===c?'sel':''} ${todo?'todo':''}" data-cty="${c}"><span class="cty-flag">${cp.flag}</span>${cp.name}${todo?'<span class="cty-tag">por confirmar</span>':''}</button>`;}).join('')}</div>
-    </div>`;
-  if(state.whatsapp){
-    html+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd3(p.utility)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 1 semana gratis si el lead viene de Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
+  const rec=state.wa.wallet==='recurrente';
+  let calc='';
+  if(waService()){
+    calc+=`<div><label class="wa-block-lbl">Desk/Studio · mensajes service <span class="u">— respuestas IA/humano</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service</span><span class="pl-price">${usd3(p.utility)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. 1.000 gratis/mes + 1 semana gratis si el lead viene de Meta Ads; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"></div></div></div>`;
   }
   if(waTemplates()){
     const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
-    html+=`<div><label class="wa-block-lbl">Engage · plantillas por WhatsApp saliente <span class="u">— precio Meta por mensaje</span></label><div class="pl-grid">
+    calc+=`<div><label class="wa-block-lbl">Plantillas por WhatsApp saliente <span class="u">— precio Meta por mensaje</span></label><div class="pl-grid">
       ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd3(p[k])}<small>c/u</small>${fee}</span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}
     </div>
     <div class="note warn" style="margin-top:12px"><span data-i="info"></span><div><b>¿Esperas respuestas a estas plantillas?</b> Cuando un cliente responde a una plantilla enviada, esa respuesta abre una conversación inbound y consume cupo de la <button class="linkbtn" data-goto="s2">bolsa de conversaciones contratada</button>.</div></div></div>`;
   }else if(state.engage){
-    html+=`<div class="note warn"><span data-i="info"></span><div><b>Engage por Correo (gratis):</b> las plantillas de pago se envían por <b>WhatsApp saliente</b>. <button class="linkbtn" data-act="out-wa">Activar WhatsApp saliente →</button></div></div>`;
+    calc+=`<div class="note warn"><span data-i="info"></span><div><b>Engage por Correo (gratis):</b> las plantillas de pago se envían por <b>WhatsApp saliente</b>. <button class="linkbtn" data-act="out-wa">Activar WhatsApp saliente →</button></div></div>`;
   }else{
-    html+=`<div class="note warn"><span data-i="info"></span><div><b>Plantillas desactivadas:</b> el envío de marketing, utilidad y autenticación requiere <b>Engage</b> con WhatsApp saliente. <button class="linkbtn" data-act="engage">Activar Engage →</button></div></div>`;
+    calc+=`<div class="note warn"><span data-i="info"></span><div><b>Plantillas desactivadas:</b> el envío de marketing, utilidad y autenticación requiere <b>Engage</b> con WhatsApp saliente. <button class="linkbtn" data-act="engage">Activar Engage →</button></div></div>`;
   }
   if(waCalls()){
     const callLbl=callConfirmed()?((state.wa.country==='CL'?'desde ':'')+usd3(waP().call))+'<small>/min</small>':'por confirmar';
-    html+=`<div><label class="wa-block-lbl">WhatsApp Call · minutos de llamada al mes <span class="u">— canal saliente de Engage</span></label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div></div></div>`;
+    calc+=`<div><label class="wa-block-lbl">WhatsApp Call · minutos de llamada al mes</label><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div></div></div>`;
   }
-  html+=`<div class="divider"></div>
-    <div class="field"><label>Tipo de billetera Adereso–Meta <span class="u">— define el fee de Adereso</span></label><div class="wallet-opts">
-      <button class="wallet ${state.wa.wallet==='recurrente'?'sel':''}" data-wallet="recurrente"><div class="wt">Recurrente <span class="wfee">+10%</span></div><div class="wd">Se renueva cada período. Consumo estable. No vence de inmediato: puedes usarlo hasta tu último período de facturación.</div></button>
-      <button class="wallet ${state.wa.wallet==='no_recurrente'?'sel':''}" data-wallet="no_recurrente"><div class="wt">Spot <span class="wfee">+12%</span></div><div class="wd">Saldo no vence, se acumula. Consumo variable o estacional.</div></button>
-    </div></div>
-    <div id="waLive"></div>
-    <div class="wa-reset-row"><button class="linkbtn" data-wa-reset><span data-i="reset" data-sz="13"></span> Reiniciar valores de la simulación</button></div>
+  const co=!!state.wa.calcOpen;
+  const html=`<div class="wa-form wa-v2">
+    <div class="wa-top">
+      <div class="wa-sel"><label for="waCty">País de facturación Meta</label>
+        <div class="sel-wrap"><select id="waCty" data-wa-country>${WA_COUNTRIES.map(c=>{const cp=WA_PRICES[c];return `<option value="${c}" ${state.wa.country===c?'selected':''}>${cp.flag}  ${cp.name}${cp.marketing==null?' · por confirmar':''}</option>`;}).join('')}</select></div></div>
+      <div class="wa-sel"><label for="waWal">Tipo de billetera</label>
+        <div class="sel-wrap"><select id="waWal" data-wa-wallet><option value="no_recurrente" ${!rec?'selected':''}>Spot · +12% fee</option><option value="recurrente" ${rec?'selected':''}>Recurrente · +10% fee</option></select></div>
+        <small class="wa-sel-help">${rec?'Se renueva cada período. Puedes usarlo hasta tu último período de facturación.':'El saldo no vence y se acumula. Ideal para consumo variable.'}</small></div>
+    </div>
+    <div class="wa-amount">
+      <label for="waAmt">¿Cuánto quiere recargar? <small>USD · monto final, ya incluye el fee de Adereso</small></label>
+      <div class="wa-amt-row">
+        <div class="ex-money big"><span>$</span><input type="number" id="waAmt" min="0" step="10" data-wa-amount value="${+state.wa.amount>0?state.wa.amount:''}" placeholder="Ej: 500"></div>
+        <div class="wa-split" id="waSplit"></div>
+      </div>
+    </div>
+    <button class="wa-calc-toggle ${co?'open':''}" data-wa-calc aria-expanded="${co}"><span data-i="chart" data-sz="15"></span><span class="wct-txt">¿No sabe cuánto recargar? <b>Estímalo por mensajes, plantillas y minutos</b></span><span class="ps-chev">⌄</span></button>
+    <div class="wa-calc ${co?'open':''}"><div class="wa-calc-in"><div class="wa-calc-body">
+      ${calc}
+      <div id="waLive"></div>
+      <div class="wa-reset-row"><button class="linkbtn" data-wa-reset><span data-i="reset" data-sz="13"></span> Reiniciar valores de la simulación</button></div>
+    </div></div></div>
   </div>`;
   area.innerHTML=html;paintIcons(area);applyReveal(area,'.wa-form');
   renderWaLive();
 }
+function renderWaSplit(){
+  const el=document.getElementById('waSplit');if(!el)return;
+  const s=walletSplit(),r=Math.round(metaFeeRate()*100);
+  if(!(s.total>0)){el.innerHTML='<span class="ws-empty">Ingresa el monto para ver cuánto va a Meta y cuánto es fee.</span>';return;}
+  el.innerHTML=`<div class="ws-item"><span>Saldo para Meta</span><b>${usd2(s.meta)}</b></div><span class="ws-op">+</span><div class="ws-item"><span>Fee Adereso ${r}%</span><b>${usd2(s.fee)}</b></div>${walletIsEstimate()?'<span class="ws-tag">según estimado</span>':''}`;
+}
 function renderWaLive(){
+  renderWaSplit();
   const el=document.getElementById('waLive');if(!el)return;
   const b=metaBase();
   if(b==null||b<=0){el.innerHTML='';return;}
-  const r=Math.round(metaFeeRate()*100);
+  const r=Math.round(metaFeeRate()*100),est=metaEst();
   el.innerHTML=`<div class="wa-live">
-    <div class="wl-row"><span>Costo Meta (base)</span><b>${usd2(b)}</b></div>
+    <div class="wl-row"><span>Costo Meta estimado</span><b>${usd2(b)}</b></div>
     <div class="wl-row"><span>Fee Adereso (+${r}%)</span><b>${usd2(metaFee())}</b></div>
-    <div class="wl-row total"><span>Total prepago estimado</span><b>${usd2(metaEst())}</b></div>
-    <div class="wl-note">Estimado mensual según lo que cargues arriba. El prepago va aparte del contrato.</div>
+    <div class="wl-row total"><span>Recarga sugerida</span><b>${usd2(est)}</b></div>
+    <div class="wl-note">Es solo una referencia: el cliente decide el monto a recargar.</div>
+    ${Math.abs((+state.wa.amount||0)-est)>0.5?`<button class="btn btn-primary wl-use" data-wa-use>Usar ${usd(est)} como monto a recargar</button>`:''}
   </div>`;
 }
 
-function selService(){return !hasService()?'—':(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk');}
-function selVol(){return !hasService()?'—':(!state.studio?'2.000 conv (base)':(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' conv':state.vol.toLocaleString('es-CL')+' conv'));}
-function selImpl(){return !state.studio?'Estándar (sin IA)':(state.setupMode==='paquetizado'?'Rápida · paquetizado':'Acompañada · '+SETUP[state.setup].name);}
+function selService(){const extra=state.existing?[state.walletOnly?'Billetera':'',state.hhCustom?'HH custom':''].filter(Boolean).join(' + '):'';if(!hasService())return extra||'—';return (state.existing?'Ampliación · ':'')+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk')+(extra?' + '+extra:'');}
+function selVol(){if(state.existing&&!scopeBag())return 'Mantiene su bolsa';return !hasService()?'—':(!state.studio?'2.000 conv (base)':(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' conv':state.vol.toLocaleString('es-CL')+' conv'));}
+function selImpl(){if(state.existing&&!scopeBot())return 'No aplica (solo bolsa)';return !state.studio?'Estándar (sin IA)':(state.setupMode==='paquetizado'?'Rápida · paquetizado':'Acompañada · '+SETUP[state.setup].name);}
 function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)parts.push('service');if(waTemplates())parts.push('plantillas');if(waCalls())parts.push('llamadas');return 'Sí · '+(state.wa.wallet==='recurrente'?'recurrente 10%':'spot 12%')+' · '+parts.join(' + ');}
 function selCassper(){return state.cassper?('Sí · '+casspPlan().name):'No';}
 
@@ -1256,24 +1495,51 @@ function renderSummary(){
   let mTable;
   if(!state.studio){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div>`;}
   else if(soloStudio){mTable=`<div class="rr"><span class="k">Studio · Agente IA (bolsa)</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div><div class="rr"><span class="k">Recargo sin Desk</span><span class="v">por confirmar</span></div>`;}
-  else if(isBase){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div><div class="rr"><span class="k">Add-on Studio · IA Generativa</span><span class="v">USD 359</span></div>`;}
+  else if(isBase){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div><div class="rr"><span class="k">Add-on Studio · IA Generativa</span><span class="v">USD ${359-mantDiscount()}</span></div>`;}
   else{mTable=`<div class="rr"><span class="k">Desk + Studio · bolsa mensual</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;}
   const mTitle=!state.studio?'Mesa de ayuda':(soloStudio?'Agente IA (sin Desk)':'Bolsa de conversaciones');
-  const xt=extraTicket();
+  if(mantDiscount()>0)mTable+=`<div class="rr"><span class="k">Mantención de bot <small class="xsplit">ya incluida en tu contrato vigente</small></span><span class="v" style="color:var(--success)">USD 0</span></div>`;
+  const xt=scopeBag()?extraTicket():null;
   if(xt){
     const xv=xt.split?`${usd3(xt.total)} c/u <small class="xsplit">(Desk ${usd3(xt.desk)} + Studio ${usd3(xt.studio)})</small>`:`${usd3(xt.total)} c/u <small class="xsplit">(${xt.desk!=null?'Desk':'Studio'})</small>`;
     mTable+=`<div class="rr xrow"><span class="k">Conversación extra · fuera de bolsa</span><span class="v">${xv}</span></div>`;
   }
-  const mDesc=!state.studio?'Plataforma omnicanal. Contrato anual.':(soloStudio?'Agente con IA, sin mesa de ayuda humana. Contrato anual.':'Plataforma omnicanal + agente con IA. Contrato anual.');
+  let mDesc=!state.studio?'Plataforma omnicanal. Contrato anual.':(soloStudio?'Agente con IA, sin mesa de ayuda humana. Contrato anual.':'Plataforma omnicanal + agente con IA. Contrato anual.');
+  let mTitleX=mTitle,mSub='Servicio Adereso',mIco=soloStudio?'robot':'msg';
+  if(state.existing){
+    /* cliente vigente: solo lo que sube respecto de lo que paga hoy */
+    const cur=+state.currentPay||0,sc=state.scope;
+    mTitleX=sc==='bolsa'?'Ampliación de bolsa':(sc==='bot'?'Bot nuevo':'Ampliación de bolsa + bot nuevo');
+    mSub='Upsell · cliente vigente';mIco=sc==='bolsa'?'chart':'robot';
+    mDesc=sc==='bot'?'Mantiene su bolsa actual. Se suma la mantención de cada bot nuevo.':'Se cobra solo la diferencia con lo que paga hoy.';
+    let t='';
+    if(scopeBag()){
+      t+=`<div class="rr"><span class="k">Nueva bolsa · ${volNow.toLocaleString('es-CL')} conv <small class="xsplit">sin mantención de bot</small></span><span class="v">${usd(bagPrice())}</span></div>`;
+      t+=`<div class="rr"><span class="k">Menos lo que paga hoy</span><span class="v">${cur>0?'−'+usd(cur):'<span style="color:var(--warning)">ingresa el monto</span>'}</span></div>`;
+      t+=`<div class="rr"><span class="k">Diferencia de bolsa</span><span class="v">${usd(bagDelta())}</span></div>`;
+    }
+    if(scopeBot())t+=`<div class="rr"><span class="k">Mantención bots nuevos <small class="xsplit">${botsN()} × USD ${BOT_MANT}</small></span><span class="v">${usd(newBotsMant())}</span></div>`;
+    if(cur>0)t+=`<div class="rr"><span class="k">Nuevo total mensual <small class="xsplit">lo que pagará con la ampliación</small></span><span class="v">${usd(cur+m)}</span></div>`;
+    mTable=t+(xt?`<div class="rr xrow"><span class="k">Conversación extra · fuera de bolsa</span><span class="v">${xt.split?`${usd3(xt.total)} c/u <small class="xsplit">(Desk ${usd3(xt.desk)} + Studio ${usd3(xt.studio)})</small>`:`${usd3(xt.total)} c/u`}</span></div>`:'');
+  }
   const mensualCard=`
-    <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>Mensual</span>
-      <div class="rsub">Servicio Adereso</div>
-      <div class="rtitle"><span data-i="${soloStudio?'robot':'msg'}" data-sz="18"></span>${mTitle}</div>
+    <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>${state.existing?'Upsell mensual':'Mensual'}</span>
+      <div class="rsub">${mSub}</div>
+      <div class="rtitle"><span data-i="${mIco}" data-sz="18"></span>${mTitleX}</div>
       <div class="rdesc">${mDesc}</div>
-      <div class="rbig"><span class="n">${usd(m).replace('$','')}</span><span class="u">/mes</span></div>
+      <div class="rbig"><span class="n">${state.existing?'+':''}${usd(m).replace('$','')}</span><span class="u">/mes</span></div>
       <div class="rtable">${mTable}</div>
-      ${withIA?`<div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar volumen (conversaciones)</label><input type="number" min="2000" step="500" data-ed="vol" value="${volNow}"></div>`:''}
+      ${withIA&&scopeBag()?`<div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar volumen (conversaciones)</label><input type="number" min="2000" step="500" data-ed="vol" value="${volNow}"></div>`:''}
     </div>`;
+  /* HH custom (solo clientes vigentes) */
+  const hhCard=(state.existing&&state.hhCustom)?`
+    <div class="rcard"><span class="rlabel"><span data-i="clock" data-sz="14"></span>Pago único</span>
+      <div class="rsub">Desarrollo a medida</div>
+      <div class="rtitle"><span data-i="tool" data-sz="18"></span>HH custom</div>
+      <div class="rdesc">Horas de desarrollo adicionales para el cliente vigente.</div>
+      <div class="rbig"><span class="n">${state.hhQty>0?state.hhQty.toLocaleString('es-CL'):'—'}</span><span class="u">HH</span></div>
+      <div class="rtable"><div class="rr"><span class="k">Valor por HH</span><span class="v">por confirmar</span></div></div>
+    </div>`:'';
 
   /* --- PREPAGO (Meta) --- */
   let prepagoCard='';
@@ -1284,12 +1550,11 @@ function renderSummary(){
       <div class="rsub">Consumo de Meta</div>
       <div class="rtitle"><span data-i="tool" data-sz="18"></span>Billetera ${rec?'recurrente':'spot'}</div>
       <div class="rdesc">${rec?'Se renueva cada período. No vence de inmediato: puedes usarlo hasta tu último período de facturación.':'Recarga variable. El saldo no vence y se acumula mes a mes.'}</div>
-      <div class="rbig"><span class="n">+${rec?'10':'12'}%</span><span class="u">fee Adereso</span></div>
+      ${(function(){const s=walletSplit();return s.total>0?`<div class="rbig"><span class="n">${usd(s.total).replace("$","")}</span><span class="u">USD a recargar</span></div>`:`<div class="rbig"><span class="n" style="font-size:26px;color:var(--z400)">Monto a definir</span></div>`;})()}
       <div class="rtable">
+        ${(function(){const s=walletSplit(),r=rec?10:12;if(!(s.total>0))return `<div class="rr"><span class="k">Fee Adereso</span><span class="v">${r}% incluido en el monto</span></div>`;return `<div class="rr"><span class="k">Saldo para Meta</span><span class="v">${usd2(s.meta)}</span></div><div class="rr"><span class="k">Fee Adereso (${r}%)</span><span class="v">${usd2(s.fee)}</span></div>`+(walletIsEstimate()?`<div class="rr"><span class="k">Origen del monto</span><span class="v" style="color:var(--warning)">Estimado por consumo</span></div>`:"");})()}
         <div class="rr"><span class="k">País (Meta)</span><span class="v">${waP().flag} ${waP().name}</span></div>
-        <div class="rr"><span class="k">Cubre</span><span class="v">${(function(){const parts=[];if(state.whatsapp)parts.push('Service');if(waTemplates())parts.push('plantillas');return parts.join(' + ')||'—';})()}</span></div>
-        ${(function(){const b=metaBase();if(b==null)return `<div class="rr"><span class="k">Estimado</span><span class="v">Tarifa por confirmar</span></div>`;if(b<=0)return `<div class="rr"><span class="k">Fee Adereso</span><span class="v">${rec?'10':'12'}% sobre consumo</span></div>`;return `<div class="rr"><span class="k">Costo Meta (base)</span><span class="v">~${usd(b)}/mes</span></div><div class="rr"><span class="k">Fee Adereso (+${rec?'10':'12'}%)</span><span class="v">~${usd(metaFee())}/mes</span></div><div class="rr"><span class="k"><b>Total prepago</b></span><span class="v"><b>~${usd(metaEst())}/mes</b></span></div>`;})()}
-        <div class="rr"><span class="k">Vencimiento</span><span class="v">${rec?'Vence cada período':'No vence'}</span></div>
+        <div class="rr"><span class="k">Vencimiento</span><span class="v">${rec?"Vence cada período":"No vence"}</span></div>
       </div>
       <div class="redit"><label><span data-i="edit" data-sz="12"></span> Editar billetera</label><div class="pills"><button class="pill ${!rec?'on':''}" data-ed="wallet" data-val="no_recurrente">Spot +12%</button><button class="pill ${rec?'on':''}" data-ed="wallet" data-val="recurrente">Recurrente +10%</button></div></div>
       <div class="rfoot"><span data-i="info" data-sz="14"></span><div>El servicio se corta al agotar el saldo.</div></div>
@@ -1375,17 +1640,17 @@ function renderSummary(){
     </div>`;
   }
 
-  if(!hasService()&&!state.cassper){
+  if(!hasService()&&!state.cassper&&!waActive()&&!(state.existing&&state.hhCustom)){
     document.getElementById('sumCard').innerHTML=`<div class="rcard" style="text-align:center;padding:40px 24px"><div class="rtitle" style="color:var(--z400)">Sin servicios seleccionados</div><div class="rdesc" style="margin:10px auto 0">Vuelve al Nivel 1 y activa al menos un servicio (Desk, Studio o Cassper) para ver la cotización.</div></div>`;
     return;
   }
   document.getElementById('sumCard').innerHTML=`
-    <div class="result-cards">${hasService()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${withIA?pagoCard:''}</div>`;
+    <div class="result-cards">${hasService()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${withIA&&scopeBot()?pagoCard:''}${hhCard}</div>`;
   paintIcons(document.getElementById('sumCard'));
   applyReveal(document.getElementById('sumCard'),'.rcard');
 }
 
-function renderAll(){renderOpts();renderVol();renderSetup();renderWa();renderRail();renderSummary();renderRoi();}
+function renderAll(){renderCust();renderOpts();renderVol();renderSetup();renderWa();renderRail();renderSummary();renderRoi();}
 
 /* ===== ROI · caso de negocio (reciclado del cotizador) ===== */
 const ROI_DIAS=22, ROI_HORAS=8, ROI_CASSPER_FEE=5;
@@ -1568,7 +1833,7 @@ document.getElementById('roiArea').addEventListener('input',e=>{
 /* nav */
 const KICK={s1:'Servicios',sc:'Canales',s2:'Volumen',s3:'Implementación',s4:'Billetera Adereso–Meta'};
 const NEXTLABEL={sc:'Continuar a canales',s2:'Continuar al volumen',s3:'Continuar a implementación',s4:'Continuar a la billetera',s5:'Ver resumen',s6:'Ver el retorno de la inversión',s7:'Ver el proceso comercial',s8:'Conocer el portal cliente'};
-function activeSections(){return SECTIONS.filter(id=>(id!=='sc'||hasService())&&(id!=='s2'||hasService())&&(id!=='s3'||state.studio)&&(id!=='s4'||waActive()));}
+function activeSections(){return SECTIONS.filter(id=>(id!=='sc'||hasService())&&(id!=='s2'||(hasService()&&scopeBag()))&&(id!=='s3'||(state.studio&&scopeBot()))&&(id!=='s4'||waActive()));}
 function buildNav(){
   const secs=activeSections();
   document.getElementById('secnav').innerHTML=secs.map((id,i)=>{const t=document.getElementById(id).dataset.title;return `<button class="snav" data-goto="${id}"><span class="num">${i+1}</span>${t}<span class="bar"></span></button>`;}).join('');
@@ -1630,15 +1895,24 @@ document.getElementById('volArea').addEventListener('input',e=>{
   syncRoiVolume();
   document.querySelectorAll('#volArea .vtile').forEach(t=>t.classList.toggle('sel',state.volMode==='tile'&&+t.dataset.vol===state.vol));
   document.getElementById('vcustom')?.classList.toggle('sel',state.volMode==='custom');
-  const cp=document.getElementById('customPrice');if(cp)cp.textContent=state.volMode==='custom'?raw.toLocaleString('es-CL'):'—';
   renderRail();renderSummary();
 });
 document.getElementById('setupArea').addEventListener('click',e=>{
   const mode=e.target.closest('[data-smode]');
   if(mode){state.setupMode=mode.dataset.smode;renderSetup();renderRail();renderSummary();return;}
-  const p=e.target.closest('[data-setup]');if(!p)return;state.setup=p.dataset.setup;renderSetup();renderRail();renderSummary();
+  const tg=e.target.closest('[data-plans-toggle]');
+  const p=e.target.closest('[data-setup]');
+  if(tg||(p&&p.dataset.setup===state.setup)){
+    /* abrir/cerrar sin re-render para que la animación se vea */
+    state.plansOpen=!state.plansOpen;const w=document.getElementById('plansWrap');
+    if(w){w.classList.toggle('open',state.plansOpen);const b=w.querySelector('[data-plans-toggle]');if(b){b.setAttribute('aria-expanded',state.plansOpen);b.querySelector('.ps-lbl').textContent=state.plansOpen?'Ocultar planes':'Cambiar plan';}}
+    return;}
+  if(!p)return;state.setup=p.dataset.setup;state.plansOpen=false;renderSetup();renderRail();renderSummary();
 });
 document.getElementById('waArea').addEventListener('click',e=>{
+  const ct=e.target.closest('[data-wa-calc]');
+  if(ct){state.wa.calcOpen=!state.wa.calcOpen;ct.classList.toggle('open',state.wa.calcOpen);ct.setAttribute('aria-expanded',state.wa.calcOpen);ct.nextElementSibling.classList.toggle('open',state.wa.calcOpen);return;}
+  if(e.target.closest('[data-wa-use]')){state.wa.amount=Math.round(metaEst()||0);const a=document.getElementById('waAmt');if(a)a.value=state.wa.amount||'';renderWaLive();renderRail();renderSummary();if(!state.roiCostTouched)calcRoiNumbers();return;}
   if(e.target.closest('[data-wa-reset]')){state.wa.service=0;state.wa.marketing=0;state.wa.utility=0;state.wa.authentication=0;state.wa.minutes=0;renderWa();renderRail();renderSummary();return;}
   const act=e.target.closest('[data-act]');
   if(act){const a=act.dataset.act;
@@ -1650,7 +1924,14 @@ document.getElementById('waArea').addEventListener('click',e=>{
   const w=e.target.closest('[data-wallet]');if(!w)return;
   state.wa.wallet=w.dataset.wallet;renderWa();renderRail();renderSummary();calcRoiNumbers();
 });
-document.getElementById('waArea').addEventListener('input',e=>{const inp=e.target.closest('[data-wa-in]');if(!inp)return;state.wa[inp.dataset.waIn]=Math.max(0,+inp.value||0);renderWaLive();renderRail();renderSummary();});
+document.getElementById('waArea').addEventListener('input',e=>{
+  const am=e.target.closest('[data-wa-amount]');
+  if(am){state.wa.amount=Math.max(0,+am.value||0);renderWaLive();renderRail();renderSummary();return;}
+  const inp=e.target.closest('[data-wa-in]');if(!inp)return;state.wa[inp.dataset.waIn]=Math.max(0,+inp.value||0);renderWaLive();renderRail();renderSummary();});
+document.getElementById('waArea').addEventListener('change',e=>{
+  const c=e.target.closest('[data-wa-country]'),w=e.target.closest('[data-wa-wallet]');
+  if(c)state.wa.country=c.value;else if(w)state.wa.wallet=w.value;else return;
+  renderWa();renderRail();renderSummary();calcRoiNumbers();});
 document.getElementById('mSum').addEventListener('click',()=>document.getElementById('mDetail').classList.toggle('open'));
 document.getElementById('sumCard').addEventListener('input',e=>{
   const el=e.target.closest('[data-ed]');if(!el)return;const t=el.dataset.ed;
@@ -1670,11 +1951,11 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=state.studio?(state.setupMode==='paquetizado'?'Rápida sin acompañamiento (paquetizado) — Gratis':SETUP[state.setup].name+' (acompañada) — '+usd(s)):'Estándar (sin IA) — Gratis';
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
-  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push('Mensual (contrato anual): '+usd(m)+'/mes');if(xCost()>0)L.push('Canal X (hasta '+X_MSGS.toLocaleString('es-CL')+' mensajes): USD '+X_PRICE+'/mes');if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
+  if(hasService()){L.push('Servicio: '+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+((+state.currentPay||0)>0?' · hoy paga '+usd(+state.currentPay)+' → nuevo total '+usd((+state.currentPay)+m):'')+(scopeBot()?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+BOT_MANT:'')):('Mensual (contrato anual): '+usd(m)+'/mes'));if(xCost()>0)L.push('Canal X (hasta '+X_MSGS.toLocaleString('es-CL')+' mensajes): USD '+X_PRICE+'/mes');if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
     const xt=extraTicket();if(xt)L.push('Conversación extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
   if(state.studio)L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
-  if(waActive())L.push('WhatsApp/Meta ('+waP().name+'): '+(meta==null?'tarifa por confirmar':'costo Meta ~'+usd(metaBase())+' + fee Adereso '+(state.wa.wallet==='recurrente'?'10':'12')+'% = ~'+usd(meta)+'/mes')+' · '+([state.whatsapp?'service':'',waTemplates()?'plantillas':'',waCalls()?'llamadas':''].filter(Boolean).join(' + ')));
+  if(waActive()){const ws=walletSplit();L.push('Billetera Adereso–Meta ('+waP().name+', '+(state.wa.wallet==='recurrente'?'recurrente 10%':'spot 12%')+'): '+(ws.total>0?'recarga '+usd(ws.total)+' (saldo Meta '+usd(ws.meta)+' + fee '+usd(ws.fee)+')'+(walletIsEstimate()?' · estimado':''):'monto a definir'));}
   L.push('─────────────────────','Inversión primer mes: '+usd(s+m+cM+(meta||0)+cSucc)+(meta==null?' (+ Meta por confirmar)':''),'Valor contrato 12 meses: '+usd((m+cM)*12+s));
   navigator.clipboard.writeText(L.join('\n')).then(()=>{const b=document.getElementById('copyBtn'),o=b.innerHTML;b.innerHTML='<span data-i="check"></span>Copiado';paintIcons(b);setTimeout(()=>{b.innerHTML=o;paintIcons(b);},1600);});
 });
@@ -1692,58 +1973,11 @@ function computeActive(){
 function onScroll(){
   const s=window.scrollY>48;if(s!==_sc){_sc=s;topbar.classList.toggle('scrolled',s);}
   const tb=document.getElementById('topBtn');if(tb)tb.classList.toggle('show',window.scrollY>420);
-  if(!_spy&&!window._snapBusy){_spy=true;requestAnimationFrame(()=>{_spy=false;computeActive();});}
+  if(!_spy){_spy=true;requestAnimationFrame(()=>{_spy=false;computeActive();});}
 }
 window.addEventListener('scroll',onScroll,{passive:true});
 window.addEventListener('resize',onScroll,{passive:true});
 
-/* Scroll magnético: el scroll es libre; al soltar cerca del inicio de un nivel, se acomoda solo
-   con un deslizamiento suave y el nivel "asienta" con un rebote leve (efecto líquido). */
-(function(){
-  const OFF=130,PULL=0.32,QUIET=170,DUR=560;
-  let tEnd=null,anim=null,gliding=false;
-  function secEls(){return activeSections().map(id=>document.getElementById(id)).filter(el=>el&&!el.classList.contains('hidden'));}
-  function blocked(t){return document.getElementById('modalBack')?.classList.contains('open')||(t&&t.closest&&t.closest('input,textarea,select,.modal'));}
-  function cancel(){if(anim){cancelAnimationFrame(anim);anim=null;}gliding=false;window._snapBusy=false;}
-  const ease=t=>1-Math.pow(1-t,3);
-  function settle(el){if(prefersReduced)return;el.classList.remove('settle');void el.offsetWidth;el.classList.add('settle');}
-  function glideTo(el,y){
-    cancel();const from=window.scrollY,dist=y-from;
-    if(Math.abs(dist)<2){settle(el);return;}
-    if(prefersReduced){window.scrollTo(0,y);return;}
-    gliding=true;window._snapBusy=true;setActive(el.id);
-    const t0=performance.now();
-    const tick=now=>{const p=Math.min(1,(now-t0)/DUR);window.scrollTo(0,from+dist*ease(p));
-      if(p<1)anim=requestAnimationFrame(tick);else{anim=null;gliding=false;window._snapBusy=false;settle(el);}};
-    anim=requestAnimationFrame(tick);
-  }
-  function topY(el){return window.scrollY+el.getBoundingClientRect().top-OFF+8;}
-  function magnet(){
-    if(gliding||document.getElementById('modalBack')?.classList.contains('open'))return;
-    const els=secEls();if(!els.length)return;
-    const vh=window.innerHeight;let best=null,bd=Infinity;
-    els.forEach(el=>{const d=el.getBoundingClientRect().top-OFF;if(Math.abs(d)<Math.abs(bd)){bd=d;best=el;}});
-    /* solo atrae si el borde del nivel está cerca; dentro de un nivel largo se queda donde dejaste */
-    if(best&&Math.abs(bd)<vh*PULL)glideTo(best,topY(best));
-  }
-  window.addEventListener('scroll',()=>{if(gliding)return;clearTimeout(tEnd);tEnd=setTimeout(magnet,QUIET);},{passive:true});
-  /* cualquier gesto nuevo interrumpe el deslizamiento: nunca pelea con el usuario */
-  ['wheel','touchstart','mousedown'].forEach(ev=>window.addEventListener(ev,()=>{if(gliding)cancel();clearTimeout(tEnd);},{passive:true}));
-  /* teclado: flechas / AvPág / espacio avanzan un nivel completo */
-  window.addEventListener('keydown',e=>{
-    if(blocked(e.target)||e.metaKey||e.ctrlKey||e.altKey)return;
-    const k=e.key;let dir=0;
-    if(k==='ArrowDown'||k==='PageDown'||(k===' '&&!e.shiftKey))dir=1;
-    else if(k==='ArrowUp'||k==='PageUp'||(k===' '&&e.shiftKey))dir=-1;
-    if(!dir)return;
-    const els=secEls();let i=0;els.forEach((el,n)=>{if(el.getBoundingClientRect().top<=OFF+40)i=n;});
-    const cur=els[i],r=cur.getBoundingClientRect();
-    if(dir>0&&r.bottom>window.innerHeight+6)return;   /* nivel largo: deja bajar normal */
-    if(dir<0&&r.top<OFF-6){e.preventDefault();glideTo(cur,topY(cur));return;}
-    const nx=els[i+dir];if(!nx)return;
-    e.preventDefault();glideTo(nx,topY(nx));
-  });
-})();
 
 /* popups para explicar pricing */
 /* Fin de página: si ya estás en el tope inferior y sigues bajando, el contenido se estira como líquido
@@ -1751,17 +1985,17 @@ window.addEventListener('resize',onScroll,{passive:true});
 (function(){
   const wrap=document.querySelector('.wrap'),cap=document.getElementById('endCap');if(!wrap||!cap)return;
   const drop=document.getElementById('endDrop'),txt=cap.querySelector('.endcap-txt');
-  const MAX=150,K=260;let acc=0,rel=null,ty=null;
+  const MAX=170,K=420,DEAD=160;let acc=0,rel=null,ty=null;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
   const blocked=()=>document.getElementById('modalBack')?.classList.contains('open');
   function paint(p){
     wrap.style.transform=p>0?`translateY(${-p*0.55}px) scaleY(${1+p/2600})`:'';
     drop.style.height=p+'px';drop.style.width=(90+p*1.1)+'px';
-    const o=Math.min(1,Math.max(0,(p-28)/60));txt.style.opacity=o;txt.style.transform=`translateY(${16-16*o}px)`;
+    const o=Math.min(1,Math.max(0,(p-105)/45));txt.style.opacity=o;txt.style.transform=`translateY(${16-16*o}px)`;
   }
-  function pull(d){acc=Math.max(0,acc+d);const p=MAX*(1-Math.exp(-acc/K));wrap.classList.remove('spring');cap.classList.remove('spring');paint(p);}
+  function pull(d){acc=Math.max(0,acc+d);const p=MAX*(1-Math.exp(-Math.max(0,acc-DEAD)/K));wrap.classList.remove('spring');cap.classList.remove('spring');paint(p);}
   function release(){acc=0;wrap.classList.add('spring');cap.classList.add('spring');paint(0);}
-  function arm(){clearTimeout(rel);rel=setTimeout(release,prefersReduced?0:140);}
+  function arm(){clearTimeout(rel);rel=setTimeout(release,prefersReduced?0:180);}
   window.addEventListener('wheel',e=>{
     if(blocked()||e.ctrlKey)return;
     if(e.deltaY>0&&atBottom()){e.preventDefault();pull(e.deltaY);arm();}
@@ -1866,50 +2100,87 @@ const PORTAL_VIEWS={
    return `<div class="portal-mhead"><div><div class="portal-mtitle">QA · solicitudes del cliente</div><div class="portal-msub">Ajustes y mejoras al agente, con seguimiento hasta resolverlos.</div></div><span class="portal-plan">${open} abiertas</span></div>
      <div class="qa-grid">${cards}</div>`;
  },
- status:()=>`<div class="portal-mhead"><div><div class="portal-mtitle">Status del proyecto</div><div class="portal-msub">Así va tu setup, el progreso y lo que queda por consumir.</div></div><span class="portal-plan">Plan 2 · Inteligente</span></div>
-   <div class="portal-stats">
-     <div class="pstat"><div class="ps-n">12</div><div class="ps-l">Días desde kickoff</div></div>
-     <div class="pstat"><div class="ps-n">1/3</div><div class="ps-l">Reuniones</div></div>
-     <div class="pstat"><div class="ps-n">1/4</div><div class="ps-l">Endpoints</div></div>
-     <div class="pstat"><div class="ps-n">9/30</div><div class="ps-l">HH de setup</div></div>
-   </div>
-   <div class="portal-phases">
-     <div class="pphase done"><span class="pp-ic">✓</span>Kickoff & levantamiento<span class="pp-tag">Completado</span></div>
-     <div class="pphase done"><span class="pp-ic">✓</span>Carga de documentos<span class="pp-tag">Completado</span></div>
-     <div class="pphase now"><span class="pp-ic">●</span>Integración API REST<span class="pp-tag">En curso · 2/9 HH</span></div>
-     <div class="pphase"><span class="pp-ic">○</span>Configuración IA conversacional<span class="pp-tag">Pendiente</span></div>
-     <div class="pphase"><span class="pp-ic">○</span>QA & Go Live<span class="pp-tag">Pendiente</span></div>
-   </div>`,
- cronograma:()=>`<div class="portal-mhead"><div><div class="portal-mtitle">Cronograma del proyecto</div><div class="portal-msub">Plazos por semana y avance en una vista.</div></div><span class="portal-plan">3 semanas</span></div>
-   <div class="gantt">
-     <div class="gantt-head"><span>Fase</span><span>Sem 1</span><span>Sem 2</span><span>Sem 3</span></div>
-     <div class="gantt-row"><span class="g-lbl">Kickoff & levantamiento</span><span class="g-track"><span class="g-bar done" style="grid-column:1/2">100%</span></span></div>
-     <div class="gantt-row"><span class="g-lbl">Base de conocimiento</span><span class="g-track"><span class="g-bar done" style="grid-column:1/3">100%</span></span></div>
-     <div class="gantt-row"><span class="g-lbl">Configuración IA conversacional</span><span class="g-track"><span class="g-bar now" style="grid-column:1/3">60%</span></span></div>
-     <div class="gantt-row"><span class="g-lbl">Integración APIs (BFF)</span><span class="g-track"><span class="g-bar now" style="grid-column:2/4">55%</span></span></div>
-     <div class="gantt-row"><span class="g-lbl">Validación y aprobación</span><span class="g-track"><span class="g-bar pend" style="grid-column:3/4">0%</span></span></div>
-     <div class="gantt-row"><span class="g-lbl">QA & Go Live</span><span class="g-track"><span class="g-bar pend" style="grid-column:3/4">0%</span></span></div>
-   </div>`,
+ avance:()=>`<div class="portal-mhead"><div><div class="portal-mtitle">Avance del proyecto</div><div class="portal-msub">Todo tu proyecto en una sola línea.</div></div><span class="portal-plan">Plan 2 · Inteligente</span></div>${journeyHTML(false)}`,
  placeholder:(name)=>`<div class="portal-empty"><span class="pe-ic"><span data-i="clock" data-sz="22"></span></span><div class="pe-t">${name}</div><div class="pe-s">Sección del portal · se habilita a medida que avanza tu proyecto.</div></div>`
 };
-const PORTAL_LABELS={onboarding:'Onboarding',status:'Status del proyecto',cronograma:'Cronograma',qa:'QA',bots:'Bots',sops:'SOPs',equipo:'Equipo'};
+/* Línea de viaje minimalista: hitos sobre una sola línea + KPIs en una fila. */
+const JOURNEY=[{t:'Kick off',m:'Sem 1',s:'done'},{t:'Conocimiento',m:'Sem 1–2',s:'done'},{t:'Integración',m:'Sem 2–3',s:'now'},{t:'QA',m:'Sem 3',s:''},{t:'Go Live',m:'Sem 3',s:''}];
+function journeyHTML(anim){
+  const pct=50;/* hasta el hito "Integración" en curso */
+  return `<div class="jr ${anim?'anim':''}">
+    <div class="jr-line"><span class="jr-fill" style="--to:${pct}%"></span>
+      ${JOURNEY.map((j,i)=>`<div class="jr-pt ${j.s}" style="left:${i/(JOURNEY.length-1)*100}%;--d:${(anim?.5:0)+i*.55}s"><span class="jr-dot">${j.s==='done'?'✓':''}</span><span class="jr-t">${j.t}</span><span class="jr-m">${j.s==='now'?'En curso':j.m}</span></div>`).join('')}
+    </div>
+    <div class="jr-kpis">
+      <span class="jk" style="--d:${anim?3.2:0}s"><b>Día 12</b> de 21</span>
+      <span class="jk" style="--d:${anim?3.45:0}s"><b>9/30</b> HH de setup</span>
+      <span class="jk" style="--d:${anim?3.7:0}s"><b>1/4</b> endpoints</span>
+      <span class="jk" style="--d:${anim?3.95:0}s"><b>1/3</b> reuniones</span>
+    </div>
+  </div>`;
+}
+/* ===== Recorrido automático del portal ===== */
+const TOUR=[
+ {nav:'onboarding',url:'Onboarding · Datos fiscales',dur:6200,k:'Paso 1 · Onboarding',t:'Carga tus datos fiscales',html:()=>{
+   const F=[['RUT empresa','76.543.210-K'],['Razón social','Tienda Andes SpA'],['Giro','Comercio minorista online'],['Correo de facturación','finanzas@tiendaandes.cl']];
+   return `<div class="tf-grid">${F.map((f,i)=>`<div class="tf" style="--d:${.5+i*1.05}s"><span class="tf-l">${f[0]}</span><span class="tf-v"><span class="tf-type" style="--n:${f[1].length}">${f[1]}</span><span class="tf-caret"></span></span></div>`).join('')}</div>
+     <div class="tr-ok" style="--d:4.9s"><span>✓</span> Datos fiscales guardados</div>`;}},
+ {nav:'onboarding',url:'Onboarding · Documentación',dur:6400,k:'Paso 2 · Onboarding',t:'Sube tu documentación',html:()=>{
+   const D=[['Politicas_devolucion.pdf','1,2 MB'],['Catalogo_productos_2026.xlsx','3,4 MB'],['Preguntas_frecuentes.docx','860 KB']];
+   return `<div class="tr-drop"><span data-i="doc" data-sz="20"></span><span>Arrastra PDF, Word o Excel · el agente aprende de aquí</span></div>
+     <div class="tr-files">${D.map((d,i)=>`<div class="tfile" style="--d:${.7+i*1.4}s"><span class="tfile-ic" data-i="doc" data-sz="15"></span><span class="tfile-n">${d[0]}<small>${d[1]}</small></span><span class="tfile-bar"><i></i></span><span class="tfile-ok">✓</span></div>`).join('')}</div>`;}},
+ {nav:'onboarding',url:'Onboarding · APIs',dur:6400,k:'Paso 3 · Onboarding',t:'Conecta tus APIs',html:()=>{
+   const E=[['GET','/pedidos/{id}','Consultar estado de pedido'],['POST','/tickets','Crear ticket de soporte'],['GET','/stock/{sku}','Ver disponibilidad']];
+   return `<div class="tfile one" style="--d:.5s"><span class="tfile-ic" data-i="tool" data-sz="15"></span><span class="tfile-n">api_pedidos.postman.json<small>Colección Postman</small></span><span class="tfile-bar"><i></i></span><span class="tfile-ok">✓</span></div>
+     <div class="tr-eps">${E.map((e,i)=>`<div class="tep" style="--d:${2.3+i*1}s"><span class="tep-m ${e[0].toLowerCase()}">${e[0]}</span><code>${e[1]}</code><span class="tep-d">${e[2]}</span><span class="tep-ok">Conectado</span></div>`).join('')}</div>`;}},
+ {nav:'onboarding',url:'Onboarding · Kick off',dur:6200,k:'Paso 4 · Onboarding',t:'Todo listo. Agenda tu kick off',html:()=>{
+   const S=[['Lun','11:00'],['Mar','15:00'],['Mié','10:00'],['Jue','12:00'],['Vie','09:30']];
+   return `<div class="tr-slots">${S.map((s,i)=>`<span class="tslot ${i===2?'pick':''}"><b>${s[0]}</b>${s[1]}</span>`).join('')}</div>
+     <div class="tr-cta"><button class="tcta" tabindex="-1"><span data-i="clock" data-sz="15"></span> Agendar kick off</button>
+       <div class="tcta-ok"><span>✓</span> Kick off agendado · Mié 10:00 · te llegó la invitación</div></div>`;}},
+ {nav:'avance',url:'Avance del proyecto',dur:7200,k:'Después del kick off',t:'Tu proyecto, en una sola línea',html:()=>journeyHTML(true)}
+];
+let tourI=0,tourT=null,tourOn=false;
+function tourShow(i){
+  const main=document.getElementById('portalMain');if(!main)return;const sc=TOUR[i];tourI=i;state.portalView=sc.nav;
+  document.querySelectorAll('#portalNav .pnav').forEach(b=>b.classList.toggle('active',b.dataset.portalView===sc.nav));
+  const u=document.getElementById('portalUrl');if(u)u.textContent='portal.adereso.ai · '+sc.url;
+  main.innerHTML=`<div class="tour-bar">${TOUR.map((s,j)=>`<span class="tb-seg ${j<i?'done':(j===i?'now':'')}" style="--dur:${s.dur}ms"><i></i></span>`).join('')}<button class="tb-btn" data-tour="${tourOn?'pause':'play'}">${tourOn?'❚❚ Pausar':(i===TOUR.length-1?'↻ Repetir':'▶ Continuar')}</button></div>
+    <div class="tr-scene"><div class="tr-k">${sc.k}</div><div class="tr-t">${sc.t}</div>${sc.html()}</div>`;
+  main.classList.toggle('touring',tourOn);
+  paintIcons(main);
+}
+function tourNext(){if(tourI<TOUR.length-1){tourShow(tourI+1);tourT=setTimeout(tourNext,TOUR[tourI].dur);}else{tourOn=false;tourShow(tourI);}}
+function tourStart(from){clearTimeout(tourT);tourOn=true;tourShow(from||0);tourT=setTimeout(tourNext,TOUR[tourI].dur);}
+function tourStop(){clearTimeout(tourT);tourOn=false;document.getElementById('portalMain')?.classList.remove('touring');}
+(function(){const box=document.querySelector('.portal');if(!box||!('IntersectionObserver' in window))return;
+  let seen=false;
+  new IntersectionObserver(es=>es.forEach(en=>{
+    if(en.isIntersecting&&!seen){seen=true;tourStart(0);}
+    else if(!en.isIntersecting&&seen){seen=false;tourStop();}
+  }),{threshold:0.45}).observe(box);})();
+const PORTAL_LABELS={onboarding:'Onboarding',avance:'Avance del proyecto',qa:'QA',bots:'Bots',sops:'SOPs',equipo:'Equipo'};
 function renderPortal(){
   const main=document.getElementById('portalMain');if(!main)return;
-  const v=state.portalView||'onboarding';
+  if(tourOn){tourShow(tourI);return;}
+  let v=state.portalView||'onboarding';if(!PORTAL_LABELS[v])v=state.portalView='onboarding';
   document.querySelectorAll('#portalNav .pnav').forEach(b=>b.classList.toggle('active',b.dataset.portalView===v));
   const urlEl=document.getElementById('portalUrl');if(urlEl)urlEl.textContent='portal.adereso.ai · '+(PORTAL_LABELS[v]||'');
-  main.innerHTML=PORTAL_VIEWS[v]?PORTAL_VIEWS[v]():PORTAL_VIEWS.placeholder(PORTAL_LABELS[v]||'Sección');
+  main.classList.remove('touring');
+  main.innerHTML=`<div class="tour-replay"><button class="tb-btn" data-tour="play">▶ Ver recorrido</button></div>`+(PORTAL_VIEWS[v]?PORTAL_VIEWS[v]():PORTAL_VIEWS.placeholder(PORTAL_LABELS[v]||'Sección'));
   paintIcons(main);
 }
 document.getElementById('portalNav').addEventListener('click',e=>{
   const b=e.target.closest('[data-portal-view]');if(!b)return;
-  state.portalView=b.dataset.portalView;renderPortal();
+  tourStop();state.portalView=b.dataset.portalView;renderPortal();
 });
 document.getElementById('portalMain').addEventListener('click',e=>{
+  const tb=e.target.closest('[data-tour]');
+  if(tb){if(tb.dataset.tour==='pause'){tourStop();tourShow(tourI);}else{tourStart(tourI>=TOUR.length-1||!document.querySelector('#portalMain .tour-bar')?0:tourI);}return;}
   const qf=e.target.closest('[data-qa-fix]');
   if(qf){state.qaFixed[qf.dataset.qaFix]=true;renderPortal();return;}
   const w=e.target.closest('[data-wiz]');if(!w)return;
-  state.portalWiz=+w.dataset.wiz;renderPortal();
+  tourStop();state.portalWiz=+w.dataset.wiz;renderPortal();
 });
 
 /* reset + volver arriba */
@@ -1922,6 +2193,25 @@ document.getElementById('resetBtn').addEventListener('click',resetAll);
 document.getElementById('topBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
 
 /* init */
+document.getElementById('custSeg')?.addEventListener('click',e=>{const b=e.target.closest('[data-cust]');if(!b)return;const ex=b.dataset.cust==='existing';if(ex===state.existing)return;state.existing=ex;
+  if(!ex){state.walletOnly=false;state.hhCustom=false;}
+  if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();});
+/* panel de cliente vigente: lo que paga hoy, alcance y bots nuevos */
+function exRefresh(){if(!state.roiCostTouched)state.roiCost=null;renderRail();renderSummary();renderRoi();}
+document.getElementById('existPanel')?.addEventListener('click',e=>{
+  const s=e.target.closest('[data-scope]');
+  if(s){state.scope=s.dataset.scope;if(state.scope!=='bolsa'&&!state.studio){state.studio=true;if(!SETUP[state.setup])state.setup='inteligente';}
+    if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();return;}
+  const st=e.target.closest('[data-ex-step]');
+  if(st){state.bots=Math.max(1,botsN()+(+st.dataset.exStep));const i=document.getElementById('exBots');if(i)i.value=state.bots;exRefresh();}
+});
+document.getElementById('existPanel')?.addEventListener('input',e=>{
+  const f=e.target.closest('[data-ex]');if(!f)return;
+  if(f.dataset.ex==='pay')state.currentPay=Math.max(0,+f.value||0);
+  else if(f.dataset.ex==='bots')state.bots=Math.max(1,Math.round(+f.value||1));
+  exRefresh();
+});
+document.getElementById('hhFoot')?.addEventListener('input',e=>{const f=e.target.closest('[data-hh]');if(!f)return;state.hhQty=Math.max(0,Math.round(+f.value||0));renderRail();renderSummary();});
 buildNav();renderMods();renderAll();refreshFlow();paintIcons();setActive('s1');observeReveals();renderPortal();
 /* Proceso comercial: cascada de iluminación izq→der al entrar en vista */
 (function(){const pt=document.querySelector('.proc-track');if(!pt)return;if(prefersReduced){pt.classList.add('lit');return;}
