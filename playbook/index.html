@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Playbook comercial Adereso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* mismo sistema visual que Pricing: superficies #1B1D22, bordes suaves y todo encerrado en cajas */
+:root{
+  --brand:#FFD540;--surface:#1B1D22;--elevated:#2E3036;--b-subtle:rgba(255,255,255,0.06);--b:rgba(255,255,255,0.10);
+  --success:#52CE5E;--danger:#FF4040;--warning:#F5B942;--info:#186EFA;
+  --t:#FFFFFF;--t-body:#d4d4d8;--t2:#a1a1aa;--t3:#71717a;--t4:#52525b;
+  --r2:10px;--r3:14px;--r4:18px;--e1:0 10px 30px rgba(0,0,0,0.35);
+  --ease:cubic-bezier(0.2,0.8,0.2,1);--head:'Outfit','Work Sans',system-ui,sans-serif
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Work Sans',system-ui,sans-serif;color:var(--t-body);-webkit-font-smoothing:antialiased;line-height:1.5;
+  background-color:#15171C;
+  background-image:radial-gradient(900px 520px at 12% -8%,rgba(255,213,64,0.08),transparent 62%),radial-gradient(820px 620px at 96% 18%,rgba(24,110,250,0.08),transparent 64%),linear-gradient(180deg,#1E2026 0%,#17191E 45%,#131519 100%),radial-gradient(rgba(255,255,255,0.035) 1px,transparent 1px);
+  background-size:auto,auto,auto,22px 22px;background-attachment:fixed,fixed,fixed,scroll;background-repeat:no-repeat,no-repeat,no-repeat,repeat}
+::selection{background:rgba(255,213,64,0.3);color:#fff}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--brand)}
+h1,h2,h3,h4,h5{font-family:var(--head);color:var(--t);letter-spacing:-0.02em;font-weight:500;line-height:1.12}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:40px;max-width:1200px;margin:0 auto;padding:0 28px;transition:grid-template-columns .3s var(--ease)}
+.layout>.side{order:2}
+body.side-off .layout{grid-template-columns:minmax(0,1fr) 40px}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.side{display:none}}
+/* botones y chips: cajas, no píldoras */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:var(--r2);border:1px solid var(--b);background:var(--surface);font-size:13px;color:var(--t);transition:all .2s var(--ease);white-space:nowrap}
+.btn:hover{border-color:rgba(255,213,64,0.5);color:var(--brand)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#0C0C0D;font-weight:500}
+.btn.pri:hover{filter:brightness(1.06);color:#0C0C0D}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn.ico{width:38px;padding:0;height:38px}
+.btn.done{color:var(--success);border-color:rgba(82,206,94,0.45)}
+.btn svg{width:15px;height:15px;flex:0 0 auto}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,0.03);font-size:12px;color:var(--t2)}
+.chip.y{color:var(--brand);border-color:rgba(255,213,64,0.45);background:rgba(255,213,64,0.05)}
+.chip svg{width:13px;height:13px}
+.kicker{display:flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);font-weight:500}
+.kicker::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--brand)}
+/* lateral */
+.side{position:sticky;top:0;height:100vh;padding:28px 0 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-a{flex:0 0 auto;width:28px;height:28px;border-radius:8px;background:var(--brand);color:#0C0C0D;display:grid;place-items:center;font-family:var(--head);font-weight:700;font-size:14px}
+.brand>div{min-width:0;flex:1}
+.brand b{display:block;color:var(--t);font-size:13.5px;font-weight:500}
+.brand small{color:var(--t3);font-size:11px;white-space:nowrap}
+.side-tg{flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:1px solid var(--b);display:grid;place-items:center;color:var(--t3);transition:all .2s var(--ease)}
+.side-tg:hover{color:var(--brand);border-color:rgba(255,213,64,0.5)}
+.side-tg svg{width:14px;height:14px;transition:transform .3s var(--ease)}
+body.side-off .side-tg svg{transform:rotate(180deg)}
+body.side-off .brand{flex-direction:column}
+body.side-off .brand>div,body.side-off .toc a span,body.side-off .side-box{display:none}
+body.side-off .toc a{padding:5px;justify-content:center}
+.toc{display:flex;flex-direction:column;gap:2px}
+.toc a{display:flex;gap:9px;align-items:center;padding:5px 7px;border-radius:var(--r2);color:var(--t2);text-decoration:none;font-size:12.5px;border:1px solid transparent;transition:all .2s var(--ease)}
+.toc a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc a i{font-style:normal;flex:0 0 auto;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:10.5px;color:var(--t3);border:1px solid var(--b);font-family:var(--head)}
+.toc a:hover{color:var(--t);background:rgba(255,255,255,0.03)}
+.toc a.on{background:var(--surface);border-color:var(--b);color:var(--t)}
+.toc a.on i{background:var(--brand);border-color:var(--brand);color:#0C0C0D}
+.side-box{border:1px solid var(--b-subtle);border-radius:var(--r2);padding:10px;background:rgba(27,29,34,0.6)}
+.side-box h6{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);font-weight:500;margin-bottom:4px}
+.side-box .dt{color:var(--t);font-family:var(--head);font-size:13.5px}
+.lm-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--t2);padding:2px 0}
+.lm-row b{color:var(--t);font-weight:500}
+/* main */
+main{padding:40px 0 140px;min-width:0}
+.hero h1{font-size:50px;margin:14px 0 14px}
+.hero h1 em{font-style:normal;color:var(--t4)}
+.hero p{color:var(--t2);max-width:560px;font-size:15px}
+.box{border:1px solid var(--b);border-radius:var(--r4);background:var(--surface);box-shadow:var(--e1)}
+/* reunión en 45 min */
+.tl{margin-top:30px;padding:22px}
+.tl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tl-top h3{font-size:20px}
+.tl-top small{display:block;color:var(--t2);font-size:13px;margin-top:4px}
+.tl-rows{display:flex;flex-direction:column;gap:6px}
+.tl-row{display:grid;grid-template-columns:200px minmax(0,1fr) 46px 74px;gap:14px;align-items:center;padding:9px 12px;border-radius:var(--r2);border:1px solid var(--b-subtle);background:rgba(255,255,255,0.015);text-decoration:none;color:inherit;transition:all .2s var(--ease)}
+.tl-row:hover{border-color:rgba(255,213,64,0.4)}
+.tl-row .nm{display:flex;align-items:center;gap:10px;min-width:0}
+.tl-row .nm i{font-style:normal;flex:0 0 auto;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:var(--head);font-size:11.5px;color:var(--t2);border:1px solid var(--b)}
+.tl-row .nm b{color:var(--t);font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-row .nm small{color:var(--warning);font-size:11px;white-space:nowrap}
+.track{position:relative;height:10px;border-radius:4px;background:rgba(255,255,255,0.04)}
+.bar{position:absolute;top:0;bottom:0;border-radius:4px}
+.bar.g{background:#4A4D55}.bar.y{background:var(--brand)}.bar.s{background:var(--success)}
+.bar.d{background:repeating-linear-gradient(90deg,#4A4D55 0 6px,transparent 6px 10px)}
+.tl-row .mn{font-family:var(--head);color:var(--t);font-size:14px;text-align:right}
+.tl-row .wn{color:var(--t3);font-size:12px;text-align:right}
+@media(max-width:720px){.tl-row{grid-template-columns:1fr 40px}.track,.tl-row .wn{display:none}}
+/* sección */
+.sec{scroll-margin-top:24px;margin-top:70px}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.sh-l{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:11px;background:var(--brand);color:#0C0C0D;display:grid;place-items:center;font-family:var(--head);font-weight:600;font-size:17px}
+.sec h2{font-size:32px}
+.sec-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sec .lead{color:var(--t2);margin-top:10px;font-size:14.5px}
+.sec .lead b{color:var(--t);font-weight:500}
+/* etapas colapsables: cerradas muestran número, título, chips y objetivo */
+.sec.fold{margin-top:14px;padding:16px 18px;border:1px solid var(--b);border-radius:var(--r4);background:rgba(27,29,34,0.55);transition:border-color .25s var(--ease),background .25s var(--ease)}
+.sec.fold:hover{border-color:rgba(255,255,255,0.16)}
+.sec.fold.exp{border-color:rgba(255,213,64,0.3);background:rgba(27,29,34,0.85)}
+.sh-fold{flex:1;text-align:left;cursor:pointer;align-items:center}
+.sec.fold h2{font-size:24px}
+.sec.fold.exp h2{font-size:30px}
+.sec-sum{color:var(--t2);font-size:13.5px;margin-top:8px}
+.sec.fold.exp .sec-sum{display:none}
+.fold-chev{flex:0 0 auto;margin-left:auto;width:32px;height:32px;border-radius:9px;border:1px solid var(--b);display:grid;place-items:center;color:var(--t3);transition:all .25s var(--ease)}
+.fold-chev svg{width:16px;height:16px}
+.sh-fold:hover .fold-chev{color:var(--brand);border-color:rgba(255,213,64,0.45)}
+.sec.fold.exp .fold-chev{transform:rotate(180deg);color:var(--brand);border-color:rgba(255,213,64,0.45)}
+/* abrir: la altura se despliega en ~0,5 s y el contenido baja y aparece en cascada; cerrar es un poco más rápido */
+.sec-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.4,0,.2,1)}
+.sec.fold.exp .sec-body{grid-template-rows:1fr;transition:grid-template-rows .52s cubic-bezier(.22,.8,.24,1)}
+.sec-in{overflow:hidden;min-height:0}
+.sec.exp.shown .sec-in{overflow:visible}
+.sec-in>*{opacity:0;transform:translateY(-10px);transition:opacity .18s ease,transform .18s ease}
+.sec.fold.exp .sec-in>*{opacity:1;transform:none;transition:opacity .4s ease,transform .45s cubic-bezier(.22,.8,.24,1)}
+.sec.fold.exp .sec-in>*:nth-child(1){transition-delay:.12s}.sec.fold.exp .sec-in>*:nth-child(2){transition-delay:.2s}.sec.fold.exp .sec-in>*:nth-child(3){transition-delay:.28s}.sec.fold.exp .sec-in>*:nth-child(n+4){transition-delay:.34s}
+.sec.fold.exp .haz li{animation:liIn .4s cubic-bezier(.22,.8,.24,1) both}
+.sec.fold.exp .haz li:nth-child(1){animation-delay:.26s}.sec.fold.exp .haz li:nth-child(2){animation-delay:.31s}.sec.fold.exp .haz li:nth-child(3){animation-delay:.36s}.sec.fold.exp .haz li:nth-child(4){animation-delay:.41s}.sec.fold.exp .haz li:nth-child(5){animation-delay:.46s}.sec.fold.exp .haz li:nth-child(n+6){animation-delay:.5s}
+@keyframes liIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.sec.fold.exp{animation:secGlow .9s ease}
+@keyframes secGlow{0%{box-shadow:0 0 0 0 rgba(255,213,64,0)}30%{box-shadow:0 0 0 4px rgba(255,213,64,0.14),0 18px 50px rgba(0,0,0,0.35)}100%{box-shadow:0 18px 50px rgba(0,0,0,0.35)}}
+.fold-chev,.fold-chev svg{transition:transform .45s cubic-bezier(.22,.8,.24,1),color .25s,border-color .25s}
+.sec.fold h2{transition:font-size .35s cubic-bezier(.22,.8,.24,1)}
+.fold-all{display:flex;gap:8px;justify-content:flex-end;margin-top:40px}
+.sh-r{display:flex;gap:8px}
+/* botones junto al chip de tiempo, del mismo alto; la flecha queda sola a la derecha */
+.sec-meta{align-items:center}
+.sec-meta .sh-r{gap:8px;flex-wrap:wrap;cursor:default}
+.sec-meta .sh-r .btn{padding:4px 10px;font-size:12px;border-radius:8px;gap:6px}
+.sec-meta .sh-r .btn svg{width:14px;height:14px}
+.sh-fold:focus-visible{outline:2px solid rgba(255,213,64,0.6);outline-offset:4px;border-radius:var(--r3)}
+.sec.fold .pr-pop{right:auto;left:0;transform-origin:top left}
+.sec.fold .pr-pop::before{right:auto;left:28px}
+/* escenario de práctica: solo con la etapa abierta; popup anclado al botón */
+.prac{position:relative}
+.sec:not(.exp) .prac{display:none}
+.prac-b{border-color:rgba(255,213,64,0.45);color:var(--brand);background:rgba(255,213,64,0.07);animation:prIn .4s var(--ease)}
+.prac-b svg{width:16px;height:16px}
+.prac.on .prac-b{background:rgba(255,213,64,0.16);border-color:var(--brand)}
+@keyframes prIn{from{opacity:0;transform:translateY(-4px)}}
+.pr-pop{position:absolute;right:0;top:calc(100% + 10px);z-index:60;width:min(400px,86vw);display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:var(--r3);background:#22252C;border:1px solid rgba(255,213,64,0.4);box-shadow:0 24px 60px rgba(0,0,0,0.55);opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease);font-size:13px;line-height:1.45;color:var(--t-body);text-align:left}
+.prac.on .pr-pop{opacity:1;transform:none;pointer-events:auto}
+.pr-pop::before{content:"";position:absolute;top:-6px;right:28px;width:10px;height:10px;background:#22252C;border-left:1px solid rgba(255,213,64,0.4);border-top:1px solid rgba(255,213,64,0.4);transform:rotate(45deg)}
+.pr-pop.swap>*{animation:prSw .3s var(--ease) both}
+@keyframes prSw{from{opacity:0;transform:translateY(4px)}}
+.pr-h{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.pr-h button{width:26px;height:26px;border-radius:7px;border:1px solid var(--b);color:var(--t2);font-size:16px;line-height:1}
+.pr-h button:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+.pr-cli{display:flex;flex-direction:column;gap:2px;padding-bottom:10px;border-bottom:1px dashed rgba(255,255,255,0.12)}
+.pr-cli b{font-family:var(--head);font-size:16px;font-weight:500;color:#fff}
+.pr-cli span{color:var(--t2);font-size:12.5px}
+.pr-cli .pr-t{color:var(--brand)}
+.pr-row em{display:block;font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:2px}
+.pr-row p{margin:0;color:var(--t2)}
+.pr-row.say p{color:#fff;font-style:italic}
+.pr-row.ojo p{color:var(--t)}
+.pr-row.goal{padding:10px 12px;border-radius:var(--r2);background:rgba(255,213,64,0.07);border:1px solid rgba(255,213,64,0.25)}
+.pr-row.goal p{color:#fff}
+.pr-f{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.12)}
+.pr-sel{position:relative;flex:1;min-width:0}
+.pr-sel select{width:100%;appearance:none;-webkit-appearance:none;font:inherit;font-size:12.5px;color:var(--t);background:var(--surface);border:1px solid var(--b);border-radius:var(--r2);padding:7px 30px 7px 10px;cursor:pointer;transition:border-color .2s var(--ease)}
+.pr-sel select:hover,.pr-sel select:focus{border-color:rgba(255,213,64,0.5);outline:none}
+.pr-sel::after{content:"";position:absolute;right:12px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--t2);border-bottom:1.5px solid var(--t2);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.pr-sel option{background:#22252C;color:#fff}
+.pr-f .btn svg{width:14px;height:14px}
+.pr-f .btn{white-space:nowrap}
+.card{margin-top:16px;padding:24px}
+.goal-h{font-size:26px;line-height:1.2;margin-bottom:18px}
+.say{border:1px solid rgba(255,213,64,0.3);background:rgba(255,213,64,0.05);border-radius:var(--r3);padding:13px 16px;margin-bottom:16px}
+.lbl{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:500;margin-bottom:8px}
+.sp-help{position:relative;margin-left:auto;text-transform:none;letter-spacing:0}
+.sp-help-b{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;border-radius:8px;border:1px solid rgba(24,110,250,0.45);background:rgba(24,110,250,0.1);color:#7FB0FF;font-size:12px;font-weight:500;transition:all .2s var(--ease)}
+.sp-help-b:hover,.sp-help.on .sp-help-b{background:rgba(24,110,250,0.2);border-color:rgba(127,176,255,0.7);color:#fff}
+.sp-q{width:18px;height:18px;border-radius:5px;background:#7FB0FF;color:#0C0C0D;display:grid;place-items:center;font-size:11px;font-weight:700}
+.sp-pop{position:absolute;right:0;top:calc(100% + 10px);z-index:50;width:min(360px,80vw);display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:var(--r3);background:#22252C;border:1px solid rgba(127,176,255,0.4);box-shadow:0 24px 60px rgba(0,0,0,0.55);opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;pointer-events:none;transition:opacity .22s var(--ease),transform .22s var(--ease);font-size:13px;color:var(--t-body);text-align:left;line-height:1.45}
+.sp-help.on .sp-pop{opacity:1;transform:none;pointer-events:auto}
+.sp-pop::before{content:"";position:absolute;top:-6px;right:22px;width:10px;height:10px;background:#22252C;border-left:1px solid rgba(127,176,255,0.4);border-top:1px solid rgba(127,176,255,0.4);transform:rotate(45deg)}
+.sp-t{font-family:var(--head);font-size:16px;color:#fff;font-weight:500}
+.sp-why{color:var(--t2)}
+.sp-list{display:flex;flex-direction:column;gap:8px}
+.sp-list>span{display:flex;gap:10px;align-items:flex-start}
+.sp-list i{flex:0 0 auto;min-width:28px;height:24px;padding:0 5px;border-radius:6px;background:rgba(24,110,250,0.16);border:1px solid rgba(127,176,255,0.4);color:#7FB0FF;display:grid;place-items:center;font-style:normal;font-family:var(--head);font-weight:600;font-size:12px}
+.sp-list em{font-style:normal;color:var(--t2)}
+.sp-list em b{display:block;color:#fff;font-weight:500}
+.sp-foot{border-top:1px dashed rgba(255,255,255,0.12);padding-top:10px;font-size:12px;color:var(--t3)}
+.lbl svg{width:14px;height:14px}
+.lbl.di svg{color:var(--brand)}.lbl.hz svg{color:var(--warning)}
+.say p{color:var(--t);font-family:var(--head);font-size:18px;line-height:1.35}
+.haz{list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:h}
+.haz li{counter-increment:h;display:flex;gap:12px;align-items:flex-start;padding:11px 13px;border-radius:var(--r2);background:rgba(255,255,255,0.025);border:1px solid var(--b-subtle);color:var(--t);font-size:14.5px}
+.haz li::before{content:counter(h);flex:0 0 auto;width:22px;height:22px;border-radius:6px;background:rgba(255,213,64,0.12);color:var(--brand);display:grid;place-items:center;font-family:var(--head);font-size:12px}
+.haz .st{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.haz .st>b{color:var(--t);font-weight:500;font-size:15px;line-height:1.4}
+.sp-chip{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:6px;border:1px solid rgba(24,110,250,0.45);background:rgba(24,110,250,0.1);color:#7FB0FF;font-size:10.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;vertical-align:2px;white-space:nowrap}
+.haz .st>small{color:var(--t2);font-size:13px;line-height:1.45}
+.haz .ex{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:8px;background:rgba(255,213,64,0.05);border:1px solid rgba(255,213,64,0.16)}
+.haz .ex span{color:#FFE680;font-family:var(--head);font-size:14.5px;line-height:1.4}
+.haz .di-tag,.haz .br-tag{flex:0 0 auto;font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 7px;margin-top:1px;white-space:nowrap}
+.haz .di-tag{color:#0C0C0D;background:var(--brand)}
+.haz .br-tag{color:var(--t);background:rgba(255,255,255,0.08);border:1px solid var(--b)}
+.myn{margin-top:14px;display:none}
+.card.writing .myn{display:block}
+.myn textarea{width:100%;min-height:70px;resize:vertical;background:rgba(255,255,255,0.03);border:1px solid var(--b);border-radius:var(--r2);padding:10px 12px;color:var(--t);font:inherit;font-size:13.5px}
+.myn textarea:focus{outline:none;border-color:rgba(255,213,64,0.5)}
+.myn div{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.more{margin-top:14px}
+.more .chev{transition:transform .25s var(--ease)}
+.sec.open .more .chev{transform:rotate(180deg)}
+.detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.sec.open .detail{grid-template-rows:1fr}
+.detail-in{overflow:hidden}
+.detail-body{margin-top:12px;padding:22px}
+.detail-body h4{font-size:16px;margin:20px 0 9px}
+.detail-body h4:first-child{margin-top:0}
+.detail-body p,.detail-body li{font-size:14px}
+.detail-body ul,.detail-body ol{padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.q{color:var(--t);font-family:var(--head);font-size:16px;border:1px solid var(--b-subtle);background:rgba(255,255,255,0.02);border-radius:var(--r2);padding:10px 13px;margin:8px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px}
+.tile{border:1px solid var(--b-subtle);border-radius:var(--r3);padding:13px;background:rgba(255,255,255,0.02)}
+.tile b{display:block;color:var(--t);font-weight:500;font-size:13.5px;margin-bottom:3px}
+.tile span{font-size:13px;color:var(--t2)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.steps>div{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:14px;padding:9px 12px;border-radius:var(--r2);border:1px solid var(--b-subtle);background:rgba(255,255,255,0.015)}
+.steps>div::before{content:counter(s);flex:0 0 auto;width:22px;height:22px;border-radius:6px;background:rgba(255,213,64,0.12);color:var(--brand);display:grid;place-items:center;font-family:var(--head);font-size:12px}
+.steps b{color:var(--t);font-weight:500}
+.note{margin-top:12px;border-radius:var(--r3);padding:12px 14px;font-size:13.5px;border:1px solid rgba(24,110,250,0.25);background:rgba(24,110,250,0.06)}
+.note.warn{border-color:rgba(245,185,66,0.35);background:rgba(245,185,66,0.06)}
+.note.bad{border-color:rgba(255,64,64,0.35);background:rgba(255,64,64,0.06)}
+.note.ok{border-color:rgba(82,206,94,0.35);background:rgba(82,206,94,0.06)}
+.note b{color:var(--t);font-weight:500}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;margin-top:8px;border:1px solid var(--b-subtle);border-radius:var(--r3);overflow:hidden}
+th{text-align:left;color:var(--t3);font-weight:500;font-size:12px;padding:9px 11px;background:rgba(255,255,255,0.03)}
+td{padding:9px 11px;border-top:1px solid var(--b-subtle)}
+td:first-child{color:var(--t)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{padding:6px 11px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,0.02);font-size:12.5px;color:var(--t2)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.flow>div{flex:1 1 120px;border:1px solid var(--b-subtle);border-radius:var(--r3);padding:11px;font-size:13px;background:rgba(255,255,255,0.02)}
+.flow>div i{font-style:normal;color:var(--brand);font-family:var(--head);display:block;font-size:12px}
+.flow>div b{color:var(--t);font-weight:500;display:block}
+.flow>div span{color:var(--t3);font-size:12px}
+.objs{margin-top:20px}
+.objs h5{font-size:13px;color:var(--t2);font-weight:500;margin-bottom:8px}
+.obj{border:1px solid var(--b-subtle);border-radius:var(--r3);margin-bottom:6px;overflow:hidden;background:rgba(255,255,255,0.015)}
+.obj-h{width:100%;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;text-align:left;font-size:13.5px;color:var(--t)}
+.obj-h small{color:var(--t3);font-size:11px;flex:0 0 auto;border:1px solid var(--b);border-radius:6px;padding:1px 7px}
+.obj-b{display:none;padding:0 14px 13px;font-size:13.5px}
+.obj.open .obj-b{display:block}
+.obj-b p{margin-top:6px}
+.obj-b .si b{color:var(--success)}
+.obj-b .no b{color:var(--danger)}
+.obj-b .caso{color:var(--t3);font-size:12.5px}
+.own input{width:100%;margin-top:6px;background:rgba(255,255,255,0.02);border:1px dashed var(--b);border-radius:var(--r3);padding:11px 14px;color:var(--t);font:inherit;font-size:13px}
+.own input:focus{outline:none;border-color:rgba(255,213,64,0.5)}
+/* pirámide de confianza */
+.pyr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:22px}
+@media(max-width:820px){.pyr{grid-template-columns:1fr}}
+.funnel{padding:26px;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center}
+.tier{display:flex;align-items:center;justify-content:center;gap:9px;height:78px;font-family:var(--head);font-size:19px;font-weight:500;transition:transform .2s var(--ease),filter .2s var(--ease);clip-path:polygon(0 0,100% 0,90% 100%,10% 100%)}
+.tier i{font-style:normal;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:12px}
+.tier:hover{filter:brightness(1.08)}
+.tier.t1{width:100%;background:var(--brand);color:#0C0C0D}.tier.t1 i{background:#0C0C0D;color:var(--brand)}
+.tier.t2{width:80%;background:#4A4D55;color:var(--t)}.tier.t2 i{background:rgba(255,255,255,0.15)}
+.tier.t3{width:60%;background:#2E3036;color:var(--t2)}.tier.t3 i{background:rgba(255,255,255,0.08)}
+.tier.sel{transform:scale(1.02)}
+.tier:not(.sel){opacity:.75}
+.pyr-d{padding:26px}
+.pyr-d h3{font-size:34px;margin:14px 0 6px}
+.pyr-d p{color:var(--t2);font-size:14.5px}
+.pyr-d ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.pyr-d li{display:flex;gap:11px;align-items:center;padding:11px 13px;border-radius:var(--r2);background:rgba(255,255,255,0.03);border:1px solid var(--b-subtle);color:var(--t);font-size:14px}
+.pyr-d li svg{flex:0 0 auto;width:16px;height:16px;color:var(--brand)}
+.end{margin-top:80px;padding:30px}
+.end h2{font-size:34px}
+.end h2 em{font-style:normal;color:var(--t4)}
+.end p{color:var(--t2);margin:8px 0 18px}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+/* flotantes */
+.annot{position:fixed;z-index:60;display:none;transform:translate(-50%,-115%)}
+.annot.on{display:inline-flex}
+.drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .3s;z-index:70}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(430px,100%);background:var(--surface);border-left:1px solid var(--b);z-index:71;transform:translateX(100%);transition:transform .35s var(--ease);display:flex;flex-direction:column}
+.drawer-on .drawer-bg{opacity:1;pointer-events:auto}
+.drawer-on .drawer{transform:none}
+.dr-h{padding:20px;border-bottom:1px solid var(--b-subtle);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.dr-h h4{font-size:19px}
+.dr-h small{color:var(--t3);font-size:12.5px}
+.dr-tabs{display:flex;gap:6px;padding:12px 20px}
+.dr-tabs button{padding:5px 10px;border-radius:8px;border:1px solid var(--b);font-size:12px;color:var(--t2)}
+.dr-tabs button.on{border-color:var(--brand);color:var(--brand)}
+.dr-list{flex:1;overflow-y:auto;padding:0 20px 20px;display:flex;flex-direction:column;gap:8px}
+.ent{border:1px solid var(--b-subtle);border-radius:var(--r3);padding:10px 12px;font-size:13px;background:rgba(255,255,255,0.015)}
+.ent small{display:flex;justify-content:space-between;gap:8px;color:var(--t3);font-size:11.5px;margin-bottom:3px}
+.ent .x{color:var(--t3)}
+.ent .x:hover{color:var(--danger)}
+.empty{color:var(--t3);font-size:13px;text-align:center;padding:40px 0}
+.dr-f{padding:14px 20px;border-top:1px solid var(--b-subtle);display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-180%);z-index:80;padding:9px 14px;border-radius:var(--r2);background:var(--elevated);border:1px solid var(--b);font-size:13px;color:var(--t);transition:transform .3s var(--ease)}
+.toast.on{transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="brand"><span class="brand-a">A</span><div><b>Adereso</b><small>Playbook · primera reunión</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <nav class="toc" id="toc"></nav>
+    <div class="side-box"><h6>Según Notion</h6><div class="dt">26 oct 2026</div>
+      <a class="btn sm" style="margin-top:10px;width:100%" href="https://app.notion.com/p/31d9c2747df581e7bec7cfea5d224070" target="_blank" rel="noopener">Ver playbook en Notion ↗</a></div>
+    <div class="side-box"><h6>Bitácora</h6>
+      <div class="lm-row"><span>Notas</span><b id="cNote">0</b></div>
+      <div class="lm-row"><span>Objeciones propias</span><b id="cObj">0</b></div>
+      <button class="btn sm" style="margin-top:10px;width:100%" data-open-log>Abrir bitácora</button></div>
+  </aside>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="kicker">Playbook comercial · Primera reunión con lead</div>
+      <h1>Vendemos confianza.<br><em>No features.</em></h1>
+      <p>Primera reunión con lead nuevo, outbound o inbound, de 45–60 min. <b style="color:var(--t);font-weight:500">Mínimo de éxito:</b> segunda reunión agendada o compromiso de revisar la propuesta. Selecciona cualquier texto para anotarlo.</p>
+      <div class="box tl">
+        <div class="tl-top"><div><h3>La reunión en 45 minutos</h3><small>Antes, 15–30' de preparación. Después, 15' de holgura.</small></div>
+        </div>
+        <div class="tl-rows" id="tlRows"></div>
+      </div>
+    </section>
+    <div id="secs"></div>
+    <section class="box end">
+      <h2>Confianza primero.<br><em>Lo demás se ordena.</em></h2>
+      <p>Tus notas y objeciones se guardan en este navegador. Expórtalas para llevarlas al playbook.</p>
+      <div class="links">
+        <a class="btn" href="https://app.notion.com/p/31d9c2747df581e7bec7cfea5d224070" target="_blank" rel="noopener">Ver playbook en Notion ↗</a>
+        <a class="btn" href="https://app.notion.com/p/dc5d2467187845fa8e65c3640c97acca" target="_blank" rel="noopener">Accionables del playbook ↗</a>
+        <a class="btn" href="https://www.notion.so/3249c2747df581d59741c3e16f594541" target="_blank" rel="noopener">Contexto económico ↗</a>
+      </div>
+    </section>
+  </main>
+</div>
+
+<button class="btn pri sm annot" id="annot">✎ Anotar</button>
+<div class="drawer-bg" data-close-log></div>
+<aside class="drawer" aria-label="Bitácora">
+  <div class="dr-h"><div><h4>Bitácora</h4><small>Registra lo que vas entrenando del playbook</small></div><button class="btn sm" data-close-log>Cerrar</button></div>
+  <div class="dr-tabs" id="drTabs"><button class="on" data-f="all">Todo</button><button data-f="note">Notas</button><button data-f="obj">Objeciones</button></div>
+  <div class="dr-list" id="drList"></div>
+  <div class="dr-f"><button class="btn sm" id="exCopy">Copiar todo</button><button class="btn sm" id="exDl">Descargar .txt</button></div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Objeciones (fuente: Playbook comercial en Notion, ajustadas a lo vigente en la Wiki y la Operativa) */
+const OBJ={
+ crm:{t:'¿Ustedes son un CRM?',si:'"No, Adereso gestiona la conversación con tus clientes en WhatsApp, redes y chat web, y se integra con tu CRM (HubSpot, Salesforce) para registrar todo." Pregunta qué CRM usan.',no:'Dejar la duda abierta o compararte con un CRM.'},
+ sf:{t:'Ya tenemos Salesforce / HubSpot / Zendesk',si:'Posiciona como complemento: "Salesforce gestiona datos; Adereso gestiona la conversación. Nos integramos vía API. ¿Hoy cómo atienden WhatsApp desde Salesforce?"',no:'Cambiar de tema o seguir preguntando por el stack sin abordar la objeción.',c:'BredenMaster, Cooperativa Pacífico.'},
+ tiktok:{t:'¿Tienen TikTok? La competencia ya lo tiene',si:'Primero: "¿Qué % de tu tráfico viene de TikTok?". Desk ya conecta TikTok Business para mensajes privados (confirmar habilitación de la cuenta). Si un canal está en beta, sé transparente: un beta tiene riesgo también en la competencia.',no:'Dar una fecha vaga y dejar la objeción flotando.',c:'Jose Urbano (feb 2026).'},
+ ml:{t:'¿Integran con Mercado Libre?',si:'"ML tiene una API muy restringida para recibir mensajes de compradores, para todos los proveedores. Lo que sí hacemos: atender la post-compra por WhatsApp o chat web." Registrar como feature request si hay 2+ clientes interesados.',no:'Una respuesta vaga o implícita.',c:'Enkout, AnfaPets, Empresas Dabed.'},
+ voz:{t:'¿Tienen llamadas de voz / call center?',si:'Hoy Desk tiene WhatsApp Calling saliente (agente → usuario) para clientes que cumplan los requisitos de Meta. El bot deriva al call center cuando el cliente lo pide.',no:'Prometer llamadas entrantes, IVR o callback automático: no existen. Voice de Studio aún no tiene despliegue ni precio.',c:'Siman, BredenMaster.'},
+ bloqueo:{t:'Meta me bloqueó el número de WhatsApp',si:'Explica el porqué en 30 segundos y da la ruta: 1) verificar en Meta Business Manager, 2) apelar con documentación de la empresa, 3) mientras tanto, migrar a API oficial con número nuevo. Ofrece acompañar.',no:'Repetir "es extraño" sin dar un próximo paso.',c:'Héctor T&H Solar, Patricio, Jose Urbano (feb 2026).'},
+ grupos:{t:'Atendemos por grupos de WhatsApp',si:'"La API de Meta no permite conectarse a grupos, para ningún proveedor. Lo reemplazamos por un número único de soporte: cada persona escribe directo y cada conversación queda como ticket con historial."',no:'Decir "no, no, no" sin explicar ni dar la alternativa.',c:'Tri-Chile (40+ centros).'},
+ arbol:{t:'¿Es un bot de árbol o IA de verdad?',si:'"No es árbol. Si el cliente escribe \'quiero saber cuánto debo\', el bot interpreta la intención, consulta tu sistema y responde. Te lo muestro en vivo ahora."',no:'Afirmarlo sin demostrarlo.',c:'Siman.'},
+ yalo:{t:'"Eso ya lo hacemos" / "eso lo hace X"',si:'"¿Qué herramienta usan para eso?" Escucha, y diferencia: inbox unificado de WhatsApp, Instagram y chat web con historial en cada ticket. "¿Hoy lo ven centralizado?"',no:'Aceptar la equivalencia sin diferenciar.',c:'Doit Center, Ripley.'},
+ comp:{t:'¿En qué se diferencian de [competidor]?',si:'1) Valida: "entiendo que evalúen opciones". 2) "¿Qué te ofrecieron?". 3) Contrasta punto a punto con lo que ya le duele: API oficial Meta, soporte real, casos similares.',no:'Quedarse en "no vengo a hablar mal de nadie".'},
+ que:{t:'¿Qué tienen que no tenga lo que ya uso?',si:'Antes de responder: "¿Qué tiene tu solución actual? ¿Qué te falta o te frustra?" Construye el contraste con sus palabras.',no:'Frases genéricas sin anclar en sus dolores.',c:'Bella Piel (feb 2026).'},
+ checkout:{t:'¿Puede el bot vender / hacer checkout?',si:'"Sí. El bot muestra catálogo, agrega ítems y genera link de pago (Transbank, MercadoPago, PayPal). Con Shopify revisamos el conector; VTEX y Magento se validan por tienda." Confirma con SP qué viene paquetizado.',no:'"Sí se puede pero no sabría decirte el camino".',c:'BredenMaster, Posadas, dtsautoservicio.'},
+ api:{t:'¿Se integra con nuestra base / API propia?',si:'Da estructura: "¿Tienen API REST? Los proyectos toman 3–4 semanas (1–2 si es paquetizado). Si no, evaluamos SQL, Excel o Google Sheets." Valida con SP antes de comprometer costo o fecha.',no:'"Hay que validarlo con el equipo técnico" y seguir sin respuesta.',c:'BredenMaster (RUT en SII), Doit Center, Posadas.'},
+ horas:{t:'¿Cuántas horas nos toma implementarlo?',si:'De inmediato: "2–3 horas semanales del owner, para avances y feedback. Nosotros ponemos 40 horas de desarrollo; ustedes revisan y aprueban."',no:'"Tendría que evaluarlo".',c:'ACWS (feb 2026).'},
+ costo:{t:'Quiero saber el costo exacto ahora',si:'Ten la tabla abierta: "Para [país], con N conversaciones/mes, el plan parte en $Y. Te mando la propuesta detallada al terminar." Sin volumen: pide el dato y promete propuesta en 24 h.',no:'Improvisar rangos vagos ("ponle mil ochocientos").',c:'BredenMaster, Siman, Doit Center.'},
+ caro:{t:'Es caro / el presupuesto no lo manejo yo',si:'"¿Es tema de monto o de timing?" Si es monto: vuelve al resultado acordado y al ROI (costo de responder a mano). Si decide otro: pregunta cómo incluirlo.',no:'Ignorar la objeción, o seguir con la persona equivocada.',c:'Felipe Antunez (feb 2026).'},
+ trim:{t:'¿Hay opción trimestral o mensual?',si:'"El formato trimestral no incluye el 40% de descuento del anual." Nombrarlo solo si lo preguntan.',no:'Ofrecer trimestral de forma proactiva.'},
+ cuotas:{t:'¿Podemos pagar el setup en cuotas?',si:'El setup se ofrece 100% adelantado. Menciona 50/50 solo si el cliente lo negocia. Promoción Setup $0 (Plan 1 y 2): exige pagar el primer MRR por adelantado.',no:'Abrir el 50/50 antes de que lo pidan.'},
+ equipo:{t:'Lo tengo que revisar con mi equipo',si:'"¿Quién más debe estar para la aprobación? ¿Agendamos una segunda reunión con ellos para revisar la propuesta?" Deja fecha, dueño y objetivo.',no:'Cerrar con "quedamos atentos".'},
+ noagenda:{t:'Todavía no quiero agendar',si:'"¿Cuándo tiene sentido que te vuelva a escribir: después de revisarlo internamente esta semana o más cerca de la decisión?" Una ventana explícita sí cuenta como seguimiento.',no:'Enviar información sin fecha, dueño ni condición.'},
+ noresp:{t:'No responde después de la reunión',si:'Sigue la cadencia: D1 correo, D3–4 WhatsApp o llamada, D7 correo con valor, D14 llamada, D21 "¿sigue siendo relevante?". Si no hay respuesta: Perdido, reactivar en 60–90 días.',no:'Dejar el deal sin próximo paso.'}
+};
+const STAGES=[
+ {id:'piramide',toc:'Pirámide de confianza',num:'★',kind:'pyr'},
+ {id:'prep',toc:'Preparación',num:'P',time:'15–30 min antes',b:'Quién',title:'Preparación',lead:'Adobo hace la parte pesada. <b>Tú profundizas y personalizas.</b>',goal:'Llegar sabiendo quién es y qué le duele.',
+  haz:[{a:'Lee el brief de Adobo',n:'Si no llegó, revisa #BANT en Slack y el deal en HubSpot'},{a:'Investiga su web, sus canales y su bot',n:'Anota en el deal tamaño, industria, cargos de los asistentes y mejoras a su bot'},{a:'Prepara el efecto WOW',n:'Casos de uso con Adobo y su web, y una demo de bot IA'},{a:'Deja abiertos el brief, su web y Adereso DEMO',n:'3 minutos antes, deja entrar a Diio'}],
+  det:`<h4>Adobo · brief pre-reunión en Slack</h4>
+   <div class="grid2"><div class="tile"><b>Qué trae</b><span>Empresa, origen, hora y link al deal · contacto, SDR, web, industria y tamaño · desafío del SDR · 2–3 clientes similares · 4–5 preguntas sugeridas</span></div>
+   <div class="tile"><b>15 min antes</b><span>Resumen, checklist de recursos y alertas: deal sin actualizar o BANT incompleto</span></div></div>
+   <h4>Anota en el deal</h4><div class="pills"><span class="pill">Tamaño</span><span class="pill">Industria</span><span class="pill">Cargos de asistentes</span><span class="pill">Web y canales</span><span class="pill">Probar su bot y anotar mejoras</span></div>
+   <div class="note warn"><b>KAM:</b> antes de proponer algo adicional, revisa alcance contratado, adopción, resultados medidos, pendientes y actores de la cuenta.</div>
+   <h4>Prepara el efecto WOW</h4><ul><li>Casos de uso con Adobo + su web</li><li>Wappalyzer para ver su stack</li><li>Demo de bot IA: componentes compartidos + lo custom</li></ul>
+   <div class="note"><b>Abierto antes de entrar:</b> brief de Adobo, web del lead y Adereso DEMO. <b>3 minutos antes:</b> deja entrar a Diio, el único asistente autorizado.</div>`,obj:[]},
+ {id:'e0',toc:'Rompe hielo',num:'0',min:1,time:"1 min",b:'Cómo',title:'Romper el hielo',lead:'Leer al lead. <b>Cercanía</b> antes que pitch.',goal:'Romper el hielo y leer al lead.',
+  haz:[{a:'Saluda y agradece',d:'Hola [nombre], gracias por tu tiempo y por conectarte a esta reunión.'},{a:'Haz una pregunta liviana',b:[['Modo de trabajo','¿Estás presencial o remoto?'],['Ubicación','He visto que estás en [ciudad], ¿en qué sede estás?'],['Contexto','El clima o algo del lugar']],n:'Observa su tono y su energía. Máximo 1 minuto'},{a:'Si la cita tiene dos dominios, aclara el foco',d:'Me quedó una duda… veo que están con dos dominios distintos, ¿les gustaría enfocar la reunión para la empresa A o B, o son lo mismo?'}],
+  det:`<div class="note"><b>Antes de entrar:</b> brief de Adobo, web de la empresa y Adereso DEMO abiertos. <b>3 minutos antes</b>, deja entrar al asistente Diio.</div>`,obj:[]},
+ {id:'e1',toc:'Introducción y hand-off',num:'1',min:4,time:'~4 min',b:'Quién',title:'Introducción y hand-off',lead:'Vamos de menos a más construyendo confianza. <b>Generalmente lo que cuenta aquí no alcanza para demostrar valor: por eso pasamos a Dolores.</b>',goal:'Que el cliente se abra sobre su situación actual.',
+  haz:[{a:'Marca el paso a modo trabajo',d:'[Nombre], ¿alguien más se sumará a la reunión? ¿O empezamos no más?',n:'Marca el antes y el después: de la conversación relajada a modo trabajo'},{a:'Preséntate como asesor',d:'Primero que todo, gracias por el espacio para esta reunión. Soy [AE], Asesor en transformación digital. La idea de esta sesión es revisar la solución Adereso y cómo puede beneficiarles. ¿Habían escuchado antes de Adereso o es primera vez?'},{a:'Responde según lo que diga',b:[['Sí','¡Ahh, qué bien! ¿De dónde nos conoces?'],['No','Súper. No hay problema, vamos a revisar con más detalle todo en esta sesión. A modo introductorio, en Adereso automatizamos de punta a punta la conversación con tus clientes para venta y postventa.']],n:'Sí: preguntas fáciles para calentar motores (si es inbound, pudo habernos investigado). No: un resumen para contextualizar, suele pasar en outbound'},{a:'Hand-off: retoma lo del SDR y pide contexto',b:[['🟢 Inbound','Estuve conversando con [SDR], de mi equipo comercial, y me comentó que [desafío en 1 oración]. ¿Me ayudas con más contexto para personalizar mejor la demo que tengo preparada?'],['🔵 Outbound','Entiendo que [SDR], de mi equipo comercial, se contactó contigo por [teléfono/correo], más que nada para revisar iniciativas de automatización conversacional. ¿Qué te llamó la atención en particular de ese correo o llamada para agendar la reunión? ¿Tienen algún proyecto en mente o solo están explorando?']]},{a:'Escucha y deja que se abra',n:'Buscamos la mayor cantidad de información sobre su dolor para conectarlo con Adereso. Si no alcanza para demostrar valor, pasa a Dolores'}],
+  det:`<h4>Por qué cada paso</h4><div class="grid2"><div class="tile"><b>🟢 Inbound</b><span>Siempre que pedimos algo, recompensamos: más detalle a cambio de una reunión de buena calidad.</span></div><div class="tile"><b>🔵 Outbound</b><span>Casi siempre dirá "ustedes me contactaron, no tengo un dolor específico". Por eso le das la salida "o solo explorando", para que no sienta que preguntamos por preguntar. Si solo explora, hay más chances de que se abra en Dolores.</span></div></div>`,obj:['crm','sf']},
+ {id:'e2',toc:'Dolores',num:'2',min:12,time:'~12 min',b:'Qué',title:'Levantar dolores y operativa',lead:'Ponte en los zapatos del cliente. <b>Solo pregunta lo que falta por descubrir</b> y marca el ritmo: no es un cuestionario.',goal:'Ponerle cara al dolor del cliente y empatizar.',
+  haz:[{a:'Comparte pantalla con su web',d:'Antes de pasar a la presentación que tengo preparada… estuve revisando tu página web. ¿Esta es la página por donde los clientes los contactan?',n:'Empieza la auditoría express. Confirma lo que ya trae el brief y profundiza donde falte, sin repetir'},
+   {a:'Pregunta 1 · Canales',sp:'Situation',d:'Solo para entender la operativa: si yo fuese cliente, ¿a dónde llega mi consulta cuando escribo a este WhatsApp / formulario / chat web? ¿Se le asigna a alguien?',b:[['Si ya tiene sistema','¿Hay algo que te falte o quieras mejorar de esa solución?']],n:'Descubre si usan un SaaS de la competencia de Desk o lo hacen manual: un número por ejecutivo, una cuenta de WhatsApp compartida o un sistema que centraliza'},
+   {a:'Pregunta 2 · Tipos de consulta',sp:'Pain',d:'¿Cuáles son los tipos de consultas que reciben por estos canales? ¿Venta o más enfocado a la postventa?',b:[['Repregunta','¿Qué consultas representan mayor volumen?']],n:'Dónde está la oportunidad de automatización que mostrará valor en la demo y en el ROI. Casi siempre hay más de un caso: enfócate en el de más tráfico'},
+   {a:'Pregunta 3 · Impacto',sp:'Impact',d:'Respecto a [consultas de mayor tráfico], ¿pierden ventas por no responder a tiempo? ¿Sabes cuánto aprox? ¿Sabes cuánto tiempo les toma a los ejecutivos resolver este tipo de consultas?',n:'Mide qué tanto le duele y qué urgencia tiene la solución. Generalmente no tiene estos datos a mano: dale ejemplos'},
+   {a:'Pregunta 4 · Si no se resuelve',sp:'Critical Event',d:'Y si esto sigue igual los próximos meses, ¿qué pasa? ¿Hay alguna fecha o meta que lo haga más urgente, como una temporada alta, un lanzamiento o un objetivo del año?',b:[['Si no ve urgencia','¿Qué tendría que pasar para que esto se vuelva prioridad?']],n:'Busca el costo de no hacer nada y el hito que los obliga a decidir. Ese hito es el que retomas en el Cierre para acordar plazos'},
+   {a:'Pregunta 5 · Dónde viven las respuestas',d:'¿Dónde viven las respuestas a esas consultas? ¿CRM? ¿Ecommerce? ¿Documentos?',b:[['Si cuesta','Actualmente, ¿dónde van los ejecutivos a buscar una respuesta para el cliente?']],n:'Anticipa la implementación: qué conectar al Agente IA'},
+   {a:'Pregunta 6 · Equipo',d:'¿Cuántas personas componen el equipo que actualmente responde esas consultas?',n:'Para dimensionar el impacto de la IA. Muchas veces buscan reducir el equipo o darle más productividad'},
+   {a:'Pregunta 7 · Volumen',d:'¿Cuántas conversaciones reciben al mes aproximadamente?'},
+   {a:'Pregunta 8 · Derivación',d:'¿Buscas que el agente derive a un ejecutivo humano o necesitas 100% de automatización?',n:'Flujos para explicar en la demo y nivel de automatización esperado: no es lo mismo una venta 100% automatizada que calificar leads y derivar'},
+   {a:'Pregunta 9 · Éxito',d:'¿Qué medirías tú para considerar un proyecto exitoso?',n:'Alinea el valor y sirve para mostrar métricas en la demo. Suele costarle: da ejemplos como tasa de calificación, conversión de venta o % de automatización'},
+   {a:'Recapitula y pasa a la demo',d:'Perfecto, a modo de resumen y para ir avanzando: actualmente las consultas más comunes son X y les provoca Y. ¿Correcto? Por mi lado, estoy súper claro para la demo, ¿quieres acotar algo adicional?',n:'Que se sienta escuchado y que no se escape nada'}],
+  det:`<div class="note"><b>Chips SPICED:</b> marcan qué detectamos con cada pregunta. <b>Situation</b> = cómo operan hoy · <b>Pain</b> = dónde está el problema · <b>Impact</b> = cuánto les cuesta y qué urgencia tiene · <b>Critical Event</b> = qué pasa si no lo resuelven y qué fecha los obliga a decidir.</div>
+   <div class="note warn"><b>Siempre sensa su ánimo.</b> Si lo ves aburrido de responder, di "ya vamos a la demo" o "mientras te voy compartiendo".</div>
+   <h4>Si presiona por ver la demo</h4><p>No le lleves la contraria. El lead que busca una solución casi siempre contesta todo.</p><p class="q">"Ahh, sí obvio, te comparto la demo altiro, solo quería entender bien tu operación para mostrarte una demo que te haga sentido."</p><p>Durante la demo, usa cada sección para hacer las preguntas pendientes de forma natural.</p>`,obj:['tiktok','ml','voz','bloqueo','grupos']},
+ {id:'e3',toc:'Demo',num:'3',min:15,time:'máx. 15 min',b:'Qué',title:'Presentación y demo',lead:'Desk 5 minutos y Studio 5 minutos, <b>siempre en Adereso DEMO</b>.',goal:'Mostrar cómo se resuelve su dolor.',
+  haz:[{a:'Ten preparada la demo de Studio antes de la reunión',n:'Es lo que provoca el efecto WOW. Siempre en la instancia Adereso DEMO, nunca en la de un cliente real'},
+   {a:'Desk · Canales',d:'Puedes conectar 1 o más cuentas según las que tengas actualmente.'},
+   {a:'Desk · Abre un ticket',n:'Datos del cliente, metadatos, pedidos y tickets anteriores: trazabilidad'},
+   {a:'Desk · Usuarios y departamentos',d:'Los usuarios son ilimitados.'},
+   {a:'Desk · Vista kanban',d:'La idea es que el ejecutivo vea siempre la primera columna vacía.'},
+   {a:'Desk · Caso de éxito',d:'Walmart atiende 600.000 tickets al mes con 200 usuarios desde un solo WhatsApp. Cada consulta se resuelve en ~5 min.'},
+   {a:'Studio · Entra al módulo y abre el bot preparado',n:'Muestra la base de conocimiento y/o la conexión MCP con Shopify'},
+   {a:'Studio · Muestra los componentes',n:'Componentes y herramientas según su caso de uso'},
+   {a:'Studio · Pruébalo en el tester'},
+   {a:'Studio · Muestra los activadores',n:'Simula activar WhatsApp, Facebook e Instagram'},
+   {a:'Abre espacio a consultas',b:[['Pregunta','¿Cómo lo ves? ¿Se ajustaría a tu operación actual?'],['O bien','¿Crees que esto haría más eficiente tu proceso?']]}],
+  det:`<div class="grid2"><div class="tile"><b>Desk · 5 min</b><span>Canales, ticket con trazabilidad, usuarios ilimitados, kanban y caso Walmart.</span></div><div class="tile"><b>Studio · 5 min</b><span>Bot preparado, base de conocimiento o MCP Shopify, componentes, tester y activadores.</span></div></div>
+   <div class="note bad"><b>Siempre en ADERESO DEMO</b>, nunca en la instancia de un cliente real.</div>`,obj:['arbol','yalo','comp','que','checkout','api','horas']},
+ {id:'tec',toc:'Técnicas de conexión',num:'∞',time:'toda la reunión',b:'Cómo',title:'Nunca apagues el modo consultor',lead:'El discovery no termina cuando empieza el pitch. <b>El cliente es protagonista hasta el final.</b>',goal:'Que la demo sea conversación, no monólogo.',
+  haz:[{a:'El silencio vende: después de preguntar, no llenes el vacío',n:'Bebe agua. El cliente aguanta máximo 4 segundos antes de hablar, y lo que dice ahí es el dolor real'},{a:'Usa su nombre al menos 10 veces en la reunión',d:'María, lo que me contaste sobre el equipo distribuido, ¿esto lo resuelve?',n:'Al inicio, al validar algo importante y al cerrar'},{a:'Mirroring: repite sus últimas palabras como pregunta',d:'¿Muy lento?',n:'Si dijo "el proceso es muy manual y lento", él profundiza solo y te explica el dolor real'},{a:'Pregunta cada ~3 minutos en el discovery',b:[['Ej.','¿Esto se parece a cómo lo hacen hoy?'],['Ej.','¿Con quién más de tu equipo tendría impacto esto?'],['Ej.','¿Qué fue lo que más resonó?']],n:'Y cállate: el que habla primero pierde'}],
+  det:`<div class="note">Basado en Kahneman, Cialdini, Voss y Sinek: cada etapa le habla primero al instinto del prospecto y después a la razón. <a href="https://app.notion.com/p/3409c2747df581a4b358e1ba9bf80491" target="_blank" rel="noopener">Ver Marco Mental del AE ↗</a></div>`,obj:[]},
+ {id:'e4',toc:'Pricing + ROI',num:'4',min:8,time:'~8 min',b:'Qué',title:'Presentación de pricing',lead:'<b>Siempre parte diciendo que cobramos por conversaciones, no por usuarios.</b> Y nunca muestres el precio sin el ROI.',goal:'Que el precio se lea como inversión, no como gasto.',
+  haz:[{a:'Parte por la unidad de cobro',d:'El pricing de Adereso es por cantidad de conversaciones, no por usuarios.'},{a:'Simula su escenario con la presentación de pricing web',n:'Arma junto con el cliente un escenario personalizado y guía por niveles, según indica el documento'},{a:'No le des muchas opciones',n:'Decide por él en gran parte, asesorándolo sobre lo que necesita'},{a:'Acompaña siempre el precio con el ROI',n:'Nunca presentes solo pricing (ver pricing web landing)'},{a:'Cuenta el proceso comercial, de la firma al Go-Live',n:'Le da robustez a la operación'},{a:'Pregunta por el presupuesto',d:'¿Cómo lo ven a nivel presupuestario? ¿Se ajusta?',n:'Para entender de quién depende la decisión y qué tecla tocar en los seguimientos'}],
+  det:`<h4>De la firma al Go-Live</h4><div class="flow">
+   <div><i>1</i><b>Propuesta firmada</b><span>en HubSpot</span></div><div><i>2</i><b>Cliente creado</b><span>~10 días</span></div><div><i>3</i><b>Kickoff PM</b><span>antes del pago</span></div><div><i>4</i><b>Factura setup</b><span>pago único</span></div><div><i>5</i><b>Desarrollo</b><span>3–4 sem · 1–2 si es paquetizado</span></div><div><i>6</i><b>Contrato 12m</b><span>borrador en el desarrollo</span></div><div><i>7</i><b>Go-Live</b><span>salida a producción</span></div></div>`,obj:['costo','caro','trim','cuotas']},
+ {id:'e5',toc:'Cierre',num:'5',min:5,time:'~5 min',b:'Cómo',title:'Cierre y siguientes pasos',lead:'Saber qué tan rápido será el cierre, si impactó la reunión, y <b>priorizar esfuerzos comerciales</b>.',goal:'Salir con la próxima reunión agendada.',
+  haz:[{a:'Identifica si es SMB o Enterprise',n:'Define el timing y el proceso de aprobación'},{a:'Pregunta el timing',d:'En caso de implementar, ¿crees que sería para el próximo mes o para más adelante?',n:'Cuándo cerraría el deal y qué prioridad darle'},{a:'Mapea a los decisores',d:'¿Quién más del equipo debe estar para la aprobación? ¿Tienen un proceso específico de compra?',n:'De quién depende la decisión y qué tecla tocar en los seguimientos'},{a:'Agenda la próxima reunión',d:'¿Te parece si dejamos agendada la próxima semana, a esta misma hora, una reunión para revisar con más detalle la propuesta comercial que te dejaré enviada?',b:[['Si no quiere agendar','¿Cuándo tiene sentido que te vuelva a escribir: después de revisarlo internamente esta semana o más cerca de la decisión?']],n:'Asegura el seguimiento y mide qué tanto interés hay'},{a:'Explica qué sigue para implementar',d:'Desde Adereso, para avanzar a implementación necesitamos la firma de la propuesta comercial, lo que desencadenará la reunión de planificación con Servicios Profesionales…'},{a:'Despídete con los próximos pasos',n:'Menciona explícitamente los próximos pasos y los documentos que enviarás'}],
+  det:`<h4>Si el lead quiere ver pricing en esta reunión</h4><p>Ten la tabla de precios abierta antes de entrar y apóyate en la plantilla <b>Template_Adereso.ai_PropuestaComercial</b> o en la presentación de pricing.</p>
+   <p class="q">"Para [país], el ticket de conversación es $X. Con N conversaciones al mes, el plan base parte en $Y. Te mando la propuesta detallada al terminar."</p>
+   <div class="note">Si no saben su volumen, pide el dato y promete la propuesta en 24 h.</div>`,obj:['equipo','noagenda']},
+ {id:'smb',toc:'SMB vs Enterprise',num:'S/E',time:'identificar en el cierre',b:'Qué',title:'SMB vs Enterprise',lead:'Define el timing, la aprobación y cuánto personalizar.',goal:'Saber qué tan largo será el cierre.',
+  haz:['Identifícalo en el Cierre: define timing, aprobación y cuánto personalizar','SMB: decide 1–2 personas en 1–2 semanas. Propuesta en 24–48 h y seguimiento cada 2–3 días','Enterprise: varios stakeholders (TI, legal, finanzas, gerencia), 2–6 meses. Seguimiento cada 5–7 días'],
+  det:`<table><tr><th></th><th>SMB</th><th>Enterprise</th></tr><tr><td>Agentes</td><td>&lt; 50</td><td>&gt; 50</td></tr><tr><td>Tickets/mes</td><td>&lt; 20.000</td><td>&gt; 20.000</td></tr><tr><td>Aprobación</td><td>1–2 semanas</td><td>2–6 meses</td></tr><tr><td>Demo</td><td>Genérica o leve personalización</td><td>Con datos y casos del cliente</td></tr><tr><td>Propuesta</td><td>24–48 h</td><td>Revisión SP y/o legal</td></tr><tr><td>Follow-up</td><td>Cada 2–3 días</td><td>Cada 5–7 días</td></tr><tr><td>Señal</td><td>Decide el dueño</td><td>Comité, RFP, TI</td></tr></table>
+   <div class="note warn"><b>Enterprise:</b> mapea interlocutores comerciales, TI/seguridad y Finanzas. No prometas capacidades o condiciones pendientes de validación.</div>`,obj:[]},
+ {id:'post',toc:'Post-reunión',num:'↻',time:'mismo día',b:'Cómo',title:'Post-reunión',lead:'Nunca un deal <b>sin próximo paso</b>.',goal:'Que el deal nunca quede sin próximo paso.',
+  haz:['Informe y tarea en HubSpot','Correo antes de las 10:00 del día siguiente','Si no responde: días 1, 3–4, 7, 14 y 21'],
+  det:`<h4>Informe</h4><ul><li>Con Diio, el resumen sale solo: revísalo antes de subirlo</li><li>Revisa el informe en #reuniones-account-executive</li><li>Nota en el deal de HubSpot + tarea con los próximos pasos</li><li>Registra el <b>criterio de éxito</b>: caso de uso, métrica, base, meta, plazo, fuente y dueño. Separa lo acordado de lo pendiente</li></ul>
+   <h4>Correo · "Adereso &amp; [empresa] — Próximos pasos"</h4><div class="pills"><span class="pill">Brochure Adereso.ai 2025</span><span class="pill">Demo personalizada, si se comprometió</span><span class="pill">Propuesta, si aplica</span><span class="pill">Fecha sugerida para la siguiente</span></div>
+   <h4>Si no responde</h4><div class="flow"><div><i>D1</i><b>Correo</b><span>próximos pasos</span></div><div><i>D3–4</i><b>WhatsApp o llamada</b><span>breve, referencia el correo</span></div><div><i>D7</i><b>Correo con valor</b><span>caso de éxito o novedad</span></div><div><i>D14</i><b>Llamada</b><span>+ mensaje de voz</span></div><div><i>D21</i><b>Cierre de ciclo</b><span>"¿Sigue siendo relevante?"</span></div></div>
+   <div class="note bad">Sin respuesta tras 21 días y 5 touchpoints: <b>Perdido — Sin Respuesta</b>. Reactivar en 60–90 días si era de alta calidad. SMB cada 2–3 días; Enterprise cada 5–7.</div>
+   <h4>Segunda reunión · "Adereso &amp; [empresa] — Revisión proyecto"</h4><div class="steps"><div><span>Resolver dudas: proceso y equipos involucrados</span></div><div><span>Temas: ROI, casos de éxito, demo personalizada y mostrar la plataforma a otros integrantes</span></div><div><span>Grabar con Diio y/o Gemini</span></div><div><span>Resumen como nota en HubSpot</span></div><div><span>Correo + tarea para el próximo touchpoint</span></div></div>`,obj:['noresp']},
+ {id:'firma',toc:'Propuesta y firma',num:'✓',time:'cierre ganado',b:'Qué',title:'Propuesta, firma y activación',lead:'Se cotiza en el CRM de SSPP y la propuesta se firma <b>en HubSpot</b>, con plazo de validez explícito.',goal:'Cerrar bien y pasar el cliente a implementación.',
+  haz:['Cotiza en el CRM de SSPP: el deal queda en Etapa 4','Genera la propuesta en HubSpot y envíala (Etapa 5)','El cliente firma ese mismo documento: el deal pasa solo a Etapa 6'],
+  det:`<div class="flow"><div><i>1</i><b>Cotizar</b><span>CRM de SSPP → Etapa 4</span></div><div><i>2</i><b>Enviar propuesta</b><span>desde HubSpot → Etapa 5</span></div><div><i>3</i><b>Firma en HubSpot</b><span>→ Etapa 6 automática</span></div><div><i>4</i><b>Portal cliente</b><span>datos fiscales y documentación</span></div><div><i>5</i><b>Kickoff con el PM</b><span>con CS y Onboarding</span></div></div>
+   <ul style="margin-top:12px"><li>Incluye el caso de uso y el <b>criterio de éxito</b> validado, con los supuestos pendientes visibles. Una meta esperada no es una promesa de resultado</li><li>Explicita el alcance paquetizado, las exclusiones y el trabajo adicional</li><li>Deal Enterprise o de ticket alto: revísalo con tu manager</li><li>Menciona el plazo de validez de la propuesta</li></ul>
+   <div class="note">Al firmar: Adobo avisa en #team_sales, HubSpot en #general, se crea el canal Slack y el portal envía credenciales al responsable de decisiones. El <b>contrato legal</b> se genera en paralelo (Adobo prepara el borrador y lo envías al autorizarlo) y se firma por <b>LexGo</b>.</div>
+   <div class="note warn"><b>Hand-off:</b> sesión interna PM–AE antes del kickoff con alcance vendido, criterio de éxito, base, meta, supuestos y pendientes. Sin contrato firmado no se inicia el servicio.</div>
+   <h4>Primeros 90 días</h4><p>Implementar, estabilizar y demostrar valor con el resultado acordado a la vista. El PM conserva la ejecución, CS la salud y adopción. El traspaso comercial AE → KAM ocurre a los 6 meses desde el inicio del servicio, con salud alta y sin negocio activo (ver Operativa).</p>`,obj:[]}
+];
+const PYR=[
+ {n:'1º · Lo más importante',t:'Quién',p:'Asesor en transformación digital. No vendedor.',l:['Preséntate como Asesor en transformación digital','Diagnostica con su web, no recites features','Casos de clientes parecidos a ellos']},
+ {n:'2º',t:'Cómo',p:'El tono, la cercanía, las pausas, los silencios y mencionar su nombre.',l:['Usa su nombre al menos 10 veces','Deja silencios: el cliente habla','Pregunta cada ~3 minutos en el discovery']},
+ {n:'3º',t:'Qué',p:'El contenido de lo que le decimos: conectar sus dolores con la solución.',l:['Cada solución conectada a un dolor','Solo pregunta lo que falta por descubrir','Pricing siempre acompañado del ROI']}
+];
+/* Escenarios de práctica: banco de casos ficticios por industria. Cada caso arma el contexto de las etapas 0–5.
+   Para sumar uno, copia una línea de PRAC y cambia sus campos:
+   i industria · c empresa · r rubro · p persona · t Inbound/Outbound · mot cómo llegó · m actitud (MOODS) · op cómo atienden hoy
+   vol conversaciones/mes · eq equipo · top consultas más frecuentes · dol su dolor · ce evento crítico · ver qué quiere ver en la demo
+   dq su pregunta en la demo · o3 ojo en la demo (opcional) · ref reacción al precio (REFS) · dec quién decide · seg SMB/Enterprise */
+const IND={eco:'Ecommerce',ret:'Retail',aut:'Automotriz',sal:'Salud',leg:'Legal',sb:'Servicios básicos'};
+const MOODS={
+ apurado:{c0:'Se conecta puntual pero con poco tiempo: tiene otra reunión en 40 minutos.',d0:'Hola, cuéntame, tengo media hora no más.',o0:'Confirma la duración y ve al grano sin perder la cercanía.',i1:'Te escribí porque necesitamos resolver esto luego.',o1:'Ustedes me contactaron, ¿qué me quieren mostrar?',c5:'Mándame la info y lo veo.'},
+ formal:{c0:'Formal, con cámara prendida y de pocas palabras.',d0:'Buenas tardes. Adelante.',o0:'No fuerces la cercanía: rompe hielo corto y pasa a modo trabajo.',i1:'Estamos evaluando proveedores para este proyecto.',o1:'Acepté la reunión para conocer la propuesta.',c5:'Esto tiene que pasar por las áreas que corresponden.'},
+ entusiasta:{c0:'Llega con mucha energía y habla bastante.',d0:'¡Hola! Qué bueno, tenía ganas de esta reunión.',o0:'Aprovecha la energía, pero toma el control del tiempo con suavidad.',i1:'Los vengo siguiendo hace rato, creo que nos sirve mucho.',o1:'Me llamó la atención lo de la IA, cuéntame más.',c5:'Me encantó. ¿Cuándo podemos partir?'},
+ esceptico:{c0:'Cordial pero distante. Ya probó otra herramienta y no le fue bien.',d0:'Hola. Te cuento altiro que ya probamos algo parecido.',o0:'No te defiendas: pregunta qué pasó con esa experiencia.',i1:'Ya probamos un chatbot y fue un desastre, quiero ver si esto es distinto.',o1:'Todos dicen que tienen IA. ¿Qué tienen ustedes de distinto?',c5:'Lo veo, pero necesito pruebas antes de comprometerme.'},
+ distraido:{c0:'Se conecta tarde, con la cámara apagada y respondiendo el celular.',d0:'Hola, perdón, estoy con mil cosas hoy.',o0:'Empatiza y pide cámara solo si se da natural. Si lo apuras, sigue en el celular.',i1:'Sí, sí, lo pedí porque estamos colapsados.',o1:'Perdón, ¿me recuerdas de qué era la reunión?',c5:'Déjame revisarlo y te escribo.'},
+ curioso:{c0:'De buen ánimo y con ganas de conversar: pregunta por ti antes de que preguntes tú.',d0:'Hola, ¿cómo estás? ¿Desde dónde te conectas?',o0:'Responde corto y devuelve la pregunta: el protagonista es el cliente.',i1:'Vi algo de ustedes y quedé con ganas de saber más.',o1:'No tengo un proyecto definido, solo estoy explorando.',c5:'Interesante. ¿Qué sería lo siguiente?'}
+};
+const REFS={
+ gratis:{ctx:'Hoy no paga software de atención: usa WhatsApp Business y planillas.',dice:'Uf, hoy no pagamos nada por esto.',ojo:'Ancla en lo que pierden hoy en ventas y horas del equipo, no en el software.'},
+ usuario:{ctx:'Hoy paga otra herramienta por usuario y quiere comparar por agente.',dice:'¿Cuánto es por agente? Así lo comparo con lo que tenemos.',ojo:'Explica que cobramos por conversaciones, no por usuarios, y muestra el ROI antes del total.'},
+ bpo:{ctx:'Tiene la atención tercerizada y compara contra lo que paga al proveedor.',dice:'¿Esto reemplaza al proveedor o es un costo adicional?',ojo:'Muestra el ROI frente al costo del proveedor actual, sin prometer reemplazos totales.'},
+ formal:{ctx:'Espera una propuesta formal y personalizada, no un precio en la reunión.',dice:'Prefiero una propuesta formal para llevarla al comité.',ojo:'Muestra el ROI y acuerda qué debe traer la propuesta y para cuándo.'},
+ pauta:{ctx:'Compara la inversión contra lo que gasta en marketing al mes.',dice:'Tengo que justificarlo frente a lo que invertimos en pauta.',ojo:'Habla en costo por lead o por venta recuperada: es su lenguaje.'},
+ ppto:{ctx:'Tiene un presupuesto acotado y ya definido para este año.',dice:'Se nos va un poco del presupuesto que tenemos.',ojo:'No descuentes de entrada: revisa la bolsa adecuada y pregunta cuándo se abre el próximo presupuesto.'},
+ interno:{ctx:'TI cree que podría construirlo internamente.',dice:'Nuestro equipo de TI dice que esto lo podrían hacer ellos.',ojo:'Compara contra el costo y el tiempo de construirlo y mantenerlo, no contra el precio.'},
+ descuento:{ctx:'Negocia fuerte y pide descuento apenas ve el número.',dice:'¿Y cuál es el mejor precio que me puedes dar?',ojo:'No regales descuento sin algo a cambio: plazo, volumen o fecha de firma.'}
+};
+const O3_INT='No prometas integraciones que no conoces: déjalo como pendiente para el equipo técnico.',O3_SEG='No improvises respuestas de seguridad o datos sensibles: anótalo y ofrece sesión con el equipo técnico.',O3_URG='Muestra la derivación inmediata a un humano en urgencias y no improvises.';
+const PRAC=[
+ {i:'eco',c:'Tienda Andina',r:'Moda online',p:'Camila · Gerenta de ecommerce',t:'Inbound',mot:'el formulario de la web',m:'distraido',op:'WhatsApp Business en 3 celulares compartidos, más Instagram y chat web',vol:'6.000',eq:'5 ejecutivas',top:'estado de pedido y cambios',dol:'En el último Cyber se nos acumularon cientos de mensajes y perdimos ventas.',ce:'el Cyber de dentro de 2 meses',ver:'el seguimiento de pedidos conectado a su tienda',dq:'¿Esto se conecta con nuestra tienda? Las respuestas están ahí.',ref:'gratis',dec:'el gerente comercial, con revisión de finanzas',seg:'SMB'},
+ {i:'eco',c:'Casa Nativa',r:'Decoración online',p:'Tomás · Fundador',t:'Inbound',mot:'un anuncio en Instagram',m:'entusiasta',op:'responde el mismo fundador por Instagram y WhatsApp',vol:'1.500',eq:'él y una asistente',top:'stock, despachos y medidas de productos',dol:'Respondo mensajes hasta las 12 de la noche y igual se me escapan ventas.',ce:'la campaña de Navidad',ver:'cómo la IA responde stock y medidas desde el catálogo',dq:'¿Puede responder si un producto tiene stock?',ref:'ppto',dec:'el mismo fundador',seg:'SMB'},
+ {i:'eco',c:'Pet Feliz',r:'Alimento de mascotas por suscripción',p:'Daniela · Jefa de atención al cliente',t:'Outbound',mot:'correo',m:'apurado',op:'un helpdesk de la competencia sin IA',vol:'8.000',eq:'7 agentes',top:'cambios de fecha de suscripción y pedidos atrasados',dol:'Mi equipo pasa el día moviendo fechas de despacho a mano.',ce:'el aumento de suscriptores que esperan para el verano',ver:'la gestión de suscripciones por WhatsApp sin intervención humana',dq:'¿La IA puede cambiar la fecha de un despacho?',o3:O3_INT,ref:'usuario',dec:'la gerenta de operaciones',seg:'SMB'},
+ {i:'eco',c:'Vértice Tech',r:'Electrónica online',p:'Felipe · Gerente de ecommerce',t:'Inbound',mot:'una búsqueda en Google',m:'esceptico',op:'un chatbot de reglas en la web y WhatsApp atendido a mano',vol:'12.000',eq:'6 ejecutivos',top:'garantías, compatibilidad de productos y despacho',dol:'El chatbot actual frustra a los clientes y terminan llamando igual.',ce:'el Black Friday',ver:'una conversación de IA que entiende preguntas técnicas abiertas',dq:'¿Qué pasa si la IA responde algo incorrecto?',o3:'Muestra cómo se controla lo que responde la IA y cuándo deriva a un humano.',ref:'usuario',dec:'el gerente de ecommerce y TI',seg:'Enterprise'},
+ {i:'eco',c:'Bella Raíz',r:'Cosmética natural online',p:'Valentina · Community manager',t:'Inbound',mot:'un webinar',m:'curioso',op:'Instagram y WhatsApp desde el celular de la empresa',vol:'2.500',eq:'2 personas',top:'recomendación de productos según tipo de piel',dol:'Nos preguntan lo mismo cien veces y no alcanzamos a vender.',ce:'el lanzamiento de una línea nueva en un mes',ver:'cómo la IA recomienda productos y cierra la venta en el chat',dq:'¿Puede recomendar como lo haría una asesora?',ref:'pauta',dec:'la dueña de la marca',seg:'SMB'},
+ {i:'eco',c:'MercaHogar',r:'Marketplace de hogar',p:'Ignacio · Gerente de experiencia cliente',t:'Outbound',mot:'LinkedIn',m:'formal',op:'un contact center propio con un software antiguo',vol:'30.000',eq:'35 agentes',top:'reclamos de vendedores y compradores, y devoluciones',dol:'Tenemos tiempos de respuesta de más de un día en reclamos.',ce:'la meta de bajar el tiempo de respuesta antes de fin de año',ver:'la bandeja única con reglas para separar vendedores y compradores',dq:'¿Cómo se manejan dos tipos de clientes distintos?',ref:'formal',dec:'un comité con TI, operaciones y finanzas',seg:'Enterprise'},
+ {i:'eco',c:'Ruta Bike',r:'Bicicletas y repuestos online',p:'Sebastián · Dueño',t:'Inbound',mot:'un caso de éxito que vio en LinkedIn',m:'apurado',op:'el WhatsApp personal del dueño y un correo',vol:'900',eq:'él y un vendedor',top:'cotizaciones de repuestos y tallas',dol:'Pierdo ventas el fin de semana porque nadie responde.',ce:'la temporada de primavera',ver:'cómo la IA cotiza y atiende fuera de horario',dq:'¿Atiende los fines de semana?',ref:'gratis',dec:'el mismo dueño',seg:'SMB'},
+ {i:'eco',c:'Dulce Caja',r:'Regalos y desayunos a domicilio',p:'Francisca · Gerenta comercial',t:'Inbound',mot:'el formulario de la web',m:'entusiasta',op:'WhatsApp Business en 2 celulares',vol:'4.000',eq:'4 vendedoras',top:'disponibilidad por comuna y horarios de entrega',dol:'En fechas como el Día de la Madre colapsamos y la gente se va a otra tienda.',ce:'el Día de la Madre',ver:'pedidos tomados por la IA con comuna y horario',dq:'¿Puede tomar el pedido completo y mandarlo a pagar?',ref:'ppto',dec:'la gerenta comercial y su socio',seg:'SMB'},
+ {i:'eco',c:'Visión Online',r:'Lentes online',p:'Martín · Jefe de ecommerce',t:'Outbound',mot:'teléfono',m:'esceptico',op:'un chat web de otro proveedor y WhatsApp',vol:'5.000',eq:'5 agentes',top:'recetas, prueba virtual y despachos',dol:'Muchos carritos se abandonan porque no resolvemos dudas de la receta.',ce:'la meta de conversión del semestre',ver:'la IA resolviendo dudas antes de la compra',dq:'¿Cómo mides que la IA ayudó a vender?',ref:'usuario',dec:'el gerente general',seg:'SMB'},
+ {i:'ret',c:'Ferretería Del Sur',r:'Cadena de ferreterías',p:'Patricio · Gerente de canales digitales',t:'Inbound',mot:'una búsqueda en Google',m:'formal',op:'un WhatsApp por sucursal, cada uno con su número',vol:'10.000',eq:'20 vendedores en 12 sucursales',top:'stock por sucursal y cotizaciones',dol:'Cada sucursal responde como puede y no tenemos control de nada.',ce:'la apertura de 3 sucursales el próximo año',ver:'un solo número con derivación por sucursal',dq:'¿Se puede derivar a la sucursal más cercana?',ref:'formal',dec:'la gerencia comercial y TI',seg:'Enterprise'},
+ {i:'ret',c:'Moda Austral',r:'Tiendas de ropa',p:'Carolina · Subgerenta de servicio al cliente',t:'Outbound',mot:'correo',m:'apurado',op:'un call center tercerizado y correo, sin WhatsApp oficial',vol:'15.000',eq:'18 agentes',top:'cambios, boletas y estado de despacho',dol:'Los clientes nos escriben por Instagram porque no tenemos WhatsApp.',ce:'la liquidación de enero',ver:'cómo se suma WhatsApp oficial a lo que ya tienen',dq:'¿Cuánto toma tener el WhatsApp funcionando?',ref:'bpo',dec:'la gerencia de clientes y finanzas',seg:'Enterprise'},
+ {i:'ret',c:'Supermercados Vega',r:'Supermercados regionales',p:'Rodrigo · Gerente de marketing',t:'Inbound',mot:'un webinar',m:'curioso',op:'redes sociales atendidas por una agencia',vol:'7.000',eq:'la agencia y 3 personas internas',top:'ofertas, horarios y reclamos de productos',dol:'La agencia responde lento y no sabe resolver reclamos.',ce:'el lanzamiento de su app de compras',ver:'cómo se separan consultas de reclamos y se derivan',dq:'¿Puede saber qué ofertas hay esta semana?',ref:'pauta',dec:'el gerente de marketing y el gerente general',seg:'SMB'},
+ {i:'ret',c:'Hogar Total',r:'Tiendas de muebles',p:'Andrea · Jefa de ventas online',t:'Inbound',mot:'el formulario de la web',m:'entusiasta',op:'WhatsApp Business y chat web sin integrar',vol:'5.500',eq:'6 vendedores',top:'cotizaciones, armado y despacho',dol:'Nos llegan cotizaciones que nadie sigue y se pierden.',ce:'el Cyber de octubre',ver:'el seguimiento de cotizaciones con recordatorios automáticos',dq:'¿Puede hacer seguimiento a quien no compró?',ref:'ppto',dec:'la gerenta comercial',seg:'SMB'},
+ {i:'ret',c:'Deportes Cumbre',r:'Tiendas deportivas',p:'Cristóbal · Gerente de operaciones',t:'Outbound',mot:'LinkedIn',m:'esceptico',op:'un helpdesk de la competencia con un bot de botones',vol:'9.000',eq:'10 agentes',top:'tallas, cambios y estado de pedido',dol:'Pagamos por un bot que casi nadie usa.',ce:'el término del contrato con su proveedor en 4 meses',ver:'una conversación de IA real frente a su bot de botones',dq:'¿Por qué esto funcionaría si el bot actual no?',ref:'usuario',dec:'operaciones y finanzas',seg:'SMB'},
+ {i:'ret',c:'Farmacias Cerca',r:'Cadena de farmacias',p:'Marcela · Gerenta de experiencia cliente',t:'Outbound',mot:'correo',m:'formal',op:'un call center tercerizado y WhatsApp sin automatizar',vol:'40.000',eq:'45 agentes',top:'stock de medicamentos, recetas y pedidos',dol:'El proveedor no da abasto en los peaks y la gente cuelga.',ce:'la renovación del contrato con el proveedor en 6 meses',ver:'la consulta de stock por sucursal y la derivación de recetas',dq:'¿Cómo manejan los datos sensibles de los pacientes?',o3:O3_SEG,ref:'bpo',dec:'un comité con TI, legal y compras',seg:'Enterprise'},
+ {i:'ret',c:'Juguetería Arcoíris',r:'Tiendas de juguetes',p:'Paz · Dueña',t:'Inbound',mot:'Instagram',m:'distraido',op:'Instagram y WhatsApp desde el celular de la dueña',vol:'2.000',eq:'ella y 2 vendedoras',top:'stock, precios y retiro en tienda',dol:'En diciembre no doy abasto y respondo días después.',ce:'la Navidad',ver:'respuestas automáticas de stock y retiro en tienda',dq:'¿Puede reservar un juguete para retiro?',ref:'gratis',dec:'la misma dueña',seg:'SMB'},
+ {i:'ret',c:'Electro Norte',r:'Tiendas de electrodomésticos',p:'Héctor · Gerente comercial',t:'Inbound',mot:'la recomendación de otro cliente',m:'apurado',op:'vendedores que atienden WhatsApp desde sus celulares personales',vol:'8.500',eq:'15 vendedores',top:'cotizaciones, crédito y garantías',dol:'Cuando un vendedor se va, se lleva los clientes en su celular.',ce:'la meta de ventas del segundo semestre',ver:'cómo queda todo en una sola plataforma con trazabilidad',dq:'¿Puedo ver qué conversaciones tiene cada vendedor?',ref:'descuento',dec:'el gerente comercial y el directorio',seg:'SMB'},
+ {i:'ret',c:'Calzados Paso',r:'Tiendas de calzado',p:'Lorena · Jefa de marketing digital',t:'Outbound',mot:'teléfono',m:'curioso',op:'un WhatsApp Business central y redes sociales',vol:'3.500',eq:'3 personas',top:'tallas, cambios y promociones',dol:'Las promociones generan peaks y no alcanzamos a responder.',ce:'el Cyber de noviembre',ver:'cómo la IA responde promociones y tallas',dq:'¿Se puede actualizar fácil cuando cambia una promoción?',ref:'pauta',dec:'la gerenta general',seg:'SMB'},
+ {i:'aut',c:'Automotora Ruta Sur',r:'Autos nuevos y usados',p:'Andrés · Gerente comercial',t:'Inbound',mot:'un formulario de Meta',m:'entusiasta',op:'leads de Meta que llegan al WhatsApp de cada vendedor',vol:'4.000',eq:'12 vendedores',top:'precios, financiamiento y test drive',dol:'Los vendedores demoran horas en responder y el lead se enfría.',ce:'el lanzamiento de un modelo nuevo en 2 meses',ver:'la calificación de leads y la agenda de test drive',dq:'¿Puede agendar el test drive directo?',ref:'pauta',dec:'el gerente comercial y el dueño',seg:'SMB'},
+ {i:'aut',c:'Grupo Motor Andes',r:'Red de concesionarios',p:'Verónica · Gerenta de marketing',t:'Outbound',mot:'LinkedIn',m:'formal',op:'un CRM automotriz y un call center propio',vol:'20.000',eq:'30 ejecutivos en 6 locales',top:'cotizaciones, servicio técnico y repuestos',dol:'Cada local trabaja distinto y no medimos la conversión de los leads.',ce:'la meta anual que les pide la marca',ver:'la integración con el CRM y la derivación por local',dq:'¿Esto convive con nuestro CRM?',o3:O3_INT,ref:'formal',dec:'un comité de gerencia y TI',seg:'Enterprise'},
+ {i:'aut',c:'Taller Pistón',r:'Taller mecánico con 3 sedes',p:'Luis · Administrador',t:'Inbound',mot:'una búsqueda en Google',m:'apurado',op:'teléfono y un celular con WhatsApp por sede',vol:'1.800',eq:'3 recepcionistas',top:'agendar mantenciones y estado del auto',dol:'Perdemos horas porque el teléfono suena y nadie contesta.',ce:'la temporada de revisión técnica',ver:'el agendamiento de mantenciones por WhatsApp',dq:'¿Puede avisar cuando el auto está listo?',ref:'gratis',dec:'el dueño del taller',seg:'SMB'},
+ {i:'aut',c:'Neumáticos Express',r:'Venta e instalación de neumáticos',p:'Paula · Jefa de ventas',t:'Outbound',mot:'correo',m:'esceptico',op:'un chat web con bot de reglas y WhatsApp',vol:'6.000',eq:'5 ejecutivos',top:'medidas, stock por sucursal y agenda de instalación',dol:'El bot no entiende las medidas y la gente se frustra.',ce:'el invierno, cuando suben las ventas',ver:'la IA entendiendo medidas y agendando la instalación',dq:'¿Qué pasa si el cliente no sabe la medida?',ref:'usuario',dec:'la jefa de ventas y el gerente',seg:'SMB'},
+ {i:'aut',c:'Rent a Car Vía',r:'Arriendo de autos',p:'Diego · Gerente de operaciones',t:'Inbound',mot:'un webinar',m:'curioso',op:'un call center tercerizado y correo',vol:'9.000',eq:'8 agentes',top:'reservas, documentos y extensiones de arriendo',dol:'En verano no alcanzamos a contestar y perdemos reservas.',ce:'la temporada de verano',ver:'reservas y extensiones resueltas por la IA',dq:'¿Funciona en inglés para turistas?',ref:'bpo',dec:'operaciones y finanzas',seg:'SMB'},
+ {i:'aut',c:'Motos Fénix',r:'Motos y repuestos',p:'Cristián · Dueño',t:'Inbound',mot:'Instagram',m:'distraido',op:'Instagram y WhatsApp atendidos por el dueño',vol:'1.200',eq:'él y 2 vendedores',top:'precios, crédito y repuestos',dol:'Respondo cuando puedo y sé que se me escapan ventas.',ce:'una feria de motos en 6 semanas',ver:'respuestas de precios y repuestos fuera de horario',dq:'¿Puede cotizar repuestos?',ref:'ppto',dec:'el mismo dueño',seg:'SMB'},
+ {i:'aut',c:'AutoPlus Seminuevos',r:'Autos usados',p:'Natalia · Gerenta comercial',t:'Outbound',mot:'teléfono',m:'apurado',op:'portales de autos que derivan al WhatsApp de cada vendedor',vol:'5.000',eq:'8 vendedores',top:'disponibilidad, precio y auto en parte de pago',dol:'Llegan muchos curiosos y los vendedores pierden tiempo.',ce:'la meta de ventas del trimestre',ver:'filtros de calificación antes de pasar al vendedor',dq:'¿Puede preguntar si tiene un auto en parte de pago?',ref:'descuento',dec:'la gerenta comercial y su socio',seg:'SMB'},
+ {i:'aut',c:'Flota Segura',r:'Gestión de flotas y GPS',p:'Óscar · Gerente de servicio al cliente',t:'Outbound',mot:'LinkedIn',m:'formal',op:'una mesa de ayuda por correo y teléfono',vol:'7.500',eq:'10 agentes',top:'soporte técnico de GPS y facturación',dol:'Los clientes empresa se quejan de que demoramos días.',ce:'una licitación con un cliente grande en 3 meses',ver:'tickets con niveles de servicio y trazabilidad',dq:'¿Se pueden medir los tiempos por cliente empresa?',ref:'formal',dec:'la gerencia general y TI',seg:'Enterprise'},
+ {i:'sal',c:'Clínica Sonríe',r:'Red de clínicas dentales',p:'Constanza · Jefa de contact center',t:'Outbound',mot:'correo',m:'apurado',op:'un helpdesk de la competencia sin IA, WhatsApp y teléfono',vol:'9.000',eq:'12 agentes',top:'agendar, confirmar y cambiar horas',dol:'Los agentes pasan el día agendando a mano y mucho paciente no llega.',ce:'la apertura de 3 sedes sin sumar agentes',ver:'el agendamiento y la confirmación de horas, con derivación de casos clínicos',dq:'¿La IA puede agendar directo en nuestra agenda?',o3:O3_INT,ref:'usuario',dec:'el gerente de operaciones, con revisión de TI',seg:'SMB'},
+ {i:'sal',c:'Centro Médico Alameda',r:'Centro médico',p:'Javier · Gerente de operaciones',t:'Inbound',mot:'una búsqueda en Google',m:'formal',op:'un call center propio',vol:'18.000',eq:'20 agentes',top:'horas médicas, exámenes y convenios',dol:'La gente espera 15 minutos en línea para pedir una hora.',ce:'la meta de bajar el abandono de llamadas este año',ver:'el paso de pedidos de hora del teléfono a WhatsApp con IA',dq:'¿Cómo maneja la IA una urgencia?',o3:O3_URG,ref:'formal',dec:'un comité con dirección médica y TI',seg:'Enterprise'},
+ {i:'sal',c:'Laboratorio Bioanálisis',r:'Laboratorio clínico',p:'Fernanda · Jefa de atención',t:'Outbound',mot:'teléfono',m:'esceptico',op:'WhatsApp Business en recepción y correo',vol:'6.000',eq:'6 personas',top:'preparación de exámenes, resultados y precios',dol:'Nos preguntan todo el día cómo prepararse para un examen.',ce:'la campaña de chequeo preventivo',ver:'respuestas de preparación de exámenes con IA',dq:'¿Puede entregar resultados?',o3:'Aclara qué hace la IA y qué no con resultados: no prometas lo que no está validado.',ref:'ppto',dec:'el director del laboratorio',seg:'SMB'},
+ {i:'sal',c:'Kine Activa',r:'Centros de kinesiología',p:'Matías · Socio fundador',t:'Inbound',mot:'Instagram',m:'entusiasta',op:'un celular con WhatsApp por centro',vol:'2.000',eq:'3 recepcionistas',top:'agenda de sesiones, convenios y precios',dol:'Las recepcionistas no dan abasto entre atender y contestar.',ce:'la apertura de un cuarto centro',ver:'el agendamiento y los recordatorios de sesiones',dq:'¿Puede recordar la sesión el día anterior?',ref:'gratis',dec:'los dos socios',seg:'SMB'},
+ {i:'sal',c:'Seguro Salud Vital',r:'Seguros de salud',p:'Claudia · Gerenta de experiencia cliente',t:'Outbound',mot:'LinkedIn',m:'formal',op:'un contact center tercerizado',vol:'35.000',eq:'40 agentes',top:'reembolsos, coberturas y estado de solicitudes',dol:'El proveedor responde lento y las quejas suben.',ce:'la renovación del contrato con el proveedor en 6 meses',ver:'la consulta de reembolsos con validación de identidad',dq:'¿Cómo se valida que es el afiliado?',o3:O3_SEG,ref:'bpo',dec:'un comité con riesgo, TI y compras',seg:'Enterprise'},
+ {i:'sal',c:'Veterinaria Huellas',r:'Clínicas veterinarias',p:'Antonia · Administradora',t:'Inbound',mot:'una recomendación',m:'distraido',op:'WhatsApp y teléfono en recepción',vol:'2.500',eq:'2 recepcionistas',top:'horas, vacunas y urgencias',dol:'Si estamos con una urgencia, nadie contesta el WhatsApp.',ce:'la campaña de vacunación de marzo',ver:'la agenda de horas y las respuestas sobre vacunas',dq:'¿Qué pasa si escriben por una urgencia?',o3:O3_URG,ref:'gratis',dec:'el veterinario dueño',seg:'SMB'},
+ {i:'sal',c:'Óptica Mirada',r:'Cadena de ópticas',p:'Ricardo · Gerente comercial',t:'Outbound',mot:'correo',m:'curioso',op:'un WhatsApp por tienda',vol:'7.000',eq:'14 vendedores',top:'horas de examen visual, precios y estado de lentes',dol:'Nadie sabe cuántas consultas perdemos por tienda.',ce:'la meta de ventas de fin de año',ver:'la agenda de exámenes y el aviso de lentes listos',dq:'¿Podemos ver los datos por tienda?',ref:'usuario',dec:'la gerencia comercial y finanzas',seg:'SMB'},
+ {i:'sal',c:'Clínica Piel Nueva',r:'Medicina estética',p:'Sofía · Gerenta de marketing',t:'Inbound',mot:'un anuncio en Instagram',m:'entusiasta',op:'Instagram y WhatsApp atendidos por asesoras',vol:'4.500',eq:'3 asesoras',top:'precios de tratamientos, evaluaciones y promociones',dol:'Gastamos en pauta y las asesoras no alcanzan a responder a todos.',ce:'la campaña de verano',ver:'la IA respondiendo precios y agendando evaluaciones',dq:'¿Puede agendar una evaluación gratuita?',ref:'pauta',dec:'la dueña y la gerenta de marketing',seg:'SMB'},
+ {i:'leg',c:'Bravo Abogados',r:'Estudio laboral',p:'Pablo · Socio',t:'Inbound',mot:'una búsqueda en Google',m:'apurado',op:'un formulario web y el WhatsApp de una secretaria',vol:'1.500',eq:'2 secretarias y 4 abogados',top:'despidos y primeras consultas',dol:'Los abogados pierden horas en consultas que no son casos.',ce:'la campaña de marketing que parte el próximo mes',ver:'la IA calificando el caso antes de pasarlo a un abogado',dq:'¿Puede saber si el caso vale la pena?',o3:'Aclara que la IA no da asesoría legal: califica y deriva.',ref:'pauta',dec:'los socios',seg:'SMB'},
+ {i:'leg',c:'Defensa Deudores',r:'Asesoría en deudas',p:'Rocío · Gerenta comercial',t:'Outbound',mot:'teléfono',m:'entusiasta',op:'WhatsApp en 6 celulares de ejecutivos',vol:'7.000',eq:'6 ejecutivos',top:'evaluación de deudas, requisitos y precios',dol:'Llegan muchos leads de pauta y respondemos tarde.',ce:'la meta de captación del trimestre',ver:'la calificación de leads con preguntas de deuda y renta',dq:'¿Puede pedir documentos?',ref:'pauta',dec:'la gerenta comercial y el dueño',seg:'SMB'},
+ {i:'leg',c:'Notaría Central',r:'Notaría',p:'Eduardo · Administrador',t:'Inbound',mot:'una recomendación',m:'formal',op:'teléfono y correo',vol:'3.000',eq:'4 funcionarios',top:'requisitos de trámites, horarios y estado de documentos',dol:'El teléfono no para y la gente igual viene a preguntar.',ce:'el aumento de trámites de fin de año',ver:'respuestas de requisitos y estado de trámites',dq:'¿Puede avisar cuando un documento está listo?',ref:'ppto',dec:'el notario',seg:'SMB'},
+ {i:'leg',c:'Lex Corporativo',r:'Estudio corporativo',p:'Isabel · Gerenta de operaciones',t:'Outbound',mot:'LinkedIn',m:'esceptico',op:'el correo y el teléfono de cada abogado',vol:'2.000',eq:'25 abogados',top:'consultas de clientes empresa y seguimiento de causas',dol:'Los clientes preguntan por sus causas y nadie centraliza.',ce:'una auditoría interna de calidad de servicio',ver:'una bandeja única con trazabilidad por cliente',dq:'¿Cómo se protege la confidencialidad?',o3:O3_SEG,ref:'formal',dec:'el comité de socios',seg:'Enterprise'},
+ {i:'leg',c:'Cobranza Justa',r:'Cobranza extrajudicial',p:'Mauricio · Jefe de operaciones',t:'Inbound',mot:'un webinar',m:'curioso',op:'WhatsApp masivo y call center',vol:'25.000',eq:'30 agentes',top:'repactaciones, montos y comprobantes',dol:'Mandamos miles de mensajes y no damos abasto con las respuestas.',ce:'la entrada de una cartera nueva en 2 meses',ver:'la IA respondiendo montos y repactaciones, con derivación',dq:'¿Puede mostrar el monto de la deuda?',o3:O3_INT,ref:'usuario',dec:'la gerencia general y TI',seg:'Enterprise'},
+ {i:'leg',c:'Herencias Claras',r:'Estudio de familia y herencias',p:'Gabriela · Socia',t:'Inbound',mot:'Instagram',m:'distraido',op:'el WhatsApp de la socia',vol:'800',eq:'ella y una asistente',top:'posesiones efectivas, precios y plazos',dol:'Me paso el día respondiendo lo mismo en vez de trabajar en las causas.',ce:'su vuelta de vacaciones, cuando se acumulan consultas',ver:'respuestas de precios y plazos con agenda de primera reunión',dq:'¿Puede agendar la primera reunión?',ref:'gratis',dec:'la misma socia',seg:'SMB'},
+ {i:'leg',c:'Marcas & Patentes',r:'Propiedad intelectual',p:'Joaquín · Gerente comercial',t:'Outbound',mot:'correo',m:'apurado',op:'un formulario web y correo',vol:'1.200',eq:'3 ejecutivos',top:'registro de marca, plazos y precios',dol:'Respondemos los formularios al día siguiente y el cliente ya cotizó con otro.',ce:'la meta de nuevos registros del semestre',ver:'la respuesta inmediata con calificación del cliente',dq:'¿Puede revisar si una marca está disponible?',o3:'No prometas búsquedas que la IA no hace: muestra cómo califica y deriva.',ref:'ppto',dec:'el gerente comercial y el socio',seg:'SMB'},
+ {i:'leg',c:'Laboral Pro',r:'Asesoría laboral a empresas',p:'Elena · Directora',t:'Inbound',mot:'una recomendación',m:'formal',op:'una mesa de ayuda por correo',vol:'4.000',eq:'8 asesores',top:'contratos, finiquitos y consultas de clientes empresa',dol:'Los clientes empresa esperan dos días por respuestas simples.',ce:'la renovación de contratos con clientes en marzo',ver:'tickets por cliente empresa con niveles de servicio',dq:'¿Se puede medir el tiempo de respuesta por cliente?',ref:'formal',dec:'la directora y su socio',seg:'SMB'},
+ {i:'sb',c:'Aguas del Valle',r:'Sanitaria regional',p:'Ramón · Gerente comercial',t:'Outbound',mot:'LinkedIn',m:'formal',op:'un call center tercerizado y oficinas',vol:'50.000',eq:'60 agentes',top:'cortes, boletas y reclamos',dol:'En un corte de agua el call center colapsa en minutos.',ce:'la exigencia del regulador de mejorar los tiempos de respuesta',ver:'avisos de cortes y consulta de boletas por WhatsApp',dq:'¿Aguanta miles de mensajes al mismo tiempo?',ref:'bpo',dec:'un comité con TI, regulación y compras',seg:'Enterprise'},
+ {i:'sb',c:'Luz Austral',r:'Distribuidora eléctrica',p:'Mónica · Subgerenta de atención',t:'Outbound',mot:'correo',m:'esceptico',op:'un call center propio y una app',vol:'80.000',eq:'90 agentes',top:'cortes, reposición y boletas',dol:'En los temporales los clientes no logran comunicarse.',ce:'la temporada de temporales del invierno',ver:'respuestas automáticas en peaks con el estado de la reposición',dq:'¿Cómo se conecta con nuestro sistema de cortes?',o3:O3_INT,ref:'interno',dec:'un comité con TI y operaciones',seg:'Enterprise'},
+ {i:'sb',c:'Gas Hogar',r:'Distribución de gas',p:'Esteban · Jefe de ventas',t:'Inbound',mot:'una búsqueda en Google',m:'apurado',op:'teléfono y un WhatsApp por zona',vol:'12.000',eq:'10 operadores',top:'pedidos de cilindros, precios y horarios',dol:'En invierno no alcanzamos a tomar pedidos y se van a la competencia.',ce:'el invierno',ver:'pedidos de gas tomados por la IA con dirección y horario',dq:'¿Puede tomar el pedido y mandarlo al repartidor?',ref:'ppto',dec:'el gerente comercial',seg:'SMB'},
+ {i:'sb',c:'Fibra Rápida',r:'Internet residencial',p:'Alejandra · Gerenta de experiencia cliente',t:'Inbound',mot:'un webinar',m:'curioso',op:'un helpdesk de la competencia y WhatsApp',vol:'30.000',eq:'35 agentes',top:'soporte técnico, visitas y cambios de plan',dol:'La mitad de las consultas son reinicios de módem que el cliente podría hacer solo.',ce:'la meta de bajar las visitas técnicas este año',ver:'el diagnóstico guiado por IA antes de agendar una visita',dq:'¿Puede agendar la visita técnica?',ref:'usuario',dec:'la gerencia de clientes, TI y finanzas',seg:'Enterprise'},
+ {i:'sb',c:'Telecable Sur',r:'Cable e internet regional',p:'Hugo · Gerente general',t:'Outbound',mot:'teléfono',m:'distraido',op:'teléfono y una oficina comercial',vol:'8.000',eq:'8 agentes',top:'cortes de servicio, pagos y planes',dol:'Los clientes llaman, no contestamos y se cambian de compañía.',ce:'la llegada de un competidor a la zona',ver:'pagos y estado del servicio por WhatsApp',dq:'¿Puede mandar el link de pago?',ref:'gratis',dec:'el gerente general',seg:'SMB'},
+ {i:'sb',c:'Recicla Ya',r:'Retiro de residuos',p:'Bárbara · Jefa de operaciones',t:'Inbound',mot:'Instagram',m:'entusiasta',op:'WhatsApp Business y correo',vol:'3.000',eq:'3 coordinadoras',top:'agenda de retiros, comunas y precios',dol:'Coordinamos los retiros a mano por WhatsApp y se nos pasan.',ce:'un contrato nuevo con una municipalidad',ver:'la agenda de retiros por comuna con IA',dq:'¿Puede agendar según la comuna?',ref:'ppto',dec:'la gerenta general',seg:'SMB'},
+ {i:'sb',c:'Energía Sol',r:'Instalación de paneles solares',p:'Simón · Gerente comercial',t:'Inbound',mot:'un formulario de Meta',m:'esceptico',op:'leads de Meta que llegan al WhatsApp de los vendedores',vol:'2.500',eq:'5 vendedores',top:'cotizaciones, ahorro estimado y financiamiento',dol:'La mitad de los leads no tiene casa propia y perdemos tiempo.',ce:'el fin de un subsidio en 4 meses',ver:'la calificación de leads con preguntas de vivienda y consumo',dq:'¿Puede pedir la boleta de luz para cotizar?',ref:'pauta',dec:'el gerente comercial y su socio',seg:'SMB'},
+ {i:'sb',c:'Hogar Seguro 24',r:'Alarmas y monitoreo',p:'Carla · Gerenta de clientes',t:'Outbound',mot:'LinkedIn',m:'formal',op:'una central de monitoreo y un call center',vol:'15.000',eq:'20 agentes',top:'soporte de alarmas, visitas técnicas y pagos',dol:'Mezclamos emergencias con consultas simples y eso es un riesgo.',ce:'la expansión a dos regiones nuevas',ver:'la separación de emergencias y consultas, con derivación inmediata',dq:'¿Qué pasa si alguien escribe por una emergencia real?',o3:O3_URG,ref:'formal',dec:'la gerencia general, operaciones y TI',seg:'Enterprise'}
+];
+const PST=['e0','e1','e2','e3','e4','e5'];
+const LS='adereso_playbook_v1';
+let db={log:[],own:{}};
+try{const s=JSON.parse(localStorage.getItem(LS)||'null');if(s)db=Object.assign(db,s);}catch(e){}
+const save=()=>{try{localStorage.setItem(LS,JSON.stringify(db));}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const stTitle=id=>(STAGES.find(s=>s.id===id)||{}).title||'General';
+const IC={redo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>',play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M10 8.5v7l5.5-3.5z"/></svg>',clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+ target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>',
+ pen:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+ chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4V5z"/></svg>',
+ chev:'<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>'};
+let pyrSel=0;
+
+function objHtml(k){const o=OBJ[k];return `<div class="obj"><button class="obj-h" data-obj><span>${o.t}</span><small>Playbook</small></button><div class="obj-b"><p class="si"><b>✅ Sí:</b> ${o.si}</p><p class="no"><b>❌ No:</b> ${o.no}</p>${o.c?`<p class="caso">📌 Casos reales: ${o.c}</p>`:''}</div></div>`;}
+/* paso del guion: acción + frase de ejemplo (Di) + respuestas según el caso + nota */
+/* ayuda SPICED: botón junto a "Paso a paso" en las etapas con preguntas SPICED; el popup se abre ahí mismo */
+const SPICED_HELP=`<span class="sp-help"><button type="button" class="sp-help-b" data-sp-help aria-expanded="false"><span class="sp-q">?</span>¿Qué es SPICED?</button>
+  <span class="sp-pop" role="dialog" aria-label="Estrategia SPICED">
+    <b class="sp-t">Estrategia SPICED</b>
+    <span class="sp-why">Un orden para el discovery: primero entender, después dimensionar y al final ver cómo y cuándo deciden. Así la demo y el ROI se arman sobre lo que el cliente dijo, no sobre supuestos.</span>
+    <span class="sp-list">
+      <span><i>S</i><em><b>Situation</b>Cómo operan hoy: canales, herramientas y equipo.</em></span>
+      <span><i>P</i><em><b>Pain</b>Qué problema tienen y dónde está la oportunidad de automatizar.</em></span>
+      <span><i>I</i><em><b>Impact</b>Cuánto les cuesta: ventas perdidas, tiempo y urgencia.</em></span>
+      <span><i>CE</i><em><b>Critical Event</b>Qué pasa si no lo resuelven y qué fecha o hito los obliga a decidir.</em></span>
+      <span><i>D</i><em><b>Decision</b>Quién decide, con qué criterios y cómo compran.</em></span>
+    </span>
+    <span class="sp-foot">En este playbook: S, P, I y CE en las preguntas de Dolores · D en el Cierre (decisores), donde también confirmas el timing.</span>
+  </span></span>`;
+function hazLi(h){const o=typeof h==='string'?{a:h}:h;
+  const ex=(tag,txt,cls)=>`<div class="ex"><em class="${cls}">${tag}</em><span>"${txt}"</span></div>`;
+  return `<li><div class="st"><b>${o.a}${o.sp?`<span class="sp-chip" title="Lo que detectamos con esta pregunta, según SPICED">SPICED · ${o.sp}</span>`:''}</b>${o.d?ex('Di',o.d,'di-tag'):''}${o.b?o.b.map(([k,v])=>ex(k,v,'br-tag')).join(''):''}${o.n?`<small>${o.n}</small>`:''}</div></li>`;}
+function pyrDetail(){const p=PYR[pyrSel];return `<span class="chip y">${p.n}</span><h3>${p.t}</h3><p>${p.p}</p><ul>${p.l.map(x=>`<li>${IC.check}${x}</li>`).join('')}</ul>`;}
+function stageHtml(s){
+  if(s.kind==='pyr')return `<section class="sec" id="${s.id}" data-sec><div class="kicker">Antes de todo</div><h2 style="margin-top:12px">Lo que vendemos es <span style="color:var(--brand)">confianza.</span></h2><p class="lead">Lo más importante es el <b>quién</b>, luego el <b>cómo</b> y al final el <b>qué</b>.</p>
+    <div class="pyr"><div class="box funnel">${PYR.map((p,i)=>`<button class="tier t${i+1}${i===pyrSel?' sel':''}" data-tier="${i}"><i>${i+1}</i>${p.t}</button>`).join('')}</div><div class="box pyr-d" id="pyrD">${pyrDetail()}</div></div></section>`;
+  const nObj=s.obj.length;
+  const own=(db.own[s.id]||['','']).map((v,j)=>`<div class="own"><input data-own="${s.id}" data-j="${j}" value="${esc(v)}" placeholder="Objeción posible · ¿Qué podría frenar aquí?"></div>`).join('');
+  return `<section class="sec fold" id="${s.id}" data-sec><div class="sec-head"><div class="sh-l sh-fold" role="button" tabindex="0" data-fold aria-expanded="false"><span class="sec-num">${s.num}</span><div style="min-width:0"><h2>${s.title}</h2>
+    <div class="sec-meta"><span class="chip">${IC.clock}${s.time}</span><div class="sh-r">${PST.includes(s.id)?`<div class="prac"><button class="btn prac-b" type="button" data-prac="${s.id}" aria-expanded="false" title="Un cliente ficticio para practicar esta etapa">${IC.play}<span>Practicar escenario</span></button><div class="pr-pop" role="dialog" aria-label="Escenario de práctica"></div></div>`:''}<button class="btn" type="button" data-write="${s.id}">${IC.pen}<span>Tomar nota</span></button></div></div><p class="sec-sum">${s.goal}</p></div><span class="fold-chev">${IC.chev}</span></div></div>
+    <div class="sec-body"><div class="sec-in">
+    <p class="lead">${s.lead}</p>
+    <div class="box card" data-card><h3 class="goal-h">${s.goal}</h3>
+    ${s.di?`<div class="say"><div class="lbl di">${IC.chat}Di</div><p>${s.di}</p></div>`:''}
+    <div class="lbl hz">${IC.check}Paso a paso${s.haz.some(h=>h&&h.sp)?SPICED_HELP:''}</div><ol class="haz">${s.haz.map(hazLi).join('')}</ol>
+    <div class="myn"><textarea data-note-txt placeholder="Tu nota sobre esta etapa"></textarea><div><button class="btn sm" data-write="${s.id}">Cancelar</button><button class="btn pri sm" data-note-save="${s.id}">Guardar nota</button></div></div></div>
+    <button class="btn more" data-more>${IC.chev}<span>Ver detalle y ejemplos · ${nObj} objeci${nObj===1?'ón':'ones'}</span></button>
+    <div class="detail"><div class="detail-in"><div class="box detail-body">${s.det}
+      <div class="objs"><h5>Objeciones posibles</h5>${s.obj.map(objHtml).join('')}${own}</div></div></div></div></div></div></section>`;}
+function setFold(s,on){if(!s||!s.classList.contains('fold'))return;s.classList.toggle('exp',on);if(!on)s.querySelectorAll('.prac.on').forEach(x=>x.classList.remove('on'));s.classList.remove('shown');clearTimeout(s._ft);if(on)s._ft=setTimeout(()=>s.classList.add('shown'),560);const b=s.querySelector('[data-fold]');if(b)b.setAttribute('aria-expanded',on?'true':'false');}
+function render(){
+  document.getElementById('secs').innerHTML=STAGES.map((s,i)=>stageHtml(s)+(s.kind==='pyr'?'<div class="fold-all"><button class="btn sm" data-fold-all="open">Abrir todas</button><button class="btn sm" data-fold-all="close">Cerrar todas</button></div>':'')).join('');
+  document.getElementById('toc').innerHTML=STAGES.map((s,i)=>`<a href="#${s.id}" data-toc="${s.id}" title="${s.toc}"><i>${i+1}</i><span>${s.toc}</span></a>`).join('');
+  const tl=STAGES.filter(s=>s.min);const tot=tl.reduce((a,s)=>a+s.min,0);let acc=0;
+  const col=s=>s.opt?'d':s.id==='e5'?'s':(s.id==='e2'||s.id==='e3')?'y':'g';
+  document.getElementById('tlRows').innerHTML=tl.map(s=>{const a=acc;acc+=s.min;return `<a class="tl-row" href="#${s.id}" data-tl="${s.id}"><span class="nm"><i>${s.num}</i><b>${s.toc}</b>${s.opt?'<small>solo si lo piden</small>':''}</span><span class="track"><span class="bar ${col(s)}" style="left:${a/tot*100}%;width:${s.min/tot*100}%"></span></span><span class="mn">${s.min}'</span><span class="wn">min ${a}–${acc}</span></a>`;}).join('');
+  counts();}
+function counts(){const c=t=>db.log.filter(e=>e.type===t).length;
+  document.getElementById('cNote').textContent=c('note');
+  document.getElementById('cObj').textContent=Object.values(db.own).flat().filter(v=>v&&v.trim()).length;}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),1800);}
+function addLog(type,stage,text){db.log.unshift({type,stage,text,at:Date.now()});save();counts();renderLog();}
+
+/* escenario de práctica: cada vez que se abre el popup o se pide otro, sale un caso al azar del banco (filtrado por industria) */
+const PK='adereso_playbook_ind';let pracInd='',pracI=-1;try{pracInd=localStorage.getItem(PK)||'';if(!IND[pracInd])pracInd='';}catch(e){}
+function pracPick(){const pool=PRAC.map((k,i)=>i).filter(i=>!pracInd||PRAC[i].i===pracInd);const op=pool.length>1?pool.filter(i=>i!==pracI):pool;pracI=op[Math.floor(Math.random()*op.length)];}
+function pracStage(k,id){const m=MOODS[k.m],ib=k.t==='Inbound';
+  if(id==='e0')return{ctx:m.c0,dice:m.d0,ojo:m.o0};
+  if(id==='e1')return{ctx:ib?`Llegó por ${k.mot}.`:`El SDR hizo el contacto por ${k.mot}.`,dice:ib?m.i1:m.o1,ojo:ib?'Retoma lo que trae el brief y pide contexto: si lo invitas, se abre.':'Dale la salida de “solo explorando” y pregunta qué le llamó la atención.'};
+  if(id==='e2')return{ctx:`Hoy: ${k.op}. Recibe ~${k.vol} conversaciones al mes. Equipo: ${k.eq}. Lo más frecuente: ${k.top}.`,dice:k.dol,ojo:`Ayuda a dimensionar el impacto con ejemplos. Evento crítico por descubrir: ${k.ce}.`};
+  if(id==='e3')return{ctx:`Quiere ver ${k.ver}.`,dice:k.dq,ojo:k.o3||'Conecta cada pantalla con lo que dijo en Dolores y pregunta cada ~3 minutos.'};
+  if(id==='e4')return REFS[k.ref];
+  return{ctx:`Quién decide: ${k.dec}.`,dice:m.c5,ojo:k.seg==='Enterprise'?'Ciclo largo: mapea quiénes deciden, qué revisan (TI, legal, compras) y fija la próxima reunión.':'Cierre corto: deja agendada la reunión con quien firma y una fecha tentativa de inicio.'};}
+function pracBody(id){const k=PRAC[pracI],st=STAGES.find(s=>s.id===id);if(!k||!st)return '';const x=pracStage(k,id);
+  return `<div class="pr-h"><span>Escenario de práctica · Etapa ${st.num}</span><button type="button" data-prac-x aria-label="Cerrar">×</button></div>
+  <div class="pr-cli"><b>${k.c}</b><span>${k.r} · ${k.p}</span><span class="pr-t">${IND[k.i]} · ${k.t} · ${k.seg}</span></div>
+  <div class="pr-row"><em>Contexto</em><p>${x.ctx}</p></div>
+  <div class="pr-row say"><em>El cliente dice</em><p>“${x.dice}”</p></div>
+  <div class="pr-row ojo"><em>Ojo con</em><p>${x.ojo}</p></div>
+  <div class="pr-row goal"><em>Tu objetivo</em><p>${st.goal}</p></div>
+  <div class="pr-f"><label class="pr-sel" title="Filtra los casos por industria"><select data-prac-ind aria-label="Industria"><option value="">Todas las industrias</option>${Object.keys(IND).map(v=>`<option value="${v}"${v===pracInd?' selected':''}>${IND[v]}</option>`).join('')}</select></label><button type="button" class="btn sm pri" data-prac-next>${IC.redo}<span>Generar otro caso</span></button></div>`;}
+function pracFill(pr){pracPick();const b=pr.querySelector('[data-prac]'),pop=pr.querySelector('.pr-pop');pop.innerHTML=pracBody(b.dataset.prac);pop.classList.remove('swap');void pop.offsetWidth;pop.classList.add('swap');}
+document.addEventListener('change',e=>{const s=e.target.closest('[data-prac-ind]');if(!s)return;pracInd=s.value;try{localStorage.setItem(PK,pracInd);}catch(err){}pracFill(s.closest('.prac'));});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.sp-help.on,.prac.on').forEach(x=>x.classList.remove('on'));
+  if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-fold]')){e.preventDefault();const s=e.target.closest('[data-sec]');setFold(s,!s.classList.contains('exp'));}});
+document.addEventListener('click',e=>{
+  const pr=e.target.closest('.prac');
+  document.querySelectorAll('.prac.on').forEach(x=>{if(x!==pr){x.classList.remove('on');x.querySelector('[data-prac]').setAttribute('aria-expanded','false');}});
+  if(pr){const pb=pr.querySelector('[data-prac]');
+    if(e.target.closest('[data-prac-x]')){pr.classList.remove('on');pb.setAttribute('aria-expanded','false');}
+    else if(e.target.closest('[data-prac-next]'))pracFill(pr);
+    else if(e.target.closest('[data-prac]')){const on=pr.classList.toggle('on');pb.setAttribute('aria-expanded',on);if(on)pracFill(pr);}
+    document.querySelectorAll('.sp-help.on').forEach(x=>x.classList.remove('on'));return;}
+  /* ayuda SPICED: abre/cierra desde el mismo botón; un click fuera la esconde */
+  const sh=e.target.closest('.sp-help');
+  document.querySelectorAll('.sp-help.on').forEach(x=>{if(x!==sh){x.classList.remove('on');x.querySelector('[data-sp-help]').setAttribute('aria-expanded','false');}});
+  if(sh){if(e.target.closest('[data-sp-help]')){const on=sh.classList.toggle('on');e.target.closest('[data-sp-help]').setAttribute('aria-expanded',on);}return;}
+  /* dentro del hub el playbook vive en un iframe: los enlaces #etapa se resuelven con scroll, no navegando */
+  const ln=e.target.closest('a[href^="#"]');if(ln){e.preventDefault();const el=document.getElementById(ln.getAttribute('href').slice(1));if(el){setFold(el,true);setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),40);}return;}
+  const fd=e.target.closest('[data-fold]');if(fd&&!e.target.closest('.sh-r')){const s=fd.closest('[data-sec]');setFold(s,!s.classList.contains('exp'));return;}
+  const fa=e.target.closest('[data-fold-all]');if(fa){const on=fa.dataset.foldAll==='open';document.querySelectorAll('.sec.fold').forEach(s=>setFold(s,on));return;}
+  const m=e.target.closest('[data-more]');if(m){m.closest('[data-sec]').classList.toggle('open');return;}
+  const o=e.target.closest('[data-obj]');if(o){o.parentElement.classList.toggle('open');return;}
+  const tr=e.target.closest('[data-tier]');if(tr){pyrSel=+tr.dataset.tier;document.querySelectorAll('[data-tier]').forEach(b=>b.classList.toggle('sel',b===tr));document.getElementById('pyrD').innerHTML=pyrDetail();return;}
+  const w=e.target.closest('[data-write]');if(w){const sec=document.getElementById(w.dataset.write);setFold(sec,true);const c=sec.querySelector('[data-card]');c.classList.toggle('writing');if(c.classList.contains('writing'))c.querySelector('textarea').focus({preventScroll:true});return;}
+  const ns=e.target.closest('[data-note-save]');if(ns){const c=ns.closest('[data-card]'),ta=c.querySelector('textarea'),v=ta.value.trim();if(!v){ta.focus();return;}addLog('note',ns.dataset.noteSave,v);ta.value='';c.classList.remove('writing');toast('Nota guardada en tu bitácora');return;}
+  const op=e.target.closest('[data-open-log]');if(op){document.body.classList.add('drawer-on');renderLog();return;}
+  if(e.target.closest('[data-close-log]')){document.body.classList.remove('drawer-on');return;}
+  const f=e.target.closest('#drTabs [data-f]');if(f){document.querySelectorAll('#drTabs button').forEach(b=>b.classList.toggle('on',b===f));renderLog();return;}
+  const x=e.target.closest('[data-del]');if(x){db.log.splice(+x.dataset.del,1);save();counts();renderLog();return;}
+});
+document.addEventListener('input',e=>{const i=e.target.closest('[data-own]');if(!i)return;const id=i.dataset.own;db.own[id]=db.own[id]||['',''];db.own[id][+i.dataset.j]=i.value;save();counts();});
+
+/* bitácora */
+function curFilter(){const b=document.querySelector('#drTabs button.on');return b?b.dataset.f:'all';}
+function ownEntries(){return Object.entries(db.own).flatMap(([id,arr])=>arr.filter(v=>v&&v.trim()).map(v=>({type:'obj',stage:id,text:v})));}
+function renderLog(){const f=curFilter();
+  let items=db.log.map((e,i)=>Object.assign({i},e));if(f==='obj')items=[];else if(f!=='all')items=items.filter(e=>e.type===f);
+  const own=(f==='all'||f==='obj')?ownEntries():[];
+  const lbl={train:'Práctica',note:'Nota',obj:'Objeción propia'};
+  const html=items.map(e=>`<div class="ent"><small><span>${lbl[e.type]} · ${esc(stTitle(e.stage))}</span><span>${new Date(e.at).toLocaleDateString('es-CL',{day:'numeric',month:'short'})} <button class="x" data-del="${e.i}" aria-label="Borrar">×</button></span></small>${esc(e.text)}</div>`).join('')+
+    own.map(e=>`<div class="ent"><small><span>${lbl.obj} · ${esc(stTitle(e.stage))}</span></small>${esc(e.text)}</div>`).join('');
+  document.getElementById('drList').innerHTML=html||`<div class="empty">Aún no hay entradas.<br>Usa "Tomar nota" o selecciona un texto para anotarlo.</div>`;}
+function exportTxt(){const lbl={train:'Práctica',note:'Nota',obj:'Objeción propia'};
+  return ['Bitácora · Playbook comercial Adereso',''].concat(db.log.map(e=>`[${lbl[e.type]}] ${stTitle(e.stage)}: ${e.text}`),ownEntries().map(e=>`[${lbl.obj}] ${stTitle(e.stage)}: ${e.text}`)).join('\n');}
+document.getElementById('exCopy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(exportTxt()).then(()=>toast('Bitácora copiada'),()=>toast('No se pudo copiar'));};
+document.getElementById('exDl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([exportTxt()],{type:'text/plain'}));a.download='bitacora-playbook.txt';a.click();};
+
+/* anotar: seleccionar texto dentro de una etapa */
+const an=document.getElementById('annot');let selInfo=null;
+document.addEventListener('mouseup',()=>setTimeout(()=>{const s=window.getSelection();const txt=s&&s.toString().trim();
+  if(!txt||txt.length<3){an.classList.remove('on');selInfo=null;return;}
+  const node=s.anchorNode&&(s.anchorNode.nodeType===1?s.anchorNode:s.anchorNode.parentElement);const sec=node&&node.closest('[data-sec]');
+  if(!sec||node.closest('input,textarea')){an.classList.remove('on');return;}
+  const r=s.getRangeAt(0).getBoundingClientRect();selInfo={stage:sec.id,text:txt.slice(0,400)};
+  an.style.left=(r.left+r.width/2)+'px';an.style.top=r.top+'px';an.classList.add('on');},0));
+an.addEventListener('mousedown',e=>e.preventDefault());
+an.onclick=()=>{if(!selInfo)return;
+  addLog('note',selInfo.stage,'«'+selInfo.text+'»');an.classList.remove('on');window.getSelection().removeAllRanges();toast('Nota guardada en tu bitácora');};
+
+/* índice activo al hacer scroll */
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){document.querySelectorAll('[data-toc]').forEach(a=>a.classList.toggle('on',a.dataset.toc===en.target.id));}}),{rootMargin:'-30% 0px -60% 0px'});
+
+
+render();renderLog();document.querySelectorAll('[data-sec]').forEach(s=>io.observe(s));
+/* menú lateral plegable: se recuerda la preferencia */
+const SK='adereso_playbook_side';try{if(localStorage.getItem(SK)==='off')document.body.classList.add('side-off');}catch(e){}
+document.getElementById('sideTg').onclick=()=>{const off=document.body.classList.toggle('side-off');const b=document.getElementById('sideTg');b.title=b.ariaLabel=off?'Mostrar menú':'Ocultar menú';try{localStorage.setItem(SK,off?'off':'on');}catch(e){}};
+</script>
+</body>
+</html>

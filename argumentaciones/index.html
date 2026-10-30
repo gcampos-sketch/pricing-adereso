@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argumentaciones · Adereso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* mismo sistema visual que Pricing: superficies #1B1D22, bordes suaves y todo encerrado en cajas */
+:root{
+  --brand:#FFD540;--surface:#1B1D22;--elevated:#2E3036;--b-subtle:rgba(255,255,255,0.06);--b:rgba(255,255,255,0.10);
+  --success:#52CE5E;--danger:#FF4040;--warning:#F5B942;--info:#186EFA;
+  --t:#FFFFFF;--t-body:#d4d4d8;--t2:#a1a1aa;--t3:#71717a;--t4:#52525b;
+  --r2:10px;--r3:14px;--r4:18px;--e1:0 10px 30px rgba(0,0,0,0.35);
+  --ease:cubic-bezier(0.2,0.8,0.2,1);--head:'Outfit','Work Sans',system-ui,sans-serif
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Work Sans',system-ui,sans-serif;color:var(--t-body);-webkit-font-smoothing:antialiased;line-height:1.5;
+  background-color:#15171C;
+  background-image:radial-gradient(900px 520px at 12% -8%,rgba(255,213,64,0.08),transparent 62%),radial-gradient(820px 620px at 96% 18%,rgba(24,110,250,0.08),transparent 64%),linear-gradient(180deg,#1E2026 0%,#17191E 45%,#131519 100%),radial-gradient(rgba(255,255,255,0.035) 1px,transparent 1px);
+  background-size:auto,auto,auto,22px 22px;background-attachment:fixed,fixed,fixed,scroll;background-repeat:no-repeat,no-repeat,no-repeat,repeat}
+::selection{background:rgba(255,213,64,0.3);color:#fff}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--brand)}
+h1,h2,h3,h4,h5{font-family:var(--head);color:var(--t);letter-spacing:-0.02em;font-weight:500;line-height:1.12}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:40px;max-width:1200px;margin:0 auto;padding:0 28px;transition:grid-template-columns .3s var(--ease)}
+.layout>.side{order:2}
+body.side-off .layout{grid-template-columns:minmax(0,1fr) 40px}
+@media(max-width:960px){.layout{grid-template-columns:1fr}.side{display:none}}
+/* botones y chips: cajas, no píldoras */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 14px;border-radius:var(--r2);border:1px solid var(--b);background:var(--surface);font-size:13px;color:var(--t);transition:all .2s var(--ease);white-space:nowrap}
+.btn:hover{border-color:rgba(255,213,64,0.5);color:var(--brand)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#0C0C0D;font-weight:500}
+.btn.pri:hover{filter:brightness(1.06);color:#0C0C0D}
+.btn.sm{padding:6px 10px;font-size:12px}
+.btn.ico{width:38px;padding:0;height:38px}
+.btn.done{color:var(--success);border-color:rgba(82,206,94,0.45)}
+.btn svg{width:15px;height:15px;flex:0 0 auto}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,0.03);font-size:12px;color:var(--t2)}
+.chip.y{color:var(--brand);border-color:rgba(255,213,64,0.45);background:rgba(255,213,64,0.05)}
+.chip svg{width:13px;height:13px}
+.kicker{display:flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--t2);font-weight:500}
+.kicker::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--brand)}
+/* lateral */
+.side{position:sticky;top:0;height:100vh;padding:28px 0 18px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;overflow-x:hidden}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-a{flex:0 0 auto;width:28px;height:28px;border-radius:8px;background:var(--brand);color:#0C0C0D;display:grid;place-items:center;font-family:var(--head);font-weight:700;font-size:14px}
+.brand>div{min-width:0;flex:1}
+.brand b{display:block;color:var(--t);font-size:13.5px;font-weight:500}
+.brand small{color:var(--t3);font-size:11px;white-space:nowrap}
+.side-tg{flex:0 0 auto;width:26px;height:26px;border-radius:7px;border:1px solid var(--b);display:grid;place-items:center;color:var(--t3);transition:all .2s var(--ease)}
+.side-tg:hover{color:var(--brand);border-color:rgba(255,213,64,0.5)}
+.side-tg svg{width:14px;height:14px;transition:transform .3s var(--ease)}
+body.side-off .side-tg svg{transform:rotate(180deg)}
+body.side-off .brand{flex-direction:column}
+body.side-off .brand>div,body.side-off .toc a span,body.side-off .side-box{display:none}
+body.side-off .toc a{padding:5px;justify-content:center}
+.toc{display:flex;flex-direction:column;gap:2px}
+.toc a{display:flex;gap:9px;align-items:center;padding:5px 7px;border-radius:var(--r2);color:var(--t2);text-decoration:none;font-size:12.5px;border:1px solid transparent;transition:all .2s var(--ease)}
+.toc a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toc a i{font-style:normal;flex:0 0 auto;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:10.5px;color:var(--t3);border:1px solid var(--b);font-family:var(--head)}
+.toc a:hover{color:var(--t);background:rgba(255,255,255,0.03)}
+.toc a.on{background:var(--surface);border-color:var(--b);color:var(--t)}
+.toc a.on i{background:var(--brand);border-color:var(--brand);color:#0C0C0D}
+.side-box{border:1px solid var(--b-subtle);border-radius:var(--r2);padding:10px;background:rgba(27,29,34,0.6)}
+.side-box h6{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);font-weight:500;margin-bottom:4px}
+.side-box .dt{color:var(--t);font-family:var(--head);font-size:13.5px}
+.lm-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--t2);padding:2px 0}
+.lm-row b{color:var(--t);font-weight:500}
+/* main */
+main{padding:40px 0 140px;min-width:0}
+.hero h1{font-size:50px;margin:14px 0 14px}
+.hero h1 em{font-style:normal;color:var(--t4)}
+.hero p{color:var(--t2);max-width:560px;font-size:15px}
+.box{border:1px solid var(--b);border-radius:var(--r4);background:var(--surface);box-shadow:var(--e1)}
+/* reunión en 45 min */
+.tl{margin-top:30px;padding:22px}
+.tl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.tl-top h3{font-size:20px}
+.tl-top small{display:block;color:var(--t2);font-size:13px;margin-top:4px}
+.tl-rows{display:flex;flex-direction:column;gap:6px}
+.tl-row{display:grid;grid-template-columns:200px minmax(0,1fr) 46px 74px;gap:14px;align-items:center;padding:9px 12px;border-radius:var(--r2);border:1px solid var(--b-subtle);background:rgba(255,255,255,0.015);text-decoration:none;color:inherit;transition:all .2s var(--ease)}
+.tl-row:hover{border-color:rgba(255,213,64,0.4)}
+.tl-row .nm{display:flex;align-items:center;gap:10px;min-width:0}
+.tl-row .nm i{font-style:normal;flex:0 0 auto;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:var(--head);font-size:11.5px;color:var(--t2);border:1px solid var(--b)}
+.tl-row .nm b{color:var(--t);font-weight:500;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-row .nm small{color:var(--warning);font-size:11px;white-space:nowrap}
+.track{position:relative;height:10px;border-radius:4px;background:rgba(255,255,255,0.04)}
+.bar{position:absolute;top:0;bottom:0;border-radius:4px}
+.bar.g{background:#4A4D55}.bar.y{background:var(--brand)}.bar.s{background:var(--success)}
+.bar.d{background:repeating-linear-gradient(90deg,#4A4D55 0 6px,transparent 6px 10px)}
+.tl-row .mn{font-family:var(--head);color:var(--t);font-size:14px;text-align:right}
+.tl-row .wn{color:var(--t3);font-size:12px;text-align:right}
+@media(max-width:720px){.tl-row{grid-template-columns:1fr 40px}.track,.tl-row .wn{display:none}}
+/* sección */
+.sec{scroll-margin-top:24px;margin-top:70px}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.sh-l{display:flex;gap:14px;align-items:flex-start;min-width:0}
+.sec-num{flex:0 0 auto;width:44px;height:44px;border-radius:11px;background:var(--brand);color:#0C0C0D;display:grid;place-items:center;font-family:var(--head);font-weight:600;font-size:17px}
+.sec h2{font-size:32px}
+.sec-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.sec .lead{color:var(--t2);margin-top:10px;font-size:14.5px}
+.sec .lead b{color:var(--t);font-weight:500}
+.sh-r{display:flex;gap:8px}
+.card{margin-top:16px;padding:24px}
+.goal-h{font-size:26px;line-height:1.2;margin-bottom:18px}
+.say{border:1px solid rgba(255,213,64,0.3);background:rgba(255,213,64,0.05);border-radius:var(--r3);padding:13px 16px;margin-bottom:16px}
+.lbl{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);font-weight:500;margin-bottom:8px}
+.lbl svg{width:14px;height:14px}
+.lbl.di svg{color:var(--brand)}.lbl.hz svg{color:var(--warning)}
+.say p{color:var(--t);font-family:var(--head);font-size:18px;line-height:1.35}
+.haz{list-style:none;display:flex;flex-direction:column;gap:8px;counter-reset:h}
+.haz li{counter-increment:h;display:flex;gap:12px;align-items:flex-start;padding:11px 13px;border-radius:var(--r2);background:rgba(255,255,255,0.025);border:1px solid var(--b-subtle);color:var(--t);font-size:14.5px}
+.haz li::before{content:counter(h);flex:0 0 auto;width:22px;height:22px;border-radius:6px;background:rgba(255,213,64,0.12);color:var(--brand);display:grid;place-items:center;font-family:var(--head);font-size:12px}
+.haz .st{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.haz .st>b{color:var(--t);font-weight:500;font-size:15px;line-height:1.4}
+.haz .st>small{color:var(--t2);font-size:13px;line-height:1.45}
+.haz .ex{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border-radius:8px;background:rgba(255,213,64,0.05);border:1px solid rgba(255,213,64,0.16)}
+.haz .ex span{color:#FFE680;font-family:var(--head);font-size:14.5px;line-height:1.4}
+.haz .di-tag,.haz .br-tag{flex:0 0 auto;font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 7px;margin-top:1px;white-space:nowrap}
+.haz .di-tag{color:#0C0C0D;background:var(--brand)}
+.haz .br-tag{color:var(--t);background:rgba(255,255,255,0.08);border:1px solid var(--b)}
+.myn{margin-top:14px;display:none}
+.card.writing .myn{display:block}
+.myn textarea{width:100%;min-height:70px;resize:vertical;background:rgba(255,255,255,0.03);border:1px solid var(--b);border-radius:var(--r2);padding:10px 12px;color:var(--t);font:inherit;font-size:13.5px}
+.myn textarea:focus{outline:none;border-color:rgba(255,213,64,0.5)}
+.myn div{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.more{margin-top:14px}
+.more .chev{transition:transform .25s var(--ease)}
+.sec.open .more .chev{transform:rotate(180deg)}
+.detail{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.sec.open .detail{grid-template-rows:1fr}
+.detail-in{overflow:hidden}
+.detail-body{margin-top:12px;padding:22px}
+.detail-body h4{font-size:16px;margin:20px 0 9px}
+.detail-body h4:first-child{margin-top:0}
+.detail-body p,.detail-body li{font-size:14px}
+.detail-body ul,.detail-body ol{padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.q{color:var(--t);font-family:var(--head);font-size:16px;border:1px solid var(--b-subtle);background:rgba(255,255,255,0.02);border-radius:var(--r2);padding:10px 13px;margin:8px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px}
+.tile{border:1px solid var(--b-subtle);border-radius:var(--r3);padding:13px;background:rgba(255,255,255,0.02)}
+.tile b{display:block;color:var(--t);font-weight:500;font-size:13.5px;margin-bottom:3px}
+.tile span{font-size:13px;color:var(--t2)}
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.steps>div{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:14px;padding:9px 12px;border-radius:var(--r2);border:1px solid var(--b-subtle);background:rgba(255,255,255,0.015)}
+.steps>div::before{content:counter(s);flex:0 0 auto;width:22px;height:22px;border-radius:6px;background:rgba(255,213,64,0.12);color:var(--brand);display:grid;place-items:center;font-family:var(--head);font-size:12px}
+.steps b{color:var(--t);font-weight:500}
+.note{margin-top:12px;border-radius:var(--r3);padding:12px 14px;font-size:13.5px;border:1px solid rgba(24,110,250,0.25);background:rgba(24,110,250,0.06)}
+.note.warn{border-color:rgba(245,185,66,0.35);background:rgba(245,185,66,0.06)}
+.note.bad{border-color:rgba(255,64,64,0.35);background:rgba(255,64,64,0.06)}
+.note.ok{border-color:rgba(82,206,94,0.35);background:rgba(82,206,94,0.06)}
+.note b{color:var(--t);font-weight:500}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;margin-top:8px;border:1px solid var(--b-subtle);border-radius:var(--r3);overflow:hidden}
+th{text-align:left;color:var(--t3);font-weight:500;font-size:12px;padding:9px 11px;background:rgba(255,255,255,0.03)}
+td{padding:9px 11px;border-top:1px solid var(--b-subtle)}
+td:first-child{color:var(--t)}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pill{padding:6px 11px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,0.02);font-size:12.5px;color:var(--t2)}
+.flow{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.flow>div{flex:1 1 120px;border:1px solid var(--b-subtle);border-radius:var(--r3);padding:11px;font-size:13px;background:rgba(255,255,255,0.02)}
+.flow>div i{font-style:normal;color:var(--brand);font-family:var(--head);display:block;font-size:12px}
+.flow>div b{color:var(--t);font-weight:500;display:block}
+.flow>div span{color:var(--t3);font-size:12px}
+.objs{margin-top:20px}
+.objs h5{font-size:13px;color:var(--t2);font-weight:500;margin-bottom:8px}
+.obj{border:1px solid var(--b-subtle);border-radius:var(--r3);margin-bottom:6px;overflow:hidden;background:rgba(255,255,255,0.015)}
+.obj-h{width:100%;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:11px 14px;text-align:left;font-size:13.5px;color:var(--t)}
+.obj-h small{color:var(--t3);font-size:11px;flex:0 0 auto;border:1px solid var(--b);border-radius:6px;padding:1px 7px}
+.obj-b{display:none;padding:0 14px 13px;font-size:13.5px}
+.obj.open .obj-b{display:block}
+.obj-b p{margin-top:6px}
+.obj-b .si b{color:var(--success)}
+.obj-b .no b{color:var(--danger)}
+.obj-b .caso{color:var(--t3);font-size:12.5px}
+.own input{width:100%;margin-top:6px;background:rgba(255,255,255,0.02);border:1px dashed var(--b);border-radius:var(--r3);padding:11px 14px;color:var(--t);font:inherit;font-size:13px}
+.own input:focus{outline:none;border-color:rgba(255,213,64,0.5)}
+/* pirámide de confianza */
+.pyr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:22px}
+@media(max-width:820px){.pyr{grid-template-columns:1fr}}
+.funnel{padding:26px;display:flex;flex-direction:column;align-items:center;gap:6px;justify-content:center}
+.tier{display:flex;align-items:center;justify-content:center;gap:9px;height:78px;font-family:var(--head);font-size:19px;font-weight:500;transition:transform .2s var(--ease),filter .2s var(--ease);clip-path:polygon(0 0,100% 0,90% 100%,10% 100%)}
+.tier i{font-style:normal;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:12px}
+.tier:hover{filter:brightness(1.08)}
+.tier.t1{width:100%;background:var(--brand);color:#0C0C0D}.tier.t1 i{background:#0C0C0D;color:var(--brand)}
+.tier.t2{width:80%;background:#4A4D55;color:var(--t)}.tier.t2 i{background:rgba(255,255,255,0.15)}
+.tier.t3{width:60%;background:#2E3036;color:var(--t2)}.tier.t3 i{background:rgba(255,255,255,0.08)}
+.tier.sel{transform:scale(1.02)}
+.tier:not(.sel){opacity:.75}
+.pyr-d{padding:26px}
+.pyr-d h3{font-size:34px;margin:14px 0 6px}
+.pyr-d p{color:var(--t2);font-size:14.5px}
+.pyr-d ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:18px}
+.pyr-d li{display:flex;gap:11px;align-items:center;padding:11px 13px;border-radius:var(--r2);background:rgba(255,255,255,0.03);border:1px solid var(--b-subtle);color:var(--t);font-size:14px}
+.pyr-d li svg{flex:0 0 auto;width:16px;height:16px;color:var(--brand)}
+.end{margin-top:80px;padding:30px}
+.end h2{font-size:34px}
+.end h2 em{font-style:normal;color:var(--t4)}
+.end p{color:var(--t2);margin:8px 0 18px}
+.links{display:flex;gap:8px;flex-wrap:wrap}
+/* flotantes */
+.annot{position:fixed;z-index:60;display:none;transform:translate(-50%,-115%)}
+.annot.on{display:inline-flex}
+.drawer-bg{position:fixed;inset:0;background:rgba(0,0,0,0.5);opacity:0;pointer-events:none;transition:opacity .3s;z-index:70}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:min(430px,100%);background:var(--surface);border-left:1px solid var(--b);z-index:71;transform:translateX(100%);transition:transform .35s var(--ease);display:flex;flex-direction:column}
+.drawer-on .drawer-bg{opacity:1;pointer-events:auto}
+.drawer-on .drawer{transform:none}
+.dr-h{padding:20px;border-bottom:1px solid var(--b-subtle);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.dr-h h4{font-size:19px}
+.dr-h small{color:var(--t3);font-size:12.5px}
+.dr-tabs{display:flex;gap:6px;padding:12px 20px}
+.dr-tabs button{padding:5px 10px;border-radius:8px;border:1px solid var(--b);font-size:12px;color:var(--t2)}
+.dr-tabs button.on{border-color:var(--brand);color:var(--brand)}
+.dr-list{flex:1;overflow-y:auto;padding:0 20px 20px;display:flex;flex-direction:column;gap:8px}
+.ent{border:1px solid var(--b-subtle);border-radius:var(--r3);padding:10px 12px;font-size:13px;background:rgba(255,255,255,0.015)}
+.ent small{display:flex;justify-content:space-between;gap:8px;color:var(--t3);font-size:11.5px;margin-bottom:3px}
+.ent .x{color:var(--t3)}
+.ent .x:hover{color:var(--danger)}
+.empty{color:var(--t3);font-size:13px;text-align:center;padding:40px 0}
+.dr-f{padding:14px 20px;border-top:1px solid var(--b-subtle);display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-180%);z-index:80;padding:9px 14px;border-radius:var(--r2);background:var(--elevated);border:1px solid var(--b);font-size:13px;color:var(--t);transition:transform .3s var(--ease)}
+.toast.on{transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+/* argumentaciones */
+.search{display:flex;align-items:center;gap:10px;margin-top:26px;padding:12px 14px;border-radius:var(--r3);border:1px solid var(--b);background:var(--surface)}
+.search:focus-within{border-color:rgba(255,213,64,0.5)}
+.search svg{width:17px;height:17px;color:var(--t3);flex:0 0 auto}
+.search input{flex:1;min-width:0;background:none;border:0;color:var(--t);font:inherit;font-size:15px}
+.search input:focus{outline:none}
+.search small{color:var(--t3);font-size:12px;white-space:nowrap}
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.cat{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;border:1px solid var(--b);background:rgba(255,255,255,0.02);font-size:12.5px;color:var(--t2);transition:all .2s var(--ease)}
+.cat i{font-style:normal;font-size:11px;color:var(--t3);font-family:var(--head)}
+.cat:hover{color:var(--t);border-color:rgba(255,213,64,0.4)}
+.cat.on{background:var(--brand);border-color:var(--brand);color:#0C0C0D}
+.cat.on i{color:#0C0C0D}
+.grp{scroll-margin-top:24px;margin-top:44px}
+.grp-h{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.grp-h span{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--brand);color:#0C0C0D;display:grid;place-items:center;font-family:var(--head);font-weight:600;font-size:14px}
+.grp-h h2{font-size:24px}
+.grp-h small{color:var(--t3);font-size:13px;margin-left:auto}
+.arg{border:1px solid var(--b);border-radius:var(--r3);background:var(--surface);margin-bottom:8px;overflow:hidden;transition:border-color .2s var(--ease)}
+.arg:hover{border-color:rgba(255,255,255,0.16)}
+.arg.open{border-color:rgba(255,213,64,0.35)}
+.arg-h{width:100%;display:flex;gap:12px;align-items:center;padding:14px 16px;text-align:left}
+.arg-h .qq{flex:1;min-width:0;color:var(--t);font-family:var(--head);font-size:16px;line-height:1.35}
+.arg-h .qq small{display:block;font-family:'Work Sans',sans-serif;color:var(--t3);font-size:12.5px;margin-top:3px}
+.tag{flex:0 0 auto;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid var(--b);color:var(--t2);white-space:nowrap}
+.tag.q4{color:var(--brand);border-color:rgba(255,213,64,0.4)}
+.tag.pend{color:var(--warning);border-color:rgba(245,185,66,0.4)}
+.arg-h .chev{width:16px;height:16px;color:var(--t3);flex:0 0 auto;transition:transform .25s var(--ease)}
+.arg.open .arg-h .chev{transform:rotate(180deg)}
+.arg-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s var(--ease)}
+.arg.open .arg-b{grid-template-rows:1fr}
+.arg-in{overflow:hidden}
+.arg-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.blk{border-radius:var(--r2);padding:11px 13px;border:1px solid var(--b-subtle);background:rgba(255,255,255,0.02);font-size:14px}
+.blk .lb{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);font-weight:500;margin-bottom:5px}
+.blk.di{border-color:rgba(255,213,64,0.22);background:rgba(255,213,64,0.05)}
+.blk.di .lb{color:var(--brand)}
+.blk.di p{color:#FFE680;font-family:var(--head);font-size:15.5px;line-height:1.42}
+.blk.av .lb{color:var(--info)}
+.blk.av p{color:var(--t);font-weight:500}
+.sino{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){.sino{grid-template-columns:1fr}}
+.blk.si .lb{color:var(--success)}
+.blk.no .lb{color:var(--danger)}
+.blk.ni{border-color:rgba(245,185,66,0.25);background:rgba(245,185,66,0.05)}
+.blk.ni .lb{color:var(--warning)}
+.blk ul{padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.empty{color:var(--t3);font-size:14px;text-align:center;padding:60px 0}
+.end{margin-top:60px;padding:24px}
+.end h3{font-size:20px}
+.end p{color:var(--t2);margin:6px 0 14px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="side">
+    <div class="brand"><span class="brand-a">A</span><div><b>Adereso</b><small>Argumentaciones</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <nav class="toc" id="toc"></nav>
+    <div class="side-box"><h6>Según Notion</h6><div class="dt">27 oct 2026</div>
+      <a class="btn sm" style="margin-top:10px;width:100%" href="https://app.notion.com/p/adereso/Manejo-de-objeciones-2e79c2747df580f99f9ace377b9467b8" target="_blank" rel="noopener">Ver en Notion ↗</a></div>
+  </aside>
+  <main>
+    <section class="hero" id="top">
+      <div class="kicker">Argumentaciones · Objeciones y comentarios en reunión</div>
+      <h1>Escucha, valida<br><em>y lleva al siguiente paso.</em></h1>
+      <p>Lo que el cliente dice en la reunión y cómo responder. Cada respuesta termina en una pregunta para avanzar.</p>
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Busca lo que dijo el cliente: caro, contrato, TikTok, IA…" autocomplete="off"><small id="cnt"></small></label>
+      <div class="cats" id="cats"></div>
+    </section>
+    <div id="list"></div>
+    <section class="box end">
+      <h3>¿Apareció una objeción nueva?</h3>
+      <p>Súmala a la base del equipo con un ejemplo real de la reunión.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="https://app.notion.com/p/adereso/Manejo-de-objeciones-2e79c2747df580f99f9ace377b9467b8" target="_blank" rel="noopener">Manejo de objeciones en Notion ↗</a><a class="btn" href="https://docs.google.com/spreadsheets/d/11oIVv_5OhzUd5zb-vSIX7q7dIa9UF4F7T0f_TkCSZDc/edit?gid=1552817069#gid=1552817069" target="_blank" rel="noopener">Base de objeciones del equipo ↗</a></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* Fuente: "Manejo de objeciones" en Notion (27 oct 2026). r = qué decir · av = para avanzar · si/no = qué hacer y qué no · ni = nota interna · q4 = borrador estrategia Q4 */
+const CATS=[
+ {id:'precio',t:'Precio / Presupuesto',items:[
+  {q:'"No tenemos presupuesto ahora."',ctx:'Venta nueva',q4:1,r:'Entiendo. Veamos si el freno es el presupuesto de este período o que todavía no está justificada la inversión. Si el caso tiene sentido, podemos definir el alcance prioritario y cuándo podrían evaluarlo con presupuesto disponible.',av:'¿Cuándo revisan presupuesto y qué necesitarían para presentar el caso internamente?',ni:'No asumir falta de interés ni ofrecer financiamiento o condiciones no aprobadas.'},
+  {q:'¿Cuánto vamos a vender más o ahorrar en atención?',q4:1,r:'Estimémoslo con datos de su operación: volumen, costo de atención manual, conversión o ventas recuperadas. Acordemos una línea base, una métrica y un período de medición para separar proyección de resultado comprobado.',av:'¿Qué dato tienen hoy para medir el problema y su costo?',ni:'No prometer porcentajes de mejora ni plazos de retorno sin evidencia.'},
+  {q:'Son muy caros o la propuesta supera nuestro presupuesto',q4:1,r:'Entiendo. Revisemos el presupuesto disponible, el alcance prioritario y el resultado que necesitan para justificar la inversión. Podemos evaluar un primer alcance acotado; cualquier cambio de precio o condición debe validarse en la propuesta.',av:'¿El freno es el monto disponible, los costos adicionales o el retorno esperado?',ni:'No confundir con falta de presupuesto en este período. No ofrecer descuentos o financiamiento sin aprobación. Si el presupuesto lo decide otra persona, acordar cómo incorporarla a la evaluación.'},
+  {q:'Precio cuando son empresas pequeñas',r:'',si:['Pregunta primero: ¿qué es caro para ti? ¿Con quién me estás comparando? ¿Tienes un presupuesto asignado? ¿En qué etapa de la decisión estás? ¿Cuánto pagas?','<b>Si viene de un competidor:</b> ¿con quién me comparas y cuánto pagas? ¿Estarías dispuesto a pagar más por resolver el dolor? ¿Por qué estamos en esta reunión, hay algo que te falta?','<b>Si no tiene proveedor:</b> estas soluciones no son caras por lo que cuestan, sino por lo que te retornan (ROI / calculadora). Cuenta un caso de un cliente con el mismo dolor.'],ni:'Es lo que estamos empezando a probar; todavía no es una respuesta oficial del playbook.'},
+  {q:'La competencia o nuestra herramienta actual cuesta menos',q4:1,r:'Comparemos el costo total y qué incluye cada alternativa: plataforma, implementación, integraciones, consumo y acompañamiento. La diferencia debe justificarse por una brecha concreta de su operación y por el resultado esperado.',av:'¿Qué incluye la otra propuesta y qué tendrían que resolver por su cuenta?',ni:'Aplica también a comparaciones con Bambe. No descalificar al competidor ni reducir el precio antes de entender alcance y valor.'},
+  {q:'¿El precio incluye todo? ¿Qué costos adicionales hay?',q4:1,r:'Dejemos la propuesta desglosada: plataforma, IA y atención humana, implementación, integraciones, consumo de terceros, capacitación y acompañamiento. Las personalizaciones deben tener alcance y costo acordados antes de comprometernos.',av:'¿Qué sistemas, servicios y procesos son imprescindibles desde el primer día?',ni:'Validar plan, consumos, soporte y exclusiones en la cotización vigente. Separar costos fijos, variables y desarrollos adicionales.'},
+  {q:'Pricing en vivo: quieren saber el costo exacto ahora',si:['Ten la tabla de precios abierta antes de la reunión.','Responde: "Para [país], el ticket de conversación es $X. Con N conversaciones al mes, el plan base parte en $Y. Te mando la propuesta detallada al terminar."','Si no saben el volumen, pide el dato y promete la propuesta en 24 h.'],no:['Improvisar rangos vagos en vivo ("ponle mil ochocientos").','Cotizar sin saber el volumen real del cliente.']},
+  {q:'¿Por qué se cobra por mensaje y cómo se cuenta el uso del bot?',r:'Revisemos la unidad de cobro de la propuesta y cómo se contabiliza cada interacción, incluidos los mensajes del bot. Con su volumen podemos mostrar un ejemplo de consumo y costo, distinguiendo el servicio de Adereso del consumo de Meta.',av:'¿Qué volumen estiman y qué interacción les genera dudas sobre el cobro?',ni:'Confirmar el modelo vigente del plan; no intercambiar mensajes, conversaciones y tickets como si fueran la misma unidad.'},
+  {q:'¿Por qué se cobra un fee del 12% sobre el consumo de Meta?',r:'El 12% es un fee de Adereso por la operación del canal mediante la API oficial de WhatsApp. Incluye la conexión integrada a nuestra plataforma y el acompañamiento de nuestro equipo de soporte ante dudas o incidencias. Se aplica sobre el consumo de mensajería de Meta.'},
+  {q:'¿Por qué se cobran las plantillas o mensajes de marketing?',r:'Revisemos qué mensajes se enviaron, su clasificación y cómo se reflejan en la facturación. Expliquemos el cobro aplicable con un ejemplo del uso real, distinguiendo el consumo de Meta del servicio de Adereso.',av:'¿Qué cargo o plantilla les parece injustificado?',ni:'Validar condiciones y clasificación vigentes. No dar por sentado que el cliente solicitó el envío o comprende el cargo.'},
+  {q:'Dudas sobre cómo se cobran las conversaciones excedentes',si:['Información clara sobre la política de cobro y ejemplos concretos de costos adicionales.'],no:['Dejar al cliente en la incertidumbre o dar respuestas evasivas.']},
+  {q:'No se deberían cobrar servicios que no hemos usado',si:['Asegurar que los cargos sean claros y justificados por el uso. Comunicar la estructura de precios de forma transparente.'],no:['Ponerse defensivo con la estructura de precios; enfócate en justificar los costos según el uso.']},
+  {q:'El costo de implementación o desarrollo es alto o inesperado',r:'Desglosemos el trabajo de implementación y desarrollo, sus riesgos y el valor que aporta cada parte. Acordemos qué es imprescindible y qué puede quedar para otra etapa, con costos visibles desde el inicio.',av:'¿Qué parte del costo no esperaban y qué alcance consideran prioritario?',ni:'No justificarlo solo como un cargo estándar ni omitir el esfuerzo de las personalizaciones.'},
+  {q:'Requerimiento de pago por adelantado',si:['Ofrece un plan de pagos que se adapte o explica los beneficios de pagar por adelantado.'],no:['Evadir la pregunta o tomar una postura rígida sin opciones.']},
+  {q:'Esperaba un descuento mayor',si:['Comunica los beneficios que justifican el precio y abre el diálogo sobre condiciones que mejoren la propuesta.'],no:['Desestimar las expectativas del cliente.'],ni:'Cualquier descuento adicional requiere aprobación.'},
+  {q:'Costos adicionales de llamadas',si:['Aclara los costos asociados a las llamadas y ofrece alternativas más rentables.'],no:['Omitir costos adicionales en la propuesta inicial.']},
+  {q:'Cobros por tickets',si:['Aclara la política de precios respecto a tickets y cómo impacta en sus costos operativos.'],no:['Confundir con detalles técnicos si solo busca respuestas sobre costos.']},
+  {q:'El precio actual es preferencial y no quiero que aumente',si:['Reafirma el valor del servicio y conversa cómo mantener precios atractivos a largo plazo.'],no:['Asumir que entiende por qué cambian los precios o no ofrecer alternativas.']},
+  {q:'¿Podría bajar el precio si solo usamos WhatsApp?',si:['Explora un plan para un único canal con opciones de pricing ajustadas.'],no:['Responder que no sin explorar alternativas ni explicar por qué.']}]},
+ {id:'comp',t:'Diferenciación vs. competencia',items:[
+  {q:'"Lo podemos desarrollar internamente."',ctx:'Venta nueva',q4:1,r:'Podemos evaluar esa alternativa con ustedes. Además de construir el primer flujo, conviene considerar integraciones, operación, mantenimiento y optimización. Comparemos ese esfuerzo con el alcance y acompañamiento de nuestra propuesta.',av:'¿Quién se haría responsable de operarlo y mejorarlo después del desarrollo inicial?',ni:'Comparar costo y capacidad con datos del cliente; no afirmar que desarrollar internamente será más caro.'},
+  {q:'¿Por qué no conecto OpenAI directo en vez de usar Adereso Studio?',si:['OpenAI directo entrega un motor de lenguaje; Adereso Studio entrega la capa operacional completa: canales, tickets, contexto, herramientas, knowledge bases, handoff humano, seguridad, monitoreo y soporte.'],no:['Venderlo como "somos OpenAI" o comparar solo modelos.','Minimizar la opción técnica: reconoce que puede construirlo, pero deja claro todo lo que tendría que operar y mantener en producción.']},
+  {q:'Ya tenemos CRM o una solución que hace lo mismo. ¿Qué agrega Adereso?',q4:1,r:'Partamos por lo que ya les funciona y dónde se corta el proceso. Revisemos si existe una brecha en conversaciones, seguimiento, automatización o atención que justifique sumar Adereso y cómo conviviría con sus sistemas.',av:'¿Qué parte todavía exige trabajo manual o queda sin seguimiento?',ni:'No asumir que deben reemplazar Salesforce, HubSpot o Zendesk. Demostrar el aporte concreto antes de afirmar una diferencia o una integración.'},
+  {q:'¿En qué se diferencia Adereso de otros proveedores?',r:'Entiendo que estén evaluando opciones. Revisemos qué les ofrecen y qué problema necesitan resolver; comparemos alcance, integración, operación y acompañamiento con evidencia del caso.',av:'¿Qué les atrae de la otra propuesta y qué resultado necesitan mejorar?',ni:'No quedarse en "somos transparentes" ni atribuir limitaciones al competidor sin comprobarlas.'},
+  {q:'La plataforma anterior no cumplía requisitos legales',si:['Explica cómo Adereso cumple las normativas y requisitos que les aplican.'],no:['Minimizar la importancia de los requisitos legales.']},
+  {q:'Nos preocupa que Adereso trabaje con un competidor',si:['Aclara la política de la empresa sobre exclusividad y atención diferenciada.'],no:['Darle la espalda a la preocupación; aborda con empatía y transparencia.']}]},
+ {id:'valor',t:'Propuesta de valor',items:[
+  {q:'¿Qué es Adereso y para qué lo necesitamos?',q4:1,r:'Adereso combina atención, automatización e IA para conectar venta y postventa. Antes de revisar funcionalidades, identifiquemos un problema concreto (ventas perdidas, seguimiento o trabajo manual) y mostremos cómo lo resolvería el flujo propuesto.',av:'¿Dónde pierden hoy más ventas o tiempo operativo?',ni:'Adaptar al contexto del cliente. No enumerar funciones sin conectar su utilidad.'},
+  {q:'"¿Tenemos que contratar todos los módulos desde el inicio?"',ctx:'Venta nueva',q4:1,r:'La estrategia es entrar por un caso concreto y expandir cuando haya valor demostrado. Definamos qué necesitan para resolver ese primer problema; la combinación de productos y el plan se confirman en la propuesta.',av:'Si resolviéramos una sola cosa primero, ¿cuál tendría más impacto?'},
+  {q:'Me preocupa que la IA frustre a mis clientes o responda mal',v:'"¿La IA va a reemplazar a mi equipo? ¿Qué pasa si se equivoca?"',q4:1,r:'El enfoque combina IA y personas. Definamos qué tareas conviene automatizar, cuáles requieren intervención humana y cómo pasar de una a otra. Antes de ampliar el uso, acordemos pruebas y criterios de calidad para el caso.',av:'¿Qué decisiones necesitan que siga tomando una persona?',si:['Valida el miedo y llévalo a control operativo: la IA no es piloto automático ciego; se implementa con conocimiento controlado, límites de respuesta, handoff a humano y monitoreo de calidad.','Aterriza con casos: Kitchen Center (+21% revenue, 69% de automatización) y Walmart (SLA 98% en menos de 5 min).','Pregunta: ¿qué respuesta les daría miedo automatizar? ¿Qué casos podrían partir en piloto? ¿Quién define la pauta de calidad?'],no:['Decir "la IA funciona perfecto" o prometer 100% de automatización.','Entrar a demo sin separar casos automatizables de casos sensibles.'],ni:'Validar los mecanismos disponibles para ese flujo; evitar prometer cero errores.'},
+  {q:'Nuestros clientes prefieren atención humana. ¿Cómo convive con el bot?',r:'Definamos qué consultas puede atender la IA y cuáles deben pasar a una persona, con contexto y una transición clara. La atención especializada y las decisiones sensibles pueden mantenerse en el equipo humano.',av:'¿Qué casos requieren sí o sí a una persona y cómo debería ocurrir la derivación?',ni:'No vender automatización total ni desestimar la confianza en profesionales.'},
+  {q:'No confiamos en el bot o tuvimos malas experiencias',r:'Entiendo la duda. Revisemos qué falló antes y probemos consultas reales de su operación, con criterios de calidad y resultados medibles. Los casos de referencia ayudan, pero debemos demostrar el encaje con su necesidad.',av:'¿Qué tendría que responder o resolver bien para que ustedes confíen en la solución?',ni:'No minimizar experiencias anteriores ni prometer resultados sin evidencia.'},
+  {q:'¿Es un bot de árbol o IA conversacional? Los menús confunden',r:'Mostremos con una consulta real cómo el flujo interpreta lenguaje natural y qué opciones usa cuando necesita guiar al usuario. Definamos cuándo conviene texto libre o un menú simple según su público.',av:'¿Qué consulta o menú actual genera más confusión?',ni:'"No es un bot de árbol" necesita una demostración en vivo; no basta con decirlo.'},
+  {q:'¿Cómo protegen nuestros datos y el know how?',r:'Revisemos qué datos y conocimiento utilizaría la solución, quién necesita acceder y qué controles requieren. El equipo responsable debe responder con evidencia vigente sobre seguridad, privacidad y protección de la información.',av:'¿Qué información consideran sensible y qué requisitos necesitan validar?',ni:'No prometer controles o garantías sin confirmación. Ver también Seguridad y confianza.'},
+  {q:'El bot no aprende y no está bien configurado',si:['Explica cómo se ajusta el bot con el tiempo y ofrece soporte continuo para su configuración.'],no:['Afirmar aprendizaje sin poder demostrarlo.']},
+  {q:'La solución no se ajusta a problemas complejos',si:['Identifica qué problemas complejos son críticos y muestra cómo abordarlos con personalización o desarrollo adicional.'],no:['Afirmar que funciona para todos los escenarios sin entender su negocio.']},
+  {q:'La plataforma limita la libertad de los desarrolladores',si:['Muestra casos donde otros equipos de desarrollo la encontraron flexible y la capacidad de personalización.'],no:['Desestimar el trabajo de los desarrolladores.']},
+  {q:'Necesitamos análisis de texto y aprendizaje automático más avanzado',si:['Describe cómo Adereso integra y mejora continuamente sus capacidades de IA.'],no:['Decir que no hay demanda para eso.']},
+  {q:'Inquietudes sobre automatizar un proceso específico (ej.: matrícula)',si:['Muestra cómo la automatización agiliza el proceso con casos similares.'],no:['Subestimar la preocupación; da ejemplos claros.']},
+  {q:'Dudas sobre la validez de las decisiones de su equipo de marketing',si:['Ofrece casos o testimonios que respalden decisiones basadas en datos.'],no:['Minimizar sus preocupaciones.']}]},
+ {id:'impl',t:'Implementación',items:[
+  {q:'¿Y si la implementación no funciona o no justifica la inversión?',q4:1,r:'Acordemos desde el inicio qué significa éxito: estabilidad, uso y resultados. Durante la implementación revisamos esas métricas y, si aparecen brechas, definimos causas, responsables y siguientes pasos.',av:'¿Qué condición debe cumplirse para considerar exitosa la implementación?',ni:'La estrategia contempla extender la marcha blanca en Plan 3, Plan 4 y Custom si no cumplen las métricas; validar aplicación contractual. No prometer devolución, gratuidad o garantías de resultado.'},
+  {q:'¿Cuándo podemos empezar y cuánto demora la implementación?',q4:1,r:'Empecemos por un caso acotado y de impacto claro. Definamos alcance, accesos, costos y criterios de éxito para acordar fechas realistas de pruebas, salida, estabilización y medición de valor.',av:'¿Qué caso priorizamos y quién puede habilitar los accesos?',ni:'El marco de 90 días no es una fecha de salida ni una garantía. No comprometer plazos sin validar dependencias.'},
+  {q:'No tenemos tiempo ni especialistas. ¿Cuánta dedicación requiere?',q4:1,r:'La implementación requiere acompañamiento de Adereso y una contraparte del cliente que valide procesos y facilite accesos. Definamos tareas, responsables y una estimación de dedicación para el alcance concreto antes de partir.',av:'¿Quién conoce el proceso y qué disponibilidad puede destinar a validarlo?',ni:'No presentar las horas de un caso anterior como compromiso universal ni prometer una operación completamente delegada.'},
+  {q:'¿Se integra con nuestro CRM, ERP, API o base de datos?',q4:1,r:'Para confirmar la integración necesitamos conocer el sistema, su documentación, accesos, autenticación y los datos o acciones que debe conectar. Con eso acordamos una revisión técnica con fecha y responsables para definir viabilidad, alcance, pruebas y esfuerzo.',av:'¿Qué sistema usan, tiene API o documentación y qué información debe leer o escribir el flujo?',ni:'Separar lo estándar de lo personalizado. Si no hay API, evaluar alternativas con el equipo técnico; no prometer compatibilidad ni plazos antes de validar.'},
+  {q:'¿Cómo será la migración y qué pasa con los mensajes existentes?',r:'Preparemos un plan de migración con etapas, responsables, datos a trasladar y gestión de mensajes durante la transición. Debemos validar qué historial se puede conservar y cómo se mantendrá la operación.',av:'¿Qué información necesitan preservar y qué interrupción sería inaceptable?',ni:'No prometer una migración sin pérdida de datos antes de confirmar viabilidad.'},
+  {q:'La decisión depende de otras personas o de una aprobación institucional',r:'Mapeemos quién valida el caso, quién autoriza el presupuesto y qué aprobaciones faltan. Podemos preparar una propuesta o presentación con alcance, evidencia y retorno esperado para esas personas.',av:'¿Quién debe participar y qué necesita para aprobar el siguiente paso?',ni:'Respetar el proceso institucional. No presionar a quien no tiene permiso ni saltarse a los responsables.'},
+  {q:'Nos preocupa el impacto en la operación diaria',r:'Revisemos los procesos que cambiarían y planifiquemos una transición gradual, con capacitación, pruebas y seguimiento de la eficiencia operativa. Acordemos cómo mantener la continuidad durante el cambio.',av:'¿Qué proceso no puede verse afectado y cómo mediremos su funcionamiento?',ni:'No minimizar el esfuerzo de adaptación ni prometer que nada cambiará.'},
+  {q:'El equipo se resiste a cambiar de herramienta',r:'La adopción es parte del proyecto. Identifiquemos un responsable interno, los flujos que cambiarían y un primer caso gradual, con capacitación y métricas visibles. Si trabajan en Salesforce u otra herramienta, evaluemos cómo convivir o migrar con el menor impacto.',av:'¿Qué perdería o tendría que cambiar el equipo y quién puede acompañar la adopción?',ni:'No asumir que se acostumbrarán solos ni forzar un cambio completo.'},
+  {q:'¿Tendremos acompañamiento y soporte durante y después?',r:'Dejemos claros los responsables, canales de contacto y el acompañamiento incluido en cada etapa. Si hubo respuestas lentas o falta de soporte, revisemos el problema y acordemos una ruta de atención concreta.',av:'¿Qué tipo de ayuda necesitan y qué dificultad de comunicación quieren evitar?',ni:'Confirmar alcance, tiempos y recursos contratados; no prometer soporte ilimitado.'},
+  {q:'Tenemos dificultades con la mesa de ayuda o creando tickets',r:'Revisemos el flujo y un ejemplo reproducible para identificar si es configuración, una limitación o una incidencia. Acordemos con el equipo responsable la solución o alternativa y el seguimiento.',av:'¿En qué paso no pueden avanzar y qué necesitan que ocurra?',ni:'No minimizar el problema ni prometer una función sin validarla.'},
+  {q:'¿Pueden hacer carrito de compras / checkout dentro del bot?',si:['Confirma con claridad: "Sí. El bot puede mostrar catálogo, agregar ítems y generar link de pago (Transbank, MercadoPago, PayPal o link externo). Si usan Shopify o WooCommerce, la integración es nativa. Para ERP propio, vía API."'],no:['Decir "sí se puede pero no te sabría decir el camino más eficiente": genera desconfianza.']},
+  {q:'No queremos depender del soporte a largo plazo',si:['Muestra las herramientas de autoayuda y recursos que reducen la dependencia del soporte.'],no:['Dar una visión negativa del soporte o sugerir que no podrán manejar la herramienta solos.']},
+  {q:'Requerimos que el servidor sea de Adereso',si:['Explica las opciones de implementación del servidor y cómo Adereso se adapta.'],no:['Ser inflexible o cerrar la posibilidad de adaptaciones.']},
+  {q:'No podemos seguir bien el flujo de leads',si:['Detalla cómo la plataforma maneja flujos de leads y qué ajustes los mejoran.'],no:['Minimizar el problema o responder sin soluciones específicas.']},
+  {q:'Mostrar imágenes de productos es un proceso complejo',si:['Explica las opciones para mostrar imágenes de productos, aunque requieran un ajuste inicial.'],no:['Afirmar que es instantáneo.']},
+  {q:'Programar el bot en lenguaje natural se ve complejo',si:['Ofrece capacitación o talleres que simplifiquen su uso.'],no:['Minimizar la dificultad o sugerir que deberían entenderlo sin problemas.']},
+  {q:'Dudas sobre cómo se asignan tareas a los ejecutivos',si:['Explora cómo asignan tareas hoy y cómo se integraría la solución en ese flujo.'],no:['Subestimar la preocupación; la claridad de responsabilidades es clave.']},
+  {q:'Dificultad con el idioma inglés de la plataforma actual',si:['Ofrece soporte en español y capacitación.'],no:['Asumir que todos pueden trabajar sin problemas en inglés.']},
+  {q:'Necesitan un abogado en Chile',si:['Recomienda un abogado especializado para los requisitos legales locales.'],no:['Asegurar que no hay normativas locales que cumplir.']}]},
+ {id:'meta',t:'WhatsApp / Meta',items:[
+  {q:'Mi número de WhatsApp fue bloqueado. ¿Por qué y qué hacemos?',r:'Revisemos el estado y la causa disponible en Meta Business Manager. Con esa información definimos la documentación y los pasos de revisión o apelación, con acompañamiento del equipo de soporte y una alternativa operativa si corresponde.',av:'¿Qué aviso recibieron y quién tiene acceso al administrador de Meta?',ni:'No prometer recuperación del número ni atribuir una causa sin revisarla. Dar un próximo paso concreto.'},
+  {q:'Faltan permisos, verificación o asociación de la fan page en Meta',r:'Revisemos el portafolio empresarial, la verificación, los permisos y la asociación de los activos necesarios para conectar el canal. Definamos quién administra cada activo y los pasos pendientes.',av:'¿Quién tiene acceso de administrador y qué aviso o requisito aparece?',ni:'Distinguir un requisito de configuración de un bloqueo del número.'},
+  {q:'Las restricciones de Meta limitan campañas o automatizaciones',r:'Identifiquemos qué envío o automatización necesitan y confirmemos las políticas y límites aplicables a ese caso. Con esa revisión podemos explicar qué es viable y qué alternativa permite el canal.',av:'¿Qué acción concreta está restringida y qué impacto tiene en su operación?',ni:'No ofrecer atajos para eludir restricciones ni prometer soluciones inmediatas a límites de terceros.'},
+  {q:'¿Cómo manejan grupos de WhatsApp como canal de soporte?',r:'Revisemos el uso que hacen de los grupos y qué permite la API oficial para su caso. Si ese flujo no está disponible, evaluemos un número de soporte donde cada persona escriba directamente y las conversaciones se gestionen individualmente.',av:'¿Quiénes participan en los grupos y qué necesitan conservar del flujo actual?',ni:'Confirmar las restricciones vigentes antes de comprometer la solución.'},
+  {q:'Tuvimos malas experiencias con WhatsApp',si:['Escucha, comparte casos exitosos y ofrece un plan de acción concreto.'],no:['Minimizar la experiencia pasada.']},
+  {q:'Requisitos de Meta para nivel TIR 3',si:['Explica en detalle los requisitos de Meta y cómo abordarlos.'],no:['Ignorar requisitos técnicos que afecten la implementación.']},
+  {q:'No podemos usar un solo número por las franquicias',si:['Explora gestionar varias franquicias bajo una cuenta o por franquicia.'],no:['Dar una solución simple sin considerar la complejidad.']},
+  {q:'WhatsApp no es fácil para personas mayores',si:['Presenta alternativas que faciliten la accesibilidad para todas las edades.'],no:['Desestimar las necesidades de ese público.']}]},
+ {id:'canales',t:'Canales faltantes',items:[
+  {q:'¿Integran TikTok? La competencia ya lo tiene',r:'Primero revisemos cuánto pesa TikTok en su operación y qué integración necesitan. Confirmemos con Producto la disponibilidad, alcance y limitaciones actuales; si hay problemas de calidad reportados, revisemos el caso antes de proponer una alternativa.',av:'¿Qué porcentaje del tráfico llega por TikTok y qué acción necesitan resolver?',ni:'No dar fechas vagas ni tratar un roadmap como entrega confirmada.'},
+  {q:'¿Tienen llamadas de voz o call center?',r:'Revisemos qué necesitan resolver por voz y validemos la disponibilidad actual para ese flujo. Si no está cubierto, evaluemos cómo complementar la atención telefónica existente con canales digitales o una derivación al equipo humano.',av:'¿Buscan llamadas entrantes, salientes, cobranza o derivación desde conversaciones?',ni:'No presentar fechas antiguas de roadmap como disponibilidad actual ni descartar voz si es decisivo.'},
+  {q:'Queremos mantener el teléfono: nuestros clientes prefieren voz',r:'Tiene sentido conservar el canal que sus clientes usan. Revisemos qué consultas necesitan voz y cuáles pueden resolverse por texto, para diseñar una atención complementaria acorde con sus preferencias.',av:'¿Qué consultas llegan por teléfono y qué parte podrían atender por otros canales?',ni:'No asumir que un bot debe sustituir la atención telefónica.'},
+  {q:'¿Integran con Mercado Libre?',si:['Sé honesto y redirige: "ML tiene una API muy restringida que no permite recibir mensajes de compradores por canales externos; aplica a todos los proveedores. Lo que sí hacemos: gestionar consultas post-compra por WhatsApp o chat web y conectar con tu sistema de órdenes ML vía su API de órdenes."','Registra feature request si hay 2 o más clientes interesados.'],no:['Dar una respuesta vaga. Si no se puede, dilo directo y da la alternativa.']},
+  {q:'Necesitamos integrar o activar otros canales sin demora',r:'Identifiquemos los canales imprescindibles, el caso de uso y las dependencias de cada activación. Confirmemos disponibilidad y acordemos una secuencia y fechas realistas antes de cerrar el alcance.',av:'¿Qué canal es indispensable desde el inicio y qué volumen o proceso depende de él?',ni:'No prometer activaciones inmediatas ni compatibilidad sin validación.'},
+  {q:'No necesitamos llamadas salientes',si:['Destaca la efectividad de los canales digitales y su integración con sus herramientas.'],no:['Insistir en voz sin analizar cómo complementa.']},
+  {q:'No tenemos CRM ni telefonía integrada',si:['Propón integrar CRM y telefonía como parte del servicio, con sus beneficios.'],no:['Ignorar la necesidad.']},
+  {q:'Varios números de teléfono en un solo ticket',si:['Explica cómo Adereso maneja múltiples números y asegura que entienda el proceso.'],no:['Dar una solución rápida sin detallar los pasos.']},
+  {q:'El reenvío automático provoca bloqueos por spam',si:['Recomienda alternativas y la configuración adecuada para evitar bloqueos.'],no:['Insinuar que es problema del cliente sin ofrecer soluciones.']},
+  {q:'No permite reenvío a cuentas externas',si:['Di con claridad que hoy no se permite reenviar a cuentas externas.'],no:['Dar información confusa sobre las capacidades actuales.']},
+  {q:'El bot no puede buscar información en la web',si:['Ofrece alternativas para integrar otras fuentes de información.'],no:['Evitar el tema o subestimarlo.']}]},
+ {id:'contrato',t:'Condiciones contractuales',items:[
+  {q:'¿Vamos a quedar amarrados? Necesitamos claridad sobre contrato y salida',q4:1,r:'Revisemos desde el inicio la duración, las cláusulas de salida y cómo accederían o recuperarían sus datos. La continuidad debe sostenerse en el valor de la operación, con condiciones claras para decidir.',av:'¿Qué datos y condiciones de salida necesitan para estar tranquilos?',ni:'Validar contrato, portabilidad y propiedad de datos. Una meta de ventas no garantiza resultados ni habilita por sí sola una salida.'},
+  {q:'No quiero contrato anual',r:'¿Te preocupa el plazo o comprometerte antes de ver resultados? Acordemos cómo evaluar el resultado y revisemos las condiciones aplicables.',ni:'Alternativa trimestral con recargo del 40%: validar vigencia y aprobación antes de ofrecerla.'},
+  {q:'Necesitamos actualizar la propuesta comercial',si:['Revisa la propuesta para ajustarla a sus necesidades actuales.'],no:['Dar por sentado que la propuesta anterior es suficiente.']}]},
+ {id:'piloto',t:'Pilotos y criterios de éxito',items:[
+  {q:'Quiero piloto sin KPIs, solo probar',pend:'Respuesta por confirmar en Notion'}]},
+ {id:'seg',t:'Seguridad y confianza',items:[
+  {q:'Me preocupa la ley de protección de datos. ¿Cómo lo abordan?',r:'Usamos los datos de sus clientes siguiendo sus instrucciones y para prestar el servicio contratado. Tenemos un acuerdo de tratamiento de datos (DPA) que establece nuestras responsabilidades y las de ustedes. Aplicamos medidas de seguridad y restringimos los accesos según la necesidad de prestar el servicio. Si ocurre una brecha que afecte los datos tratados, les notificamos a más tardar dentro de 48 horas desde que tomamos conocimiento, según el DPA. Podemos compartirles ese acuerdo y nuestras políticas de privacidad y seguridad.',av:'¿Tienen requisitos o un cuestionario de privacidad que podamos revisar con su equipo?',ni:'No afirmar cumplimiento legal integral ni prometer aislamiento dedicado, DLP para todo dato sensible, borrado inmediato o notificación instantánea. No entrenar no implica no almacenar. Legal y Seguridad validan compromisos específicos: data-privacy@adere.so.'},
+  {q:'"¿Cumplen nuestros requisitos de seguridad y SLA?"',ctx:'Venta nueva',q4:1,r:'Compártannos sus requisitos y coordinamos una revisión con el equipo responsable. Les responderemos con evidencia vigente y con los compromisos que podamos acordar para su operación.',av:'¿Tienen un cuestionario de seguridad o requisitos de disponibilidad para revisar?',ni:'Comprobar certificaciones, controles, residencia de datos y SLA actuales antes de comprometer.'}]},
+ {id:'decision',t:'Decisión y próximos pasos',items:[
+  {q:'"Mándame una propuesta y lo revisamos."',ctx:'Venta nueva',q4:1,r:'Claro. Para que les sirva, confirmemos el caso prioritario, el alcance y qué necesitan evaluar para decidir. Así la propuesta responde a su problema y podemos revisarla con las personas involucradas.',av:'¿Qué tendría que mostrar esa propuesta y quién más participa en la decisión?',ni:'Acordar siguiente paso y fecha; enviar una propuesta no demuestra avance.'}]},
+ {id:'expansion',t:'Expansión de cuentas',items:[
+  {q:'"Ya pagamos suficiente. No queremos aumentar el gasto."',ctx:'Base instalada',q4:1,r:'Revisemos qué resultado adicional justificaría aumentar la inversión. Podemos separar lo que ya consiguen con el alcance actual del problema nuevo que quieren resolver. Si no hay una mejora clara que medir, primero trabajemos sobre el valor de lo contratado.',av:'¿Qué resultado adicional tendría que aparecer para que valga la pena invertir más?',ni:'Distinguir precio de la expansión, consumo y renovación. No ofrecer descuentos.'},
+  {q:'"Primero hagan funcionar bien lo que ya tenemos."',ctx:'Base instalada',q4:1,r:'Tiene sentido. Revisemos qué está fallando y acordemos responsables y próximos pasos para estabilizarlo. Con una base que funcione, podemos volver a evaluar la expansión con evidencia.',av:'¿Qué problema actual les impide considerar algo adicional?',ni:'Priorizar recuperación y adopción con CS. No condicionar la solución de una falla a comprar más.'},
+  {q:'"Todavía no vemos el ROI de lo que contratamos."',ctx:'Base instalada',q4:1,r:'Partamos por revisar los objetivos iniciales y los datos disponibles. Veamos qué valor se está obteniendo y dónde hay brechas. Con eso podemos decidir si corresponde optimizar lo actual o si existe un caso adicional que se sostenga por sí mismo.',av:'¿Qué resultado esperaban ver y con qué dato lo están evaluando?',ni:'No sumar una expansión como solución a un ROI no demostrado.'},
+  {q:'"Casi no usamos lo que tenemos. ¿Para qué contratar más?"',ctx:'Base instalada',q4:1,r:'Primero identifiquemos por qué el uso es bajo: puede faltar capacitación, encaje con el proceso o resolver una dificultad operativa. Definamos cómo aprovechar el alcance actual y revisemos después si hace falta sumar algo.',av:'¿Qué impide que el equipo use hoy lo que ya tiene disponible?',ni:'Acordar una acción de adopción antes de volver con más módulos.'},
+  {q:'"Eso debería estar incluido en lo que ya pagamos."',ctx:'Base instalada',q4:1,r:'Revisemos juntos el alcance contratado y qué necesitan hacer ahora. Si está incluido, corresponde trabajar con ese alcance. Si es una capacidad o servicio adicional, expliquemos la diferencia y su costo antes de decidir.',av:'¿Qué parte de lo que necesitan entienden que ya está incluida?',ni:'Validar contrato y alcance. No calificar como adicional una corrección pendiente.'},
+  {q:'"No tenemos equipo para otro proyecto."',ctx:'Base instalada',q4:1,r:'Podemos priorizar un solo caso adicional y estimar el esfuerzo de ambos equipos antes de avanzar. Definamos quién lo operará y qué trabajo requiere. Si hoy no hay capacidad, acordemos cuándo tendría sentido retomarlo.',av:'¿Qué dedicación podrían destinar y quién sería responsable del nuevo proceso?',ni:'Confirmar esfuerzo con delivery.'},
+  {q:'"Otra área o país quiere usarlo, pero tiene procesos distintos."',ctx:'Base instalada',q4:1,r:'Usemos lo que ya funciona como punto de partida y revisemos qué cambia en ese equipo. Con esas diferencias podemos definir un alcance y validar qué se puede reutilizar antes de extenderlo.',av:'¿Qué cambia en canales, sistemas, responsables o requisitos de ese equipo?',ni:'No asumir que el mismo bot funciona en otra área o país.'},
+  {q:'"La otra área ya tiene su propia herramienta."',ctx:'Base instalada',q4:1,r:'Entendamos primero qué les funciona y qué problema queda sin resolver. Podemos evaluar si Adereso aporta valor en ese recorrido y cómo conviviría con sus sistemas. Cualquier cambio tiene que justificarse para ese equipo.',av:'¿Quién de esa área podría ayudarnos a entender su operación y sus prioridades?',ni:'La relación con una cuenta no equivale a presupuesto en otra área.'},
+  {q:'"Me están cobrando más, pero sigo haciendo lo mismo."',ctx:'Base instalada',q4:1,r:'Separemos a qué corresponde el aumento: más volumen, un cambio de alcance o una nueva propuesta. Revisemos el consumo y las condiciones acordadas para entenderlo; después evaluamos si hay una necesidad de expansión.',av:'¿Qué cambió en la factura o propuesta respecto de lo que tenían acordado?',ni:'Aclarar el cobro con evidencia antes de ofrecer más productos.'},
+  {q:'"Veámoslo en la renovación / más adelante."',ctx:'Base instalada',q4:1,r:'De acuerdo. Podemos dejar definido qué caso evaluar y qué información necesitarán para decidir en ese momento. Si hay un problema urgente, revisemos su impacto; si no, fijemos una fecha útil para retomarlo.',av:'¿Cuándo preparan la renovación y quién tendría que participar en esa revisión?',ni:'Respetar el timing y registrar motivo, responsable y fecha. No crear urgencia.'}]}
+];
+
+const chev='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const txt=o=>norm([o.q,o.v,o.r,o.av,o.ni,(o.si||[]).join(' '),(o.no||[]).join(' ')].join(' '));
+let cat='all',term='';
+function argHtml(o,id){
+  const tags=(o.ctx?`<span class="tag">${o.ctx}</span>`:'')+(o.q4?'<span class="tag q4">Q4 · borrador</span>':'')+(o.pend?'<span class="tag pend">Por confirmar</span>':'');
+  const li=a=>`<ul>${a.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  const body=(o.r?`<div class="blk di"><span class="lb">Di</span><p>"${o.r}"</p></div>`:'')+
+    (o.av?`<div class="blk av"><span class="lb">Para avanzar, pregunta</span><p>${o.av}</p></div>`:'')+
+    (o.si||o.no?`<div class="sino">${o.si?`<div class="blk si"><span class="lb">✓ Qué sí hacer</span>${li(o.si)}</div>`:''}${o.no?`<div class="blk no"><span class="lb">✕ Qué no hacer</span>${li(o.no)}</div>`:''}</div>`:'')+
+    (o.ni?`<div class="blk ni"><span class="lb">Nota interna</span>${o.ni}</div>`:'')+
+    (o.pend&&!o.r&&!o.si?`<div class="blk ni"><span class="lb">Por confirmar</span>${o.pend}</div>`:'');
+  return `<div class="arg" id="${id}"><button class="arg-h" data-arg><span class="qq">${o.q}${o.v?`<small>También: ${o.v}</small>`:''}</span>${tags}${chev}</button><div class="arg-b"><div class="arg-in"><div class="arg-body">${body}</div></div></div></div>`;}
+function render(){
+  const t=norm(term.trim());let n=0;
+  const html=CATS.filter(c=>cat==='all'||c.id===cat).map((c,ci)=>{
+    const its=c.items.map((o,i)=>[o,i]).filter(([o])=>!t||txt(o).includes(t));n+=its.length;if(!its.length)return '';
+    return `<section class="grp" id="g-${c.id}"><div class="grp-h"><span>${CATS.indexOf(c)+1}</span><h2>${c.t}</h2><small>${its.length} ${its.length===1?'argumento':'argumentos'}</small></div>${its.map(([o,i])=>argHtml(o,c.id+'-'+i)).join('')}</section>`;}).join('');
+  document.getElementById('list').innerHTML=html||'<div class="empty">No encontré argumentos con esa búsqueda.<br>Prueba con otra palabra o revisa Notion.</div>';
+  document.getElementById('cnt').textContent=n+' de '+TOTAL;
+  if(t&&n&&n<=3)document.querySelectorAll('.arg').forEach(a=>a.classList.add('open'));}
+const TOTAL=CATS.reduce((a,c)=>a+c.items.length,0);
+document.getElementById('cats').innerHTML=`<button class="cat on" data-cat="all">Todas <i>${TOTAL}</i></button>`+CATS.map(c=>`<button class="cat" data-cat="${c.id}">${c.t} <i>${c.items.length}</i></button>`).join('');
+document.getElementById('toc').innerHTML=CATS.map((c,i)=>`<a href="#g-${c.id}" data-toc="${c.id}" title="${c.t}"><i>${i+1}</i><span>${c.t}</span></a>`).join('');
+document.addEventListener('click',e=>{
+  /* dentro del hub esto vive en un iframe: los enlaces #categoría se resuelven con scroll */
+  const ln=e.target.closest('a[href^="#"]');if(ln){e.preventDefault();const id=ln.getAttribute('href').slice(1);
+    if(cat!=='all'&&id!=='g-'+cat){cat='all';document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('on',b.dataset.cat==='all'));render();}
+    const el=document.getElementById(id);el&&el.scrollIntoView({behavior:'smooth',block:'start'});return;}
+  const a=e.target.closest('[data-arg]');if(a){a.parentElement.classList.toggle('open');return;}
+  const c=e.target.closest('[data-cat]');if(c){cat=c.dataset.cat;document.querySelectorAll('[data-cat]').forEach(b=>b.classList.toggle('on',b===c));render();return;}
+});
+document.getElementById('q').addEventListener('input',e=>{term=e.target.value;render();});
+/* índice activo al hacer scroll */
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){const id=en.target.id.slice(2);document.querySelectorAll('[data-toc]').forEach(a=>a.classList.toggle('on',a.dataset.toc===id));}}),{rootMargin:'-30% 0px -60% 0px'});
+const obs=()=>{io.disconnect();document.querySelectorAll('.grp').forEach(s=>io.observe(s));};
+const _r=render;render=function(){_r();obs();};
+render();
+/* menú lateral plegable: comparte la preferencia con el Playbook */
+const SK='adereso_playbook_side';try{if(localStorage.getItem(SK)==='off')document.body.classList.add('side-off');}catch(e){}
+document.getElementById('sideTg').onclick=()=>{const off=document.body.classList.toggle('side-off');const b=document.getElementById('sideTg');b.title=b.ariaLabel=off?'Mostrar menú':'Ocultar menú';try{localStorage.setItem(SK,off?'off':'on');}catch(e){}};
+</script>
+</body>
+</html>
