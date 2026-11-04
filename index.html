@@ -5519,6 +5519,8 @@ body.side-off .side-tg svg{transform:rotate(180deg)}
 body.side-off .brand{flex-direction:column}
 body.side-off .brand>div,body.side-off .toc a span,body.side-off .side-box{display:none}
 body.side-off .toc a{padding:5px;justify-content:center}
+/* cerrado: solo queda el botón para volver a abrir el menú (sin logo ni números) */
+body.side-off .toc,body.side-off .brand-a{display:none}
 .toc{display:flex;flex-direction:column;gap:2px}
 .toc a{display:flex;gap:9px;align-items:center;padding:5px 7px;border-radius:var(--r2);color:var(--t2);text-decoration:none;font-size:12.5px;border:1px solid transparent;transition:all .2s var(--ease)}
 .toc a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5662,6 +5664,7 @@ main{padding:40px 0 140px;min-width:0}
 .haz li{counter-increment:h;display:flex;gap:12px;align-items:flex-start;padding:11px 13px;border-radius:var(--r2);background:rgba(255,255,255,0.025);border:1px solid var(--b-subtle);color:var(--t);font-size:14.5px}
 .haz li::before{content:counter(h);flex:0 0 auto;width:22px;height:22px;border-radius:6px;background:rgba(255,213,64,0.12);color:var(--brand);display:grid;place-items:center;font-family:var(--head);font-size:12px}
 .haz .st{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.sp-chip.sc-chip{border-color:rgba(82,206,94,0.45);background:rgba(82,206,94,0.1);color:#7FDC8A}
 .haz .st>b{color:var(--t);font-weight:500;font-size:15px;line-height:1.4}
 .sp-chip{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:6px;border:1px solid rgba(24,110,250,0.45);background:rgba(24,110,250,0.1);color:#7FB0FF;font-size:10.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;vertical-align:2px;white-space:nowrap}
 .haz .st>small{color:var(--t2);font-size:13px;line-height:1.45}
@@ -5670,6 +5673,25 @@ main{padding:40px 0 140px;min-width:0}
 .haz .di-tag,.haz .br-tag{flex:0 0 auto;font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:3px 7px;margin-top:1px;white-space:nowrap}
 .haz .di-tag{color:#0C0C0D;background:var(--brand)}
 .haz .br-tag{color:var(--t);background:rgba(255,255,255,0.08);border:1px solid var(--b)}
+/* descubrimiento: preguntas como bloques que flotan apenas, unidos por un hilo; menos amarillo para leer qué decir y por qué */
+.haz-flow{gap:22px}
+.haz-flow li{position:relative;padding:16px 18px;background:rgba(255,255,255,0.035);border-color:var(--b);animation:hzFloat 7s ease-in-out infinite}
+.haz-flow li:nth-child(2n){animation-delay:-2.3s}.haz-flow li:nth-child(3n){animation-delay:-4.6s}
+.haz-flow li+li::after{content:"";position:absolute;left:24px;top:-23px;height:22px;border-left:1.5px dashed rgba(255,213,64,0.28)}
+.haz-flow li+li .st::before{content:"";position:absolute;left:21px;top:-15px;width:7px;height:7px;border-radius:50%;background:var(--brand);opacity:.45;animation:hzPulse 3.2s ease-in-out infinite}
+.haz-flow .st{gap:10px}
+.haz-flow .ex{background:rgba(255,255,255,0.03);border:1px solid var(--b-subtle);border-left:2px solid var(--brand)}
+.haz-flow .ex span{color:#fff;font-size:15px}
+.haz-flow .ex:has(.br-tag){border-left-color:rgba(255,255,255,0.18);background:transparent}
+.haz-flow .ex:has(.br-tag) span{color:var(--t2);font-size:14px}
+.haz-flow .st>small{display:block;padding-top:10px;border-top:1px dashed var(--b-subtle);color:var(--t2)}
+.haz .why{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-right:8px}
+.haz-flow li.story{counter-increment:none;background:linear-gradient(135deg,rgba(24,110,250,0.10),rgba(24,110,250,0.03));border-color:rgba(24,110,250,0.35)}
+.haz-flow li.story::before{content:"✦";background:rgba(24,110,250,0.18);color:#7FB0FF}
+.haz-flow li.story .ex{border-left-color:#7FB0FF}
+@keyframes hzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes hzPulse{0%,100%{opacity:.25}50%{opacity:.7}}
+@media (prefers-reduced-motion:reduce){.haz-flow li,.haz-flow li+li .st::before{animation:none}}
 .myn{margin-top:14px;display:none}
 .card.writing .myn{display:block}
 .myn textarea{width:100%;min-height:70px;resize:vertical;background:rgba(255,255,255,0.03);border:1px solid var(--b);border-radius:var(--r2);padding:10px 12px;color:var(--t);font:inherit;font-size:13.5px}
@@ -5865,12 +5887,13 @@ const STAGES=[
   haz:[{a:'Comparte pantalla con su web',d:'Antes de pasar a la presentación que tengo preparada… estuve revisando tu página web. ¿Esta es la página por donde los clientes los contactan?',n:'Empieza la auditoría express. Confirma lo que ya trae el brief y profundiza donde falte, sin repetir'},
    {a:'Pregunta 1 · Canales',sp:'Situation',d:'Solo para entender la operativa: si yo fuese cliente, ¿a dónde llega mi consulta cuando escribo a este WhatsApp / formulario / chat web? ¿Se le asigna a alguien?',b:[['Si ya tiene sistema','¿Hay algo que te falte o quieras mejorar de esa solución?']],n:'Descubre si usan un SaaS de la competencia de Desk o lo hacen manual: un número por ejecutivo, una cuenta de WhatsApp compartida o un sistema que centraliza'},
    {a:'Pregunta 2 · Tipos de consulta',sp:'Pain',d:'¿Cuáles son los tipos de consultas que reciben por estos canales? ¿Venta o más enfocado a la postventa?',b:[['Repregunta','¿Qué consultas representan mayor volumen?']],n:'Dónde está la oportunidad de automatización que mostrará valor en la demo y en el ROI. Casi siempre hay más de un caso: enfócate en el de más tráfico'},
+   {a:'Puente · Resume y cuenta una historia',sp:'Summarize · Story',story:true,d:'Si te entendí bien, hoy [dolor 1] y [dolor 2]. Es súper común en [industria]; de hecho, lo vemos harto.',b:[['Historia corta','Nos pasó con [cliente parecido], también de [industria]: tenían [mismo dolor] y el equipo no daba abasto. Partieron con [solución] y en [tiempo] lograron [resultado].'],['Puente al impacto','¿Te suena parecido? ¿Y a ustedes cómo les está pegando hoy en el día a día?']],n:'Baja la tensión: muestra que su dolor es conocido y tiene solución. Cuenta la historia en 30 segundos, con un cliente de su misma industria, y salta al impacto.'},
    {a:'Pregunta 3 · Impacto',sp:'Impact',d:'Respecto a [consultas de mayor tráfico], ¿pierden ventas por no responder a tiempo? ¿Sabes cuánto aprox? ¿Sabes cuánto tiempo les toma a los ejecutivos resolver este tipo de consultas?',n:'Mide qué tanto le duele y qué urgencia tiene la solución. Generalmente no tiene estos datos a mano: dale ejemplos'},
-   {a:'Pregunta 4 · Si no se resuelve',sp:'Critical Event',d:'Y si esto sigue igual los próximos meses, ¿qué pasa? ¿Hay alguna fecha o meta que lo haga más urgente, como una temporada alta, un lanzamiento o un objetivo del año?',b:[['Si no ve urgencia','¿Qué tendría que pasar para que esto se vuelva prioridad?']],n:'Busca el costo de no hacer nada y el hito que los obliga a decidir. Ese hito es el que retomas en el Cierre para acordar plazos'},
-   {a:'Pregunta 5 · Dónde viven las respuestas',d:'¿Dónde viven las respuestas a esas consultas? ¿CRM? ¿Ecommerce? ¿Documentos?',b:[['Si cuesta','Actualmente, ¿dónde van los ejecutivos a buscar una respuesta para el cliente?']],n:'Anticipa la implementación: qué conectar al Agente IA'},
-   {a:'Pregunta 6 · Equipo',d:'¿Cuántas personas componen el equipo que actualmente responde esas consultas?',n:'Para dimensionar el impacto de la IA. Muchas veces buscan reducir el equipo o darle más productividad'},
-   {a:'Pregunta 7 · Volumen',d:'¿Cuántas conversaciones reciben al mes aproximadamente?'},
-   {a:'Pregunta 8 · Derivación',d:'¿Buscas que el agente derive a un ejecutivo humano o necesitas 100% de automatización?',n:'Flujos para explicar en la demo y nivel de automatización esperado: no es lo mismo una venta 100% automatizada que calificar leads y derivar'},
+   {a:'Pregunta 4 · Si no se resuelve',sp:'Critical Event',d:'¿Y qué pasa si [dolor que te contó] sigue igual los próximos meses? ¿Cuánto les cuesta en ventas, clientes o carga del equipo? ¿Hay alguna fecha o meta que lo haga más urgente, como una temporada alta, un lanzamiento o un objetivo del año?',b:[['Para cuantificar','Si [dolor] sigue así hasta [temporada alta / fin de año], ¿cuánto calculas que dejarían de vender o cuántos clientes se irían?'],['Si no ve urgencia','¿Qué tendría que pasar para que esto se vuelva prioridad?']],n:'Usa su propio dolor con sus palabras: que diga en voz alta qué pierde si no hace nada. Busca ese costo y el hito que los obliga a decidir. Ese hito es el que retomas en el Cierre para acordar plazos'},
+   {a:'Pregunta 5 · Dónde viven las respuestas',sc:'Entendimiento de alcance',d:'¿Dónde viven las respuestas a esas consultas? ¿CRM? ¿Ecommerce? ¿Documentos?',b:[['Si cuesta','Actualmente, ¿dónde van los ejecutivos a buscar una respuesta para el cliente?']],n:'Anticipa la implementación: qué conectar al Agente IA'},
+   {a:'Pregunta 6 · Equipo',sc:'Entendimiento de alcance',d:'¿Cuántas personas componen el equipo que actualmente responde esas consultas?',n:'Para dimensionar el impacto de la IA. Muchas veces buscan reducir el equipo o darle más productividad'},
+   {a:'Pregunta 7 · Volumen',sc:'Entendimiento de alcance',d:'¿Cuántas conversaciones reciben al mes aproximadamente?'},
+   {a:'Pregunta 8 · Derivación',sc:'Entendimiento de alcance',d:'¿Buscas que el agente derive a un ejecutivo humano o necesitas 100% de automatización?',n:'Flujos para explicar en la demo y nivel de automatización esperado: no es lo mismo una venta 100% automatizada que calificar leads y derivar'},
    {a:'Pregunta 9 · Éxito',d:'¿Qué medirías tú para considerar un proyecto exitoso?',n:'Alinea el valor y sirve para mostrar métricas en la demo. Suele costarle: da ejemplos como tasa de calificación, conversión de venta o % de automatización'},
    {a:'Recapitula y pasa a la demo',d:'Perfecto, a modo de resumen y para ir avanzando: actualmente las consultas más comunes son X y les provoca Y. ¿Correcto? Por mi lado, estoy súper claro para la demo, ¿quieres acotar algo adicional?',n:'Que se sienta escuchado y que no se escape nada'}],
   det:`<div class="note"><b>Chips SPICED:</b> marcan qué detectamos con cada pregunta. <b>Situation</b> = cómo operan hoy · <b>Pain</b> = dónde está el problema · <b>Impact</b> = cuánto les cuesta y qué urgencia tiene · <b>Critical Event</b> = qué pasa si no lo resuelven y qué fecha los obliga a decidir.</div>
@@ -6036,7 +6059,7 @@ const SPICED_HELP=`<span class="sp-help"><button type="button" class="sp-help-b"
   </span></span>`;
 function hazLi(h){const o=typeof h==='string'?{a:h}:h;
   const ex=(tag,txt,cls)=>`<div class="ex"><em class="${cls}">${tag}</em><span>"${txt}"</span></div>`;
-  return `<li><div class="st"><b>${o.a}${o.sp?`<span class="sp-chip" title="Lo que detectamos con esta pregunta, según SPICED">SPICED · ${o.sp}</span>`:''}</b>${o.d?ex('Di',o.d,'di-tag'):''}${o.b?o.b.map(([k,v])=>ex(k,v,'br-tag')).join(''):''}${o.n?`<small>${o.n}</small>`:''}</div></li>`;}
+  return `<li${o.story?' class="story"':''}><div class="st"><b>${o.a}${o.sp?`<span class="sp-chip" title="Lo que detectamos con esta pregunta, según SPICED">SPICED · ${o.sp}</span>`:''}${o.sc?`<span class="sp-chip sc-chip" title="Para dimensionar la solución y la implementación">${o.sc}</span>`:''}</b>${o.d?ex('Di',o.d,'di-tag'):''}${o.b?o.b.map(([k,v])=>ex(k,v,'br-tag')).join(''):''}${o.n?`<small><em class="why">Por qué</em>${o.n}</small>`:''}</div></li>`;}
 function pyrDetail(){const p=PYR[pyrSel];return `<span class="chip y">${p.n}</span><h3>${p.t}</h3><p>${p.p}</p><ul>${p.l.map(x=>`<li>${IC.check}${x}</li>`).join('')}</ul>`;}
 function stageHtml(s){
   if(s.kind==='pyr')return `<section class="sec" id="${s.id}" data-sec><div class="kicker">Antes de todo</div><h2 style="margin-top:12px">Lo que vendemos es <span style="color:var(--brand)">confianza.</span></h2><p class="lead">Lo más importante es el <b>quién</b>, luego el <b>cómo</b> y al final el <b>qué</b>.</p>
@@ -6049,7 +6072,7 @@ function stageHtml(s){
     <p class="lead">${s.lead}</p>
     <div class="box card" data-card><h3 class="goal-h">${s.goal}</h3>
     ${s.di?`<div class="say"><div class="lbl di">${IC.chat}Di</div><p>${s.di}</p></div>`:''}
-    <div class="lbl hz">${IC.check}Paso a paso${s.haz.some(h=>h&&h.sp)?SPICED_HELP:''}</div><ol class="haz">${s.haz.map(hazLi).join('')}</ol>
+    <div class="lbl hz">${IC.check}Paso a paso${s.haz.some(h=>h&&h.sp)?SPICED_HELP:''}</div><ol class="haz haz-flow">${s.haz.map(hazLi).join('')}</ol>
     <div class="myn"><textarea data-note-txt placeholder="Tu nota sobre esta etapa"></textarea><div><button class="btn sm" data-write="${s.id}">Cancelar</button><button class="btn pri sm" data-note-save="${s.id}">Guardar nota</button></div></div></div>
     <button class="btn more" data-more>${IC.chev}<span>Ver detalle y ejemplos · ${nObj} objeci${nObj===1?'ón':'ones'}</span></button>
     <div class="detail"><div class="detail-in"><div class="box detail-body">${s.det}
@@ -6151,7 +6174,8 @@ const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){docu
 
 render();renderLog();document.querySelectorAll('[data-sec]').forEach(s=>io.observe(s));
 /* menú lateral plegable: se recuerda la preferencia */
-const SK='adereso_playbook_side';try{if(localStorage.getItem(SK)==='off')document.body.classList.add('side-off');}catch(e){}
+/* menú lateral cerrado por defecto; se abre solo si el usuario lo dejó abierto */
+const SK='adereso_side_v2';try{if(localStorage.getItem(SK)!=='on'){document.body.classList.add('side-off');const b=document.getElementById('sideTg');if(b)b.title=b.ariaLabel='Mostrar menú';}}catch(e){document.body.classList.add('side-off');}
 document.getElementById('sideTg').onclick=()=>{const off=document.body.classList.toggle('side-off');const b=document.getElementById('sideTg');b.title=b.ariaLabel=off?'Mostrar menú':'Ocultar menú';try{localStorage.setItem(SK,off?'off':'on');}catch(e){}};
 </script>
 </body>
@@ -6218,6 +6242,8 @@ body.side-off .side-tg svg{transform:rotate(180deg)}
 body.side-off .brand{flex-direction:column}
 body.side-off .brand>div,body.side-off .toc a span,body.side-off .side-box{display:none}
 body.side-off .toc a{padding:5px;justify-content:center}
+/* cerrado: solo queda el botón para volver a abrir el menú (sin logo ni números) */
+body.side-off .toc,body.side-off .brand-a{display:none}
 .toc{display:flex;flex-direction:column;gap:2px}
 .toc a{display:flex;gap:9px;align-items:center;padding:5px 7px;border-radius:var(--r2);color:var(--t2);text-decoration:none;font-size:12.5px;border:1px solid transparent;transition:all .2s var(--ease)}
 .toc a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -6609,7 +6635,8 @@ const obs=()=>{io.disconnect();document.querySelectorAll('.grp').forEach(s=>io.o
 const _r=render;render=function(){_r();obs();};
 render();
 /* menú lateral plegable: comparte la preferencia con el Playbook */
-const SK='adereso_playbook_side';try{if(localStorage.getItem(SK)==='off')document.body.classList.add('side-off');}catch(e){}
+/* menú lateral cerrado por defecto; se abre solo si el usuario lo dejó abierto */
+const SK='adereso_side_v2';try{if(localStorage.getItem(SK)!=='on'){document.body.classList.add('side-off');const b=document.getElementById('sideTg');if(b)b.title=b.ariaLabel='Mostrar menú';}}catch(e){document.body.classList.add('side-off');}
 document.getElementById('sideTg').onclick=()=>{const off=document.body.classList.toggle('side-off');const b=document.getElementById('sideTg');b.title=b.ariaLabel=off?'Mostrar menú':'Ocultar menú';try{localStorage.setItem(SK,off?'off':'on');}catch(e){}};
 </script>
 </body>
@@ -6676,6 +6703,8 @@ body.side-off .side-tg svg{transform:rotate(180deg)}
 body.side-off .brand{flex-direction:column}
 body.side-off .brand>div,body.side-off .toc a span,body.side-off .side-box{display:none}
 body.side-off .toc a{padding:5px;justify-content:center}
+/* cerrado: solo queda el botón para volver a abrir el menú (sin logo ni números) */
+body.side-off .toc,body.side-off .brand-a{display:none}
 .toc{display:flex;flex-direction:column;gap:2px}
 .toc a{display:flex;gap:9px;align-items:center;padding:5px 7px;border-radius:var(--r2);color:var(--t2);text-decoration:none;font-size:12.5px;border:1px solid transparent;transition:all .2s var(--ease)}
 .toc a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -7127,7 +7156,8 @@ const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){docu
 function obs(){io.disconnect();document.querySelectorAll('.phase').forEach(s=>io.observe(s));}
 obs();
 /* menú lateral plegable: comparte la preferencia con el Playbook */
-const SK='adereso_playbook_side';try{if(localStorage.getItem(SK)==='off')document.body.classList.add('side-off');}catch(e){}
+/* menú lateral cerrado por defecto; se abre solo si el usuario lo dejó abierto */
+const SK='adereso_side_v2';try{if(localStorage.getItem(SK)!=='on'){document.body.classList.add('side-off');const b=document.getElementById('sideTg');if(b)b.title=b.ariaLabel='Mostrar menú';}}catch(e){document.body.classList.add('side-off');}
 document.getElementById('sideTg').onclick=()=>{const off=document.body.classList.toggle('side-off');const b=document.getElementById('sideTg');b.title=b.ariaLabel=off?'Mostrar menú':'Ocultar menú';try{localStorage.setItem(SK,off?'off':'on');}catch(e){}};
 </script>
 </body>
