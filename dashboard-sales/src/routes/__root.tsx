@@ -78,10 +78,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Sales Dashboard" },
+      { title: "Hub comercial · Adereso" },
       { name: "description", content: "Panel comercial de Adereso con pipeline, cuotas y seguimiento en vivo." },
       { name: "author", content: "Adereso" },
-      { property: "og:title", content: "Sales Dashboard" },
+      { property: "og:title", content: "Hub comercial · Adereso" },
       { property: "og:description", content: "Panel comercial de Adereso con pipeline, cuotas y seguimiento en vivo." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -16,9 +16,9 @@ npm run dev
 
 La descarga original puede traer `.env` con la configuración pública de Supabase. En ese caso, basta agregar las claves privadas faltantes a `.env.local`. Ambos archivos quedan fuera de Git.
 
-Dashboard: http://127.0.0.1:8878/. Hub comercial local: http://127.0.0.1:8877/?vista=dashboard.
+Hub completo: http://127.0.0.1:8877/. La raíz del servidor muestra el ingreso único; `/?dashboard=1` abre el dashboard con esa misma sesión. Desde la raíz del repositorio, `npm run dev` inicia el proxy local y la aplicación.
 
-El hub vive en `/Users/gonzalocampos/Projects/pricing-adereso`. Su herramienta Dashboard Sales incrusta el servidor local en el puerto 8878. Fuera de localhost usa la URL de servidor configurada en `dashboard-settings.js` o muestra la página de disponibilidad pendiente; no vuelve a Lovable. El dashboard es una aplicación con servidor: GitHub Pages por sí solo no ejecuta sus funciones.
+El Hub completo se aloja en Render, con sus archivos privados fuera del directorio público. Docker usa la raíz del repositorio como contexto. Ver [DASHBOARD-SALES.md](../DASHBOARD-SALES.md) para autenticación, migración y despliegue. GitHub Pages no ejecuta esta protección y debe redirigirse al destino definitivo después de validar el ingreso.
 
 ## Conexiones y acceso
 
@@ -26,7 +26,7 @@ El hub vive en `/Users/gonzalocampos/Projects/pricing-adereso`. Su herramienta D
 - `SUPABASE_SERVICE_ROLE_KEY`: clave del mismo proyecto Supabase, usada únicamente en el servidor para snapshots, dispositivos de confianza y operaciones administrativas existentes.
 - Configurar Email OTP de ocho dígitos y TOTP en el Supabase propio, con SMTP y plantilla de código. Ver `../DASHBOARD-SALES.md`. Los prefijos `VITE_` solo pueden contener configuración pública.
 - La restricción `@adere.so`, el segundo factor del servidor y los permisos MCP se conservan. No hay un modo local que omita autenticación.
-- El código de correo puede ingresarse dentro del hub. Si el navegador bloquea almacenamiento entre sitios, usar el enlace «Abrir» del hub.
+- El código y el segundo factor se completan en la entrada del Hub. El dashboard comparte el mismo origen y la misma sesión.
 
 Las librerías MCP de Lovable se conservan como dependencia de código para mantener las herramientas existentes; no necesitan el editor. Las rutas MCP no confían por defecto en cabeceras de proxy suministradas por el cliente. Si el hosting usa un proxy, revisar su contrato antes de cambiar esa configuración.
 

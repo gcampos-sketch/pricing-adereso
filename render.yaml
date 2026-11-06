@@ -1,20 +1,32 @@
 # Initial deployment uses the free plan; approve a paid plan separately when needed.
 services:
   - type: web
-    name: adereso-sales-dashboard
+    name: adereso-hub-comercial
     runtime: docker
     repo: https://github.com/gcampos-sketch/pricing-adereso
     branch: codex/dashboard-sales-hub
     plan: free
     region: virginia
     dockerfilePath: ./dashboard-sales/Dockerfile
-    dockerContext: ./dashboard-sales
+    dockerContext: .
     healthCheckPath: /healthz
     autoDeployTrigger: checksPass
     buildFilter:
       paths:
         - dashboard-sales/**
         - render.yaml
+        - index.html
+        - brand-system.css
+        - chapter-index.js
+        - dashboard-settings.js
+        - assets/**
+        - academy/**
+        - argumentaciones/**
+        - operativa/**
+        - playbook/**
+        - dashboard/**
+        - "*.webp"
+        - .dockerignore
     envVars:
       - key: PORT
         value: 10000
@@ -29,6 +41,4 @@ services:
       - key: SUPABASE_PUBLISHABLE_KEY
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: HUBSPOT_ACCESS_TOKEN
         sync: false

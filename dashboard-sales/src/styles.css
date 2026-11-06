@@ -5277,3 +5277,7 @@ body::before {
 .auth-email-actions button:disabled { opacity: .5; cursor: default; }
 
 .auth-email-form .pill { justify-content: center; }
+
+.hub-portal { position: fixed; inset: 0; background: var(--background); }
+.hub-portal-frame { display: block; width: 100%; height: 100%; border: 0; }
+.hub-sign-out { position: fixed; right: 18px; bottom: 18px; z-index: 100; border: 1px solid var(--border-default); border-radius: 999px; padding: 8px 14px; background: var(--surface); color: var(--foreground); font: inherit; font-size: 12px; cursor: pointer; }

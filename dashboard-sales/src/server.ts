@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { handleHubRequest } from "./lib/hub-content.server";
 import { runtimeHealthResponse } from "./lib/runtime-health.server";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
@@ -53,6 +54,8 @@ export default {
       return request.method === "HEAD" ? new Response(null, { status: health.status, headers: health.headers }) : health;
     }
     try {
+      const hubResponse = await handleHubRequest(request);
+      if (hubResponse) return hubResponse;
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

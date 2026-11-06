@@ -38,6 +38,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
+      if (!next) void fetch("/api/hub/session", { method: "DELETE", credentials: "same-origin" });
       setReady(true);
     });
     supabase.auth.getSession().then(({ data: current }) => {
@@ -90,8 +91,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <main className="pulse-main">
       <div className="auth-card">
-        <h1 className="pulse-h2">Dashboard comercial</h1>
-        <p className="eyebrow">Acceso exclusivo al equipo Adereso. Código por correo y verificación en dos pasos.</p>
+        <h1 className="pulse-h2">Hub comercial</h1>
+        <p className="eyebrow">Un solo acceso para todas tus herramientas. Ingresa con tu correo @adere.so y tu segundo factor.</p>
         {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
         {sentTo ? <form className="auth-email-form" onSubmit={confirmCode}>
           <p role="status">Enviamos un código a <strong>{sentTo}</strong>.</p>

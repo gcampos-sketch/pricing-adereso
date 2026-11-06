@@ -41,3 +41,5 @@
 
 - Standalone development uses native Vite/TanStack configuration and a Node Nitro build; server-only HubSpot access uses HUBSPOT_ACCESS_TOKEN against the official API. Never restore a Lovable gateway fallback, treat connector credentials as native tokens or expose server secrets through VITE_*.
 - The local hub embeds Dashboard Sales on port 8878. Sign-in uses eight-digit email OTP for exact @adere.so addresses, followed by MfaGate; Supabase must use an OTP email template and the corporate signup hook. Preserve server MFA and MCP grants; email verification alone never grants report access.
+
+- The whole Hub is served behind the shared AuthGate/MfaGate at the application root. Hub files must remain outside public build assets and pass the server-verified /hub-content/ gateway; the embedded dashboard uses /?dashboard=1 on the same origin. Never restore the unprotected static development server.

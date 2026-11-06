@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const app = join(root, 'dashboard-sales');
 const apply = process.argv.includes('--apply');
 const cli = process.env.GCLOUD_BIN || 'gcloud';
 const project = 'adereso-internal-tools';
@@ -61,7 +60,7 @@ try {
     ...publicKeys.flatMap(key => ['--build-arg', `${key}=${process.env[key]}`]), '.'] }], images: [image],
     options: { logging: 'CLOUD_LOGGING_ONLY' }, timeout: '1200s' };
   const config = join(dir, 'cloudbuild.json');writeFileSync(config, JSON.stringify(build));
-  cloud(['builds', 'submit', app, '--config', config, '--service-account', `projects/${project}/serviceAccounts/${buildAccount}`]);
+  cloud(['builds', 'submit', root, '--config', config, '--service-account', `projects/${project}/serviceAccounts/${buildAccount}`]);
   const env = `^|^SUPABASE_URL=${process.env.VITE_SUPABASE_URL}|SUPABASE_PUBLISHABLE_KEY=${process.env.VITE_SUPABASE_PUBLISHABLE_KEY}`;
   cloud(['run', 'deploy', service, '--image', image, '--region', region, '--service-account', runtimeAccount,
     '--cpu=1', '--memory=1Gi', '--min-instances=0', '--max-instances=2', '--concurrency=20', '--timeout=300', '--port=8080',

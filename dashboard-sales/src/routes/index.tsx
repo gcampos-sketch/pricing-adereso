@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import {
   keepPreviousData,
   queryOptions,
@@ -15,6 +15,7 @@ import { LossDashboard } from "@/components/pulse/LossDashboard";
 import { QualityDashboard } from "@/components/pulse/QualityDashboard";
 import { LoadingProgress } from "@/components/pulse/LoadingProgress";
 import { AuthGate } from "@/components/AuthGate";
+import { HubPortal } from "@/components/HubPortal";
 import { RefreshProvider, useRegisterRefresh } from "@/contexts/RefreshContext";
 import {
   getCoachingReport,
@@ -125,7 +126,7 @@ function useReport<T extends Report>(
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Sales Dashboard | Comercial y Partners en vivo" },
+      { title: "Hub comercial · Adereso" },
       {
         name: "description",
         content:
@@ -145,10 +146,12 @@ export const Route = createFileRoute("/")({
 });
 
 function IndexRoute() {
+  const search = useLocation({ select: location => location.searchStr });
+  const dashboard = new URLSearchParams(search).get("dashboard") === "1";
   return (
     <RefreshProvider>
       <AuthGate>
-        <Index />
+        {dashboard ? <Index /> : <HubPortal />}
       </AuthGate>
     </RefreshProvider>
   );
