@@ -11,6 +11,7 @@ test('external presentation contains only the current Partners document, no Hub 
  const source = await readFile(resolve(root, 'index.html'), 'utf8');
  const page = partnerDocument(source);
  expect(page).toContain('<base href="/partners/">');
+ expect(page).not.toContain('<html lang="es" data-hub-mail="true">');
  expect(page).toContain('Resumen Programa Partner');
  expect(page).toContain('Fee de Partner');
  for (const privateMarker of ['id="homeGrid"', 'id="acadTpl"', 'id="opTpl"', 'id="ppTpl"', 'dashboard-settings.js', 'DASHBOARD_SALES_URL']) expect(page).not.toContain(privateMarker);

@@ -9,7 +9,7 @@ type Dependencies = {
   publicOrigin?: string | undefined;
 };
 const failure = (status: number, error: string) => Response.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } });
-function readTicket(request: Request): Ticket | null {
+export function readTicket(request: Request): Ticket | null {
   const raw = request.headers.get('cookie')?.split(';').map(item => item.trim()).find(item => item.startsWith(HUB_COOKIE + '='))?.slice(HUB_COOKIE.length + 1);
   if (!raw || raw.length > 3800) return null;
   try {

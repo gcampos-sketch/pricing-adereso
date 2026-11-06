@@ -22,9 +22,10 @@ export async function verifyHubIdentity(accessToken: string, trustToken?: string
     const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data, error } = await client.auth.getClaims(accessToken);
     if (error || !data?.claims) return null;
-    return authorizeHubClaims(data.claims, trustToken, async (userId, token) => {
+    const authorization = await authorizeHubClaims(data.claims, trustToken, async (userId, token) => {
       const { verifyTrustToken } = await import('./mfa-trust.server');
       return verifyTrustToken(userId, token);
     });
+    return authorization ? { ...authorization, userId: data.claims.sub, email: String(data.claims.email).trim().toLowerCase() } : null;
   } catch { return null; }
 }

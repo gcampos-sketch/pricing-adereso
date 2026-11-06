@@ -45,3 +45,5 @@
 - The whole Hub is served behind the shared AuthGate/MfaGate at the application root. Hub files must remain outside public build assets and pass the server-verified /hub-content/ gateway; the embedded dashboard uses /?dashboard=1 on the same origin. Never restore the unprotected static development server.
 
 - Public /partners/ is an explicitly authorized external presentation extracted only from ppTpl, plus three allowlisted visual assets. Sharing must link to it without session tokens or customer data; never expose the Hub shell or private reports through public route parameters.
+
+- Per-user Gmail sharing is server-only and requires the existing corporate MFA session. Verify Google ID-token issuer/audience, nonce, verified email/domain and exact Hub-account match. Keep encrypted refresh credentials inaccessible to browser roles. Atomic send claims prevent duplicate retries; ambiguous delivery must never automatically resend. Missing OAuth configuration must remain explicit.

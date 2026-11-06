@@ -8190,8 +8190,9 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     if(kind==='share'){
       return '<div class="partner-share-context">'+(isRef()?'Advisor':'Reseller')+' · '+TI()[S.tier].n+' · '+disc()+'% '+(isRef()?'comisión':'fee')+'</div>'+
         '<input class="partner-share-url" id="partnerShareUrl" type="url" readonly aria-label="Enlace de Partners" value="'+esc(partnerShareUrl())+'">'+
+        (hubMailEnabled()?'<div id="partnerMailAccount" class="partner-mail-account">Cargando remitente…</div><label class="partner-share-label" for="partnerShareTo">Para</label><input class="partner-share-to" id="partnerShareTo" type="email" autocomplete="email" placeholder="nombre@empresa.com">':'')+
         '<label class="partner-share-label" for="partnerShareMessage">Mensaje listo para enviar</label><textarea class="partner-share-template" id="partnerShareMessage" rows="3">Hola, te comparto el Programa de Partners de Adereso. Aquí puedes revisar las condiciones y simular tu operación. ¡Lo vemos y conversamos!</textarea>'+
-        '<div class="partner-share-actions"><button type="button" class="btn btn-o" data-copy-partners>Copiar enlace</button><a class="btn btn-p" id="partnerShareEmail" target="_blank" rel="noopener noreferrer">Abrir correo ↗</a></div>'+
+        '<div class="partner-share-actions"><button type="button" class="btn btn-o" data-copy-partners>Copiar enlace</button>'+ (hubMailEnabled()?'<button type="button" class="btn btn-p" data-send-partner disabled>Enviar correo</button>':'<a class="btn btn-p" id="partnerShareEmail" target="_blank" rel="noopener noreferrer">Abrir correo ↗</a>')+'</div>'+
         '<p class="partner-share-status" id="partnerShareStatus" role="status" aria-live="polite"></p>'+
         (partnerShareIsLocal()?'<small class="partner-share-publish">Enlace público disponible al publicar.</small>':'');
     }
@@ -8229,12 +8230,15 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     var partnerDetail=kind==='partnerplans'?$('#partnerPlansDetail'):null;
     var partnerHome=partnerDetail&&partnerDetail.parentNode,partnerNext=partnerDetail&&partnerDetail.nextSibling;
     if(partnerDetail){$('#partnerPlansMount',root).appendChild(partnerDetail);partnerDetail.hidden=false;renderConditions();}
-    if(kind==='share')updateShareEmail();
+    if(kind==='share'){updateShareEmail();if(hubMailEnabled())loadHubMail();}
     function redraw(){var y=$('.modal',root).scrollTop;$('#mBody').innerHTML=modalBody(kind);$('.modal',root).scrollTop=y;render()}
     root.onclick=function(e){
       if(e.target.id==='mbg'){close();return}
       var t=e.target.closest('button');if(!t)return;
       if(t.hasAttribute('data-copy-partners')){copyPartnerLink();return}
+      if(t.hasAttribute('data-connect-mail')){connectHubMail(t);return}
+      if(t.hasAttribute('data-disconnect-mail')){disconnectHubMail(t);return}
+      if(t.hasAttribute('data-send-partner')){sendHubMail(t);return}
       if(kind==='partnerplans'){
         if(t.dataset.tier){if(t.dataset.ptype)S.ptype=t.dataset.ptype;S.tier=t.dataset.tier;render();return}
         if(t.dataset.flag){S[t.dataset.flag]=!S[t.dataset.flag];render();return}
@@ -8314,6 +8318,29 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     function copied(){status.textContent='Enlace copiado.'}
     function fallback(){input.focus();input.select();try{if(document.execCommand('copy'))copied();else status.textContent='Selecciona el enlace y cópialo.'}catch(e){status.textContent='Selecciona el enlace y cópialo.'}}
     if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(input.value).then(copied,fallback);else fallback();
+  }
+  function hubMailEnabled(){return document.documentElement.dataset.hubMail==='true'}
+  function mailSelection(){return {tipo:S.ptype,categoria:S.tier,rebase:!!S.rebase,soporte:!!S.soporte}}
+  var mailRequestId=null,mailConnected=false,mailBlocked=false;
+  var mailErrors={authentication_required:'Tu sesión venció. Vuelve a ingresar al Hub.',gmail_not_configured:'La conexión de Gmail todavía no está habilitada.',sender_mismatch:'Conecta el mismo correo @adere.so con el que ingresaste al Hub.',gmail_not_connected:'Conecta tu Gmail para enviar.',gmail_reconnect_required:'Vuelve a conectar tu Gmail.',gmail_send_rejected:'Google rechazó el envío. Revisa el destinatario o vuelve a conectar Gmail.',mail_rate_limit:'Llegaste al límite de envíos de esta hora. Intenta más tarde.',delivery_unknown:'No pudimos confirmar el envío. Revisa Enviados en Gmail antes de intentar otra vez.',invalid_input:'Revisa el correo del destinatario y el mensaje.',request_conflict:'Este intento ya se utilizó. Cierra y vuelve a abrir Compartir.'};
+  function mailStatus(message){var n=$('#partnerShareStatus');if(n)n.textContent=message}
+  async function mailApi(route,data){var response=await fetch('/api/hub/mail/'+route,{method:data===undefined?'GET':'POST',credentials:'same-origin',headers:data===undefined?{}:{'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify(data)});var result=await response.json();if(!response.ok){var e=new Error(mailErrors[result.error]||'No pudimos completar la acción. Intenta más tarde.');e.code=result.error;throw e}return result}
+  async function loadHubMail(){
+    var node=$('#partnerMailAccount');if(!node)return;mailRequestId=crypto.randomUUID();mailConnected=false;mailBlocked=false;
+    try{var result=await mailApi('status');if($('#partnerMailAccount')!==node)return;
+      mailConnected=!!result.connected;
+      node.innerHTML=result.connected?'<span>Desde <b>'+esc(result.email)+'</b></span><button type="button" data-disconnect-mail>Desconectar</button>':result.configured?'<span>Envía desde tu cuenta de Adereso</span><button type="button" data-connect-mail>Conectar Gmail</button>':'<span>Conexión de Gmail pendiente de habilitación</span>';
+      var button=$('[data-send-partner]');if(button)button.disabled=!mailConnected;
+    }catch(e){if($('#partnerMailAccount')===node)node.textContent=e.message}
+  }
+  async function connectHubMail(button){button.disabled=true;mailStatus('Abriendo Google…');try{var result=await mailApi('connect',mailSelection());var url=new URL(result.url);if(url.origin!=='https://accounts.google.com')throw new Error('No pudimos abrir Google.');window.top.location.href=url.href}catch(e){mailStatus(e.message);button.disabled=false}}
+  async function disconnectHubMail(button){button.disabled=true;try{await mailApi('disconnect',{});await loadHubMail();mailStatus('Correo desconectado.')}catch(e){mailStatus(e.message);button.disabled=false}}
+  async function sendHubMail(button){
+    var to=$('#partnerShareTo'),message=$('#partnerShareMessage');if(!to||!message||!to.value.trim()||!to.checkValidity()){mailStatus('Escribe un correo válido en Para.');if(to){to.reportValidity();to.focus()}return}
+    if(!message.value.trim()){mailStatus('Escribe el mensaje que quieres enviar.');return}
+    if(!mailConnected||mailBlocked)return;
+    button.disabled=true;mailStatus('Enviando…');
+    try{var result=await mailApi('send',{requestId:mailRequestId,to:to.value.trim(),message:message.value.trim(),selection:mailSelection()});if(result.status==='sent'){mailBlocked=true;mailStatus('Enviado a '+to.value.trim()+'.');button.textContent='Enviado'}}catch(e){mailStatus(e.message);if(e.code==='delivery_unknown'||!e.code){mailBlocked=true;mailStatus(mailErrors.delivery_unknown)}else{mailRequestId=crypto.randomUUID();button.disabled=false}}
   }
   function share(){openModal('share')}
 
@@ -8450,6 +8477,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
   function render(){renderConditions();renderMoney();renderTotals();renderPortal()}
 
   setOpen(true);render();mark(0);spy();
+  if(hubMailEnabled()&&incoming.get('mail')){openModal('share');if(incoming.get('mail')!=='connected')mailStatus('No se conectó Gmail. Puedes volver a intentarlo.')}
   document.documentElement.classList.add('js');
 })();
 </script>
@@ -10705,7 +10733,7 @@ function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool
   document.body.classList.toggle('v-op',v==='operativa');
   if(v==='operativa'){const f=document.getElementById('opFrame'),tp=document.getElementById('opTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
   document.body.classList.toggle('v-pp',v==='progpartners');
-  if(v==='progpartners'){const f=document.getElementById('ppFrame'),tp=document.getElementById('ppTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
+  if(v==='progpartners'){const f=document.getElementById('ppFrame'),tp=document.getElementById('ppTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es" data-hub-mail="true">'+tp.innerHTML+'</html>';}
   if(v==='embed'){const t=ALL_TOOLS.find(x=>x.k===k);const f=document.getElementById('evFrame');
     document.getElementById('evTitle').textContent=t.name;document.getElementById('evOpen').href=t.url;
     document.querySelector('.ev-note').hidden=k==='dashboard';

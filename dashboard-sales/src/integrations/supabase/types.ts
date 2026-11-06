@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      hub_gmail_connections: {
+        Row: {
+          user_id: string
+          email: string
+          google_sub: string
+          refresh_token_encrypted: string
+          connected_at: string
+        }
+        Insert: {
+          user_id: string
+          email: string
+          google_sub: string
+          refresh_token_encrypted: string
+          connected_at?: string
+        }
+        Update: {
+          user_id?: string
+          email?: string
+          google_sub?: string
+          refresh_token_encrypted?: string
+          connected_at?: string
+        }
+        Relationships: []
+      }
+      hub_gmail_oauth_states: {
+        Row: {
+          user_id: string
+          state_hash: string
+          verifier_encrypted: string
+          nonce: string
+          selection: Json
+          expires_at: string
+        }
+        Insert: {
+          user_id: string
+          state_hash: string
+          verifier_encrypted: string
+          nonce: string
+          selection: Json
+          expires_at: string
+        }
+        Update: {
+          user_id?: string
+          state_hash?: string
+          verifier_encrypted?: string
+          nonce?: string
+          selection?: Json
+          expires_at?: string
+        }
+        Relationships: []
+      }
+      hub_gmail_sends: {
+        Row: {
+          request_id: string
+          user_id: string
+          payload_hash: string
+          status: string
+          provider_message_id: string | null
+          created_at: string
+        }
+        Insert: {
+          request_id: string
+          user_id: string
+          payload_hash: string
+          status: string
+          provider_message_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          request_id?: string
+          user_id?: string
+          payload_hash?: string
+          status?: string
+          provider_message_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       coaching_events: {
         Row: {
           action_note: string | null
@@ -208,6 +286,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      hub_claim_gmail_send: {
+        Args: { p_user_id: string; p_request_id: string; p_payload_hash: string }
+        Returns: string
+      }
+
       has_active_mcp_grant: { Args: { _client_id: string }; Returns: boolean }
       save_sales_notifications: {
         Args: { p_payload: Json; p_revision: number; p_user: string }

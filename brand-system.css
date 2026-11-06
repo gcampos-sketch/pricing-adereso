@@ -351,3 +351,10 @@ body.shared-partners .apprail,body.shared-partners .home-fab {display:none!impor
 .modal--share .partner-share-status {min-height:0;margin:0;font-size:10px;}
 .modal--share .partner-share-status:not(:empty) {margin-top:10px;}
 .partner-share-publish {display:block;font:400 9px/1.5 var(--font-body);color:#747d8c;margin-top:12px;}
+
+/* Account-bound sharing inside the authenticated Hub only. */
+.partner-mail-account{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;color:#9fa7b5;font:400 11px/1.5 var(--font-body)}
+.partner-mail-account b{color:#e4e7ec;font-weight:500}
+.partner-mail-account button{border:0;background:none;color:var(--brand);font:inherit;cursor:pointer;padding:4px 0;white-space:nowrap}
+.partner-share-to{box-sizing:border-box;display:block;width:100%;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(0,0,0,.15);color:#e4e7ec;padding:10px 11px;font:400 12px var(--font-body)}
+.partner-share-actions button:disabled{opacity:.45;cursor:default}
