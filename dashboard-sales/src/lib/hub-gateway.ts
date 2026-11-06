@@ -50,7 +50,7 @@ export function createHubGateway(deps: Dependencies) {
     if (!identity || identity.expiresAt <= now()) return failure(401, 'authentication_required');
     try {
       const bytes = path === 'dashboard-settings.js'
-        ? new TextEncoder().encode("window.ADERESO_DASHBOARD_URL = '/?dashboard=1';\n")
+        ? new TextEncoder().encode("window.ADERESO_DASHBOARD_URL = '/?dashboard=1&embedded=hub';\n")
         : await deps.read(path);
       return new Response(request.method === 'HEAD' ? null : new Uint8Array(bytes), { headers: {
         'Content-Type': HUB_FILES[path]!, 'Cache-Control': 'private, no-store', 'Vary': 'Cookie',

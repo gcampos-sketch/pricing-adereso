@@ -10668,7 +10668,7 @@ const TI={
 };
 // Local and hosted dashboards share this hub; no Lovable runtime fallback.
 const DASHBOARD_SALES_URL=window.ADERESO_DASHBOARD_URL || (['localhost','127.0.0.1','[::1]'].includes(location.hostname)
-  ? location.protocol+'//'+location.hostname+':8878/?dashboard=1'
+  ? location.protocol+'//'+location.hostname+':8878/?dashboard=1&embedded=hub'
   : 'dashboard/');
 const TOOLS=[
  {g:'Para reunión',items:[

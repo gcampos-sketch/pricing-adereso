@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BarChart3, BriefcaseBusiness, ChevronDown, Handshake, PanelLeftClose, PanelLeftOpen, Users, Workflow, X } from "lucide-react";
 import { AccountMenu } from "@/components/AuthGate";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export type ReportView = "comercial" | "proyectos" | "partners" | "equipo" | "crecimiento" | "simulador" | "embudo" | "perdidos" | "calidad";
 
@@ -21,8 +22,9 @@ const groups = [
   ] },
 ] satisfies { id: ReportView; label: string; icon: typeof Users; children?: { id: ReportView; label: string }[] }[];
 
-export function ReportSidebar({ view, onView, collapsed, onCollapse }: {
+export function ReportSidebar({ view, onView, collapsed, onCollapse, presentation = 'sidebar' }: {
   view: ReportView; onView: (view: ReportView) => void; collapsed: boolean; onCollapse: () => void;
+  presentation?: 'sidebar' | 'toolbar';
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expanded, setExpanded] = useState<string[]>(["comercial"]);
@@ -46,6 +48,37 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse }: {
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
+
+  if (presentation === 'toolbar') return <header className="report-toolbar">
+    <span className="report-toolbar-label"><BarChart3 aria-hidden="true" />Reportes</span>
+    <nav className="report-toolbar-nav" aria-label="Vistas del dashboard">
+      {groups.map(group => {
+        const active = group.children ? group.children.some(child => child.id === view) : view === group.id;
+        const item = <Button variant="ghost" className="report-toolbar-item" data-active={active}
+          aria-current={!group.children && active ? 'page' : undefined}
+          onClick={group.children ? undefined : () => select(group.id)}>
+          <group.icon aria-hidden="true" /><span>{group.label}</span>
+          {group.children && <ChevronDown aria-hidden="true" />}
+        </Button>;
+        return group.children ? <DropdownMenu key={group.id}>
+          <DropdownMenuTrigger asChild>{item}</DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="report-toolbar-menu">
+            {group.children.map(child => <DropdownMenuItem key={child.id} data-active={view === child.id}
+              aria-current={view === child.id ? 'page' : undefined} onSelect={() => select(child.id)}>{child.label}</DropdownMenuItem>)}
+          </DropdownMenuContent>
+        </DropdownMenu> : <div key={group.id}>{item}</div>;
+      })}
+    </nav>
+    <label className="report-toolbar-mobile">
+      <span className="sr-only">Vista del dashboard</span>
+      <select value={view} onChange={event => select(event.target.value as ReportView)}>
+        {groups.map(group => group.children ? <optgroup key={group.id} label={group.label}>
+          {group.children.map(child => <option key={child.id} value={child.id}>{child.label}</option>)}
+        </optgroup> : <option key={group.id} value={group.id}>{group.label}</option>)}
+      </select>
+    </label>
+    <AccountMenu collapsed />
+  </header>;
 
   return <>
     <div className="report-mobile-bar">

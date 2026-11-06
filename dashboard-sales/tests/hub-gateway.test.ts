@@ -57,7 +57,7 @@ test('logout clears the shared hub cookie and rejects cross-origin logout', asyn
 });
 test('the embedded dashboard uses the same origin and session', async () => {
  const { gateway } = setup(); const response = await gateway(new Request(origin + '/hub-content/dashboard-settings.js', { headers: { cookie: cookie() } }));
- expect(await response?.text()).toContain("'/?dashboard=1'");
+ expect(await response?.text()).toContain("'/?dashboard=1&embedded=hub'");
 });
 test('MCP and ordinary app routes retain their own existing handlers', async () => {
  const { gateway } = setup(); for (const path of ['/', '/mcp', '/healthz']) expect(await gateway(new Request(origin + path))).toBeNull();

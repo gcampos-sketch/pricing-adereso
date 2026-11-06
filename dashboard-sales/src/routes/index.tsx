@@ -147,11 +147,13 @@ export const Route = createFileRoute("/")({
 
 function IndexRoute() {
   const search = useLocation({ select: location => location.searchStr });
-  const dashboard = new URLSearchParams(search).get("dashboard") === "1";
+  const params = new URLSearchParams(search);
+  const dashboard = params.get("dashboard") === "1";
+  const embedded = params.get("embedded") === "hub";
   return (
     <RefreshProvider>
       <AuthGate>
-        {dashboard ? <Index /> : <HubPortal />}
+        {dashboard ? <Index embedded={embedded} /> : <HubPortal />}
       </AuthGate>
     </RefreshProvider>
   );
@@ -169,7 +171,7 @@ function ago(iso: string | undefined) {
   return `hace ${hours} h`;
 }
 
-function Index() {
+function Index({ embedded = false }: { embedded?: boolean }) {
   const [view, setView] = useState<View>("comercial");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [simulateOwner, setSimulateOwner] = useState<string | undefined>(undefined);
@@ -186,9 +188,9 @@ function Index() {
   const meta = useQuery(metaQuery);
 
   useEffect(() => {
-    document.body.dataset["reportNavigation"] = sidebarCollapsed ? "collapsed" : "expanded";
+    document.body.dataset["reportNavigation"] = embedded ? "embedded" : sidebarCollapsed ? "collapsed" : "expanded";
     return () => { delete document.body.dataset["reportNavigation"]; };
-  }, [sidebarCollapsed]);
+  }, [embedded, sidebarCollapsed]);
 
   // Mantiene una sola cápsula de vidrio alineada con la opción activa de cada
   // control segmentado, incluso cuando cambian filtros o medidas del viewport.
@@ -328,7 +330,7 @@ function Index() {
 
   const tabs = (
     <>
-      <ReportSidebar view={view} onView={setView} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((current) => !current)} />
+      <ReportSidebar view={view} onView={setView} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((current) => !current)} presentation={embedded ? 'toolbar' : 'sidebar'} />
       {stamp ? (
         <p className="data-stamp">
           <span className="data-stamp-dot" data-live={active.isRefreshing} aria-hidden="true" />
