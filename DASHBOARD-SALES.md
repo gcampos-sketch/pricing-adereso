@@ -25,6 +25,18 @@ La dependencia npm `@lovable.dev/mcp-js` se conserva para mantener las herramien
 
 Los cambios previos del hub (identidad, Partners, índice y demás secciones) se conservan en el mismo árbol de trabajo. Publicar el conjunto completo con sus archivos nuevos.
 
+## Supabase propio del dashboard
+
+Destino: proyecto `nsflqsdtfmnuangezsid` (organización Adereso, `supabase-coral-cave`). El código local utiliza su URL y claves desde archivos de entorno ignorados. Mantener los mismos valores de URL y clave publicable en cliente y servidor; la clave privada va únicamente en `SUPABASE_SERVICE_ROLE_KEY`. Ese nombre acepta la clave secreta moderna `sb_secret_`; nunca copiarla a `VITE_*`.
+
+Para instalar el esquema en un destino vacío, revisar y ejecutar `dashboard-sales/deployment/supabase-bootstrap.sql` en el editor SQL del proyecto correcto. Agrupa las ocho migraciones originales en una transacción y se detiene si encuentra tablas o funciones del dashboard existentes. No usarlo para actualizar un esquema instalado. No borra datos ni copia información del origen. El trigger de fechas usa un nombre propio del dashboard para evitar reemplazar funciones de otras aplicaciones.
+
+El esquema consta de seis tablas con RLS: reportes, coaching, recuperación MFA, dispositivos confiables, permisos MCP y notificaciones personales. El acceso al caché de reportes queda reservado al servidor. Cada usuario solo puede leer sus propios grants MCP; la función de escritura de notificaciones es exclusiva del servidor. Comprobar tablas, políticas y rechazos sin sesión después de instalar.
+
+Una instalación nueva no importa usuarios, eventos de coaching ni notificaciones del proyecto anterior. Los reportes se reconstruyen desde HubSpot con una clave válida. Para conservar historial almacenado se requiere una exportación autorizada del origen y una revisión de las asociaciones a usuarios. Las cuentas deben volver a configurar MFA y reconectar clientes MCP; no copiar sesiones, dispositivos confiables ni grants vigentes del proyecto anterior.
+
+El proveedor de ingreso y los retornos permitidos se configuran en Supabase. Para Google hacen falta las credenciales OAuth correspondientes y autorizar `https://nsflqsdtfmnuangezsid.supabase.co/auth/v1/callback`. El servidor conserva la comprobación `@adere.so` y MFA. No conectar el sitio público hasta validar el ingreso completo y un reporte real.
+
 ## Despliegue en Render (destino elegido)
 
 `render.yaml` en la raíz define un Web Service Docker llamado `adereso-sales-dashboard`, usando el Dockerfile y contexto de `dashboard-sales/`. El servicio conserva Supabase; no crea una base de datos nueva ni utiliza GCP o Lovable para alojar la aplicación.
