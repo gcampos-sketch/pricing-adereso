@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Adereso - Pricing a tu medida</title>
+<title>Hub comercial · Adereso</title>
 <style>
   :root{
     --brand:#FFD540; --brand-hover:#FFE37A; --brand-active:#E6C039;
@@ -199,7 +199,7 @@
   @keyframes arPop{0%{transform:scale(.7);color:var(--brand)}60%{transform:scale(1.12);color:var(--brand)}100%{transform:none}}
   #aiBg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   /* viñeta suave para que las tarjetas se lean sobre el cielo */
-  .home-view::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(14,15,18,0.55),rgba(14,15,18,0) 60%)}
+  .home-view::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,rgba(8,11,19,0.35),transparent 68%)}
   .home-in{z-index:1}
   .home-in{position:relative;max-width:920px;margin:0 auto;padding:72px 24px 60px}
   .home-brand .logo-word{font-size:26px}
@@ -1742,20 +1742,22 @@
     section.lvl:not(#s5){display:none!important}
   }
 </style>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
 </head>
 <body>
   <header class="topbar">
     <div class="progress"><div class="fill" id="pfill"></div></div>
   </header>
   <!-- barra lateral de herramientas: el ícono de cada una abre su vista (home, cotizador o sitio integrado) -->
-  <nav class="apprail" aria-label="Herramientas comerciales" id="apprail"></nav>
-  <button type="button" class="home-fab" data-tool="home" aria-label="Volver al inicio" title="Inicio">a<em>.</em></button>
+  <nav class="apprail" aria-label="Hub comercial" id="apprail"></nav>
+  <button type="button" class="home-fab" data-tool="home" aria-label="Volver al inicio" title="Inicio"><img class="adereso-symbol" src="assets/adereso-symbol.svg" width="28" height="28" alt=""></button>
   <!-- home: tarjetas de las herramientas sobre fondo animado de IA -->
   <section class="home-view" id="homeView" aria-label="Inicio">
     <canvas id="aiBg" aria-hidden="true"></canvas>
     <div class="home-in">
-      <div class="home-brand"><span class="logo-word">adereso<em>.ai</em></span></div>
-      <h1 class="home-title">Herramientas comerciales</h1>
+      <div class="home-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
+      <h1 class="home-title">Hub comercial</h1>
       <p class="home-sub">Todo lo que necesitas para cotizar, vender y acompañar a tus clientes.</p>
       <div id="homeGrid"></div>
     </div>
@@ -1763,7 +1765,7 @@
   <!-- vista integrada: abre los sitios dentro de la página -->
   <!-- descuentos a utilizar: simulador de plazo, pago anticipado y descuento comercial -->
   <section class="disc-view" id="discView" aria-label="Descuentos a utilizar">
-    <div class="disc-in">
+    <div class="disc-in"><div class="tool-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
       <div class="level-kicker">Descuentos a utilizar</div>
       <h2 class="disc-title">Simula los descuentos</h2>
       <p class="disc-sub">Trae el valor que cotizaste o ingresa uno a mano, y combina plazo, pago anticipado y descuento comercial.</p>
@@ -2156,6 +2158,8 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
   .main { padding: 20px; }
 }
 </style>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -2163,7 +2167,7 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
   <div class="header">
     <div class="header-top">
       <div>
-        <div class="header-logo">adereso.ai</div>
+        <div class="header-logo"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
         <h1>Sales Academy</h1>
       </div>
       <div class="header-stats">
@@ -5859,11 +5863,13 @@ td:first-child{color:var(--t)}
 .toast.on{transform:translate(-50%,0)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 </style>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
 </head>
 <body>
 <div class="layout">
   <aside class="side">
-    <div class="brand"><span class="brand-a">A</span><div><b>Adereso</b><small>Playbook · primera reunión</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <div class="brand"><div><b><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></b><small>Playbook · primera reunión</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
     <nav class="toc" id="toc"></nav>
     <div class="side-box"><h6>Según Notion</h6><div class="dt">26 oct 2026</div>
       <a class="btn sm" style="margin-top:10px;width:100%" href="https://app.notion.com/p/31d9c2747df581e7bec7cfea5d224070" target="_blank" rel="noopener">Ver playbook en Notion ↗</a></div>
@@ -5873,7 +5879,7 @@ td:first-child{color:var(--t)}
       <button class="btn sm" style="margin-top:10px;width:100%" data-open-log>Abrir bitácora</button></div>
   </aside>
 
-  <main>
+  <main><div class="tool-brand document-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
     <section class="hero" id="top">
       <div class="kicker">Playbook comercial · Primera reunión con lead</div>
       <h1>Vendemos confianza.<br><em>No features.</em></h1>
@@ -6527,16 +6533,18 @@ td:first-child{color:var(--t)}
 .end h3{font-size:20px}
 .end p{color:var(--t2);margin:6px 0 14px;font-size:14px}
 </style>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
 </head>
 <body>
 <div class="layout">
   <aside class="side">
-    <div class="brand"><span class="brand-a">A</span><div><b>Adereso</b><small>Argumentaciones</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <div class="brand"><div><b><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></b><small>Argumentaciones</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
     <nav class="toc" id="toc"></nav>
     <div class="side-box"><h6>Según Notion</h6><div class="dt">27 oct 2026</div>
       <a class="btn sm" style="margin-top:10px;width:100%" href="https://app.notion.com/p/adereso/Manejo-de-objeciones-2e79c2747df580f99f9ace377b9467b8" target="_blank" rel="noopener">Ver en Notion ↗</a></div>
   </aside>
-  <main>
+  <main><div class="tool-brand document-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
     <section class="hero" id="top">
       <div class="kicker">Argumentaciones · Objeciones y comentarios en reunión</div>
       <h1>Escucha, valida<br><em>y lleva al siguiente paso.</em></h1>
@@ -7037,16 +7045,18 @@ mark{background:rgba(255,213,64,0.3);color:var(--t);border-radius:3px;padding:0 
 .end h3{font-size:20px}
 .end p{color:var(--t2);margin:6px 0 14px;font-size:14px}
 </style>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
 </head>
 <body>
 <div class="layout">
   <aside class="side">
-    <div class="brand"><span class="brand-a">A</span><div><b>Adereso</b><small>Operativa comercial</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+    <div class="brand"><div><b><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></b><small>Operativa comercial</small></div><button class="side-tg" id="sideTg" aria-label="Ocultar menú" title="Ocultar menú"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
     <nav class="toc" id="toc"></nav>
     <div class="side-box"><h6>Según Notion</h6><div class="dt">23 oct 2026</div>
       <a class="btn sm" style="margin-top:10px;width:100%" href="https://app.notion.com/p/adereso/Operativa-comercial-31c9c2747df581d98825fcaaff9823b7" target="_blank" rel="noopener">Ver en Notion ↗</a></div>
   </aside>
-  <main>
+  <main><div class="tool-brand document-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
     <section class="hero" id="top">
       <div class="kicker">Operativa comercial · Del lead al inicio del servicio</div>
       <h1>Sigue el deal,<br><em>rama por rama.</em></h1>
@@ -7834,6 +7844,8 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
 .share-toast.up{transform:translateY(6px)}
 .share-toast.up.on{transform:translateY(0)}
 </style>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
 </head>
 <body>
 
@@ -7856,7 +7868,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
 
 <nav class="rail" id="steps" aria-label="Secciones"></nav>
 
-<div class="shell">
+<div class="shell"><div class="tool-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
   <div class="pdf-bar top-pdf"><button type="button" class="pdf-btn share-btn" data-share><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button><button type="button" class="pdf-btn" data-pdf><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6"/><path d="m9 14 3 3 3-3"/></svg>Exportar a PDF</button></div>
   <div id="screens">
 
@@ -7878,6 +7890,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
           <div class="cfg-row">
             <p class="flbl"><span>2</span>Categoría</p>
             <div class="seg" id="tierSeg" role="group" aria-label="Categoría"></div>
+            <button type="button" class="partner-detail-link" data-modal="partnerplans" aria-haspopup="dialog">Ver planes completos <span aria-hidden="true">↗</span></button>
           </div>
           <div class="cfg-row" id="flagRow">
             <p class="flbl"><span>3</span>Extras</p>
@@ -7918,7 +7931,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
             <div class="view on" id="v-clientes">
               <div class="kpis">
                 <div>Clientes activos<b id="kN"></b></div>
-                <div>MRR a precio lista<b id="kMrr"></b></div>
+                <div>Facturación a clientes<b id="kMrr"></b></div>
                 <div><span id="kDiscL">Fee de Partner</span><b id="kDisc"></b></div>
               </div>
               <div class="grid" id="grid"></div>
@@ -7926,7 +7939,8 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
               <div class="det" id="det" hidden></div>
               <div class="inv">
                 <div class="hd"><div id="invTitle"></div><svg class="ic"><use href="#i-invoice"/></svg></div>
-                <table><thead><tr><th>Cliente</th><th id="thList">Lista</th><th id="thDisc">Fee</th><th id="thPay">Pagas</th></tr></thead><tbody id="invBody"></tbody><tfoot><tr><td>Total</td><td id="fList"></td><td id="fDisc"></td><td class="y" id="fPay"></td></tr></tfoot></table>
+                <div class="invoice-table-wrap"><table aria-label="Factura de Adereso al Partner, facturación al cliente y ganancia del Partner"><thead><tr><th scope="col">Cliente</th><th scope="col" id="thPay"></th><th scope="col" id="thList"></th><th scope="col" id="thDisc"></th></tr></thead><tbody id="invBody"></tbody><tfoot><tr><td>Total USD</td><td id="fPay"></td><td id="fList"></td><td class="partner-earned" id="fDisc"></td></tr></tfoot></table></div>
+                <p class="invoice-explanation" id="invoiceExplanation"></p>
               </div>
             </div>
             <div class="view" id="v-cotizador">
@@ -7960,7 +7974,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
         <div class="pprof" id="pProf"></div>
         <div class="cost">
           <div class="card cc">
-            <div class="t"><span>Servicio Adereso · mes</span><button class="edit" data-modal="svc" aria-label="Configurar servicio"><svg class="ic sm"><use href="#i-edit"/></svg></button></div>
+            <div class="t"><div class="cost-heading"><span class="cost-kicker">Servicio mensual</span><h3>Servicio Adereso</h3></div><button class="edit" data-modal="svc" aria-label="Configurar servicio"><svg class="ic sm"><use href="#i-edit"/></svg></button></div>
             <div class="pills2" id="svcChips"></div>
             <div class="pre" id="svcPre"></div>
             <div class="v"><span id="svcV"></span> <small>USD/mes</small></div>
@@ -7968,7 +7982,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
             <div class="note" id="svcN"></div>
           </div>
           <div class="card cc">
-            <div class="t"><span>Billetera Meta · prepago</span><button class="edit" data-modal="meta" aria-label="Configurar billetera"><svg class="ic sm"><use href="#i-edit"/></svg></button></div>
+            <div class="t"><div class="cost-heading"><span class="cost-kicker">Saldo prepago</span><h3>Billetera Meta</h3></div><button class="edit" data-modal="meta" aria-label="Configurar billetera"><svg class="ic sm"><use href="#i-edit"/></svg></button></div>
             <div class="pills2" id="metaChips"></div>
             <div class="pre" id="metaPre"></div>
             <div class="v"><span id="metaV"></span> <small>USD</small></div>
@@ -7976,7 +7990,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
             <div class="note" id="metaN"></div>
           </div>
           <div class="card cc">
-            <div class="t"><span>Implementación · pago único</span><button class="edit" data-modal="impl" aria-label="Elegir plan de implementación"><svg class="ic sm"><use href="#i-edit"/></svg></button></div>
+            <div class="t"><div class="cost-heading"><span class="cost-kicker">Pago único</span><h3>Implementación</h3></div><button class="edit" data-modal="impl" aria-label="Elegir plan de implementación"><svg class="ic sm"><use href="#i-edit"/></svg></button></div>
             <div class="pills2" id="implChips"></div>
             <div class="pre" id="implPre"></div>
             <div class="v"><span id="implV"></span> <small>USD</small></div>
@@ -7987,8 +8001,8 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
       </div></div></div>
     </section>
 
-    <!-- 4 Planes -->
-    <section class="screen" data-title="Planes">
+    <!-- Full partner comparison: opened from the category selector; retained in print. -->
+    <section id="partnerPlansDetail" hidden>
       <p class="eyebrow"><b>Planes de Partners</b></p>
       <h2>Resumen <span>Programa Partner</span></h2>
       <p class="sub">Haz clic en cualquier categoría para aplicarla a todo el documento.</p>
@@ -8015,13 +8029,13 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
           </ul>
         </div>
       </div>
+      <div class="partner-plan-selection" id="partnerPlanSelection" aria-live="polite"></div>
     </section>
   </div>
   <div class="pdf-bar end-pdf"><button type="button" class="pdf-btn share-btn" data-share><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button><button type="button" class="pdf-btn" data-pdf><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6"/><path d="m9 14 3 3 3-3"/></svg>Exportar a PDF</button></div>
 </div>
 
 <div id="modalRoot"></div>
-<div class="share-toast" id="shareToast" role="status" aria-live="polite"><span class="st-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M16 5h2a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg></span><span><b>Presentación Partners copiada</b>Pégala en el chat para compartirla.</span></div>
 <div class="toast" id="toast" role="status"><svg class="ic sm"><use href="#i-check"/></svg><span></span></div>
 
 <script>
@@ -8064,11 +8078,17 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     country:'cl',wallet:'spot',qty:{service:8000,marketing:0,utility:0,auth:0,min:0},
     agents:1,plan:'p2',setup:990,setupTouched:false,
     nCli:1,open:true,pv:'clientes',sel:null};
+  // A shared link carries only presentation preferences, never a login session.
+  var incoming=new URLSearchParams(window.parent.location.search);
+  if(incoming.get('vista')==='partners'){
+    if(['reseller','referido'].includes(incoming.get('tipo')))S.ptype=incoming.get('tipo');
+    if(TKEYS.includes(incoming.get('categoria')))S.tier=incoming.get('categoria');
+    ['rebase','soporte'].forEach(function(k){if(['0','1'].includes(incoming.get(k)))S[k]=incoming.get(k)==='1'});
+  }
   var clients=[
     {n:'Cliente A',mrr:558,bolsa:2000,c:[1500,1700,1850,1950,2150,1900]},
     {n:'Cliente B',mrr:1200,bolsa:5000,c:[3800,4200,4600,4400,4900,5300]},
-    {n:'Cliente C',mrr:2400,bolsa:10000,c:[7200,8100,7600,8800,9400,9100]},
-    {n:'Cliente D',mrr:4300,bolsa:20000,c:[14000,15500,16800,18200,17900,19600]}
+    {n:'Cliente C',mrr:2400,bolsa:10000,c:[7200,8100,7600,8800,9400,9100]}
   ];
 
   // ---------- Cálculos ----------
@@ -8140,7 +8160,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     $('#implChips').innerHTML=S.studio
       ?'<span class="qty" role="group" aria-label="Cantidad de '+S.kind.toLowerCase()+'s"><button data-ag="-1" aria-label="Quitar"><svg class="ic xs"><use href="#i-minus"/></svg></button>'+S.agents+' '+S.kind.toLowerCase()+(S.agents>1?'s':'')+'<button data-ag="1" aria-label="Agregar"><svg class="ic xs"><use href="#i-plus"/></svg></button></span>'
       :'<span class="pchip static">Sin Studio · sin agente</span>';
-    if(S.studio)$('#implChips').innerHTML+='<button class="pchip on" data-modal="impl">'+p.n+(p.hh?' · '+p.hh+' HH':' · gratis')+'</button>';
+    if(S.studio)$('#implChips').innerHTML+='<button class="pchip on" data-modal="impl">'+p.n+(p.hh?' · '+p.hh+' HH':' · gratis')+' <span aria-hidden="true">⌄</span></button>';
     $('#implPre').textContent=!S.studio?'Sin agente que implementar':(S.agents>1?(ks===null&&!S.setupTouched?'Valor por agent':'$'+fmt(S.setup)+' × '+S.agents+' '+S.kind.toLowerCase()+'s'):'Pago único al inicio');
     $('#implV').textContent=S.studio?(ks===null&&!S.setupTouched?'—':fmt(setupTotal())):'0';
     $('#implY').innerHTML='<span class="nofee">Sin fee Partner · implementa Adereso</span>';
@@ -8166,6 +8186,15 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
         '<p class="lbl">Requisito</p><p>Certificarse con <b>3 semanas full time</b> en el equipo de soporte de Adereso.</p>'+
         '<p class="lbl">Lo que sigue haciendo Adereso</p><p>Adereso siempre da los niveles 2 y 3 de soporte.</p>';
     }
+    if(kind==='share'){
+      return '<div class="partner-share-context">'+(isRef()?'Advisor':'Reseller')+' · '+TI()[S.tier].n+' · '+disc()+'% '+(isRef()?'comisión':'fee')+'</div>'+
+        '<input class="partner-share-url" id="partnerShareUrl" type="url" readonly aria-label="Enlace de Partners" value="'+esc(partnerShareUrl())+'">'+
+        '<label class="partner-share-label" for="partnerShareMessage">Mensaje listo para enviar</label><textarea class="partner-share-template" id="partnerShareMessage" rows="3">Hola, te comparto el Programa de Partners de Adereso. Aquí puedes revisar las condiciones y simular tu operación. ¡Lo vemos y conversamos!</textarea>'+
+        '<div class="partner-share-actions"><button type="button" class="btn btn-o" data-copy-partners>Copiar enlace</button><a class="btn btn-p" id="partnerShareEmail" target="_blank" rel="noopener noreferrer">Abrir correo ↗</a></div>'+
+        '<p class="partner-share-status" id="partnerShareStatus" role="status" aria-live="polite"></p>'+
+        (partnerShareIsLocal()?'<small class="partner-share-publish">Enlace público disponible al publicar.</small>':'');
+    }
+    if(kind==='partnerplans')return '<div id="partnerPlansMount"></div>';
     if(kind==='impl'){
       return '<p>Elige el plan de implementación. El valor se multiplica por la cantidad de '+S.kind.toLowerCase()+'s y no lleva descuento Partner, porque implementa Adereso.</p>'+
         '<p class="lbl">Plan</p><div class="pills2 wrap">'+PLANS.map(function(x){return '<button class="pchip'+(x.id===S.plan?' on':'')+'" data-plan="'+x.id+'">'+x.n+(x.hh?' · '+x.hh+' HH':' · gratis')+(x.price?' · $'+fmt(x.price):'')+'</button>'}).join('')+'</div>'+
@@ -8193,23 +8222,33 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
   }
   function openModal(kind){
     lastFocus=document.activeElement;
-    var title=kind==='svc'?'Servicio Adereso':kind==='impl'?'Implementación':kind==='cert'?'Certificación de soporte':'Billetera Adereso–Meta';
-    $('#modalRoot').innerHTML='<div class="modal-bg" id="mbg"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h4 id="mt">'+title+'<button class="x" id="mx" aria-label="Cerrar"><svg class="ic sm"><use href="#i-x"/></svg></button></h4><div id="mBody">'+modalBody(kind)+'</div><div class="acts"><button class="btn btn-p" id="mok">Listo</button></div></div></div>';
+    var title=kind==='share'?'Compartir Partners':kind==='partnerplans'?'Resumen Programa Partner':kind==='svc'?'Servicio Adereso':kind==='impl'?'Implementación':kind==='cert'?'Certificación de soporte':'Billetera Adereso–Meta';
+    $('#modalRoot').innerHTML='<div class="modal-bg" id="mbg"><div class="modal'+(kind==='partnerplans'?' modal--partner-plans':kind==='share'?' modal--share':'')+'" role="dialog" aria-modal="true" aria-labelledby="mt"><h4 id="mt">'+title+'<button class="x" id="mx" aria-label="Cerrar"><svg class="ic sm"><use href="#i-x"/></svg></button></h4><div id="mBody">'+modalBody(kind)+'</div>'+(kind==='share'?'':'<div class="acts"><button class="btn btn-p" id="mok">Listo</button></div>')+'</div></div>';
     var root=$('#modalRoot');
+    var partnerDetail=kind==='partnerplans'?$('#partnerPlansDetail'):null;
+    var partnerHome=partnerDetail&&partnerDetail.parentNode,partnerNext=partnerDetail&&partnerDetail.nextSibling;
+    if(partnerDetail){$('#partnerPlansMount',root).appendChild(partnerDetail);partnerDetail.hidden=false;renderConditions();}
+    if(kind==='share')updateShareEmail();
     function redraw(){var y=$('.modal',root).scrollTop;$('#mBody').innerHTML=modalBody(kind);$('.modal',root).scrollTop=y;render()}
     root.onclick=function(e){
       if(e.target.id==='mbg'){close();return}
       var t=e.target.closest('button');if(!t)return;
+      if(t.hasAttribute('data-copy-partners')){copyPartnerLink();return}
+      if(kind==='partnerplans'){
+        if(t.dataset.tier){if(t.dataset.ptype)S.ptype=t.dataset.ptype;S.tier=t.dataset.tier;render();return}
+        if(t.dataset.flag){S[t.dataset.flag]=!S[t.dataset.flag];render();return}
+      }
       if(t.dataset.svc){var p=t.dataset.svc;S[p]=!S[p];if(!S.desk)S.studio=false;if(S.studio)S.desk=true;if(!S.desk&&!S.studio)S.desk=true;autoMrr();autoSetup();redraw()}
       else if(t.dataset.kind){S.kind=t.dataset.kind;redraw()}
       else if(t.dataset.bolsa){S.bolsa=+t.dataset.bolsa;S.qty.service=S.bolsa*4;autoMrr();redraw()}
       else if(t.dataset.term){S.term=+t.dataset.term;redraw()}
       else if(t.dataset.advb){S.adv=!S.adv;redraw()}
       else if(t.dataset.wallet){S.wallet=t.dataset.wallet;redraw()}
-      else if(t.dataset.plan){S.plan=t.dataset.plan;S.setupTouched=false;autoSetup();redraw()}
+      else if(t.dataset.plan){S.plan=t.dataset.plan;S.setupTouched=false;autoSetup();redraw();var chosen=$('[data-plan="'+S.plan+'"]',root);if(chosen)chosen.focus({preventScroll:true})}
     };
     root.oninput=function(e){
       var t=e.target;
+      if(kind==='share'){updateShareEmail();return}
       if(t.id==='mMrr'){S.mrr=Math.max(0,+t.value||0);S.mrrTouched=true;render();return}
       if(t.dataset.rate){RATES[S.country][t.dataset.rate]=t.value===''?null:Math.max(0,+t.value);upd()}
       if(t.dataset.q){S.qty[t.dataset.q]=Math.max(0,+t.value||0);upd()}
@@ -8217,10 +8256,10 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     };
     root.onchange=function(e){if(e.target.id==='mCountry'){S.country=e.target.value;redraw()}};
     $('#mx').focus();
-    function close(){root.innerHTML='';root.onclick=root.oninput=root.onchange=null;document.removeEventListener('keydown',key);if(lastFocus)lastFocus.focus()}
-    function key(e){if(e.key==='Escape')close();if(e.key==='Tab'){var f=$$('button,input,select',root);if(!f.length)return;if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&document.activeElement===f[f.length-1]){e.preventDefault();f[0].focus()}}}
+    function close(){if(partnerDetail){partnerDetail.hidden=true;partnerHome.insertBefore(partnerDetail,partnerNext);}root.innerHTML='';root.onclick=root.oninput=root.onchange=null;document.removeEventListener('keydown',key);if(lastFocus)lastFocus.focus()}
+    function key(e){if(e.key==='Escape')close();if(e.key==='Tab'){var f=$('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]',root).filter(function(el){return el.offsetParent!==null});if(!f.length)return;if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f[f.length-1].focus()}else if(!e.shiftKey&&document.activeElement===f[f.length-1]){e.preventDefault();f[0].focus()}}}
     document.addEventListener('keydown',key);
-    $('#mx').addEventListener('click',close);$('#mok').addEventListener('click',close);
+    $('#mx').addEventListener('click',close);if($('#mok'))$('#mok').addEventListener('click',close);
   }
 
   // ---------- Clicks globales ----------
@@ -8254,22 +8293,35 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
   });
 
   var toastT;function toast(t){var el=$('#toast');$('span',el).textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on')},2200)}
-  /* compartir: copia el link público de la presentación y avisa 5 s */
-  var SHARE_URL='https://gcampos-sketch.github.io/partnership/',shareT,shareBtn=null;
-  /* el aviso se ubica como globo justo bajo el botón (o sobre él si no cabe abajo) */
-  function shareOk(){var el=$('#shareToast');
-    if(shareBtn){var r=shareBtn.getBoundingClientRect(),w=el.offsetWidth,h=el.offsetHeight,cx=r.left+r.width/2,
-      x=Math.max(12,Math.min(cx-w/2,window.innerWidth-w-12)),up=r.bottom+h+20>window.innerHeight;
-      el.classList.toggle('up',up);el.style.left=x+'px';el.style.top=(up?r.top-h-12:r.bottom+12)+'px';el.style.setProperty('--ax',(cx-x)+'px')}
-    el.classList.add('on');clearTimeout(shareT);shareT=setTimeout(function(){el.classList.remove('on')},5000)}
-  window.addEventListener('scroll',function(){var el=$('#shareToast');if(el.classList.contains('on'))el.classList.remove('on')},{passive:true});
-  function shareFallback(){var ta=document.createElement('textarea');ta.value=SHARE_URL;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;opacity:0;top:0;left:0';document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();if(ok)shareOk();else window.prompt('Copia este link:',SHARE_URL)}
-  function share(){if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(SHARE_URL).then(shareOk,shareFallback);else shareFallback()}
+  /* Share the same live presentation; no separate copy can drift out of date. */
+  var shareBtn=null;
+  function partnerShareIsLocal(){return ['localhost','127.0.0.1','[::1]'].includes(window.parent.location.hostname)}
+  function partnerShareUrl(preview){
+    var base=partnerShareIsLocal()&&!preview?'https://gcampos-sketch.github.io/pricing-adereso/':new URL('./',window.parent.location.href).href;
+    var url=new URL(base);url.searchParams.set('vista','partners');url.searchParams.set('tipo',S.ptype);url.searchParams.set('categoria',S.tier);
+    url.searchParams.set('rebase',S.rebase?'1':'0');url.searchParams.set('soporte',S.soporte?'1':'0');return url.href;
+  }
+  function updateShareEmail(){
+    var link=$('#partnerShareEmail');if(!link)return;
+    var url=new URL('https://mail.google.com/mail/');
+    url.searchParams.set('view','cm');url.searchParams.set('fs','1');url.searchParams.set('to','');
+    url.searchParams.set('su','Programa de Partners · Adereso');
+    url.searchParams.set('body',$('#partnerShareMessage').value.trim()+'\n\n'+partnerShareUrl());link.href=url.href;
+  }
+  function copyPartnerLink(){
+    var input=$('#partnerShareUrl'),status=$('#partnerShareStatus');
+    function copied(){status.textContent='Enlace copiado.'}
+    function fallback(){input.focus();input.select();try{if(document.execCommand('copy'))copied();else status.textContent='Selecciona el enlace y cópialo.'}catch(e){status.textContent='Selecciona el enlace y cópialo.'}}
+    if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(input.value).then(copied,fallback);else fallback();
+  }
+  function share(){openModal('share')}
 
   // ---------- Render ----------
   function press(sel,fn){$$(sel).forEach(function(b){b.setAttribute('aria-pressed',!!fn(b))})}
   function renderConditions(){
     var T=TI()[S.tier];
+    var selection=$('#partnerPlanSelection');
+    if(selection)selection.innerHTML='<span>Tu selección</span><b>'+(isRef()?'Advisor':'Reseller')+' · '+T.n+'</b><strong>'+disc()+'%</strong><small>'+(isRef()?'Comisión sobre MRR del primer año':'Fee de Partner · base + extras activos')+'</small>';
     press('[data-pt]',function(b){return b.dataset.pt===S.ptype});
     $$('#tierSeg [data-tier]').forEach(function(b){b.textContent=T&&TI()[b.dataset.tier].n;b.setAttribute('aria-pressed',b.dataset.tier===S.tier)});
     press('[data-flag]',function(b){return S[b.dataset.flag]});
@@ -8300,12 +8352,10 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     var feeSrc=TI()[S.tier].n+(isRef()?'':(S.rebase?' + Rebase':'')+(S.soporte?' + Soporte':''));
     var gain=c.margin*S.nCli;
     $('#svcY').innerHTML=(k===null&&!S.mrrTouched)?'<span class="val-miss">Ingresa el valor de lista en el popup.</span>':
-      '<div class="val"><div class="val-h">Tu ganancia como Partner</div>'+
-      '<div class="val-r"><span>'+(isRef()?'Comisión':'Fee Partner')+' <button class="val-link" data-gofee title="Cambiar en la calculadora del fee">'+disc()+'% · '+feeSrc+' ↑</button></span><b>$'+fmt(c.margin)+'<small>/cliente</small></b></div>'+
-      '<div class="val-r"><span>Clientes con este servicio</span><span class="qty" role="group" aria-label="Cantidad de clientes"><button data-ncli="-1" aria-label="Quitar cliente"><svg class="ic xs"><use href="#i-minus"/></svg></button><input id="nCli" type="number" min="1" step="1" inputmode="numeric" value="'+S.nCli+'" aria-label="Cantidad de clientes"><button data-ncli="1" aria-label="Agregar cliente"><svg class="ic xs"><use href="#i-plus"/></svg></button></span></div>'+
-      '<div class="val-r tot"><span>Ganas</span><b>$'+fmt(gain)+'<small>/mes</small></b></div>'+
-      '<div class="val-f">≈ $'+fmt(gain*12)+' al año</div>'+
-      '</div>';
+      '<div class="val"><div class="val-head"><span>Tu ganancia mensual</span><button class="val-link" data-gofee title="Cambiar en la calculadora del fee">'+disc()+'% fee ↗</button></div>'+
+      '<div class="val-result"><strong>$'+fmt(gain)+'<small>/mes</small></strong><span>≈ $'+fmt(gain*12)+' al año</span></div>'+
+      '<div class="val-controls"><label for="nCli">Clientes</label><span class="qty" role="group" aria-label="Cantidad de clientes"><button data-ncli="-1" aria-label="Quitar cliente"><svg class="ic xs"><use href="#i-minus"/></svg></button><input id="nCli" type="number" min="1" step="1" inputmode="numeric" value="'+S.nCli+'" aria-label="Cantidad de clientes"><button data-ncli="1" aria-label="Agregar cliente"><svg class="ic xs"><use href="#i-plus"/></svg></button></span></div>'+
+      '<div class="val-caption">$'+fmt(c.margin)+' por cliente · '+feeSrc+'</div></div>';
     var ni=$('#nCli');if(ni)ni.addEventListener('change',function(){S.nCli=Math.max(1,Math.round(+this.value||1));render()});
     $('#svcN').textContent='Precio al cliente final'+(termDisc()?' con −'+termDisc()+'% por plazo':'')+(agentMrr()?'. Incluye +$'+AGENT_MRR+'/mes × '+(S.agents-1)+' '+S.kind.toLowerCase()+(S.agents>2?'s':'')+' adicional'+(S.agents>2?'es':''):'')+'.';
     // Meta
@@ -8354,11 +8404,16 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
       var rm=$('#rm');if(rm)rm.addEventListener('click',function(e){e.stopPropagation();clients.splice(S.sel,1);S.sel=null;render()});
     }else det.hidden=true;
     var tl=0,body='';
-    clients.forEach(function(c,idx){tl+=c.mrr;body+='<tr class="'+(S.sel===idx?'sel':'')+'"><td>'+esc(c.n)+'</td><td>$'+fmt(c.mrr)+'</td><td>'+(isRef()?'':'−')+'$'+fmt(c.mrr*d)+'</td>'+(isRef()?'':'<td>$'+fmt(c.mrr*(1-d))+'</td>')+'</tr>'});
-    $('#invBody').innerHTML=body;$('#fList').textContent='$'+fmt(tl);$('#fDisc').textContent=(isRef()?'':'−')+'$'+fmt(tl*d);$('#fPay').textContent='$'+fmt(tl*(1-d));
+    clients.forEach(function(c,idx){tl+=c.mrr;body+='<tr class="'+(S.sel===idx?'sel':'')+'"><td>'+esc(c.n)+'</td>'+(isRef()?'':'<td>$'+fmt(c.mrr*(1-d))+'</td>')+'<td>$'+fmt(c.mrr)+'</td><td class="partner-earned">$'+fmt(c.mrr*d)+'</td></tr>'});
+    $('#invBody').innerHTML=body;$('#fList').textContent='$'+fmt(tl);$('#fDisc').textContent='$'+fmt(tl*d);$('#fPay').textContent='$'+fmt(tl*(1-d));
     $('#fPay').hidden=isRef();$('#thPay').hidden=isRef();
-    $('#thDisc').textContent=isRef()?'Tu comisión':'Fee';$('#thList').textContent=isRef()?'MRR cliente':'Lista';
-    $('#invTitle').innerHTML=isRef()?'<small>Octubre · Adereso → Partner</small>Liquidación de comisiones de tus clientes':'<small>Factura de octubre · Adereso → Partner</small>Una sola factura, desglosada por cliente';
+    $('#thList').innerHTML='<b>'+(isRef()?'Adereso factura':'Partner factura')+'</b><small>al cliente final</small>';
+    $('#thDisc').innerHTML='<b>Ganancia del Partner</b><small>'+(isRef()?'Comisión':'Fee')+' del '+disc()+'%</small>';
+    $('#thPay').innerHTML='<b>Adereso factura</b><small>al Partner</small>';
+    $('#invTitle').innerHTML='<small>Octubre · Montos en USD</small>'+(isRef()?'Facturación y comisión del Partner':'Adereso te factura, tú facturas al cliente y ganas');
+    $('#invoiceExplanation').innerHTML=isRef()
+      ?'Adereso factura al cliente final y paga al Partner su comisión a medida que el cliente paga.'
+      :'<span>Adereso te factura <b>$'+fmt(tl*(1-d))+'</b></span><i>→</i><span>Facturas al cliente <b>$'+fmt(tl)+'</b></span><i>→</i><span class="invoice-profit">Te quedas con <b>$'+fmt(tl*d)+'</b></span>';
     $('#kN').textContent=clients.length;$('#kMrr').textContent='$'+fmt(tl);$('#kDiscL').textContent=isRef()?'Tu comisión':'Fee de Partner';$('#kDisc').textContent=TI()[S.tier].n+' · '+(isRef()?'':'−')+disc()+'%';
     $('#userTier').textContent=(isRef()?'Advisor ':'Reseller ')+TI()[S.tier].n;
     $$('[data-pv]').forEach(function(b){b.classList.toggle('on',b.dataset.pv===S.pv)});
@@ -8413,7 +8468,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
 
   <div class="wrap">
     <main>
-      <div class="hero reveal">
+      <div class="hero reveal"><div class="tool-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
         <h1>Pricing basado en conversaciones.<br><span class="hero-accent">No en usuarios.</span></h1>
       </div>
       <div class="cust-row reveal"><div class="seg" id="custSeg"></div></div>
@@ -8716,7 +8771,7 @@ const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* recuerda la cotización en este navegador: al recargar o volver a entrar, sigue donde quedó */
 const SAVE_KEY='adereso_pricing_v1';
 try{const sv=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(sv&&sv.state&&typeof sv.state==='object'){Object.keys(INITIAL_STATE).forEach(k=>{if(k in sv.state)state[k]=sv.state[k];});}}catch(e){}
-function saveSession(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({state,view:(typeof curView!=='undefined'?curView:'home'),y:window.scrollY,at:Date.now()}));}catch(e){}}
+function saveSession(){if(new URLSearchParams(location.search).get('vista')==='partners')return;try{localStorage.setItem(SAVE_KEY,JSON.stringify({state,view:(typeof curView!=='undefined'?curView:'home'),y:window.scrollY,at:Date.now()}));}catch(e){}}
 window.addEventListener('pagehide',saveSession);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveSession();});
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 const CHANNELS=[
@@ -10561,6 +10616,7 @@ buildNav();renderMods();renderAll();refreshFlow();paintIcons();setActive('s1');o
   const io=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){pt.classList.remove('lit');void pt.offsetWidth;pt.classList.add('lit');}else{pt.classList.remove('lit');}});},{threshold:0.35});
   io.observe(pt);})();
 </script>
+<script src="dashboard-settings.js"></script>
 <script>
 /* Herramientas comerciales: barra lateral, home con tarjetas y vista integrada de sitios */
 const TI={
@@ -10579,6 +10635,10 @@ const TI={
  academy:'<path d="M2 9.5 12 5l10 4.5-10 4.5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/><path d="M22 9.5V15"/>',
  todas:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/>'
 };
+// Local and hosted dashboards share this hub; no Lovable runtime fallback.
+const DASHBOARD_SALES_URL=['localhost','127.0.0.1','[::1]'].includes(location.hostname)
+  ? location.protocol+'//'+location.hostname+':8878/'
+  : window.ADERESO_DASHBOARD_URL || 'dashboard/';
 const TOOLS=[
  {g:'Para reunión',items:[
   {k:'brochure',name:'Brochure',desc:'El valor agregado de Adereso y sus soluciones.',soon:true},
@@ -10590,7 +10650,7 @@ const TOOLS=[
   {k:'operativa',name:'Operativa',desc:'Pipeline, traspasos y reglas del equipo comercial.',view:'operativa'},
   {k:'academy',name:'Sales Academy',desc:'Entrena ventas, procesos y producto con juegos.',view:'academy'}]},
  {g:'Para uso interno',items:[
-  {k:'dashboard',name:'Dashboard comercial',desc:'Pipeline, proyectos y calidad comercial.',url:'https://pipelinegacj.lovable.app/'},
+  {k:'dashboard',name:'Dashboard Sales',desc:'Pipeline, proyectos y calidad comercial.',view:'embed',url:DASHBOARD_SALES_URL},
   {k:'descuentos',name:'Descuentos a utilizar',desc:'Simula plazo, pago anticipado y descuento comercial.',view:'descuentos'},
   {k:'todas',name:'Ver todas',desc:'Todas las plataformas que usa un comercial, en Notion.',url:'https://app.notion.com/p/adereso/Plataformas-que-un-comercial-debe-usar-3fb9c2747df5802a8540cd281ba8b290?source=copy_link'}]},
  {g:'Portales',items:[
@@ -10600,12 +10660,15 @@ const TOOLS=[
 ];
 const tIco=(k,s)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${TI[k]}</svg>`;
 const ALL_TOOLS=TOOLS.flatMap(g=>g.items);
+const PARTNERS_SHARED_VIEW=new URLSearchParams(location.search).get('vista')==='partners';
+document.body.classList.toggle('shared-partners',PARTNERS_SHARED_VIEW);
+if(PARTNERS_SHARED_VIEW)document.title='Programa de Partners · Adereso';
 let curView='home',curTool='';
 function renderAppRail(){const r=document.getElementById('apprail');if(!r)return;
   const it=t=>{const on=(t.view&&curView===t.view)||(t.url&&curView==='embed'&&curTool===t.k);
-    const tail=t.soon?'<span class="ar-soon">Próximamente</span>':t.url?'<span class="ar-ext">Abrir en pestaña nueva ↗</span>':'';
-    return `<button type="button" class="ar-item ${on?'on':''} ${t.soon?'soon':''}" data-tool="${t.k}" aria-label="${t.name}"${on?' aria-current="page"':''}><span class="ar-ico">${tIco(t.k,19)}</span><div class="ar-fly"><b${on?' class="ar-cur"':''}>${t.name}</b>${tail}</div></button>`;};
-  r.innerHTML=`<button type="button" class="ar-brand ${curView==='home'?'on':''}" data-tool="home" aria-label="Inicio" title="Inicio"><span class="ar-logo">a<em>.</em></span></button><div class="ar-sep"></div>`+
+    const tail=t.soon?'<span class="ar-soon">Próximamente</span>':t.url&&!t.view?'<span class="ar-ext">Abrir en pestaña nueva ↗</span>':on?'<span class="ar-meta">En esta sección</span>':'';
+    return `<button type="button" class="ar-item ${on?'on':''} ${t.soon?'soon':''}" data-tool="${t.k}" aria-label="${t.name}" aria-describedby="ar-tip-${t.k}"${on?' aria-current="page"':''}><span class="ar-ico">${tIco(t.k,19)}</span><div class="ar-fly" role="tooltip" id="ar-tip-${t.k}"><b${on?' class="ar-cur"':''}>${t.name}</b>${tail}</div></button>`;};
+  r.innerHTML=`<button type="button" class="ar-brand ${curView==='home'?'on':''}" data-tool="home" aria-label="Inicio" title="Inicio"><img class="adereso-symbol" src="assets/adereso-symbol.svg" width="28" height="28" alt=""></button><div class="ar-sep"></div>`+
     TOOLS.map((g,gi)=>(gi?'<div class="ar-sep"></div>':'')+g.items.map(it).join('')).join('');}
 /* secciones del home plegables: se recuerda cuáles cerraste */
 const HG_KEY='adereso_home_closed';
@@ -10613,9 +10676,23 @@ function hgClosed(){try{return JSON.parse(localStorage.getItem(HG_KEY)||'[]');}c
 document.addEventListener('click',e=>{const b=e.target.closest('[data-hg-toggle]');if(!b)return;const g=b.closest('.hg-group');
   const off=g.classList.toggle('closed');b.setAttribute('aria-expanded',!off);
   let c=hgClosed().filter(x=>x!==g.dataset.g);if(off)c.push(g.dataset.g);try{localStorage.setItem(HG_KEY,JSON.stringify(c));}catch(e){}});
+/* A single pointer listener paints only the card currently under the cursor. */
+let cardLightFrame=0,cardLightPointer=null;
+document.getElementById('homeGrid').addEventListener('pointermove',e=>{
+  if(e.pointerType==='touch'||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const card=e.target.closest('.hg-card:not(.soon)');if(!card)return;
+  cardLightPointer={card,x:e.clientX,y:e.clientY};
+  if(cardLightFrame)return;
+  cardLightFrame=requestAnimationFrame(()=>{
+    cardLightFrame=0;const p=cardLightPointer;if(!p||!p.card.isConnected)return;
+    const r=p.card.getBoundingClientRect();
+    p.card.style.setProperty('--card-light-x',(p.x-r.left)+'px');
+    p.card.style.setProperty('--card-light-y',(p.y-r.top)+'px');
+  });
+},{passive:true});
 function renderHome(){const g=document.getElementById('homeGrid');if(!g)return;
-  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map((t,i)=>`<button type="button" class="hg-card ${t.soon?'soon':''}" data-tool="${t.k}" style="--d:${i*60}ms"><span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small></span>${t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`).join('')}</div></div>`).join('');}
-function setView(v,k){curView=v;curTool=k||'';
+  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map((t,i)=>`<button type="button" class="hg-card ${t.soon?'soon':''}" data-tool="${t.k}" style="--d:${i*60}ms"><span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small></span>${t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`).join('')}</div></div>`).join('');}
+function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool=k||'';
   document.body.classList.toggle('v-home',v==='home');document.body.classList.toggle('v-embed',v==='embed');document.body.classList.toggle('v-desc',v==='descuentos');if(v==='descuentos')renderDisc();
   document.body.classList.toggle('v-acad',v==='academy');
   /* la academy se carga recién la primera vez que entras, y queda viva para no perder tu avance */
@@ -10661,9 +10738,9 @@ function cardsToRail(cards,pick){if(!Element.prototype.animate)return;
 /* transición fluida: el home es una capa encima del cotizador. Se cruzan los dos al mismo tiempo
    (sin pantalla vacía entre medio): el home se disuelve hacia adelante y el cotizador sube y se asienta. */
 let _vxT=0;
-function goView(v,el){if(v===curView)return;
+function goView(v,el){if(v===curView&&v!=='embed')return;
   const home=document.getElementById('homeView'),wrap=document.querySelector('.wrap'),b=document.body;
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){setView(v);return;}
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){setView(v,el&&el.dataset.tool);return;}
   clearTimeout(_vxT);b.classList.add('vx-both');
   const r=el?el.getBoundingClientRect():null;home.style.transformOrigin=r?`${r.left+r.width/2}px ${r.top+r.height/2}px`:'50% 50%';
   if(v==='home'){
@@ -10673,55 +10750,195 @@ function goView(v,el){if(v===curView)return;
   }else{
     /* sale el home: se agranda y se disuelve; el cotizador ya está debajo y sube suavemente */
     const cards=[...document.querySelectorAll('#homeGrid .hg-card')].map(c=>({k:c.dataset.tool,r:c.getBoundingClientRect(),soon:c.classList.contains('soon'),html:c.innerHTML}));
-    setView(v);b.classList.add('vx-both');wrap&&wrap.classList.add('vx-rise-from');
+    setView(v,el&&el.dataset.tool);b.classList.add('vx-both');wrap&&wrap.classList.add('vx-rise-from');
     requestAnimationFrame(()=>cardsToRail(cards,el&&el.dataset.tool));
     requestAnimationFrame(()=>{home.classList.add('vx-run','vx-from');wrap&&(wrap.classList.add('vx-run'),wrap.classList.remove('vx-rise-from'));});}
   _vxT=setTimeout(()=>{b.classList.remove('vx-both');home.classList.remove('vx-run','vx-from');wrap&&wrap.classList.remove('vx-run','vx-dim','vx-rise-from');},560);}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(!b)return;const k=b.dataset.tool;
   if(k==='home')return goView('home',b);const t=ALL_TOOLS.find(x=>x.k===k);if(!t||t.soon)return;
   if(t.view)goView(t.view,b);else window.open(t.url,'_blank','noopener');});
-/* fondo de IA: cielo de estrellas en 3 profundidades; el mouse desordena solo las que tiene cerca */
-let aiFx={shoots:[],pulses:[],nextShoot:0,nextPulse:0};
-let aiRaf=0,aiStars=[],aiM={x:-9999,y:-9999,tx:-9999,ty:-9999,on:false};
-window.addEventListener('pointermove',e=>{const c=document.getElementById('aiBg');if(!c)return;const r=c.getBoundingClientRect();aiM.tx=e.clientX-r.left;aiM.ty=e.clientY-r.top;if(!aiM.on){aiM.x=aiM.tx;aiM.y=aiM.ty;}aiM.on=true;},{passive:true});
-document.addEventListener('pointerleave',()=>{aiM.on=false;});
-function aiSeed(W,H){
-  aiStars=Array.from({length:Math.round(W*H/1250)},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random(),p:Math.random()*6.28,s:.4+Math.random()*1.1}));}
-function aiBgStart(){const c=document.getElementById('aiBg');if(!c||aiRaf)return;const x=c.getContext('2d');
-  const W=()=>c.clientWidth,H=()=>c.clientHeight;
-  const fit=()=>{const d=Math.min(2,window.devicePixelRatio||1);c.width=W()*d;c.height=H()*d;x.setTransform(d,0,0,d,0,0);aiSeed(W(),H());};
-  fit();if(!c.dataset.fit){c.dataset.fit=1;window.addEventListener('resize',()=>{if(aiRaf)fit();});}
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const step=t=>{const w=W(),h=H();x.clearRect(0,0,w,h);
-    /* el mouse se suaviza para que el movimiento se sienta con peso */
-    aiM.x+=(aiM.tx-aiM.x)*0.12;aiM.y+=(aiM.ty-aiM.y)*0.12;
-    /* solo se desordenan las estrellas cerca del mouse: se apartan y vuelven a su lugar suavemente */
-    const RS=180;
-    /* estrellas: 3 profundidades (tamaño, brillo y cuánto reaccionan) con parpadeo */
-    for(const s of aiStars){s.ox=s.ox||0;s.oy=s.oy||0;let tx=0,ty=0;
-      /* desplazamiento objetivo: se apartan del mouse según la cercanía (sin resorte, así no rebotan) */
-      if(aiM.on){const dx=s.x-aiM.x,dy=s.y-aiM.y,d=Math.hypot(dx,dy);if(d<RS&&d>0.5){const f=(1-d/RS)**2*(26+s.z*34);tx=dx/d*f-dy/d*f*0.25;ty=dy/d*f+dx/d*f*0.25;}}
-      /* se acercan a su objetivo con suavidad; al volver lo hacen más lento, como polvo que se asienta */
-      if(!reduced){const e=(Math.abs(tx)+Math.abs(ty))>0.1?0.075:0.035;s.ox+=(tx-s.ox)*e;s.oy+=(ty-s.oy)*e;}
-      const sx=s.x+s.ox,sy=s.y+s.oy,tw=.55+.45*Math.sin(t/(700+s.z*900)+s.p);
-      x.fillStyle=`rgba(255,255,255,${(0.18+s.z*0.55)*tw})`;x.beginPath();x.arc(sx,sy,s.s*(.5+s.z*.7),0,6.28);x.fill();}
-    /* de vez en cuando: una estrella fugaz (cada ~6–12 s) y un pulso suave en alguna estrella (cada ~3–6 s) */
-    if(!aiFx.nextShoot)aiFx.nextShoot=t+3000+Math.random()*4000;
-    if(!aiFx.nextPulse)aiFx.nextPulse=t+1500+Math.random()*2500;
-    if(t>aiFx.nextShoot){const fromLeft=Math.random()<.5,ang=(fromLeft?1:-1)*(0.35+Math.random()*0.25);
-      aiFx.shoots.push({x:fromLeft?Math.random()*w*0.6:w*0.4+Math.random()*w*0.6,y:Math.random()*h*0.45,vx:(fromLeft?1:-1)*Math.cos(Math.abs(ang))*9,vy:Math.sin(Math.abs(ang))*9,life:0,max:55+Math.random()*30});
-      aiFx.nextShoot=t+6000+Math.random()*6000;}
-    if(t>aiFx.nextPulse&&aiStars.length){const s=aiStars[Math.floor(Math.random()*aiStars.length)];aiFx.pulses.push({s,life:0,max:110});aiFx.nextPulse=t+3000+Math.random()*3000;}
-    aiFx.shoots=aiFx.shoots.filter(f=>{f.life++;f.x+=f.vx;f.y+=f.vy;const k=f.life/f.max,a=Math.sin(Math.PI*k),tail=110;
-      const g=x.createLinearGradient(f.x,f.y,f.x-f.vx/9*tail,f.y-f.vy/9*tail);g.addColorStop(0,`rgba(255,255,255,${0.85*a})`);g.addColorStop(1,'rgba(255,255,255,0)');
-      x.strokeStyle=g;x.lineWidth=1.4;x.beginPath();x.moveTo(f.x,f.y);x.lineTo(f.x-f.vx/9*tail,f.y-f.vy/9*tail);x.stroke();
-      x.fillStyle=`rgba(255,255,255,${a})`;x.beginPath();x.arc(f.x,f.y,1.3,0,6.28);x.fill();return f.life<f.max;});
-    aiFx.pulses=aiFx.pulses.filter(p=>{p.life++;const k=p.life/p.max,s=p.s,sx=s.x+(s.ox||0),sy=s.y+(s.oy||0);
-      x.strokeStyle=`rgba(255,213,64,${0.45*(1-k)})`;x.lineWidth=1;x.beginPath();x.arc(sx,sy,2+k*16,0,6.28);x.stroke();
-      x.fillStyle=`rgba(255,236,170,${0.9*Math.sin(Math.PI*Math.min(1,k*1.6))})`;x.beginPath();x.arc(sx,sy,1.8,0,6.28);x.fill();return p.life<p.max;});
-    aiRaf=reduced?0:requestAnimationFrame(step);};
-  aiRaf=requestAnimationFrame(step);}
-function aiBgStop(){if(aiRaf){cancelAnimationFrame(aiRaf);aiRaf=0;}}
+/* Cielo profundo: perspectiva, luz atmosférica e interacción local con el cursor. */
+let aiRaf=0,aiStars=[],aiResize=null;
+const aiMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+const aiM={x:0,y:0,on:false};
+window.addEventListener('pointermove',e=>{
+  aiM.on=curView==='home'&&e.pointerType!=='touch';
+  aiM.x=e.clientX;aiM.y=e.clientY;
+},{passive:true});
+const aiPointerReset=()=>{aiM.on=false;};
+document.addEventListener('pointerleave',aiPointerReset);
+window.addEventListener('blur',aiPointerReset);
+window.addEventListener('pointercancel',aiPointerReset);
+function aiStarOffset(s,bx,by,mx,my,active,dt){
+  let tx=0,ty=0;
+  const dx=bx-mx,dy=by-my,d=Math.hypot(dx,dy),reach=64;
+  if(active&&d<reach){
+    const force=(1-d/reach)**2*(10+(1-s.z)*16);
+    const ux=d>.01?dx/d:Math.cos(s.phase),uy=d>.01?dy/d:Math.sin(s.phase);
+    tx=ux*force;ty=uy*force;
+  }
+  const ease=1-Math.exp(-dt*(active&&d<reach?9:3.5));
+  s.ox=((s.ox||0)+(tx-(s.ox||0))*ease);
+  s.oy=((s.oy||0)+(ty-(s.oy||0))*ease);
+}
+function aiSeed(w,h){
+  const n=Math.min(2800,Math.max(750,Math.round(w*h/380)));
+  aiStars=Array.from({length:n},()=>({
+    x:Math.random()*2-1,y:Math.random()*2-1,z:.18+Math.random()*.82,
+    phase:Math.random()*Math.PI*2,size:.35+Math.random()*.65,
+    warm:Math.random()<.16,hero:Math.random()<.022,ox:0,oy:0
+  }));
+}
+function aiBgStart(){
+  const c=document.getElementById('aiBg');
+  if(!c||aiRaf||document.hidden)return;
+  const ctx=c.getContext('2d');if(!ctx)return;
+  let w=0,h=0,previous=0,clock=0,nextMeteor=3;
+  let meteors=[],lastMeteorRoute=-1;
+  const haze=document.createElement('canvas'),hc=haze.getContext('2d');
+  const glow=(color)=>{
+    const sprite=document.createElement('canvas');sprite.width=sprite.height=64;
+    const sc=sprite.getContext('2d'),g=sc.createRadialGradient(32,32,0,32,32,32);
+    g.addColorStop(0,'rgba(255,255,255,.95)');
+    g.addColorStop(.08,`rgba(${color},.7)`);
+    g.addColorStop(.28,`rgba(${color},.13)`);
+    g.addColorStop(1,`rgba(${color},0)`);
+    sc.fillStyle=g;sc.fillRect(0,0,64,64);return sprite;
+  };
+  const cool=glow('173,200,255'),warm=glow('255,224,153');
+  // Galaxies are painted once, keeping thousands of distant stars off the animation loop.
+  const galaxy=document.createElement('canvas');galaxy.width=galaxy.height=480;
+  const gc=galaxy.getContext('2d');
+  const mist=(radius,color,alpha)=>{
+    const g=gc.createRadialGradient(240,240,0,240,240,radius);
+    g.addColorStop(0,`rgba(${color},${alpha})`);g.addColorStop(.35,`rgba(${color},${alpha*.35})`);
+    g.addColorStop(1,`rgba(${color},0)`);gc.fillStyle=g;gc.fillRect(0,0,480,480);
+  };
+  mist(225,'133,148,211',.16);
+  for(let i=0;i<4600;i++){
+    const r=Math.pow(Math.random(),.65)*202;
+    const arm=i%3*Math.PI*2/3;
+    const angle=arm+r*.024+(Math.random()-.5)*(.3+r*.004);
+    const px=240+Math.cos(angle)*r+(Math.random()-.5)*9;
+    const py=240+Math.sin(angle)*r+(Math.random()-.5)*9;
+    const a=(1-r/225)*(.07+Math.random()*.2);
+    gc.fillStyle=`rgba(${i%4?'164,181,235':'228,208,178'},${a})`;
+    gc.beginPath();gc.arc(px,py,.3+Math.random()*.8,0,Math.PI*2);gc.fill();
+  }
+  mist(70,'238,219,188',.3);mist(22,'255,242,218',.36);
+
+  const fit=()=>{
+    w=c.clientWidth;h=c.clientHeight;
+    const d=Math.min(2,window.devicePixelRatio||1);
+    c.width=Math.round(w*d);c.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0);
+    // Atmospheric light is cached at low resolution, rather than rebuilt each frame.
+    haze.width=Math.max(1,Math.round(w/3));haze.height=Math.max(1,Math.round(h/3));
+    const hw=haze.width,hh=haze.height;
+    hc.fillStyle='#080b13';hc.fillRect(0,0,hw,hh);
+    const cloud=(cx,cy,r,color)=>{
+      const g=hc.createRadialGradient(cx*hw,cy*hh,0,cx*hw,cy*hh,r*hw);
+      g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');
+      hc.fillStyle=g;hc.fillRect(0,0,hw,hh);
+    };
+    cloud(.86,.16,.8,'rgba(63,77,136,.23)');
+    cloud(.02,.6,.7,'rgba(48,65,112,.17)');
+    cloud(.22,0,.46,'rgba(153,117,52,.10)');
+    cloud(.8,.85,.6,'rgba(75,49,105,.12)');
+    const distantGalaxy=(cx,cy,size,angle,flatten,alpha)=>{
+      hc.save();hc.translate(hw*cx,hh*cy);hc.rotate(angle);hc.scale(1,flatten);
+      hc.globalAlpha=alpha;hc.drawImage(galaxy,-size/2,-size/2,size,size);hc.restore();
+    };
+    distantGalaxy(.88,.14,hw*.5,-.55,.52,.72);
+    distantGalaxy(.11,.53,hw*.38,.65,.48,.48);
+    distantGalaxy(.8,.86,hw*.48,-.35,.62,.5);
+
+    aiSeed(w,h);
+  };
+  fit();aiResize=fit;
+  const step=t=>{
+    const reduced=aiMotion.matches;
+    const dt=previous?Math.min((t-previous)/1000,.05):0;previous=t;
+    if(!reduced)clock+=dt;
+    const rect=c.getBoundingClientRect();
+    const mx=aiM.x-rect.left,my=aiM.y-rect.top;
+    const pointerActive=!reduced&&aiM.on&&mx>=0&&mx<=w&&my>=0&&my<=h;
+    ctx.globalAlpha=1;ctx.drawImage(haze,0,0,w,h);
+    for(const s of aiStars){
+      if(!reduced){s.z-=dt*.006;if(s.z<.18){s.z=1;s.x=Math.random()*2-1;s.y=Math.random()*2-1;s.ox=s.oy=0;}}
+      const depth=1-s.z,spread=.72+s.z*.55;
+      const bx=w/2+s.x*w*.68/spread,by=h/2+s.y*h*.68/spread;
+      aiStarOffset(s,bx,by,mx,my,pointerActive,dt);
+      const px=bx+(reduced?0:s.ox),py=by+(reduced?0:s.oy);
+      if(px< -25||py< -25||px>w+25||py>h+25)continue;
+      const fade=Math.min(1,(s.z-.18)/.1,(1-s.z)/.12);
+      const tw=reduced?1:.84+.16*Math.sin(clock*(.35+s.size*.45)+s.phase);
+      const alpha=(.22+depth*.64)*tw*Math.max(0,fade);
+      const radius=s.size*(.45+depth*1.35);
+      if(s.hero||depth>.66){
+        const size=(s.hero?19:10)*( .6+depth);
+        ctx.globalAlpha=alpha*(s.hero?.85:.45);
+        ctx.drawImage(s.warm?warm:cool,px-size/2,py-size/2,size,size);
+      }
+      ctx.globalAlpha=alpha;ctx.fillStyle=s.warm?'#ffe6bc':'#dce8ff';
+      ctx.beginPath();ctx.arc(px,py,radius,0,Math.PI*2);ctx.fill();
+      if(s.hero&&depth>.5){
+        const arm=3+depth*4;
+        ctx.globalAlpha=alpha*.3;ctx.strokeStyle=s.warm?'#ffe6bc':'#c9dcff';ctx.lineWidth=.55;
+        ctx.beginPath();ctx.moveTo(px-arm,py);ctx.lineTo(px+arm,py);
+        ctx.moveTo(px,py-arm);ctx.lineTo(px,py+arm);ctx.stroke();
+      }
+    }
+    // Varied, unhurried trajectories: never repeat the previous route family.
+    if(!reduced&&clock>=nextMeteor){
+      const vh=Math.min(h,window.innerHeight);
+      const routes=[
+        {x:.06,y:.10,angle:.25}, {x:.94,y:.14,angle:2.85},
+        {x:.32,y:.04,angle:.70}, {x:.76,y:.05,angle:2.35},
+        {x:.12,y:.30,angle:-.20}, {x:.90,y:.33,angle:3.32}
+      ];
+      let route=Math.floor(Math.random()*(routes.length-1));
+      if(route>=lastMeteorRoute&&lastMeteorRoute>=0)route++;
+      lastMeteorRoute=route;
+      const r=routes[route],angle=r.angle+(Math.random()-.5)*.22;
+      const duration=2.6+Math.random()*1.6;
+      const distance=Math.min(w*.6,170+Math.random()*170);
+      meteors.push({x:w*(r.x+(Math.random()-.5)*.06),y:vh*(r.y+Math.random()*.06),
+        vx:Math.cos(angle)*distance/duration,vy:Math.sin(angle)*distance/duration,
+        age:0,duration,tail:38+Math.random()*65,brightness:.38+Math.random()*.28,
+        width:.65+Math.random()*.45});
+      nextMeteor=clock+10+Math.random()*12;
+    }
+    meteors=meteors.filter(m=>{
+      m.age+=dt;if(m.age>=m.duration)return false;
+      m.x+=m.vx*dt;m.y+=m.vy*dt;
+      const opacity=Math.sin(Math.PI*m.age/m.duration)**2*m.brightness;
+      const speed=Math.hypot(m.vx,m.vy),tail=m.tail;
+      const tx=m.x-m.vx/speed*tail,ty=m.y-m.vy/speed*tail;
+      const gradient=ctx.createLinearGradient(tx,ty,m.x,m.y);
+      gradient.addColorStop(0,'rgba(182,203,237,0)');
+      gradient.addColorStop(.7,`rgba(182,203,237,${opacity*.22})`);
+      gradient.addColorStop(1,`rgba(230,237,255,${opacity})`);
+      ctx.globalAlpha=1;ctx.strokeStyle=gradient;ctx.lineWidth=m.width;
+      ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(m.x,m.y);ctx.stroke();
+      ctx.globalAlpha=opacity*.7;ctx.drawImage(cool,m.x-5,m.y-5,10,10);
+      return true;
+    });
+    ctx.globalAlpha=1;
+    aiRaf=reduced?0:requestAnimationFrame(step);
+  };
+  aiRaf=requestAnimationFrame(step);
+}
+function aiBgStop(){if(aiRaf)cancelAnimationFrame(aiRaf);aiRaf=0;aiResize=null;}
+let aiFitFrame=0;
+const aiFitObserver=new ResizeObserver(()=>{
+  cancelAnimationFrame(aiFitFrame);
+  aiFitFrame=requestAnimationFrame(()=>{if(aiResize)aiResize();});
+});
+aiFitObserver.observe(document.getElementById('homeView'));
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)aiBgStop();else if(curView==='home')aiBgStart();
+});
+aiMotion.addEventListener('change',()=>{aiBgStop();if(curView==='home')aiBgStart();});
 /* Descuentos a utilizar: simulador independiente del cotizador.
    Los descuentos se suman entre sí (plazo + pago anticipado + comercial), igual que el plazo y el pago anticipado antes. */
 const DSC_KEY='adereso_descuentos_v1';
@@ -10777,8 +10994,9 @@ document.getElementById('discArea').addEventListener('input',e=>{const m=e.targe
 renderHome();
 /* vuelve a la vista y al punto del scroll donde estaba */
 (function(){let sv=null;try{sv=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch(e){}
-  const v=sv&&ALL_TOOLS.some(t=>t.view===sv.view)?sv.view:'home';setView(v);
-  if(v!=='home'&&sv&&sv.y>0){const y=sv.y;requestAnimationFrame(()=>requestAnimationFrame(()=>{window.scrollTo({top:y,behavior:'instant'});if(typeof computeActive==='function')computeActive();}));}})();
+  const dashboardRequested=new URLSearchParams(location.search).get('vista')==='dashboard';
+  const v=PARTNERS_SHARED_VIEW?'progpartners':dashboardRequested?'embed':sv&&sv.view!=='embed'&&ALL_TOOLS.some(t=>t.view===sv.view)?sv.view:'home';setView(v,dashboardRequested?'dashboard':undefined);
+  if(!PARTNERS_SHARED_VIEW&&v!=='home'&&sv&&sv.y>0){const y=sv.y;requestAnimationFrame(()=>requestAnimationFrame(()=>{window.scrollTo({top:y,behavior:'instant'});if(typeof computeActive==='function')computeActive();}));}})();
 setInterval(()=>{if(document.visibilityState==='visible')saveSession();},4000);
 </script>
 </body>

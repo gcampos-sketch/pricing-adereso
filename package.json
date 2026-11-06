@@ -1,0 +1,15 @@
+{
+  "name": "adereso-hub-comercial",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "npm --prefix dashboard-sales ci",
+    "dev": "node scripts/dev.mjs",
+    "dev:dashboard": "npm --prefix dashboard-sales run dev",
+    "dev:hub": "python3 -m http.server 8877 --bind 127.0.0.1",
+    "build": "npm --prefix dashboard-sales run build",
+    "test": "npm --prefix dashboard-sales test",
+    "typecheck": "npm --prefix dashboard-sales run typecheck",
+    "check:config": "npm --prefix dashboard-sales run check:config"
+  }
+}
