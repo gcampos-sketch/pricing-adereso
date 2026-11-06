@@ -38,7 +38,34 @@
   .report-loading-milestones { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; margin: 20px 0; }
   .report-loading-footnote { align-items: flex-start; gap: 14px; }
 }
+/* A quiet thinking rhythm: transforms and opacity keep the motion lightweight. */
+.report-loading-signal { display: flex; justify-content: center; align-items: center; gap: 10px; height: 46px; margin-bottom: 21px; }
+.report-loading-signal > span { width: 7px; height: 7px; border-radius: 50%; background: #ffe59a; box-shadow: 0 0 16px rgba(255,213,64,.28); animation: report-loading-think 2.6s cubic-bezier(.45,0,.3,1) infinite; }
+.report-loading-signal > span:nth-child(2) { animation-delay: .16s; }
+.report-loading-signal > span:nth-child(3) { animation-delay: .32s; }
+.report-loading-signal > span:nth-child(4) { animation-delay: .48s; }
+.report-loading-signal > span:nth-child(5) { animation-delay: .64s; }
+.report-loading-message { min-height: 21px; }
+.report-loading-message > span { display: inline-block; animation: report-loading-message 4.5s ease both; }
+.report-loading-stage-message, .report-loading-stage-icon { animation: report-loading-reveal .6s ease both; }
+.report-loading-inline-dots { display: inline-flex; align-items: center; gap: 4px; margin-left: 9px; vertical-align: middle; height: 16px; }
+.report-loading-inline-dots i { width: 3px; height: 3px; background: #ffe59a; border-radius: 50%; animation: report-loading-dot 1.65s ease-in-out infinite; }
+.report-loading-inline-dots i:nth-child(2) { animation-delay: .18s; }
+.report-loading-inline-dots i:nth-child(3) { animation-delay: .36s; }
+.report-loading-track > span { position: relative; overflow: hidden; }
+.report-loading-track > span::after { content: ''; position: absolute; inset: 0; width: 45%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.85), transparent); animation: report-loading-scan 2.8s ease-in-out infinite; }
+.report-loading-milestones li[data-state='active'] svg { animation: report-loading-icon-breathe 2.6s ease-in-out infinite; }
+@keyframes report-loading-think { 0%, 60%, 100% { transform: translateY(0) scale(.75); opacity: .35; } 30% { transform: translateY(-9px) scale(1.15); opacity: 1; } }
+@keyframes report-loading-message { 0% { opacity: 0; transform: translateY(6px); filter: blur(3px); } 12%, 85% { opacity: 1; transform: translateY(0); filter: blur(0); } 100% { opacity: 0; transform: translateY(-4px); filter: blur(2px); } }
+@keyframes report-loading-reveal { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes report-loading-dot { 0%, 70%, 100% { opacity: .25; transform: translateY(0); } 35% { opacity: 1; transform: translateY(-3px); } }
+@keyframes report-loading-scan { from { transform: translateX(-120%); } to { transform: translateX(350%); } }
+@keyframes report-loading-icon-breathe { 0%, 100% { opacity: .65; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .report-loading-content, .report-loading-orbit::after { animation: none; }
+  .report-loading-content, .report-loading-orbit::after, .report-loading-signal > span,
+  .report-loading-message > span, .report-loading-stage-message, .report-loading-stage-icon,
+  .report-loading-inline-dots i, .report-loading-track > span::after,
+  .report-loading-milestones li[data-state='active'] svg { animation: none; }
+  .report-loading-track > span::after { display: none; }
   .report-loading-track > span, .report-loading-milestones li { transition: none; }
 }
