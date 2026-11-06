@@ -104,3 +104,7 @@ La presentación externa también se publica como Static Site `adereso-partners`
 ## Envío por Gmail desde el Hub
 
 Implementación en `dashboard-sales/deployment/gmail-connection.md`. Cada usuario conecta su propia cuenta Google, que debe coincidir con su cuenta corporativa verificada del Hub. El popup privado incluye remitente, destinatario y envío directo; el sitio externo no permite conectar cuentas internas. Requiere cliente OAuth de Google, configuración privada en Render y consentimiento del usuario. Sin esa configuración, muestra conexión pendiente y no simula un envío.
+
+## Calculadora ROI externa
+
+`https://adereso-partners.onrender.com/roi/` publica exclusivamente la calculadora y sus fórmulas extraídas de `index.html`, con contexto editable de `roi-standalone.js`. No entrega el documento completo de Pricing ni sus catálogos. El build estático publica el HTML independiente y solo CSS/logo; la ruta equivalente del servidor aplica una lista explícita de recursos. Compartir ROI usa esta dirección e incluye únicamente mensualidad, volumen y tarifa unitaria de plantilla cuando está definida. No se incluyen identidades, sesión, datos de clientes ni el resto de la cotización. El cliente puede cambiar los supuestos sin acceder al Hub.

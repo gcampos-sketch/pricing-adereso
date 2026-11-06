@@ -47,3 +47,5 @@
 - Public /partners/ is an explicitly authorized external presentation extracted only from ppTpl, plus three allowlisted visual assets. Sharing must link to it without session tokens or customer data; never expose the Hub shell or private reports through public route parameters.
 
 - The active share flow collects a recipient/message and opens Gmail compose with the public Partner link; direct OAuth sending is deferred by the user. When enabled in future, per-user Gmail sharing is server-only and requires the existing corporate MFA session. Verify Google ID-token issuer/audience, nonce, verified email/domain and exact Hub-account match. Keep encrypted refresh credentials inaccessible to browser roles. Atomic send claims prevent duplicate retries; ambiguous delivery must never automatically resend. Missing OAuth configuration must remain explicit.
+
+- Public /roi/ must contain only the extracted ROI section/formulas and standalone inputs, never the full Pricing document hidden by CSS. Share links may carry only monthly investment, conversation volume and optional all-in WhatsApp unit rate; no private Hub state or session.

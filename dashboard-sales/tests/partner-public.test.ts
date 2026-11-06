@@ -55,8 +55,8 @@ test('presentation parameters never grant access to the private Hub or change th
 
 test('static publication packages only the external document and visual dependencies', async () => {
  execFileSync('node', ['--experimental-strip-types', 'scripts/build-partners.mjs'], { cwd: root, stdio: 'pipe' });
- const files = (await readdir(resolve(root, 'partners-public'), { recursive: true })).filter(path => path !== 'partners').sort();
- expect(files).toEqual(['index.html', 'partners/brand-system.css', 'partners/chapter-index.js', 'partners/index.html', 'partners/logoadereso.webp']);
+ const files = (await readdir(resolve(root, 'partners-public'), { recursive: true })).filter(path => !['partners','roi'].includes(path)).sort();
+ expect(files).toEqual(['index.html', 'partners/brand-system.css', 'partners/chapter-index.js', 'partners/index.html', 'partners/logoadereso.webp', 'roi/brand-system.css', 'roi/index.html', 'roi/logoadereso.webp']);
  const page = await readFile(resolve(root, 'partners-public/partners/index.html'), 'utf8');
  expect(page).toBe(partnerDocument(await readFile(resolve(root, 'index.html'), 'utf8')));
  expect(page).not.toContain('id="homeGrid"');

@@ -29,3 +29,5 @@ dashboard-sales/*.log
 !dashboard/
 !dashboard/index.html
 !.dockerignore
+
+!roi-standalone.js

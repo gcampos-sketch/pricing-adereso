@@ -15,6 +15,7 @@ services:
       paths:
         - dashboard-sales/**
         - render.yaml
+        - roi-standalone.js
         - index.html
         - brand-system.css
         - chapter-index.js
@@ -57,10 +58,12 @@ services:
         value: "true"
     buildFilter:
       paths:
+        - roi-standalone.js
         - index.html
         - brand-system.css
         - chapter-index.js
         - logoadereso.webp
         - dashboard-sales/src/lib/partner-public.ts
+        - dashboard-sales/src/lib/roi-public.ts
         - scripts/build-partners.mjs
         - render.yaml

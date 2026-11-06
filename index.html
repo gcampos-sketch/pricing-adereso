@@ -9928,15 +9928,16 @@ function calcRoiNumbers(){
   calcCmp();
 }
 /* compartir calculadora ROI: copia el link público y avisa con un popup */
-const ROI_URL='https://gcampos-sketch.github.io/roi/';
+const ROI_URL='https://adereso-partners.onrender.com/roi/';
+function roiShareUrl(){const url=new URL(ROI_URL);url.searchParams.set('mensualidad',String(Math.round(Math.max(0,roiCostValue())*100)/100));url.searchParams.set('volumen',String(Math.round(Math.max(0,roiVolume()))));const rate=roiTplUnit();if(rate!=null)url.searchParams.set('plantilla',String(rate));return url.href;}
 function shareToast(ok){let t=document.getElementById('shareToast');
   if(!t){t=document.createElement('div');t.id='shareToast';t.className='share-toast';t.setAttribute('role','status');document.body.appendChild(t);}
-  t.innerHTML=ok?`<i><span data-i="check" data-sz="16"></span></i><div><b>Link copiado en tu portapapeles</b><small>Listo para compartir: ${ROI_URL}</small></div>`:`<i style="background:rgba(245,185,66,0.14);color:var(--warning)">!</i><div><b>No se pudo copiar automáticamente</b><small>Copia este link: ${ROI_URL}</small></div>`;
+  t.innerHTML=ok?`<i><span data-i="check" data-sz="16"></span></i><div><b>Link copiado en tu portapapeles</b><small>Listo para compartir: ${roiShareUrl()}</small></div>`:`<i style="background:rgba(245,185,66,0.14);color:var(--warning)">!</i><div><b>No se pudo copiar automáticamente</b><small>Copia este link: ${roiShareUrl()}</small></div>`;
   t.style.borderColor=ok?'':'rgba(245,185,66,0.4)';paintIcons(t);
   requestAnimationFrame(()=>t.classList.add('on'));clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600);}
 function shareRoi(){
-  const fallback=()=>{const ta=document.createElement('textarea');ta.value=ROI_URL;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();shareToast(ok);};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ROI_URL).then(()=>shareToast(true),fallback);else fallback();}
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=roiShareUrl();ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();shareToast(ok);};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(roiShareUrl()).then(()=>shareToast(true),fallback);else fallback();}
 document.addEventListener('click',e=>{if(e.target.closest('[data-share-roi]'))shareRoi();});
 
 function roiCopy(){

@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHubGateway } from './hub-gateway';
 import { verifyHubIdentity } from './hub-auth.server';
+import { createRoiPublicGateway } from './roi-public';
 import { createPartnerPublicGateway } from './partner-public';
 import { handlePartnerMailRequest } from './partner-mail.server';
 
@@ -10,9 +11,10 @@ import { handlePartnerMailRequest } from './partner-mail.server';
 const packaged = resolve(process.cwd(), 'private-hub');
 const contentRoot = existsSync(packaged) ? packaged : resolve(process.cwd(), '..');
 const read = (path: string) => readFile(resolve(contentRoot, path));
+const publicRoi = createRoiPublicGateway(read);
 const publicPartners = createPartnerPublicGateway(read);
 const privateHub = createHubGateway({ verify: verifyHubIdentity,
   publicOrigin: process.env['RENDER_EXTERNAL_URL'], read });
 export async function handleHubRequest(request: Request) {
-  return await handlePartnerMailRequest(request) ?? await publicPartners(request) ?? privateHub(request);
+  return await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
 }
