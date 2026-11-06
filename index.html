@@ -268,7 +268,7 @@
   /* ---- module grid (replica cotizador) ---- */
   .modgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
   @media(min-width:560px){.modgrid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}}
-  .modcard{position:relative;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:14px 10px 13px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;transition:all .2s var(--ease);min-height:116px;justify-content:center}
+  .modcard{position:relative;background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:14px 10px 13px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;transition:all .2s var(--ease);min-height:116px;justify-content:flex-start;padding-top:18px}
   .modcard:not(.soon):not(.locked):hover{border-color:rgba(255,255,255,0.22)}
   .modcard .mod-ico{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
     background:radial-gradient(120% 120% at 32% 22%,rgba(255,255,255,0.16),rgba(255,255,255,0.02) 62%),var(--elevated);
@@ -278,6 +278,10 @@
   .modcard .mod-desc{font-size:11px;color:var(--z600);line-height:1.2}
   .modcard.on .mod-desc{color:var(--z400)}
   /* contador de agentes dentro de la tarjeta de Studio */
+  .modcard .mod-st{margin-top:6px;margin-right:4px;display:inline-flex;align-items:center;height:19px;border-radius:999px;padding:1px;font-size:10px;font-weight:500;background:rgba(255,255,255,0.04);border:1px solid rgba(24,110,250,0.4);white-space:nowrap;vertical-align:top}
+  .mst-o{height:15px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;color:#8A93A3;cursor:pointer;user-select:none;transition:background .15s,color .15s}
+  .mst-o:hover{color:#C9D6EA}
+  .mst-o.on{background:#186EFA;color:#fff}
   .modcard .mod-ag{margin-top:6px;display:inline-flex;align-items:center;gap:1px;height:19px;border-radius:999px;padding:0 2px;font-size:10px;font-weight:500;color:#7FB0FF;background:rgba(24,110,250,0.12);border:1px solid rgba(24,110,250,0.4);white-space:nowrap}
   .mag-b{width:15px;height:15px;border-radius:999px;display:grid;place-items:center;font-size:12px;line-height:1;color:#7FB0FF;cursor:pointer;user-select:none}
   .mag-b:hover{background:rgba(24,110,250,0.25);color:#fff}
@@ -501,9 +505,16 @@
   .rn-wrap{flex:1;min-width:0}
   .ag-add-row{display:flex;justify-content:center;margin-top:18px}
   .ag-add-row.w600{max-width:600px}.ag-add-row.w640{max-width:640px}
-  .ag-add{display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;border:1px dashed rgba(255,213,64,0.4);background:transparent;color:var(--z300);font:500 12.5px 'Work Sans',sans-serif;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
-  .ag-add-i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(255,213,64,0.12);color:var(--brand);font:600 16px/1 'Outfit',sans-serif}
-  .ag-add:hover{border-color:var(--brand);border-style:solid;background:rgba(255,213,64,0.06);color:#fff}
+  /* agregar agente: sólo el «+»; al pasar el mouse se estira lento y sin rebote (curva tipo líquido) y el texto aparece de a poco */
+  .ag-add{--liq:cubic-bezier(.25,.8,.25,1);display:inline-flex;align-items:center;gap:0;padding:5px;border-radius:999px;border:1px dashed rgba(255,213,64,0.4);background:transparent;color:var(--z300);font:500 12.5px 'Work Sans',sans-serif;cursor:pointer;transition:border-color .9s var(--liq),background .9s var(--liq),color .9s var(--liq),gap .9s var(--liq),padding .9s var(--liq)}
+  .ag-add-i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(255,213,64,0.12);color:var(--brand);font:600 16px/1 'Outfit',sans-serif;flex:none;transition:transform 1s var(--liq),background .9s var(--liq)}
+  .ag-add-t{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;filter:blur(2px);transition:max-width .9s var(--liq),opacity .7s var(--liq) .15s,filter .8s var(--liq) .1s}
+  .ag-add:hover,.ag-add:focus-visible{border-color:rgba(255,213,64,0.75);background:rgba(255,213,64,0.06);color:#fff;gap:8px;padding:5px 14px 5px 5px}
+  .ag-add:hover .ag-add-i,.ag-add:focus-visible .ag-add-i{transform:rotate(90deg);background:rgba(255,213,64,0.2)}
+  .ag-add:hover .ag-add-t,.ag-add:focus-visible .ag-add-t{max-width:84px;opacity:1;filter:blur(0)}
+  @media(prefers-reduced-motion:reduce){.ag-add,.ag-add-i,.ag-add-t{transition:none}}
+  /* «Cambiar plan» sobra: al tocar el plan elegido ya se despliegan los demás */
+  .plans-bar{display:none!important}
   .rn-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#fff}
   .rn-tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:rgba(82,206,94,0.12);color:var(--ok,#52CE5E);border:1px solid rgba(82,206,94,0.35)}
   .rn-sub{font-size:12px;color:var(--z400);margin-top:2px}
@@ -909,6 +920,62 @@
   .vtile-in:focus-within{border-color:rgba(255,213,64,0.55)}
   .vtile-in .lbl{margin:4px 0 0}
   .vt-pen{color:var(--brand);text-transform:none}
+  /* add-on endpoint extra: fila compacta con contador, bajo el plan elegido */
+  .ep-add{display:flex;align-items:center;gap:14px;max-width:600px;margin:14px 0 0;padding:12px 16px;border-radius:var(--r3);border:1px dashed var(--b-default);background:rgba(255,255,255,0.02);transition:border-color .2s var(--ease),background .2s var(--ease)}
+  .ep-add.on{border-style:solid;border-color:rgba(255,213,64,0.45);background:rgba(255,213,64,0.05)}
+  .ep-add-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .ep-add-t b{color:#fff;font-size:14px;font-weight:600}
+  .ep-add-t small{color:var(--z400);font-size:12px}
+  .ep-add-k{align-self:flex-start;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border:1px solid rgba(255,213,64,0.35);border-radius:999px;padding:1px 7px;margin-bottom:3px}
+  .ep-step{display:inline-flex;align-items:center;border:1px solid var(--b-default);border-radius:999px;overflow:hidden}
+  .ep-step button{width:32px;height:32px;background:none;border:0;color:#fff;font-size:17px;cursor:pointer}
+  .ep-step button:hover:not(:disabled){background:rgba(255,255,255,0.06)}
+  .ep-step button:disabled{opacity:.3;cursor:default}
+  .ep-n{min-width:28px;text-align:center;font-family:var(--font-head);font-size:15px;color:#fff}
+  .ep-sum{min-width:72px;text-align:right;font-family:var(--font-head);font-size:15px;color:var(--brand)}
+  .ep-add:not(.on) .ep-sum{color:var(--z500)}
+  /* contador bien visible: botones amarillos grandes y número destacado */
+  .ep-add{padding:16px 18px;border-color:rgba(255,213,64,0.35)}
+  .ep-add-t b{font-size:15px}
+  .ep-step{border:0;gap:8px;overflow:visible}
+  .ep-step button{width:38px;height:38px;border-radius:10px;background:var(--brand);color:#000;font-size:20px;font-weight:700;line-height:1}
+  .ep-step button:hover:not(:disabled){background:#FFE07A}
+  .ep-step button:disabled{background:rgba(255,255,255,0.08);color:var(--z500);opacity:1}
+  .ep-n{min-width:44px;height:38px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--b-default);background:rgba(0,0,0,0.25);font-size:18px;font-weight:600}
+  .ep-add.on .ep-n{border-color:var(--brand);color:var(--brand)}
+  .ep-sum{min-width:80px;font-size:17px}
+  @media(max-width:640px){.ep-add{flex-wrap:wrap}.ep-add-t{flex-basis:100%}}
+  /* dentro de la tarjeta del bot con Plan 2: misma pieza, más compacta y pegada a sus specs */
+  .ep-add.ep-in{max-width:none;margin:12px 0 0;padding:10px 12px;border-radius:var(--r2)}
+  .ep-in .ep-add-k{display:none}
+  .ep-in .ep-add-t b{font-size:13.5px}
+  .ep-in .ep-step button{width:32px;height:32px;font-size:18px}
+  .ep-in .ep-n{height:32px;min-width:38px;font-size:16px}
+  .ep-in .ep-sum{font-size:15px;min-width:64px}
+  /* versión piola: una línea más de las specs, sin caja, con contador mini */
+  .ep-add.ep-in{margin:10px 0 0;padding:8px 0 0;gap:10px;border:0;border-top:1px dashed var(--b-subtle);border-radius:0;background:none}
+  .ep-add.ep-in.on{background:none;border-color:var(--b-subtle)}
+  .ep-in-l{flex:1;font-size:12.5px;color:var(--z400)}
+  /* un solo agente: la misma fila sutil, bajo el plan elegido y con su mismo ancho */
+  /* un solo agente: sumar endpoints dentro del recuadro «Endpoints» del plan */
+  .psp-ep b .psp-ep-x{font-style:normal;color:var(--brand)}
+  .psp-ep-add{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:5px;padding-top:6px;border-top:1px dashed var(--b-subtle)}
+  .pea-l{font-size:10.5px;color:var(--z500);white-space:nowrap}
+  .psp-ep.on .pea-l{color:var(--brand)}
+  .pea-st{display:inline-flex;border:1px solid var(--b-default);border-radius:999px;overflow:hidden;flex:none}
+  .pea-b{width:22px;height:20px;display:grid;place-items:center;font-size:13px;line-height:1;color:var(--z300);cursor:pointer;user-select:none}
+  .pea-b:hover{background:rgba(255,255,255,0.08);color:#fff}
+  .pea-b.dis{color:var(--z600,#52525B);cursor:default;background:none}
+  .pea-b+.pea-b{border-left:1px solid var(--b-default)}
+  .ep-in-l small{margin-left:4px;font-size:11.5px;color:var(--z500)}
+  .ep-in .ep-step{gap:0;border:1px solid var(--b-default);border-radius:999px;overflow:hidden}
+  .ep-in .ep-step button{width:24px;height:24px;border-radius:0;background:none;color:var(--z300);font-size:14px;font-weight:500}
+  .ep-in .ep-step button:hover:not(:disabled){background:rgba(255,255,255,0.06);color:#fff}
+  .ep-in .ep-step button:disabled{background:none;color:var(--z600,#52525B)}
+  .ep-in .ep-n{min-width:22px;height:24px;border:0;border-radius:0;background:none;font-size:12.5px;color:#fff}
+  .ep-add.ep-in.on .ep-n{color:var(--brand)}
+  .ep-in .ep-sum{min-width:48px;font-size:12.5px;color:var(--z500)}
+  .ep-add.ep-in.on .ep-sum{color:var(--brand)}
   /* barra inferior "Selección" desactivada: no aporta y tapa contenido */
   .mrail{display:none!important}
   .vcustom{margin-top:12px;display:inline-flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border:1px dashed var(--b-default);border-radius:999px;transition:all .2s var(--ease)}
@@ -999,8 +1066,7 @@
   .psp b{font-family:var(--font-head);font-size:19px;font-weight:500;color:#fff;line-height:1.1;white-space:nowrap}
   .psp small{font-size:11px;color:var(--z500);line-height:1.25}
   .psp-up{font-style:normal;font-family:var(--font-body);font-size:11px;font-weight:400;color:var(--z500);margin-right:4px}
-  .psp.hh{background:rgba(255,213,64,0.10);border-color:rgba(255,213,64,0.35)}
-  .psp.hh b{color:var(--brand)}
+  /* las 3 cifras del plan con el mismo peso visual (sin destacar las HH) */
   @media(max-width:480px){.psp b{font-size:16px}.psp{padding:8px 9px}}
   /* despliegue en el lugar: los otros planes crecen alrededor del elegido y todo se achica un poco */
   .plans-wrap .plans{gap:0}
@@ -8569,6 +8635,11 @@ const TILES=[2000,3000,4000,5000,10000,15000,20000,30000];
 /* Desk solo: tramos oficiales (Notion «Pricing y márgenes — Desk, Flows y Agents»). Entre tramos se interpola, igual que la bolsa con Studio. */
 const DESK_BAG=[{c:2000,p:199},{c:5000,p:399},{c:15000,p:1099},{c:45000,p:2999},{c:135000,p:8299},{c:405000,p:23699},{c:1215000,p:66999},{c:3645000,p:193499}];
 const DESK_TILES=[2000,5000,15000,45000,135000];
+/* Desk + Flows: tramos oficiales (misma página Notion, columna «Desk + Flows»). La bolsa con Agents sigue usando BAG. */
+const FLOW_BAG=[{c:2000,p:298},{c:5000,p:598},{c:15000,p:1598},{c:45000,p:4498},{c:135000,p:12398},{c:405000,p:35498},{c:1215000,p:100498},{c:3645000,p:290298}];
+/* El tipo de Studio (Agent o Flow) se decide en la bolsa: aplica a todo el proyecto y cambia el precio */
+function studioType(){return state.studioType==='flow'?'flow':'agent';}
+function studioBag(){return studioType()==='flow'?FLOW_BAG:BAG;}
 function curVol(){return state.volMode==='custom'?(state.volCustom||2000):(state.vol||2000);}
 function priceForVolume(v,t=BAG){
   v=Math.max(2000,Math.round(v||0));
@@ -8735,7 +8806,7 @@ function monthlyBase(){
 /* Precio de la bolsa elegida (para cliente vigente con Studio, sin la mantención de bot que ya paga). */
 function bagPrice(){
   if(!hasService())return 0;
-  let base=state.studio?priceForVolume(state.volMode==='custom'?state.volCustom:state.vol):priceForVolume(curVol(),DESK_BAG);
+  let base=state.studio?priceForVolume(state.volMode==='custom'?state.volCustom:state.vol,studioBag()):priceForVolume(curVol(),DESK_BAG);
   if(state.studio&&!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)base=base*(1+STUDIO_NO_DESK_SURCHARGE/100);
   return base-mantDiscount();
 }
@@ -8760,8 +8831,10 @@ function xCost(){return (hasService()&&state.chan.x&&(!state.existing||state.cha
 function agentsN(){if(!iaSetup())return 0;if(state.existing)return (state.scope!=='bolsa'?botsN():0)+improveN();return 1+extraAgentsN();}
 function agentPlan(i){if(i===0)return state.setup;const k=state.agentPlans[i-1];return SETUP[k]?k:state.setup;}
 /* cada agente es Agent o Flow. Agent: Acompañada o Rápida. Flow: siempre Acompañada. El agente 1 guarda su modalidad en state.setupMode. */
-function agentType(i){return (state.agentTypes||[])[i]==='flow'?'flow':'agent';}
-function agentMode(i){if(agentType(i)==='flow')return 'acompanada';return i===0?state.setupMode:((state.agentModes||[])[i]||'acompanada');}
+function agentType(i){return studioType();}
+/* Rápida o Acompañada se decide por proyecto completo: con 2+ agents/flows (o un Flow) el proyecto es siempre Acompañado */
+function projectMode(){if(agentsN()>1)return 'acompanada';if(agentType(0)==='flow')return 'acompanada';return state.setupMode||'acompanada';}
+function agentMode(i){return projectMode();}
 function allRapid(){const n=Math.max(1,agentsN());for(let i=0;i<n;i++)if(agentMode(i)!=='paquetizado')return false;return true;}
 const RAPID_NOTE=`<div class="rn-head"><b>Rápida · paquetizado</b><span class="rn-tag">Sin costo</span></div>
 <div class="rn-sub">Con las mejores prácticas de la industria · Shopify, VTEX o Magento</div>
@@ -8775,7 +8848,26 @@ const RAPID_NOTE=`<div class="rn-head"><b>Rápida · paquetizado</b><span class=
 function deskInteg(){return !iaSetup()&&state.desk&&!state.existing&&!!state.deskInteg;}
 /* implementación: con agente IA, o con solo Desk en cliente nuevo (onboarding + integraciones opcionales) */
 function implVisible(){return (iaSetup()&&scopeBot())||(!iaSetup()&&state.desk&&!state.existing);}
-function setupCost(){if(deskInteg())return SETUP[state.setup].price;if(!iaSetup()||!scopeBot())return 0;let t=0;for(let i=0;i<Math.max(1,agentsN());i++)if(agentMode(i)==='acompanada')t+=SETUP[agentPlan(i)].price;return t;}
+function setupBase(){if(deskInteg())return SETUP[state.setup].price;if(!iaSetup()||!scopeBot())return 0;let t=0;for(let i=0;i<Math.max(1,agentsN());i++)if(agentMode(i)==='acompanada')t+=SETUP[agentPlan(i)].price;return t;}
+/* add-on: endpoint extra USD 80 c/u (pago único), por cada bot con Plan 2 · Inteligente (los planes 3 y 4 ya traen hasta 8/16) */
+const EP_EXTRA=80;
+function epOk(i){if(deskInteg())return i===0&&state.setup==='inteligente';if(!iaSetup()||!scopeBot())return false;return i<Math.max(1,agentsN())&&agentMode(i)==='acompanada'&&agentPlan(i)==='inteligente';}
+function epCount(i){return epOk(i)?Math.max(0,((state.epA||[])[i])|0):0;}
+function epExtraN(){let t=0;for(let i=0;i<Math.max(1,agentsN());i++)t+=epCount(i);return t;}
+function setupCost(){return setupBase()+epExtraN()*EP_EXTRA;}
+/* contador del add-on: cuadro completo (1 bot / Desk) o compacto dentro de la tarjeta del bot */
+function epStep(i){const n=epCount(i);return `<div class="ep-step" role="group" aria-label="Endpoints adicionales"><button type="button" data-ep="-1" data-epi="${i}" ${n?'':'disabled'} aria-label="Quitar endpoint">−</button><span class="ep-n">${n}</span><button type="button" data-ep="1" data-epi="${i}" aria-label="Sumar endpoint">+</button></div><span class="ep-sum">${n?'+'+usd(n*EP_EXTRA):'—'}</span>`;}
+function epAddon(i){i=i|0;if(!epOk(i))return '';const n=epCount(i);
+  return `<div class="ep-add ${n?'on':''}"><div class="ep-add-t"><span class="ep-add-k">Add-on</span><b>Endpoints adicionales</b><small>Suma los que necesites · USD ${EP_EXTRA} c/u, pago único</small></div>${epStep(i)}</div>`;}
+/* un solo agente: el contador vive dentro del recuadro «Endpoints» del plan elegido (spans, porque el plan ya es un botón) */
+function epPsp(i,s){if(!epOk(i))return `<div class="psp"><b>${s.epN}</b><small>${s.epL}</small></div>`;const n=epCount(i);
+  return `<div class="psp psp-ep ${n?'on':''}"><b>${s.epN}${n?`<em class="psp-ep-x"> + ${n}</em>`:''}</b><small>${s.epL}</small>
+    <span class="psp-ep-add"><span class="pea-l">${n?'+'+usd(n*EP_EXTRA):'Sumar · USD '+EP_EXTRA+' c/u'}</span><span class="pea-st"><span class="pea-b ${n?'':'dis'}" data-ep="-1" data-epi="${i}" role="button" aria-label="Quitar endpoint">−</span><span class="pea-b" data-ep="1" data-epi="${i}" role="button" aria-label="Sumar endpoint">+</span></span></span></div>`;}
+document.getElementById('setupArea').addEventListener('click',e=>{const b=e.target.closest('.psp-ep [data-ep]');if(!b)return;
+  e.stopPropagation();e.preventDefault();if(b.classList.contains('dis'))return;const i=+b.dataset.epi||0;state.epA=state.epA||[];state.epA[i]=Math.max(0,((state.epA[i])|0)+(+b.dataset.ep));agRefresh();},true);
+function epInline(i){if(!epOk(i))return '';const n=epCount(i);
+  return `<div class="ep-add ep-in ${n?'on':''}"><span class="ep-in-l">+ Endpoints extra <small>USD ${EP_EXTRA} c/u</small></span>${epStep(i)}</div>`;}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ep]');if(!b)return;const i=+b.dataset.epi||0;state.epA=state.epA||[];state.epA[i]=Math.max(0,((state.epA[i])|0)+(+b.dataset.ep));agRefresh();});
 /* Ticket extra fuera de bolsa = extraRate del tramo activo × 1,15 (lógica del cotizador).
    Tramo activo = último tramo cuyo cap ≤ volumen. La mantención de bot (160) no entra en el unitario. */
 const EXTRA_MARKUP=1.15;
@@ -8882,8 +8974,10 @@ function modBots(){const n=botsN();
   return `<span class="mod-ag" title="Cada agente IA extra suma USD ${BOT_MANT}/mes."><span class="mag-b ${n<=1?'dis':''}" data-bot-step="-1" role="button" aria-label="Menos agentes">−</span><span class="mag-n">${n} agente${n>1?'s':''} IA</span><span class="mag-b" data-bot-step="1" role="button" aria-label="Más agentes">+</span></span>`;}
 document.getElementById('modgrid').addEventListener('click',e=>{const s=e.target.closest('#modgrid [data-bot-step]');if(!s)return;
   e.stopPropagation();e.preventDefault();state.bots=Math.max(1,botsN()+(+s.dataset.botStep));renderMods();exRefresh();},true);
-function modAgents(){const n=1+extraAgentsN();
-  return `<span class="mod-ag" title="Studio incluye 1 agente. Cada agente extra suma USD ${BOT_MANT}/mes."><span class="mag-b ${n<=1?'dis':''}" data-ag-step="-1" role="button" aria-label="Menos agentes">−</span><span class="mag-n">${n} agent${n>1?'s':''} / flow${n>1?'s':''}</span><span class="mag-b" data-ag-step="1" role="button" aria-label="Más agentes">+</span></span>`;}
+function modAgents(){const n=1+extraAgentsN(),f=studioType()==='flow',w=f?'flow':'agent';
+  return `<span class="mod-st" role="group" aria-label="Tipo de Studio" title="Cambia el precio de la bolsa"><span class="mst-o ${!f?'on':''}" data-stype="agent" role="button">Agent</span><span class="mst-o ${f?'on':''}" data-stype="flow" role="button">Flow</span></span><span class="mod-ag" title="Studio incluye 1 ${w}. Cada ${w} extra suma USD ${BOT_MANT}/mes."><span class="mag-b ${n<=1?'dis':''}" data-ag-step="-1" role="button" aria-label="Menos">−</span><span class="mag-n">${n} ${w}${n>1?'s':''}</span><span class="mag-b" data-ag-step="1" role="button" aria-label="Más">+</span></span>`;}
+document.getElementById('modgrid').addEventListener('click',e=>{const t=e.target.closest('#modgrid [data-stype]');if(!t)return;
+  e.stopPropagation();e.preventDefault();if(state.studioType===t.dataset.stype)return;state.studioType=t.dataset.stype;renderMods();renderAll();refreshFlow();},true);
 document.getElementById('modgrid').addEventListener('click',e=>{const s=e.target.closest('#modgrid [data-ag-step]');if(!s)return;
   e.stopPropagation();e.preventDefault();state.extraAgents=Math.max(0,extraAgentsN()+(+s.dataset.agStep));renderMods();agRefresh();},true);
 document.getElementById('agentBox')?.addEventListener('click',e=>{const s=e.target.closest('[data-ag-step]');if(!s)return;
@@ -8899,6 +8993,7 @@ function removeAgent(i){const n=agentsN();if(n<=1)return;
     plans=ix.map(agentPlan),
     modes=ix.map(j=>j===0?state.setupMode:(state.agentModes||[])[j]),
     types=ix.map(agentType);
+  {const ea=Array.from({length:n},(_,j)=>((state.epA||[])[j])|0);ea.splice(i,1);state.epA=ea;}
   [plans,modes,types].forEach(a=>a.splice(i,1));
   state.setup=plans[0];state.setupMode=modes[0]||'acompanada';state.agentPlans=plans.slice(1);
   state.agentModes=modes.map((m,j)=>j===0?undefined:m);state.agentTypes=types;
@@ -9012,6 +9107,7 @@ function renderSetup(){
       /* igual que con agente: queda solo el plan elegido y los demás se despliegan con «Cambiar plan» */
       const slots=ks.map(k=>k===state.setup?`<div class="pslot sel-slot">${pc(k)}</div>`:`<div class="pslot"><div class="pslot-in">${pc(k)}</div></div>`).join('');
       h+=`<div class="level-kicker" style="margin:4px 0 12px">Plan de integración (HH)</div><div class="plans-wrap ${po?'open':''}" id="plansWrap"><div class="plans">${slots}</div><div class="plans-bar"><button class="plans-switch" data-plans-toggle aria-expanded="${po}"><span class="ps-lbl">${po?'Ocultar planes':'Cambiar plan'}</span><span class="ps-chev">⌄</span></button></div></div>`;}
+      h+=epAddon();
     /* con integraciones, los planes van primero y el onboarding (incluido) queda abajo */
     h+=onbBox;area.innerHTML=h;paintIcons(area);return;}
   const nA=agentsN();
@@ -9027,9 +9123,9 @@ function renderSetup(){
   if(nA<=1){
     const acc=agentMode(0)==='acompanada';
     if(isImprove(0))html+=`<div class="level-kicker" style="margin:0 0 12px">Mejora del agente actual · solo setup, sin mensualidad</div>`;
-    html+=typeSeg(0)+modeSeg(0);
+    html+=modeSeg(0);
     if(acc){
-    const planCard=(k)=>{const s=SETUP[k],sel=k===state.setup;return `<button class="plan ${sel?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="rec-chip">★ Recomendado</span>':''}</h3><div class="pfit">${s.fit}</div></div><span class="phh">${s.hh}</span>${sel?`<div class="pspecs-acc"><div class="pspecs"><div class="psp hh"><b>${parseInt(s.hh)}</b><small>Horas (HH)</small></div><div class="psp"><b>${s.epN}</b><small>${s.epL}</small></div><div class="psp"><b><em class="psp-up">Hasta</em>${s.sesDev} + ${s.sesPost}</b><small>Reuniones + post-entrega</small></div></div></div>`:''}</button>`;};
+    const planCard=(k)=>{const s=SETUP[k],sel=k===state.setup;return `<button class="plan ${sel?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="rec-chip">★ Recomendado</span>':''}</h3><div class="pfit">${s.fit}</div></div><span class="phh">${s.hh}</span>${sel?`<div class="pspecs-acc"><div class="pspecs"><div class="psp hh"><b>${parseInt(s.hh)}</b><small>Horas (HH)</small></div>${epPsp(0,s)}<div class="psp"><b><em class="psp-up">Hasta</em>${s.sesDev} + ${s.sesPost}</b><small>Reuniones + post-entrega</small></div></div></div>`:''}</button>`;};
     const po=!!state.plansOpen;
     /* todos los planes en su orden: el elegido queda en su lugar y los demás se despliegan arriba/abajo */
     const slots=SETUP_ORDER.map(k=>k===state.setup?`<div class="pslot sel-slot">${planCard(k)}</div>`:`<div class="pslot"><div class="pslot-in">${planCard(k)}</div></div>`).join('');
@@ -9041,23 +9137,22 @@ function renderSetup(){
     }else{
       html+=`<div class="note" style="margin-top:20px"><span data-i="bolt"></span><div class="rn-wrap">${RAPID_NOTE}</div></div>`;
     }
-    html+=AG_ADD('Agregar otro agent / flow',acc?'w600':'');
+    html+=AG_ADD('Agregar otro',acc?'w600':'');
   }else{
       /* varios agentes: cada uno en su tarjeta con tipo (Agent/Flow), modalidad y plan */
       const pill=(i,attr,v,lbl,on)=>`<button type="button" class="agp-pill ${on?'on':''}" data-${attr}="${i}" data-v="${v}">${lbl}</button>`;
       const card=i=>{const k=agentPlan(i),s=SETUP[k],fl=agentType(i)==='flow',acc=agentMode(i)==='acompanada';
         const opts=SETUP_ORDER.map(o=>{const p=SETUP[o];return `<option value="${o}" ${o===k?'selected':''}>${p.name} · ${p.hh}${p.rec?' ★':''}</option>`;}).join('');
         return `<div class="agcard"><div class="agc-head"><span class="agc-n">${isImprove(i)?'Mejora':(fl?'Flow':'Agent')+' '+(i+1)}</span>
-            <span class="agp-grp" role="group" aria-label="Tipo">${pill(i,'atype','agent','Agent',!fl)}${pill(i,'atype','flow','Flow',fl)}</span>
-            ${fl?'<span class="agp-lock">Acompañada</span>':`<span class="agp-grp" role="group" aria-label="Modalidad">${pill(i,'amode','acompanada','Acompañada',acc)}${pill(i,'amode','paquetizado','Rápida',!acc)}</span>`}
-            <span class="agc-mrr">${isImprove(i)?'solo setup':(i===0&&!state.existing?'incluido en Studio':'+USD '+BOT_MANT+'/mes')}</span><button type="button" class="agc-del" data-ag-del="${i}" aria-label="Quitar ${fl?'flow':'agente'} ${i+1}" title="Quitar">×</button></div>
+            <span class="agp-lock">Acompañada</span>
+            ${(i===0&&!state.existing&&!isImprove(i))?'':`<span class="agc-mrr">${isImprove(i)?'solo setup':'+USD '+BOT_MANT+'/mes'}</span>`}<button type="button" class="agc-del" data-ag-del="${i}" aria-label="Quitar ${fl?'flow':'agente'} ${i+1}" title="Quitar">×</button></div>
           ${acc?`<label class="agc-sel"><select data-agsel="${i}" aria-label="Plan del ${fl?'flow':'agente'} ${i+1}">${opts}</select></label>
-          <div class="agc-specs"><span><b>${parseInt(s.hh)}</b> HH</span><span><b>${s.epN}</b> ${s.epL}</span><span>Hasta <b>${s.sesDev} + ${s.sesPost}</b> reuniones</span></div>`
+          <div class="agc-specs"><span><b>${parseInt(s.hh)}</b> HH</span><span><b>${s.epN}</b> ${s.epL}</span><span>Hasta <b>${s.sesDev} + ${s.sesPost}</b> reuniones</span></div>${epInline(i)}`
           :`<div class="agc-specs"><span><b>Sin costo</b> · Shopify, VTEX o Magento</span><span>Token + políticas en <b>1 reunión</b></span><span>Go-Live <b>1–2 semanas</b></span></div>`}</div>`;};
-      html+=`<div class="level-kicker" style="margin:0 0 12px">Tipo e implementación por agente</div>
+      html+=`<div class="level-kicker" style="margin:0 0 12px">Tipo y plan por agente · proyecto Acompañado</div>
         <div class="agcards">${Array.from({length:nA},(_,i)=>card(i)).join('')}</div>
-        ${AG_ADD('Agregar otro agent / flow','w640')}
-        <div class="ag-foot">Cada agente tiene su propio setup. Los Flows se implementan siempre acompañados.</div>`;
+        ${AG_ADD('Agregar otro','w640')}
+        <div class="ag-foot">Con más de un agent / flow el proyecto completo se implementa <b>Acompañado</b>: cada uno lleva su plan de HH.</div>`;
       if(Array.from({length:nA},(_,i)=>i).some(i=>agentMode(i)==='paquetizado'))html+=`<div class="note" style="margin-top:14px"><span data-i="bolt"></span><div class="rn-wrap">${RAPID_NOTE}</div></div>`;
   }
   /* Desk + Studio: el onboarding viene incluido en la implementación */
@@ -9361,6 +9456,7 @@ function renderSummary(){renderTerm();
     :`<div class="rr"><span class="k">Incluye</span><span class="v">${sp.hh} · ${String(sp.endpoints).replace(/\s*\(.*\)/,'')}</span></div><div class="rr"><span class="k">Reuniones</span><span class="v">${sp.sesDev} + ${sp.sesPost} post-entrega</span></div>${dInt?'<div class="rr"><span class="k">Onboarding Desk</span><span class="v">Sin costo</span></div>':`<div class="rr"><span class="k">Mantención</span><span class="v">${sp.mant}</span></div>`}`;
   /* varios agentes: una línea por agente con su plan, HH y valor */
   const impTableX=(!paq&&nAg>1)?Array.from({length:nAg},(_,i)=>{const p=SETUP[agentPlan(i)],t=agentType(i)==='flow'?'Flow':'Agent';return agentMode(i)==='paquetizado'?`<div class="rr"><span class="k">${t} ${i+1} · Rápida <small class="xsplit">paquetizado</small></span><span class="v">Gratis</span></div>`:`<div class="rr"><span class="k">${t} ${i+1} · ${p.name} <small class="xsplit">${p.hh} · ${p.endpoints}</small></span><span class="v">${usd(p.price)}</span></div>`;}).join('')+`<div class="rr"><span class="k">Mantención mensual</span><span class="v">${sp.mant} por agente</span></div>`:impTable;
+  const epRow=epExtraN()?`<div class="rr"><span class="k">Endpoints extra × ${epExtraN()} <small class="xsplit">add-on USD ${EP_EXTRA} c/u</small></span><span class="v">${usd(epExtraN()*EP_EXTRA)}</span></div>`:'';
   const planEditor=withIA?`<div class="redit"><label class="re-ico" title="Editar implementación" aria-label="Editar implementación"><span data-i="edit" data-sz="14"></span></label><select data-ed="plan">
       <option value="paquetizado" ${paq?'selected':''}>Rápida · paquetizado (gratis)</option>
       ${SETUP_ORDER.map(k=>`<option value="${k}" ${(!paq&&state.setup===k)?'selected':''}>Acompañada · ${SETUP[k].name}</option>`).join('')}
@@ -9369,7 +9465,7 @@ function renderSummary(){renderTerm();
     <div class="rcard"><span class="rlabel"><span data-i="bill" data-sz="14"></span>Pago único</span>
       <div class="rtitle"><span data-i="tool" data-sz="18"></span>${impTitle}</div>
       <div class="rbig"><span class="n">${impBig}</span>${impU?`<span class="u">${impU}</span>`:''}</div>
-      ${rdet(paq?'Autogestionable, sin acompañamiento. Buenas prácticas del mercado.':'Setup inicial, integraciones y acompañamiento post-entrega.',impTableX+((state.desk&&state.studio&&!state.existing)?'<div class="rr"><span class="k">Onboarding Desk + Studio</span><span class="v">Incluido</span></div>':''),null,
+      ${rdet(paq?'Autogestionable, sin acompañamiento. Buenas prácticas del mercado.':'Setup inicial, integraciones y acompañamiento post-entrega.',impTableX+epRow+((state.desk&&state.studio&&!state.existing)?'<div class="rr"><span class="k">Onboarding Desk + Studio</span><span class="v">Incluido</span></div>':''),null,
         paq?(withIA?'<div class="rr"><span class="k">Go-Live</span><span class="v">1–2 semanas</span></div>':'<div class="rr"><span class="k">Capacitación</span><span class="v">1 por rol</span></div>')
           :(nAg>1?`<div class="rr"><span class="k">Agentes</span><span class="v">${nAg}</span></div>`:`<div class="rr"><span class="k">Incluye</span><span class="v">${sp.hh} · ${String(sp.endpoints).replace(/\s*\(.*\)/,'')}</span></div>`)+(dInt?'':`<div class="rr"><span class="k">Mantención</span><span class="v">${sp.mant}</span></div>`))}
       ${planEditor}
@@ -9850,6 +9946,8 @@ function refreshFlow(){
   buildNav();
   secs.forEach((id,i)=>{const sec=document.getElementById(id);const k=sec.querySelector('.level-kicker');if(k&&KICK[id])k.textContent='Nivel '+(i+(state.existing?0:1))+' · '+KICK[id];
     const btn=sec.querySelector('.continue button');const nx=secs[i+1];if(btn&&nx){btn.dataset.next=nx;btn.innerHTML=(NEXTLABEL[nx]||'Continuar')+' <span data-i="down"></span>';paintIcons(btn);}});
+  /* al cambiar opciones cambian las alturas: recalcula qué nivel está enfocado para no dejar difuminado el que estás viendo */
+  requestAnimationFrame(()=>{if(typeof computeActive==='function'&&document.getElementById('s1')?.offsetParent!==null)computeActive();snQueue();});
 }
 function setActive(id){
   const secs=activeSections();const i=secs.indexOf(id);if(i<0)return;
@@ -9860,7 +9958,10 @@ function setActive(id){
 }
 /* avance lateral continuo: la línea amarilla sigue el scroll entre un paso y el siguiente */
 let _snRaf=0;
-function snFlow(){_snRaf=0;const sn=document.querySelector('.sidenav');if(!sn)return;
+function snFlow(){_snRaf=0;
+  /* respaldo de las animaciones de entrada: si se pasó rápido por un título (salto o scroll veloz), igual queda visible */
+  const vh=window.innerHeight;document.querySelectorAll('.reveal:not(.in)').forEach(el=>{if(el.offsetParent!==null&&el.getBoundingClientRect().top<vh*0.96)el.classList.add('in');});
+  const sn=document.querySelector('.sidenav');if(!sn)return;
   const secs=activeSections().map(id=>document.getElementById(id)).filter(Boolean),n=secs.length;if(n<2){sn.style.setProperty('--np','0');return;}
   /* misma línea (38%) que decide qué nivel se enfoca: la pelotita se completa justo cuando su nivel deja de verse difuminado */
   const mid=window.scrollY+window.innerHeight*0.38,tops=secs.map(s=>s.getBoundingClientRect().top+window.scrollY);
@@ -10206,7 +10307,7 @@ function modalMorph(opening,done){
    Valores de lista mensuales, sin descuento por plazo. */
 const SIM={bag:0,real:0};
 function simExtraRate(v){const d=state.desk?tierRate(DESK_TIERS,v):0,s=state.studio?tierRate(STUDIO_AGENT_TIERS,v):0;return d+s;}
-function simBagPrice(v){return state.studio?priceForVolume(v)*((!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)?1+STUDIO_NO_DESK_SURCHARGE/100:1):priceForVolume(v,DESK_BAG);}
+function simBagPrice(v){return state.studio?priceForVolume(v,studioBag())*((!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)?1+STUDIO_NO_DESK_SURCHARGE/100:1):priceForVolume(v,DESK_BAG);}
 function simCalc(){
   const bag=Math.max(2000,Math.round(SIM.bag||0)),real=Math.max(0,Math.round(SIM.real||0));
   const over=Math.max(0,real-bag),rate=simExtraRate(bag);
