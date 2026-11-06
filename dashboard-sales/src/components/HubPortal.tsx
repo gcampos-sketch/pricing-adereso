@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { readTrustToken } from '@/lib/mfa-trust';
+import { PasskeySettings } from '@/components/PasskeySettings';
 
 /** Mounted only after the shared AuthGate and MfaGate have accepted the session. */
 export function HubPortal() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
+  const [passkeyOpen, setPasskeyOpen] = useState(false);
   useEffect(() => {
     let active = true;
     const sync = async () => {
@@ -28,6 +30,7 @@ export function HubPortal() {
   if (!ready) return <main className="pulse-main"><div className="auth-card"><h1 className="pulse-h2">Hub comercial</h1><p role="status">{error ? 'No pudimos abrir tu sesión. Recarga la página o vuelve a ingresar.' : 'Abriendo tus herramientas…'}</p><button className="pill" onClick={() => { void supabase.auth.signOut(); }}>Volver al ingreso</button></div></main>;
   return <div className="hub-portal">
     <iframe className="hub-portal-frame" title="Hub comercial Adereso" src={'/hub-content/index.html' + window.location.search} />
-    <button className="hub-sign-out" onClick={() => { void supabase.auth.signOut(); }}>Salir del Hub</button>
+    <div className="hub-account-actions"><button onClick={() => setPasskeyOpen(true)}>Touch ID / Face ID</button><button onClick={() => { void supabase.auth.signOut(); }}>Salir del Hub</button></div>
+    <PasskeySettings open={passkeyOpen} onOpenChange={setPasskeyOpen} />
   </div>;
 }

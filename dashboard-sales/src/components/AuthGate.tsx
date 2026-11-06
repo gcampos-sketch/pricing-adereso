@@ -2,7 +2,9 @@ import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { UserRound, LogOut, RefreshCw } from "lucide-react";
+import { UserRound, LogOut, RefreshCw, Fingerprint } from "lucide-react";
+import { supportsPasskeys, passkeyErrorMessage } from '@/lib/passkeys';
+import { PasskeySettings } from '@/components/PasskeySettings';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRefreshMenu } from "@/contexts/RefreshContext";
@@ -27,6 +29,24 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [code, setCode] = useState("");
   const [resendAt, setResendAt] = useState(0);
   const [now, setNow] = useState(Date.now);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const passkeyRequest = useRef<AbortController | null>(null);
+  useEffect(() => () => { passkeyRequest.current?.abort(); }, []);
+  const signInWithPasskey = async () => {
+    if (busy || passkeyBusy) return;
+    setPasskeyBusy(true); setError(null);
+    const controller = new AbortController();
+    passkeyRequest.current = controller;
+    try {
+      const { data, error } = await supabase.auth.signInWithPasskey({ options: { signal: controller.signal } });
+      if (error) throw error;
+      if (!data?.session || !isAllowed(data.session)) {
+        await supabase.auth.signOut();
+        setError('Solo cuentas @adere.so pueden ingresar al Hub.');
+      }
+    } catch (error) { if (!controller.signal.aborted) setError(passkeyErrorMessage(error)); }
+    finally { passkeyRequest.current = null; setPasskeyBusy(false); }
+  };
 
   useEffect(() => {
     if (!resendAt) return;
@@ -92,8 +112,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
     <main className="pulse-main">
       <div className="auth-card">
         <h1 className="pulse-h2">Hub comercial</h1>
-        <p className="eyebrow">Un solo acceso para todas tus herramientas. Ingresa con tu correo @adere.so y tu segundo factor.</p>
+        <p className="eyebrow">Un solo acceso para todas tus herramientas de Adereso.</p>
         {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
+        {supportsPasskeys() && <div className="auth-passkey-option">
+          <button className="pill auth-passkey-button" type="button" disabled={busy || passkeyBusy} onClick={() => void signInWithPasskey()}><Fingerprint size={20} aria-hidden="true" />{passkeyBusy ? 'Confirma en tu dispositivo…' : 'Entrar con Touch ID / Face ID'}</button>
+          <p className="eyebrow">¿Primera vez? Ingresa por correo y activa tu passkey dentro del Hub.</p>
+          <span className="auth-method-divider">O usa tu correo @adere.so</span>
+        </div>}
+        <fieldset className="auth-email-fieldset" disabled={passkeyBusy}>
         {sentTo ? <form className="auth-email-form" onSubmit={confirmCode}>
           <p role="status">Enviamos un correo de acceso a <strong>{sentTo}</strong>. Abre el enlace del último correo para continuar. Si incluye un código, también puedes ingresarlo aquí.</p>
           <label htmlFor="email-login-code">Código del correo, si lo recibiste</label>
@@ -109,6 +135,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           <input id="email-login-address" className="auth-email-input" type="email" autoComplete="email" placeholder="tu.nombre@adere.so" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} />
           <button className="pill" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Recibir correo de acceso'}</button>
         </form>}
+        </fieldset>
       </div>
     </main>
   );
@@ -118,6 +145,7 @@ export function AccountMenu({ collapsed }: { collapsed: boolean }) {
   const email = useContext(AccountEmailContext);
   const { onRefresh, isRefreshing } = useRefreshMenu();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [passkeyOpen, setPasskeyOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -139,10 +167,12 @@ export function AccountMenu({ collapsed }: { collapsed: boolean }) {
     </Button>
     {menuOpen && <div className="auth-hamburger-menu sidebar-account-menu" data-collapsed={collapsed} role="menu" aria-label="Cuenta">
       <span className="auth-hamburger-email">{email}</span>
+      <Button variant="ghost" className="auth-hamburger-item" role="menuitem" onClick={() => { setMenuOpen(false); setPasskeyOpen(true); }}><Fingerprint size={15} aria-hidden="true" />Touch ID / Face ID</Button>
       {onRefresh && <Button variant="ghost" className="auth-hamburger-item" role="menuitem" disabled={isRefreshing} onClick={() => { onRefresh(); setMenuOpen(false); }}>
         <RefreshCw className={isRefreshing ? "auth-refresh-spin" : undefined} size={15} aria-hidden="true" />{isRefreshing ? "Actualizando…" : "Refrescar ahora"}
       </Button>}
       <Button variant="ghost" className="auth-hamburger-item" role="menuitem" onClick={() => { setMenuOpen(false); void (async () => { try { await forgetDevice(); } catch { /* ignore */ } clearTrustToken(); await supabase.auth.signOut(); })(); }}><LogOut size={15} aria-hidden="true" />Cerrar sesión</Button>
     </div>}
+    <PasskeySettings open={passkeyOpen} onOpenChange={setPasskeyOpen} />
   </div>;
 }

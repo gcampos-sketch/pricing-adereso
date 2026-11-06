@@ -49,6 +49,7 @@ function createSupabaseClient() {
       fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),
     },
     auth: {
+      experimental: { passkey: true },
       storage: brokeredPreviewStorage(),
       persistSession: true,
       autoRefreshToken: true,
