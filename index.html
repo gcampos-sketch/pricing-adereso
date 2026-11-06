@@ -10273,7 +10273,7 @@ window.addEventListener('resize',onScroll,{passive:true});
   const drop=document.getElementById('endDrop'),txt=cap.querySelector('.endcap-txt');
   const MAX=170,K=420,DEAD=160;let acc=0,rel=null,ty=null;
   const atBottom=()=>window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-2;
-  const blocked=()=>document.getElementById('modalBack')?.classList.contains('open');
+  const blocked=()=>curView!=='pricing'||document.getElementById('modalBack')?.classList.contains('open');
   function paint(p){
     /* toda la pantalla sube lo suficiente para dejar libre el espacio de la gota y la frase: nunca se montan sobre el contenido */
     wrap.style.transform=p>0?`translateY(${-p*1.45}px)`:'';
