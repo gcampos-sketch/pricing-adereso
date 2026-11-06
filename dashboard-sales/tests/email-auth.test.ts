@@ -1,7 +1,19 @@
 import { expect, test } from 'bun:test';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { corporateEmail, sendEmailCode, verifyEmailCode } from '../src/lib/email-auth';
+import { corporateEmail, emailSendErrorMessage, sendEmailCode, verifyEmailCode } from '../src/lib/email-auth';
 type Auth = Pick<SupabaseClient['auth'], 'signInWithOtp' | 'verifyOtp'>;
+test('email limits explain that no new message was sent', () => {
+ for (const error of [{ status: 429 }, { code: 'over_email_send_rate_limit' }, { code: 'over_request_rate_limit' }]) {
+  expect(emailSendErrorMessage(error)).toContain('límite temporal');
+  expect(emailSendErrorMessage(error)).toContain('No se envió un correo nuevo');
+ }
+});
+test('other failures do not invent a rate limit or display provider payloads', () => {
+ for (const error of [undefined, null, new Error('private provider details'), { status: 500 }]) {
+  expect(emailSendErrorMessage(error)).not.toContain('límite');
+  expect(emailSendErrorMessage(error)).not.toContain('private provider details');
+ }
+});
 function fakeAuth() {
  const calls: unknown[] = [];
  const auth = { signInWithOtp: async (input: unknown) => { calls.push(input); return { error: null }; }, verifyOtp: async (input: unknown) => { calls.push(input); return { error: null, data: { session: { user: { email: 'persona@adere.so' } } } }; } } as unknown as Auth;

@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRefreshMenu } from "@/contexts/RefreshContext";
 import { MfaGate } from "@/components/MfaGate";
-import { corporateEmail, EMAIL_OTP_LENGTH, sendEmailCode, verifyEmailCode } from "@/lib/email-auth";
+import { corporateEmail, EMAIL_OTP_LENGTH, emailSendErrorMessage, sendEmailCode, verifyEmailCode } from "@/lib/email-auth";
 
 const AccountEmailContext = createContext<string | null>(null);
 export const useAccountEmail = () => useContext(AccountEmailContext);
@@ -64,7 +64,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     try {
       const normalized = await sendEmailCode(supabase.auth, sentTo ?? email);
       setSentTo(normalized); setCode(''); setNow(Date.now()); setResendAt(Date.now() + 60_000);
-    } catch { setError('No pudimos enviar el código. Revisa tu correo o intenta más tarde.'); }
+    } catch (error) { setError(emailSendErrorMessage(error)); }
     finally { setBusy(false); }
   };
   const confirmCode = async (event: FormEvent) => {
@@ -95,19 +95,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
         <p className="eyebrow">Un solo acceso para todas tus herramientas. Ingresa con tu correo @adere.so y tu segundo factor.</p>
         {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
         {sentTo ? <form className="auth-email-form" onSubmit={confirmCode}>
-          <p role="status">Enviamos un código a <strong>{sentTo}</strong>.</p>
-          <label htmlFor="email-login-code">Código del correo</label>
+          <p role="status">Enviamos un correo de acceso a <strong>{sentTo}</strong>. Abre el enlace del último correo para continuar. Si incluye un código, también puedes ingresarlo aquí.</p>
+          <label htmlFor="email-login-code">Código del correo, si lo recibiste</label>
           <input id="email-login-code" className="auth-email-input auth-email-code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, EMAIL_OTP_LENGTH))}
             inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" minLength={EMAIL_OTP_LENGTH} maxLength={EMAIL_OTP_LENGTH} required autoFocus disabled={busy} />
           <button className="pill" type="submit" disabled={busy || code.length !== EMAIL_OTP_LENGTH}>{busy ? 'Verificando…' : 'Continuar'}</button>
           <div className="auth-email-actions">
-            <button type="button" disabled={busy || resendSeconds > 0} onClick={() => void requestCode()}>{resendSeconds > 0 ? 'Reenviar en ' + resendSeconds + ' s' : 'Reenviar código'}</button>
+            <button type="button" disabled={busy || resendSeconds > 0} onClick={() => void requestCode()}>{resendSeconds > 0 ? 'Reenviar en ' + resendSeconds + ' s' : 'Reenviar correo'}</button>
             <button type="button" disabled={busy} onClick={() => { setSentTo(null); setCode(''); setError(null); }}>Cambiar correo</button>
           </div>
         </form> : <form className="auth-email-form" onSubmit={requestCode}>
           <label htmlFor="email-login-address">Correo de trabajo</label>
           <input id="email-login-address" className="auth-email-input" type="email" autoComplete="email" placeholder="tu.nombre@adere.so" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} />
-          <button className="pill" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Recibir código'}</button>
+          <button className="pill" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Recibir correo de acceso'}</button>
         </form>}
       </div>
     </main>

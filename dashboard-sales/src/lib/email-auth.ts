@@ -1,6 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export const EMAIL_OTP_LENGTH = 8;
+export function emailSendErrorMessage(error: unknown): string {
+  const info = error && typeof error === 'object' ? error as { status?: unknown; code?: unknown } : {};
+  if (info.status === 429 || info.code === 'over_email_send_rate_limit' || info.code === 'over_request_rate_limit') {
+    return 'El servicio de correo alcanzó su límite temporal de envíos. No se envió un correo nuevo. Espera antes de volver a solicitarlo; si persiste, el administrador debe revisar el servicio de correo.';
+  }
+  return 'No pudimos enviar el correo de acceso. Intenta más tarde o contacta al administrador.';
+}
 export function corporateEmail(value: string): string | null {
   const email = value.trim().toLowerCase();
   return /^[^@\s]+@adere\.so$/.test(email) ? email : null;
