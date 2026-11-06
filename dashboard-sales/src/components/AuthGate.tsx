@@ -1,22 +1,20 @@
 import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { UserRound, LogOut, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRefreshMenu } from "@/contexts/RefreshContext";
 import { MfaGate } from "@/components/MfaGate";
-import { oauthReturnPath } from "@/lib/oauth-return-path";
+import { corporateEmail, EMAIL_OTP_LENGTH, sendEmailCode, verifyEmailCode } from "@/lib/email-auth";
 
 const AccountEmailContext = createContext<string | null>(null);
 export const useAccountEmail = () => useContext(AccountEmailContext);
 
-const ALLOWED_DOMAIN = "adere.so";
-
 function isAllowed(session: Session | null) {
   const email = session?.user?.email?.toLowerCase() ?? "";
-  return email.endsWith(`@${ALLOWED_DOMAIN}`);
+  return corporateEmail(email) !== null;
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -24,6 +22,18 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState("");
+  const [sentTo, setSentTo] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [resendAt, setResendAt] = useState(0);
+  const [now, setNow] = useState(Date.now);
+
+  useEffect(() => {
+    if (!resendAt) return;
+    const timer = window.setInterval(() => { const current = Date.now(); setNow(current); if (current >= resendAt) window.clearInterval(timer); }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendAt]);
+  const resendSeconds = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
@@ -39,35 +49,30 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (ready && session && !isAllowed(session)) {
-      setError(`Solo cuentas @${ALLOWED_DOMAIN} pueden ver este reporte.`);
+      setError("Solo cuentas @adere.so pueden ver este reporte.");
       void supabase.auth.signOut();
     }
   }, [ready, session]);
 
 
-  const signIn = async () => {
-    // Google refuses authorization inside a frame. Authenticate in a top-level
-    // tab; Supabase's storage events update the embedded session on return.
-    if (window.self !== window.top) {
-      window.open(window.location.href, '_blank', 'noopener');
-      setError('Ingresa en la pestaña que se abrió y luego vuelve al hub.');
-      return;
-    }
-    setBusy(true);
-    setError(null);
+  const requestCode = async (event?: FormEvent) => {
+    event?.preventDefault();
+    if (busy || (sentTo && resendSeconds > 0)) return;
+    if (!corporateEmail(sentTo ?? email)) { setError('Ingresa tu correo @adere.so.'); return; }
+    setBusy(true); setError(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: new URL(oauthReturnPath(window.location.pathname + window.location.search), window.location.origin).href,
-          queryParams: { hd: ALLOWED_DOMAIN, prompt: 'select_account' },
-        },
-      });
-      if (error) throw error;
-    } catch {
-      setError("No pudimos iniciar sesión con Google. Intenta de nuevo.");
-      setBusy(false);
-    }
+      const normalized = await sendEmailCode(supabase.auth, sentTo ?? email);
+      setSentTo(normalized); setCode(''); setNow(Date.now()); setResendAt(Date.now() + 60_000);
+    } catch { setError('No pudimos enviar el código. Revisa tu correo o intenta más tarde.'); }
+    finally { setBusy(false); }
+  };
+  const confirmCode = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!sentTo || busy) return;
+    setBusy(true); setError(null);
+    try { await verifyEmailCode(supabase.auth, sentTo, code); }
+    catch { setError('El código no es válido o ya expiró. Revisa el último correo.'); }
+    finally { setBusy(false); }
   };
 
   if (!ready) {
@@ -85,18 +90,24 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <main className="pulse-main">
       <div className="auth-card">
-        <h1 className="pulse-h2">Sales Dashboard</h1>
-        <p className="eyebrow">
-          Acceso restringido al equipo Adereso. Ingresa con tu cuenta @{ALLOWED_DOMAIN}.
-        </p>
-        {error ? (
-          <p className="status" data-tone="bad">
-            {error}
-          </p>
-        ) : null}
-        <button className="pill" type="button" onClick={() => void signIn()} disabled={busy}>
-          {busy ? "Conectando…" : "Ingresar con Google"}
-        </button>
+        <h1 className="pulse-h2">Dashboard comercial</h1>
+        <p className="eyebrow">Acceso exclusivo al equipo Adereso. Código por correo y verificación en dos pasos.</p>
+        {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
+        {sentTo ? <form className="auth-email-form" onSubmit={confirmCode}>
+          <p role="status">Enviamos un código a <strong>{sentTo}</strong>.</p>
+          <label htmlFor="email-login-code">Código del correo</label>
+          <input id="email-login-code" className="auth-email-input auth-email-code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, EMAIL_OTP_LENGTH))}
+            inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" minLength={EMAIL_OTP_LENGTH} maxLength={EMAIL_OTP_LENGTH} required autoFocus disabled={busy} />
+          <button className="pill" type="submit" disabled={busy || code.length !== EMAIL_OTP_LENGTH}>{busy ? 'Verificando…' : 'Continuar'}</button>
+          <div className="auth-email-actions">
+            <button type="button" disabled={busy || resendSeconds > 0} onClick={() => void requestCode()}>{resendSeconds > 0 ? 'Reenviar en ' + resendSeconds + ' s' : 'Reenviar código'}</button>
+            <button type="button" disabled={busy} onClick={() => { setSentTo(null); setCode(''); setError(null); }}>Cambiar correo</button>
+          </div>
+        </form> : <form className="auth-email-form" onSubmit={requestCode}>
+          <label htmlFor="email-login-address">Correo de trabajo</label>
+          <input id="email-login-address" className="auth-email-input" type="email" autoComplete="email" placeholder="tu.nombre@adere.so" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} />
+          <button className="pill" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Recibir código'}</button>
+        </form>}
       </div>
     </main>
   );

@@ -33,7 +33,7 @@ const image = `${region}-docker.pkg.dev/${project}/${repository}/${service}:${sh
 console.log(JSON.stringify({ mode: apply ? 'deploy' : 'plan', project, region, service, image, runtimeAccount, buildAccount,
   secrets: { HUBSPOT_ACCESS_TOKEN: `${hubspotSecret}:${hubspotVersion}`, SUPABASE_SERVICE_ROLE_KEY: `${supabaseSecret}:${supabaseVersion}` },
   limits: { cpu: 1, memory: '1Gi', minInstances: 0, maxInstances: 2, concurrency: 20, timeoutSeconds: 300 },
-  authentication: 'Supabase Google @adere.so + server MFA; HTTPS service is reachable for sign-in',
+  authentication: 'Supabase email OTP @adere.so + server MFA; HTTPS service is reachable for sign-in',
 }, null, 2));
 if (!apply) process.exit(0);
 const dirty = spawnSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' });
@@ -72,5 +72,5 @@ try {
   const health = await fetch(`${url}/healthz`, { signal: AbortSignal.timeout(15000) });
   if (!health.ok || (await health.json()).status !== 'ready') throw new Error('La revisión publicada no pasó la comprobación de disponibilidad. No se cambia el destino del hub.');
   console.log(`Servidor disponible: ${url}`);
-  console.log('Antes de conectar el hub: autoriza este origen en Supabase y verifica ingreso Google, MFA y un reporte real.');
+  console.log('Antes de conectar el hub: autoriza este origen en Supabase y verifica ingreso por correo, MFA y un reporte real.');
 } finally { rmSync(dir, { recursive: true, force: true }); }

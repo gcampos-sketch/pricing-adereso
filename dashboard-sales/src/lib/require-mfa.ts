@@ -2,7 +2,7 @@ import { createMiddleware } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const ALLOWED_DOMAIN = "adere.so";
+import { corporateEmail } from "./email-auth";
 
 /** Rejects non-Adereso accounts, and sessions that neither passed TOTP (aal2) nor carry a valid trusted-device token. */
 export const requireMfa = createMiddleware({ type: "function" })
@@ -10,7 +10,7 @@ export const requireMfa = createMiddleware({ type: "function" })
   .server(async ({ next, context }) => {
     const claims = context.claims as { aal?: string; email?: string };
     const email = String(claims.email ?? "").toLowerCase();
-    if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) throw new Error("Unauthorized: cuenta no permitida");
+    if (!corporateEmail(email)) throw new Error("Unauthorized: cuenta no permitida");
     if (claims.aal !== "aal2") {
       const { verifyTrustToken, TRUST_HEADER } = await import("./mfa-trust.server");
       const ok = await verifyTrustToken(context.userId, getRequestHeader(TRUST_HEADER));

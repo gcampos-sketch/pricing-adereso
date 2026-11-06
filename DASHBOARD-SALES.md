@@ -17,7 +17,7 @@ Configurar las claves privadas de HubSpot y Supabase en `dashboard-sales/.env.lo
 
 GitHub Pages puede alojar el hub estático. El dashboard consulta HubSpot desde un servidor para proteger las claves, así que necesita un hosting Node o de contenedores. No puede ejecutarse directamente en GitHub Pages.
 
-El `Dockerfile` del dashboard usa `dashboard-sales/` como contexto. Sus tres argumentos de build son públicos: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` y `VITE_SUPABASE_PROJECT_ID`. Al ejecutar el contenedor, configurar `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `HUBSPOT_ACCESS_TOKEN` como variables del servidor. Mantener la base de datos y las migraciones existentes; agregar el dominio final a los retornos permitidos de Google en Supabase.
+El `Dockerfile` del dashboard usa `dashboard-sales/` como contexto. Sus tres argumentos de build son públicos: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` y `VITE_SUPABASE_PROJECT_ID`. Al ejecutar el contenedor, configurar `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` y `HUBSPOT_ACCESS_TOKEN` como variables del servidor. Mantener la base de datos y las migraciones existentes; configurar en Supabase el ingreso por código de correo y el segundo factor.
 
 Una vez desplegado, poner su URL HTTPS en `dashboard-settings.js` y publicar el hub desde GitHub. Hasta entonces el sitio publicado muestra una página de disponibilidad pendiente. No usa Lovable como destino alternativo.
 
@@ -29,7 +29,7 @@ Los cambios previos del hub (identidad, Partners, índice y demás secciones) se
 
 Destino: proyecto `nsflqsdtfmnuangezsid` (organización Adereso, `supabase-coral-cave`). El código local utiliza su URL y claves desde archivos de entorno ignorados. Mantener los mismos valores de URL y clave publicable en cliente y servidor; la clave privada va únicamente en `SUPABASE_SERVICE_ROLE_KEY`. Ese nombre acepta la clave secreta moderna `sb_secret_`; nunca copiarla a `VITE_*`.
 
-Para instalar el esquema en un destino vacío, revisar y ejecutar `dashboard-sales/deployment/supabase-bootstrap.sql` en el editor SQL del proyecto correcto. Agrupa las ocho migraciones originales en una transacción y se detiene si encuentra tablas o funciones del dashboard existentes. No usarlo para actualizar un esquema instalado. No borra datos ni copia información del origen. El trigger de fechas usa un nombre propio del dashboard para evitar reemplazar funciones de otras aplicaciones.
+Para instalar el esquema en un destino vacío, revisar y ejecutar `dashboard-sales/deployment/supabase-bootstrap.sql` en el editor SQL del proyecto correcto. Agrupa las migraciones del esquema y del control de dominio en una transacción y se detiene si encuentra tablas o funciones del dashboard existentes. No usarlo para actualizar un esquema instalado. No borra datos ni copia información del origen. El trigger de fechas usa un nombre propio del dashboard para evitar reemplazar funciones de otras aplicaciones.
 
 El esquema consta de seis tablas con RLS: reportes, coaching, recuperación MFA, dispositivos confiables, permisos MCP y notificaciones personales. El acceso al caché de reportes queda reservado al servidor. Cada usuario solo puede leer sus propios grants MCP; la función de escritura de notificaciones es exclusiva del servidor. Comprobar tablas, políticas y rechazos sin sesión después de instalar.
 
@@ -37,7 +37,13 @@ Una instalación nueva no importa usuarios, eventos de coaching ni notificacione
 
 Las exportaciones privadas de una migración se guardan en `dashboard-sales/.migration-backups/`, excluidas de Git, Docker y Google Cloud. El archivo `notifications.json` conserva la relación entre el UUID anterior y el correo. Después de que cada persona ingrese y verifique su correo en el proyecto nuevo, ejecutar `npm --prefix dashboard-sales run restore:notifications -- --source .migration-backups/2026-11-06/notifications.json` para revisar el plan; agregar `--apply` para restaurar las cuentas elegibles. El proceso exige correo corporativo exacto y verificado, conserva el owner de CRM y el historial, actualiza también `payload.account`, y nunca reemplaza una configuración nueva ni borra el respaldo original. Los conflictos se revisan antes de aplicar cambios; las cuentas que todavía no existen quedan pendientes.
 
-El proveedor de ingreso y los retornos permitidos se configuran en Supabase. Para Google hacen falta las credenciales OAuth correspondientes y autorizar `https://nsflqsdtfmnuangezsid.supabase.co/auth/v1/callback`. El servidor conserva la comprobación `@adere.so` y MFA. No conectar el sitio público hasta validar el ingreso completo y un reporte real.
+El ingreso elegido es código de ocho dígitos al correo `@adere.so`, seguido de TOTP. `AuthGate` solicita y verifica el código con Supabase; solo después muestra `MfaGate`. `requireMfa` conserva la validación del dominio y de `aal2` o un dispositivo confiable verificado por el servidor. No hace falta configurar Google OAuth para este ingreso.
+
+En Supabase, habilitar Email, mantener Confirm email y TOTP habilitados, y conservar la longitud OTP de ocho dígitos. Adjuntar `public.dashboard_restrict_signup_email` como hook Postgres **Before User Created**. La migración `20261106183000_dashboard_email_signup.sql` instala esa función con ejecución exclusiva de Auth; la función rechaza registros de otros dominios.
+
+Para enviar códigos, configurar un SMTP autorizado en Authentication → Emails → SMTP Settings y usar `dashboard-sales/deployment/email-code.html` en las plantillas Magic link or OTP y Confirm sign up. Asunto sugerido: «Tu código de acceso · Adereso». La variable `{{ .Token }}` es necesaria para mostrar el código. El plan gratuito observado no permite editar las plantillas sin SMTP y usa un enlace por defecto; con esa configuración la pantalla de código todavía no completa el ingreso. No se ha contratado un plan superior ni debe declararse validado el envío hasta recibir y verificar un código real. Mantener las credenciales SMTP fuera de Git.
+
+Antes de conectar el sitio público, probar código recibido, MFA, rechazo de cuentas externas y un reporte real.
 
 ## Despliegue en Render (destino elegido)
 
@@ -46,7 +52,7 @@ El proveedor de ingreso y los retornos permitidos se configuran en Supabase. Par
 1. Ingresar a Render con la cuenta de trabajo y crear un Blueprint desde este repositorio, rama `codex/dashboard-sales-hub`, archivo `render.yaml`. Revisar la conexión GitHub antes de autorizarla. El plan inicial es gratuito y se suspende tras inactividad; cambiar a uno pagado requiere aprobar su costo.
 2. Render solicita las siete variables con `sync: false`. Las cinco de URL/clave publicable/ID salen de la configuración existente de Supabase. Las dos privadas son `SUPABASE_SERVICE_ROLE_KEY` y `HUBSPOT_ACCESS_TOKEN`: ingresarlas directamente en Render por un canal seguro, nunca en Git, chat, argumentos públicos ni variables con prefijo `VITE_`.
 3. Construir el servicio. Render pasa las variables a Docker como argumentos, pero el Dockerfile declara únicamente los tres argumentos públicos VITE; las claves privadas se usan solo en runtime. El puerto es `10000`. La comprobación `/healthz` impide declarar disponible una revisión sin toda la configuración requerida; no verifica validez de las claves ni acceso a proveedores.
-4. Con la URL HTTPS real, configurar los destinos de retorno exactos en Supabase y revisar los orígenes de MCP si se usan. Probar Google `@adere.so`, MFA, rechazo de acceso no autorizado y un reporte real. Mantener la base de datos y migraciones actuales.
+4. Con la URL HTTPS real, configurar los destinos de retorno exactos en Supabase y revisar los orígenes de MCP si se usan. Probar código al correo `@adere.so`, MFA, rechazo de acceso no autorizado y un reporte real. Mantener la base de datos y migraciones actuales.
 5. Después de esas pruebas, poner la URL en `dashboard-settings.js` y publicar el hub. Hasta entonces sigue mostrando disponibilidad pendiente en producción. No anticipar una URL ni conectar una revisión fallida.
 
 Render despliega automáticamente cuando pasan los checks de la rama configurada. Tras integrar el PR a `main`, cambiar `branch` en el Blueprint y su configuración en Render a `main`. Los cambios posteriores de secretos se hacen en el servicio: `sync: false` solo solicita valores durante la creación inicial del Blueprint. No se ha contratado un plan pagado.
@@ -55,7 +61,7 @@ Documentación oficial: [Blueprints](https://render.com/docs/blueprint-spec), [D
 
 ## Alternativa preparada para Google Cloud Run
 
-Destino propuesto: proyecto `adereso-internal-tools`, región `us-central1`, servicio nuevo `sales-dashboard`. La documentación interna menciona este proyecto; todavía hay que verificar el acceso y los recursos reales. No se reutiliza ni modifica el backend del CRM. Supabase conserva la base de datos, Google Auth y MFA existentes; no hace falta Firebase adicional.
+Destino propuesto: proyecto `adereso-internal-tools`, región `us-central1`, servicio nuevo `sales-dashboard`. La documentación interna menciona este proyecto; todavía hay que verificar el acceso y los recursos reales. No se reutiliza ni modifica el backend del CRM. Supabase conserva la base de datos, Auth por correo y MFA; no hace falta Firebase adicional.
 
 ```sh
 npm run deploy:dashboard:plan
@@ -76,13 +82,13 @@ Los nombres pueden ajustarse mediante `DASHBOARD_ARTIFACT_REPOSITORY`, `DASHBOAR
 
 La revisión propuesta usa 1 CPU, 1 GiB, mínimo 0 y máximo 2 instancias, facturación por solicitudes y concurrencia 20. Estos límites contienen la capacidad pero no constituyen un presupuesto máximo: build, almacenamiento, red, secretos y uso del servicio pueden generar cargos. El arranque desde cero puede agregar espera a la primera visita.
 
-La URL HTTPS será accesible para mostrar el inicio de sesión. Las consultas privadas conservan Google `@adere.so`, MFA y permisos verificados en el servidor. El despliegue solicita acceso público al transporte de Cloud Run; verificar que esa configuración sea compatible con las políticas de la organización. No hace público el contenido autenticado por Supabase.
+La URL HTTPS será accesible para mostrar el inicio de sesión. Las consultas privadas conservan correo `@adere.so`, MFA y permisos verificados en el servidor. El despliegue solicita acceso público al transporte de Cloud Run; verificar que esa configuración sea compatible con las políticas de la organización. No hace público el contenido autenticado por Supabase.
 
 El endpoint `/healthz` devuelve solo `ready` (200) o `not-ready` (503), sin detalles de claves. Comprueba presencia de configuración; no certifica que las credenciales sean válidas ni que HubSpot y Supabase respondan. `.gcloudignore` y `.dockerignore` excluyen archivos de entorno y dependencias locales del paquete enviado.
 
 Después del despliegue:
 
-1. Registrar la URL HTTPS y el retorno exacto de autenticación que utiliza la aplicación entre los destinos permitidos en Supabase. Revisar también Google OAuth y los orígenes permitidos de MCP si corresponde.
+1. Registrar la URL HTTPS y el retorno exacto de autenticación que utiliza la aplicación entre los destinos permitidos en Supabase. Revisar también los orígenes permitidos de MCP si corresponde.
 2. Entrar con una cuenta autorizada, completar MFA y comprobar un reporte real, filtros y permisos. Comprobar que una sesión no autorizada no pueda consultar los datos.
 3. Solo entonces escribir la URL en `dashboard-settings.js`, validar el hub y publicar en GitHub. El script no cambia ese destino automáticamente.
 4. Para actualizaciones, guardar el código en un commit y repetir el despliegue; la imagen usa el identificador de ese commit. Si una revisión falla, recuperar la revisión anterior desde Cloud Run y comprobar ingreso y reporte antes de volver a darla por operativa.

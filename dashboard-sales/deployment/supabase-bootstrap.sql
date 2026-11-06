@@ -5,7 +5,7 @@ BEGIN
  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('report_cache','coaching_events','mfa_recovery_codes','mfa_trusted_devices','mcp_grants','sales_notification_repositories')) THEN
  RAISE EXCEPTION 'Existen tablas del dashboard: revisar antes de instalar. No se reemplaza contenido.';
  END IF;
- IF to_regprocedure('public.dashboard_update_updated_at_column()') IS NOT NULL OR to_regprocedure('public.has_active_mcp_grant(text)') IS NOT NULL OR to_regprocedure('public.save_sales_notifications(uuid,bigint,jsonb)') IS NOT NULL THEN
+ IF to_regprocedure('public.dashboard_restrict_signup_email(jsonb)') IS NOT NULL OR to_regprocedure('public.dashboard_update_updated_at_column()') IS NOT NULL OR to_regprocedure('public.has_active_mcp_grant(text)') IS NOT NULL OR to_regprocedure('public.save_sales_notifications(uuid,bigint,jsonb)') IS NOT NULL THEN
  RAISE EXCEPTION 'Existen funciones de destino: revisar antes de instalar.';
  END IF;
 END;
@@ -145,4 +145,21 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.save_sales_notifications(uuid,bigint,jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.save_sales_notifications(uuid,bigint,jsonb) TO service_role;
+-- Corporate email signup restriction; attach this function in Auth Hooks.
+-- Attach as the Before User Created hook in the owned Supabase project.
+CREATE FUNCTION public.dashboard_restrict_signup_email(event jsonb)
+RETURNS jsonb LANGUAGE plpgsql SET search_path = '' AS $
+DECLARE
+  email text := lower(btrim(coalesce(event->'user'->>'email', '')));
+BEGIN
+  IF email !~ '^[^@[:space:]]+@adere[.]so THEN
+    RETURN jsonb_build_object('error', jsonb_build_object('http_code', 403, 'message', 'Solo cuentas @adere.so pueden registrarse.'));
+  END IF;
+  RETURN '{}'::jsonb;
+END;
+$;
+REVOKE ALL ON FUNCTION public.dashboard_restrict_signup_email(jsonb) FROM PUBLIC, anon, authenticated, service_role;
+GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
+GRANT EXECUTE ON FUNCTION public.dashboard_restrict_signup_email(jsonb) TO supabase_auth_admin;
+
 COMMIT;

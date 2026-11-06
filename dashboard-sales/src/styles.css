@@ -5266,3 +5266,14 @@ body::before {
 .task-check:hover { border-color: var(--brand); }
 .task-check:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .task-check[aria-checked="true"] { background: var(--success); border-color: var(--success); color: var(--brand-foreground); }
+
+.auth-email-form { display: grid; gap: 12px; width: 100%; }
+.auth-email-form label { font-size: 13px; font-weight: 600; }
+.auth-email-input { width: 100%; min-height: 46px; border: 1px solid var(--border-default); border-radius: 12px; background: var(--surface); color: var(--foreground); padding: 10px 14px; font: inherit; }
+.auth-email-input:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.auth-email-code { letter-spacing: .25em; font-variant-numeric: tabular-nums; }
+.auth-email-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.auth-email-actions button { border: 0; padding: 6px 0; background: transparent; color: var(--muted-foreground); font: inherit; font-size: 13px; cursor: pointer; }
+.auth-email-actions button:disabled { opacity: .5; cursor: default; }
+
+.auth-email-form .pill { justify-content: center; }

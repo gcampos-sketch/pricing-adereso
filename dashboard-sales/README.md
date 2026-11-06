@@ -24,9 +24,9 @@ El hub vive en `/Users/gonzalocampos/Projects/pricing-adereso`. Su herramienta D
 
 - `HUBSPOT_ACCESS_TOKEN`: token de una app privada de HubSpot con los permisos que requieren los reportes (deals, empresas, asociaciones, propietarios, propiedades, metas y demás objetos consultados). Permanece en el servidor. Las claves del conector Lovable no son intercambiables con este token.
 - `SUPABASE_SERVICE_ROLE_KEY`: clave del mismo proyecto Supabase, usada únicamente en el servidor para snapshots, dispositivos de confianza y operaciones administrativas existentes.
-- Configurar el proveedor Google del proyecto Supabase y agregar `http://127.0.0.1:8878/**` a las URLs de retorno permitidas. Agregar también el dominio final cuando exista. Los prefijos `VITE_` solo pueden contener configuración pública.
+- Configurar Email OTP de ocho dígitos y TOTP en el Supabase propio, con SMTP y plantilla de código. Ver `../DASHBOARD-SALES.md`. Los prefijos `VITE_` solo pueden contener configuración pública.
 - La restricción `@adere.so`, el segundo factor del servidor y los permisos MCP se conservan. No hay un modo local que omita autenticación.
-- Dentro del hub, el botón de ingreso abre el dashboard en una pestaña superior para permitir Google OAuth. Tras ingresar, volver al hub; Supabase sincroniza la sesión entre pestañas del mismo origen. Si el navegador bloquea almacenamiento entre sitios, usar el enlace «Abrir» del hub.
+- El código de correo puede ingresarse dentro del hub. Si el navegador bloquea almacenamiento entre sitios, usar el enlace «Abrir» del hub.
 
 Las librerías MCP de Lovable se conservan como dependencia de código para mantener las herramientas existentes; no necesitan el editor. Las rutas MCP no confían por defecto en cabeceras de proxy suministradas por el cliente. Si el hosting usa un proxy, revisar su contrato antes de cambiar esa configuración.
 

@@ -40,4 +40,4 @@
 - Executive-strip cards and drilldowns share a browser-side owner/role/type scope over commercial-pipeline journeys and report on-track data; date/stage filters are excluded to retain historical counts without extra CRM reads.
 
 - Standalone development uses native Vite/TanStack configuration and a Node Nitro build; server-only HubSpot access uses HUBSPOT_ACCESS_TOKEN against the official API. Never restore a Lovable gateway fallback, treat connector credentials as native tokens or expose server secrets through VITE_*.
-- The local hub embeds Dashboard Sales on port 8878; Google sign-in opens a top-level dashboard tab. Preserve the Adereso domain restriction, server MFA and MCP grants during integration.
+- The local hub embeds Dashboard Sales on port 8878. Sign-in uses eight-digit email OTP for exact @adere.so addresses, followed by MfaGate; Supabase must use an OTP email template and the corporate signup hook. Preserve server MFA and MCP grants; email verification alone never grants report access.
