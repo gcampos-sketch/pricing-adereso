@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { runtimeHealthResponse } from "./lib/runtime-health.server";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -46,6 +47,11 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    if (new URL(request.url).pathname === "/healthz") {
+      if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+      const health = runtimeHealthResponse();
+      return request.method === "HEAD" ? new Response(null, { status: health.status, headers: health.headers }) : health;
+    }
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

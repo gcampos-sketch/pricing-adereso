@@ -10,6 +10,8 @@
     "build": "npm --prefix dashboard-sales run build",
     "test": "npm --prefix dashboard-sales test",
     "typecheck": "npm --prefix dashboard-sales run typecheck",
-    "check:config": "npm --prefix dashboard-sales run check:config"
+    "check:config": "npm --prefix dashboard-sales run check:config",
+    "deploy:dashboard:plan": "node --env-file-if-exists=dashboard-sales/.env --env-file-if-exists=dashboard-sales/.env.local scripts/deploy-dashboard-cloudrun.mjs",
+    "deploy:dashboard": "node --env-file-if-exists=dashboard-sales/.env --env-file-if-exists=dashboard-sales/.env.local scripts/deploy-dashboard-cloudrun.mjs --apply"
   }
 }

@@ -10650,7 +10650,7 @@ const TOOLS=[
   {k:'operativa',name:'Operativa',desc:'Pipeline, traspasos y reglas del equipo comercial.',view:'operativa'},
   {k:'academy',name:'Sales Academy',desc:'Entrena ventas, procesos y producto con juegos.',view:'academy'}]},
  {g:'Para uso interno',items:[
-  {k:'dashboard',name:'Dashboard Sales',desc:'Pipeline, proyectos y calidad comercial.',view:'embed',url:DASHBOARD_SALES_URL},
+  {k:'dashboard',name:'Dashboard comercial',desc:'Pipeline, proyectos y calidad comercial.',view:'embed',url:DASHBOARD_SALES_URL},
   {k:'descuentos',name:'Descuentos a utilizar',desc:'Simula plazo, pago anticipado y descuento comercial.',view:'descuentos'},
   {k:'todas',name:'Ver todas',desc:'Todas las plataformas que usa un comercial, en Notion.',url:'https://app.notion.com/p/adereso/Plataformas-que-un-comercial-debe-usar-3fb9c2747df5802a8540cd281ba8b290?source=copy_link'}]},
  {g:'Portales',items:[
@@ -10707,6 +10707,8 @@ function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool
   if(v==='progpartners'){const f=document.getElementById('ppFrame'),tp=document.getElementById('ppTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
   if(v==='embed'){const t=ALL_TOOLS.find(x=>x.k===k);const f=document.getElementById('evFrame');
     document.getElementById('evTitle').textContent=t.name;document.getElementById('evOpen').href=t.url;
+    document.querySelector('.ev-note').hidden=k==='dashboard';
+    document.getElementById('evOpen').textContent=k==='dashboard'?'Abrir dashboard ↗':'Abrir en pestaña nueva ↗';
     if(f.dataset.src!==t.url){f.dataset.src=t.url;f.src=t.url;}}
   if(v==='home')aiBgStart();else aiBgStop();
   /* no se fuerza scroll arriba: al volver al cotizador sigues donde quedaste */
