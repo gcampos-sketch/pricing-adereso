@@ -1,9 +1,9 @@
 name: Dashboard Sales
 on:
   push:
-    paths: ['dashboard-sales/**', '.github/workflows/dashboard-sales.yml']
+    paths: ['dashboard-sales/**', 'render.yaml', '.github/workflows/dashboard-sales.yml']
   pull_request:
-    paths: ['dashboard-sales/**', '.github/workflows/dashboard-sales.yml']
+    paths: ['dashboard-sales/**', 'render.yaml', '.github/workflows/dashboard-sales.yml']
   workflow_dispatch:
 permissions:
   contents: read

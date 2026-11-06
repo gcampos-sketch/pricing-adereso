@@ -25,7 +25,21 @@ La dependencia npm `@lovable.dev/mcp-js` se conserva para mantener las herramien
 
 Los cambios previos del hub (identidad, Partners, índice y demás secciones) se conservan en el mismo árbol de trabajo. Publicar el conjunto completo con sus archivos nuevos.
 
-## Despliegue preparado para Google Cloud Run
+## Despliegue en Render (destino elegido)
+
+`render.yaml` en la raíz define un Web Service Docker llamado `adereso-sales-dashboard`, usando el Dockerfile y contexto de `dashboard-sales/`. El servicio conserva Supabase; no crea una base de datos nueva ni utiliza GCP o Lovable para alojar la aplicación.
+
+1. Ingresar a Render con la cuenta de trabajo y crear un Blueprint desde este repositorio, rama `codex/dashboard-sales-hub`, archivo `render.yaml`. Revisar la conexión GitHub antes de autorizarla. El plan inicial es gratuito y se suspende tras inactividad; cambiar a uno pagado requiere aprobar su costo.
+2. Render solicita las siete variables con `sync: false`. Las cinco de URL/clave publicable/ID salen de la configuración existente de Supabase. Las dos privadas son `SUPABASE_SERVICE_ROLE_KEY` y `HUBSPOT_ACCESS_TOKEN`: ingresarlas directamente en Render por un canal seguro, nunca en Git, chat, argumentos públicos ni variables con prefijo `VITE_`.
+3. Construir el servicio. Render pasa las variables a Docker como argumentos, pero el Dockerfile declara únicamente los tres argumentos públicos VITE; las claves privadas se usan solo en runtime. El puerto es `10000`. La comprobación `/healthz` impide declarar disponible una revisión sin toda la configuración requerida; no verifica validez de las claves ni acceso a proveedores.
+4. Con la URL HTTPS real, configurar los destinos de retorno exactos en Supabase y revisar los orígenes de MCP si se usan. Probar Google `@adere.so`, MFA, rechazo de acceso no autorizado y un reporte real. Mantener la base de datos y migraciones actuales.
+5. Después de esas pruebas, poner la URL en `dashboard-settings.js` y publicar el hub. Hasta entonces sigue mostrando disponibilidad pendiente en producción. No anticipar una URL ni conectar una revisión fallida.
+
+Render despliega automáticamente cuando pasan los checks de la rama configurada. Tras integrar el PR a `main`, cambiar `branch` en el Blueprint y su configuración en Render a `main`. Los cambios posteriores de secretos se hacen en el servicio: `sync: false` solo solicita valores durante la creación inicial del Blueprint. No se ha contratado un plan pagado.
+
+Documentación oficial: [Blueprints](https://render.com/docs/blueprint-spec), [Docker](https://render.com/docs/docker) y [límites gratuitos](https://render.com/docs/free).
+
+## Alternativa preparada para Google Cloud Run
 
 Destino propuesto: proyecto `adereso-internal-tools`, región `us-central1`, servicio nuevo `sales-dashboard`. La documentación interna menciona este proyecto; todavía hay que verificar el acceso y los recursos reales. No se reutiliza ni modifica el backend del CRM. Supabase conserva la base de datos, Google Auth y MFA existentes; no hace falta Firebase adicional.
 
