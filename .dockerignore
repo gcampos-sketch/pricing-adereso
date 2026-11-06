@@ -31,3 +31,6 @@ dashboard-sales/*.log
 !.dockerignore
 
 !roi-standalone.js
+
+!starfield.js
+!starfield.d.ts

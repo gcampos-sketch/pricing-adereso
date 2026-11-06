@@ -1,3 +1,4 @@
+import { AuthScene } from '@/components/AuthScene';
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { issueRecoveryCodes, redeemRecoveryCode } from "@/lib/mfa-recovery.functions";
@@ -135,16 +136,16 @@ export function MfaGate({ children }: { children: ReactNode }) {
   if (step.kind === "ok") return <>{children}</>;
   if (step.kind === "loading") {
     return (
-      <main className="pulse-main">
+      <AuthScene>
         {error ? <p className="status" data-tone="bad">{error}</p> : <div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} />}
-      </main>
+      </AuthScene>
     );
   }
 
   if (step.kind === "codes") {
     const text = step.codes.join("\n");
     return (
-      <main className="pulse-main">
+      <AuthScene>
         <div className="auth-card">
           <h1 className="pulse-h2">Guarda tus códigos de recuperación</h1>
           <p className="eyebrow">
@@ -160,13 +161,13 @@ export function MfaGate({ children }: { children: ReactNode }) {
             Ya los guardé, continuar
           </button>
         </div>
-      </main>
+      </AuthScene>
     );
   }
 
   if (step.kind === "recover") {
     return (
-      <main className="pulse-main">
+      <AuthScene>
         <form className="auth-card" onSubmit={(e) => void recover(e)}>
           <h1 className="pulse-h2">Recuperar acceso</h1>
           <p className="eyebrow">Escribe uno de tus códigos de recuperación (ej. ABCDE-12345). Después configurarás tu nueva app de autenticación.</p>
@@ -190,12 +191,12 @@ export function MfaGate({ children }: { children: ReactNode }) {
           </button>
           <p className="eyebrow">¿No tienes tus códigos? Pide a un administrador que restablezca tu acceso.</p>
         </form>
-      </main>
+      </AuthScene>
     );
   }
 
   return (
-    <main className="pulse-main">
+    <AuthScene>
       <form className="auth-card" onSubmit={(e) => void submit(e)}>
         <h1 className="pulse-h2">Verificación en dos pasos</h1>
         {notice ? <p className="status">{notice}</p> : null}
@@ -240,6 +241,6 @@ export function MfaGate({ children }: { children: ReactNode }) {
           Tras verificar, este navegador no volverá a pedir el código por 30 días.
         </p>
       </form>
-    </main>
+    </AuthScene>
   );
 }

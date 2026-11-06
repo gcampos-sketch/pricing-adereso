@@ -1,3 +1,4 @@
+import { AuthScene } from '@/components/AuthScene';
 import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
@@ -98,9 +99,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
   if (!ready) {
     return (
-      <main className="pulse-main">
+      <AuthScene>
         <div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} />
-      </main>
+      </AuthScene>
     );
   }
 
@@ -109,7 +110,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }
 
   return (
-    <main className="pulse-main">
+    <AuthScene>
       <div className="auth-card">
         <h1 className="pulse-h2">Hub comercial</h1>
         <p className="eyebrow">Un solo acceso para todas tus herramientas de Adereso.</p>
@@ -137,7 +138,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         </form>}
         </fieldset>
       </div>
-    </main>
+    </AuthScene>
   );
 }
 

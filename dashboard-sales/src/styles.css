@@ -5272,3 +5272,14 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
   .report-toolbar { gap: 10px; padding-inline: 12px; }
   .report-toolbar-label { font-size: 0; gap: 0; }
 }
+
+/* Shared night sky and Adereso identity across sign-in and MFA. */
+.auth-scene { position: relative; isolation: isolate; min-height: 100svh; display: grid; place-items: center; padding: 48px 20px; background: #080b13; color: #fafafa; }
+.auth-scene-sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: -2; }
+.auth-scene::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, rgba(8,11,19,.48), transparent 75%); }
+.auth-scene-content { width: min(100%, 480px); display: grid; justify-items: center; gap: 28px; }
+.auth-scene-logo { display: block; width: 184px; height: auto; object-fit: contain; }
+.auth-scene .auth-card { box-sizing: border-box; width: 100%; max-width: none; margin: 0; padding: clamp(24px, 5vw, 32px); border: 1px solid rgba(255,255,255,.13); background: rgba(22,24,30,.88); backdrop-filter: blur(18px); box-shadow: 0 24px 80px rgba(0,0,0,.38); }
+.auth-scene .eyebrow { color: #a9a9b3; }
+.auth-scene .auth-email-input { background: rgba(9,11,17,.35); }
+@media (max-width: 480px) { .auth-scene { padding: 32px 16px; } .auth-scene-content { gap: 24px; } .auth-scene-logo { width: 160px; } }

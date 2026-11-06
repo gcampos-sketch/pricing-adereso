@@ -1,5 +1,6 @@
 /** Only these web files may be served from the private hub directory. */
 export const HUB_FILES: Record<string, string> = {
+  'starfield.js': 'text/javascript; charset=utf-8',
   'index.html': 'text/html; charset=utf-8',
   'brand-system.css': 'text/css; charset=utf-8',
   'chapter-index.js': 'text/javascript; charset=utf-8',
