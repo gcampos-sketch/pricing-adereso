@@ -98,3 +98,5 @@ Estado de esta preparación: código y validaciones locales listos; recursos, cl
 ## Destino desplegado
 
 Hub: https://adereso-hub-comercial.onrender.com/ . Vista externa: https://adereso-hub-comercial.onrender.com/partners/ . Servicio Render `srv-dbn287bl550s73f8sds0`, Blueprint `exs-dbn0g9m7bikc73c6e7lg`, plan Free. El primer despliegue del Hub unificado quedó Live; siguen pendientes SMTP, prueba de código/TOTP real, conexión de reportes y sustitución de Pages anterior.
+
+La presentación externa también se publica como Static Site `adereso-partners`, separado del servidor del Hub. `scripts/build-partners.mjs` usa exactamente `partnerDocument` y genera únicamente HTML de Partners y tres recursos visuales en `partners-public/`. No necesita dependencias ni variables privadas. La entrega por CDN evita el arranque después de inactividad del Web Service gratuito. Compartir apunta al dominio estático; publicar ambos servicios cuando cambie Partners. La ruta pública anterior del Hub permanece compatible.

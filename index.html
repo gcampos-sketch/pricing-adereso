@@ -8297,7 +8297,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
   var shareBtn=null;
   function partnerShareIsLocal(){return ['localhost','127.0.0.1','[::1]'].includes(window.parent.location.hostname)}
   function partnerShareUrl(preview){
-    var base=partnerShareIsLocal()&&!preview?'https://adereso-hub-comercial.onrender.com':window.parent.location.origin;
+    var base='https://adereso-partners.onrender.com';
     var url=new URL('/partners/',base);url.searchParams.set('vista','partners');url.searchParams.set('tipo',S.ptype);url.searchParams.set('categoria',S.tier);
     url.searchParams.set('rebase',S.rebase?'1':'0');url.searchParams.set('soporte',S.soporte?'1':'0');return url.href;
   }

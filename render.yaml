@@ -42,3 +42,25 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+
+  # Public presentation on the CDN: no sleeping server and no private environment variables.
+  - type: web
+    name: adereso-partners
+    runtime: static
+    repo: https://github.com/gcampos-sketch/pricing-adereso
+    branch: codex/dashboard-sales-hub
+    buildCommand: node --experimental-strip-types scripts/build-partners.mjs
+    staticPublishPath: ./partners-public
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+    buildFilter:
+      paths:
+        - index.html
+        - brand-system.css
+        - chapter-index.js
+        - logoadereso.webp
+        - dashboard-sales/src/lib/partner-public.ts
+        - scripts/build-partners.mjs
+        - render.yaml

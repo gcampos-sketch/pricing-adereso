@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { createPartnerPublicGateway, partnerDocument } from '../src/lib/partner-public';
 import { createHubGateway } from '../src/lib/hub-gateway';
@@ -49,4 +50,14 @@ test('presentation parameters never grant access to the private Hub or change th
  const privateGateway = createHubGateway({ verify: async () => null, read });
  expect((await privateGateway(new Request(origin + '/hub-content/index.html?vista=partners')))?.status).toBe(401);
  expect(await publicGateway(new Request(origin + '/hub-content/index.html'))).toBeNull();
+});
+
+test('static publication packages only the external document and visual dependencies', async () => {
+ execFileSync('node', ['--experimental-strip-types', 'scripts/build-partners.mjs'], { cwd: root, stdio: 'pipe' });
+ const files = (await readdir(resolve(root, 'partners-public'), { recursive: true })).filter(path => path !== 'partners').sort();
+ expect(files).toEqual(['index.html', 'partners/brand-system.css', 'partners/chapter-index.js', 'partners/index.html', 'partners/logoadereso.webp']);
+ const page = await readFile(resolve(root, 'partners-public/partners/index.html'), 'utf8');
+ expect(page).toBe(partnerDocument(await readFile(resolve(root, 'index.html'), 'utf8')));
+ expect(page).not.toContain('id="homeGrid"');
+ expect(page).toContain('https://adereso-partners.onrender.com');
 });
