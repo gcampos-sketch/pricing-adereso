@@ -361,7 +361,8 @@ function Index({ embedded = false }: { embedded?: boolean }) {
       <LoadingProgress
         tabs={tabs}
         estimateMs={estimateMs}
-        title="Armando el reporte desde HubSpot"
+        key={metaKey}
+        title="Preparando tu dashboard"
       />
     );
   }

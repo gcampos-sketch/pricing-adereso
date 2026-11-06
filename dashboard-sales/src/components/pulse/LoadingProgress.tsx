@@ -1,110 +1,80 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BarChart3, BriefcaseBusiness, Database, Layers3, ListTodo, Target } from "lucide-react";
+import { mountStarfield } from "../../../../starfield.js";
+import "./LoadingProgress.css";
 
-/** Pasos reales del armado del reporte, con su peso relativo en el total. */
-const STEPS: { label: string; detail: string; weight: number }[] = [
-  { label: "Conectando con HubSpot", detail: "Autenticando la conexión", weight: 4 },
-  { label: "Leyendo negocios del pipeline", detail: "Paginando deals en paralelo", weight: 42 },
-  { label: "Cuotas y comerciales", detail: "Metas del trimestre y propietarios", weight: 10 },
-  { label: "Tareas y próximas actividades", detail: "Pendientes vencidas y de hoy", weight: 22 },
-  { label: "Calculando métricas", detail: "Forecast, higiene, riesgos y Adobo", weight: 18 },
-  { label: "Listo", detail: "Ordenando paneles", weight: 4 },
+// These are illustrative milestones, not server-confirmed completion events.
+const STEPS = [
+  { label: "Conexión", detail: "Tu información, en un solo lugar", weight: 4, icon: Database },
+  { label: "Pipeline", detail: "Negocios y oportunidades", weight: 42, icon: BriefcaseBusiness },
+  { label: "Equipo y metas", detail: "Comerciales y cuotas del período", weight: 10, icon: Target },
+  { label: "Actividades", detail: "Tareas y próximos pasos", weight: 22, icon: ListTodo },
+  { label: "Indicadores", detail: "Resultados, forecast y señales", weight: 18, icon: BarChart3 },
+  { label: "Tu dashboard", detail: "Una vista para tus decisiones", weight: 4, icon: Layers3 },
 ];
-
-const TOTAL_WEIGHT = STEPS.reduce((sum, step) => sum + step.weight, 0);
 
 function fmt(ms: number) {
   const seconds = Math.max(1, Math.round(ms / 1000));
-  if (seconds < 60) return `${seconds} s`;
-  return `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+  return seconds < 60 ? `${seconds} s` : `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
 }
 
-/**
- * Loading con progreso estimado a partir del tiempo que tardó la última carga
- * medida en el servidor (no un número inventado).
- */
-export function LoadingProgress({
-  tabs,
-  estimateMs,
-  title = "Actualizando el reporte en vivo",
-  stale,
-}: {
+export function LoadingProgress({ tabs, estimateMs, title = "Preparando tu dashboard", stale }: {
   tabs?: React.ReactNode;
   estimateMs?: number | undefined;
   title?: string;
   stale?: string | undefined;
 }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
   const started = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
-  const estimate = Math.max(6000, estimateMs && estimateMs > 0 ? estimateMs : 25_000);
+  const hasEstimate = typeof estimateMs === "number" && Number.isFinite(estimateMs) && estimateMs > 0;
+  const estimate = Math.max(6000, hasEstimate ? estimateMs : 25_000);
 
+  useEffect(() => canvas.current ? mountStarfield(canvas.current) : undefined, []);
   useEffect(() => {
-    const timer = setInterval(() => setElapsed(Date.now() - started.current), 200);
+    const timer = setInterval(() => setElapsed(Date.now() - started.current), 250);
     return () => clearInterval(timer);
   }, []);
 
-  // Avance asintótico: nunca llega a 100% hasta que el dato llega de verdad.
   const ratio = elapsed / estimate;
+  // Never claim completion before the report actually arrives.
   const pct = Math.min(97, ratio < 1 ? ratio * 90 : 90 + (1 - Math.exp(-(ratio - 1))) * 7);
   const late = ratio > 1.4;
-
-  const { activeIndex } = useMemo(() => {
-    let acc = 0;
-    let index = STEPS.length - 1;
-    for (let i = 0; i < STEPS.length; i++) {
-      acc += (STEPS[i]!.weight / TOTAL_WEIGHT) * 100;
-      if (pct <= acc) {
-        index = i;
-        break;
-      }
-    }
-    return { activeIndex: index };
-  }, [pct]);
-
-  const remaining = Math.max(0, estimate - elapsed);
+  let threshold = 0;
+  const activeIndex = STEPS.findIndex(step => { threshold += step.weight; return pct <= threshold; });
+  const stage = STEPS[Math.max(0, activeIndex)]!;
 
   return (
-    <main className="pulse-main">
+    <main className="pulse-main report-loading-main">
       {tabs}
-      <div className="loader-card" role="status" aria-live="polite">
-        <div className="loader-head">
-          <div>
-            <p className="eyebrow" style={{ margin: 0 }}>
-              {stale ? `Copia de ${stale} · refrescando` : "Carga en vivo"}
-            </p>
-            <h2 className="pulse-h2" style={{ margin: "6px 0 0" }}>
-              {title}
-            </h2>
+      <section className="report-loading" aria-labelledby="report-loading-title" aria-busy="true">
+        <canvas ref={canvas} className="report-loading-sky" aria-hidden="true" />
+        <div className="report-loading-content">
+          <div className="report-loading-eyebrow"><span /> DASHBOARD COMERCIAL</div>
+          <div className="report-loading-heading">
+            <h2 id="report-loading-title">{title}</h2>
+            <p>{stale ? `Actualizando la copia de ${stale}.` : "Conectamos los datos. Tú enfócate en lo que viene."}</p>
           </div>
-          <div className="loader-pct">{Math.round(pct)}%</div>
+          <div className="report-loading-panel">
+            <div className="report-loading-current" role="status" aria-live="polite" aria-atomic="true">
+              <span className="report-loading-orbit" aria-hidden="true"><stage.icon size={23} strokeWidth={1.5} /></span>
+              <div><span className="report-loading-caption">{late ? "LA CONSULTA SIGUE EN CURSO" : "PREPARANDO TU VISTA"}</span><strong>{late ? "Esperando los datos de HubSpot" : stage.detail}</strong></div>
+            </div>
+            <div className="report-loading-progress-meta"><span>Progreso estimado</span><strong>{Math.round(pct)}<small>%</small></strong></div>
+            <div className="report-loading-track" role="progressbar" aria-label="Progreso estimado de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-valuetext={`${Math.round(pct)} por ciento estimado`}><span style={{ width: `${pct}%` }} /></div>
+            <ol className="report-loading-milestones" aria-label="Preparación del reporte, secuencia estimada">
+              {STEPS.map((step, index) => <li key={step.label} data-state={index === activeIndex ? "active" : index < activeIndex ? "past" : "pending"}>
+                <step.icon size={17} strokeWidth={1.5} aria-hidden="true" /><span>{step.label}</span>
+              </li>)}
+            </ol>
+            <div className="report-loading-footnote">
+              <span>{late ? "Está tardando más de lo habitual. Seguimos esperando tu reporte." : hasEstimate && elapsed < estimate ? `Aproximadamente ${fmt(estimate - elapsed)} restantes` : "El reporte aparecerá en cuanto estén listos los datos."}</span>
+              <span className="report-loading-source"><span /> HubSpot</span>
+            </div>
+          </div>
+          <p className="report-loading-note">Una mirada completa. Mejores decisiones.</p>
         </div>
-
-        <div className="loader-bar">
-          <span style={{ width: `${pct}%` }} />
-        </div>
-
-        <p className="loader-eta">
-          {late
-            ? "HubSpot está respondiendo lento, seguimos reintentando…"
-            : `Faltan aprox. ${fmt(remaining)} · la última carga tardó ${fmt(estimate)}`}
-        </p>
-
-        <ol className="loader-steps">
-          {STEPS.map((step, index) => (
-            <li
-              key={step.label}
-              data-state={index < activeIndex ? "done" : index === activeIndex ? "active" : "todo"}
-            >
-              <span className="loader-dot" aria-hidden="true">
-                {index < activeIndex ? "✓" : index === activeIndex ? "●" : "○"}
-              </span>
-              <span className="loader-step-text">
-                <strong>{step.label}</strong>
-                <em>{step.detail}</em>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
+      </section>
     </main>
   );
 }
