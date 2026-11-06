@@ -1,5 +1,7 @@
 # Enviar Partners desde el correo del usuario
 
+Flujo activo elegido por Gonzalo: el popup permite escribir destinatario y mensaje, y abre Gmail con asunto y enlace preparados. La persona confirma el envío allí. La conexión OAuth y el envío directo quedan preparados, pero desactivados; no mostrar un botón de envío bloqueado por esa configuración.
+
 El popup privado permite conectar la cuenta Google del usuario del Hub, elegir un destinatario y enviar una plantilla editable con el enlace público estático. La página externa sigue ofreciendo copiar enlace/abrir correo y no habilita las conexiones internas.
 
 ## Configuración necesaria

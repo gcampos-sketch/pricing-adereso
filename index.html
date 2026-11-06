@@ -8190,7 +8190,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     if(kind==='share'){
       return '<div class="partner-share-context">'+(isRef()?'Advisor':'Reseller')+' · '+TI()[S.tier].n+' · '+disc()+'% '+(isRef()?'comisión':'fee')+'</div>'+
         '<input class="partner-share-url" id="partnerShareUrl" type="url" readonly aria-label="Enlace de Partners" value="'+esc(partnerShareUrl())+'">'+
-        (hubMailEnabled()?'<div id="partnerMailAccount" class="partner-mail-account">Cargando remitente…</div><label class="partner-share-label" for="partnerShareTo">Para</label><input class="partner-share-to" id="partnerShareTo" type="email" autocomplete="email" placeholder="nombre@empresa.com">':'')+
+        '<label class="partner-share-label" for="partnerShareTo">Para</label><input class="partner-share-to" id="partnerShareTo" type="email" autocomplete="email" placeholder="nombre@empresa.com">'+
         '<label class="partner-share-label" for="partnerShareMessage">Mensaje listo para enviar</label><textarea class="partner-share-template" id="partnerShareMessage" rows="3">Hola, te comparto el Programa de Partners de Adereso. Aquí puedes revisar las condiciones y simular tu operación. ¡Lo vemos y conversamos!</textarea>'+
         '<div class="partner-share-actions"><button type="button" class="btn btn-o" data-copy-partners>Copiar enlace</button>'+ (hubMailEnabled()?'<button type="button" class="btn btn-p" data-send-partner disabled>Enviar correo</button>':'<a class="btn btn-p" id="partnerShareEmail" target="_blank" rel="noopener noreferrer">Abrir correo ↗</a>')+'</div>'+
         '<p class="partner-share-status" id="partnerShareStatus" role="status" aria-live="polite"></p>'+
@@ -8309,9 +8309,10 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
   function updateShareEmail(){
     var link=$('#partnerShareEmail');if(!link)return;
     var url=new URL('https://mail.google.com/mail/');
-    url.searchParams.set('view','cm');url.searchParams.set('fs','1');url.searchParams.set('to','');
+    url.searchParams.set('view','cm');url.searchParams.set('fs','1');url.searchParams.set('to',($('#partnerShareTo').value||'').trim());
     url.searchParams.set('su','Programa de Partners · Adereso');
     url.searchParams.set('body',$('#partnerShareMessage').value.trim()+'\n\n'+partnerShareUrl());link.href=url.href;
+    link.onclick=function(e){var to=$('#partnerShareTo');if(to.value.trim()&&!to.checkValidity()){e.preventDefault();to.reportValidity();to.focus()}};
   }
   function copyPartnerLink(){
     var input=$('#partnerShareUrl'),status=$('#partnerShareStatus');
@@ -8319,7 +8320,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     function fallback(){input.focus();input.select();try{if(document.execCommand('copy'))copied();else status.textContent='Selecciona el enlace y cópialo.'}catch(e){status.textContent='Selecciona el enlace y cópialo.'}}
     if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(input.value).then(copied,fallback);else fallback();
   }
-  function hubMailEnabled(){return document.documentElement.dataset.hubMail==='true'}
+  function hubMailEnabled(){return false} // Direct sending is deferred; Gmail compose is the active flow.
   function mailSelection(){return {tipo:S.ptype,categoria:S.tier,rebase:!!S.rebase,soporte:!!S.soporte}}
   var mailRequestId=null,mailConnected=false,mailBlocked=false;
   var mailErrors={authentication_required:'Tu sesión venció. Vuelve a ingresar al Hub.',gmail_not_configured:'La conexión de Gmail todavía no está habilitada.',sender_mismatch:'Conecta el mismo correo @adere.so con el que ingresaste al Hub.',gmail_not_connected:'Conecta tu Gmail para enviar.',gmail_reconnect_required:'Vuelve a conectar tu Gmail.',gmail_send_rejected:'Google rechazó el envío. Revisa el destinatario o vuelve a conectar Gmail.',mail_rate_limit:'Llegaste al límite de envíos de esta hora. Intenta más tarde.',delivery_unknown:'No pudimos confirmar el envío. Revisa Enviados en Gmail antes de intentar otra vez.',invalid_input:'Revisa el correo del destinatario y el mensaje.',request_conflict:'Este intento ya se utilizó. Cierra y vuelve a abrir Compartir.'};
