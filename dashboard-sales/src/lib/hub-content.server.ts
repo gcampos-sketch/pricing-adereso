@@ -3,9 +3,15 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHubGateway } from './hub-gateway';
 import { verifyHubIdentity } from './hub-auth.server';
+import { createPartnerPublicGateway } from './partner-public';
 
 // Private files are deliberately outside Nitro's public directory/CDN.
 const packaged = resolve(process.cwd(), 'private-hub');
 const contentRoot = existsSync(packaged) ? packaged : resolve(process.cwd(), '..');
-export const handleHubRequest = createHubGateway({ verify: verifyHubIdentity,
-  publicOrigin: process.env['RENDER_EXTERNAL_URL'], read: path => readFile(resolve(contentRoot, path)) });
+const read = (path: string) => readFile(resolve(contentRoot, path));
+const publicPartners = createPartnerPublicGateway(read);
+const privateHub = createHubGateway({ verify: verifyHubIdentity,
+  publicOrigin: process.env['RENDER_EXTERNAL_URL'], read });
+export async function handleHubRequest(request: Request) {
+  return await publicPartners(request) ?? privateHub(request);
+}

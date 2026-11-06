@@ -19,7 +19,7 @@ Render aloja el Hub completo con su servidor Node. Después de Email OTP y MFA, 
 
 El `Dockerfile` usa la raíz del repositorio como contexto. Sus tres argumentos de build son públicos: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` y `VITE_SUPABASE_PROJECT_ID`. Las claves privadas se configuran únicamente en runtime. Render proporciona `RENDER_EXTERNAL_URL` para validar el origen del intercambio de sesión detrás de su proxy HTTPS; no se confía en cabeceras de origen reenviadas por el cliente.
 
-GitHub Pages no puede proteger el Hub con este servidor. Antes de afirmar que la publicación está protegida, reemplazar la copia pública anterior por una redirección al nuevo destino HTTPS, una vez validado el ingreso real. El repositorio público también conserva el código de las páginas; la autenticación protege la aplicación y sus datos privados, no oculta ese código. El acceso externo de partners requiere una vista separada y una decisión explícita sobre su alcance; no hay una excepción pública para todo el Hub.
+GitHub Pages no puede proteger el Hub con este servidor. Antes de afirmar que la publicación está protegida, reemplazar la copia pública anterior por una redirección al nuevo destino HTTPS, una vez validado el ingreso real. El repositorio público también conserva el código de las páginas; la autenticación protege la aplicación y sus datos privados, no oculta ese código. La vista externa autorizada de Partners está en `/partners/`: extrae únicamente la plantilla Partners del mismo `index.html` y permite sus tres recursos visuales. No sirve el Hub completo ni consulta datos privados. Compartir conserva tipo, categoría y extras en la URL, sin sesiones, contactos ni clientes. Cada despliegue actualiza esa vista con la misma fuente que la sección interna; el enlace se mantiene. El resto de `/hub-content/` conserva el ingreso corporativo.
 
 La dependencia npm `@lovable.dev/mcp-js` se conserva para mantener las herramientas MCP existentes: es una librería de código y no encarga el desarrollo, hosting ni acceso a HubSpot a Lovable. Las rutas existentes de consentimiento conservan su nombre por compatibilidad con la configuración OAuth actual.
 
@@ -94,3 +94,7 @@ Después del despliegue:
 4. Para actualizaciones, guardar el código en un commit y repetir el despliegue; la imagen usa el identificador de ese commit. Si una revisión falla, recuperar la revisión anterior desde Cloud Run y comprobar ingreso y reporte antes de volver a darla por operativa.
 
 Estado de esta preparación: código y validaciones locales listos; recursos, claves, autenticación productiva y publicación final pendientes de verificación en las cuentas correspondientes.
+
+## Destino desplegado
+
+Hub: https://adereso-hub-comercial.onrender.com/ . Vista externa: https://adereso-hub-comercial.onrender.com/partners/ . Servicio Render `srv-dbn287bl550s73f8sds0`, Blueprint `exs-dbn0g9m7bikc73c6e7lg`, plan Free. El primer despliegue del Hub unificado quedó Live; siguen pendientes SMTP, prueba de código/TOTP real, conexión de reportes y sustitución de Pages anterior.
