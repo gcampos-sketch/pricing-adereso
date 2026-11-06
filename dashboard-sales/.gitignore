@@ -35,3 +35,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Private migration exports
+.migration-backups/

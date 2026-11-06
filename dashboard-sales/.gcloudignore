@@ -17,3 +17,6 @@ dist/**
 **/.env.*
 *.log
 .DS_Store
+
+# Private migration exports
+.migration-backups/

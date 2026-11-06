@@ -35,6 +35,8 @@ El esquema consta de seis tablas con RLS: reportes, coaching, recuperación MFA,
 
 Una instalación nueva no importa usuarios, eventos de coaching ni notificaciones del proyecto anterior. Los reportes se reconstruyen desde HubSpot con una clave válida. Para conservar historial almacenado se requiere una exportación autorizada del origen y una revisión de las asociaciones a usuarios. Las cuentas deben volver a configurar MFA y reconectar clientes MCP; no copiar sesiones, dispositivos confiables ni grants vigentes del proyecto anterior.
 
+Las exportaciones privadas de una migración se guardan en `dashboard-sales/.migration-backups/`, excluidas de Git, Docker y Google Cloud. El archivo `notifications.json` conserva la relación entre el UUID anterior y el correo. Después de que cada persona ingrese y verifique su correo en el proyecto nuevo, ejecutar `npm --prefix dashboard-sales run restore:notifications -- --source .migration-backups/2026-11-06/notifications.json` para revisar el plan; agregar `--apply` para restaurar las cuentas elegibles. El proceso exige correo corporativo exacto y verificado, conserva el owner de CRM y el historial, actualiza también `payload.account`, y nunca reemplaza una configuración nueva ni borra el respaldo original. Los conflictos se revisan antes de aplicar cambios; las cuentas que todavía no existen quedan pendientes.
+
 El proveedor de ingreso y los retornos permitidos se configuran en Supabase. Para Google hacen falta las credenciales OAuth correspondientes y autorizar `https://nsflqsdtfmnuangezsid.supabase.co/auth/v1/callback`. El servidor conserva la comprobación `@adere.so` y MFA. No conectar el sitio público hasta validar el ingreso completo y un reporte real.
 
 ## Despliegue en Render (destino elegido)

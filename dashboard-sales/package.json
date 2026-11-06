@@ -13,7 +13,8 @@
     "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.local .output/server/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "check:config": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-config.mjs"
+    "check:config": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/check-config.mjs",
+    "restore:notifications": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/restore-notification-accounts.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
