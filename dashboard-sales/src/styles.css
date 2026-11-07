@@ -737,6 +737,29 @@
     box-shadow: var(--glass-shadow);
     backdrop-filter: blur(22px) saturate(155%);
   }
+  .filter-panel-compact[data-has-actions="true"] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+  }
+  .filter-panel-compact[data-has-actions="true"] > .filter-row,
+  .filter-panel-compact[data-has-actions="true"] > .filter-data-age {
+    grid-column: 1;
+  }
+  .filter-panel-actions {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    padding: 6px 6px 6px 12px;
+    border-left: 1px solid var(--border-default);
+  }
+  .filter-panel-actions .notification-bell {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+  }
 
   .filter-row-inline {
     display: flex;

@@ -1179,7 +1179,7 @@ export function PulseDashboard({
             Pipeline Comercial · gestionable E1-E5.1 · WR por closedate · datos en vivo
           </p>
         </div>
-        <div className="dashboard-tabs-wrap">{tabs}<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}} tasks={operationalTasks} generatedAt={report.generatedAt}/></div>
+        {tabs ? <div className="dashboard-tabs-wrap">{tabs}</div> : null}
       </div>
 
       <CompactFilterBar
@@ -1206,6 +1206,7 @@ export function PulseDashboard({
         isRefreshing={isRefreshing}
         onRefresh={onRefresh}
         label="Filtros del pipeline comercial"
+        actions={<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}} tasks={operationalTasks} generatedAt={report.generatedAt}/>}
       />
 
       {projectsOnly ? (

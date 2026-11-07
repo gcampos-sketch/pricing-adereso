@@ -3,7 +3,7 @@
  * (+ estado de datos en vivo). La usan todas las páginas para que el formato y
  * el contenido sean idénticos al de Pipeline Comercial > Vista general.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ActiveMrr } from "@/contexts/RefreshContext";
@@ -273,6 +273,7 @@ export type FilterBarProps = {
   /** tipo de negocio: todo | inbound | outbound (opcional, solo donde aplica) */
   dealType?: string;
   onDealType?: (value: string) => void;
+  actions?: ReactNode;
 };
 
 export function CompactFilterBar({
@@ -295,6 +296,7 @@ export function CompactFilterBar({
   label = "Filtros del tablero",
   dealType,
   onDealType,
+  actions,
 }: FilterBarProps) {
   const [openFilter, setOpenFilter] = useState<"role" | "year" | "quarter" | "owner" | "stage" | "type" | null>(null);
   const [floating, setFloating] = useState(false);
@@ -340,6 +342,7 @@ export function CompactFilterBar({
       ref={panelRef}
       className="filter-panel filter-panel-compact"
       data-floating={floating}
+      data-has-actions={!!actions}
       aria-label={label}
     >
       <div className="filter-row filter-row-inline" ref={rowRef}>
@@ -435,6 +438,7 @@ export function CompactFilterBar({
         <span className="data-stamp-dot" data-live={isRefreshing} aria-hidden="true" />
         Datos de {ago}{isRefreshing ? " · actualizando…" : ""}
       </div>
+      {actions ? <div className="filter-panel-actions">{actions}</div> : null}
     </section>
     </>
   );
