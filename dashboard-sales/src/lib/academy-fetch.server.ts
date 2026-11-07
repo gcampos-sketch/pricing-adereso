@@ -90,23 +90,48 @@ function richText(value: unknown): string {
 export async function fetchNotionSnapshot(token: string, fetcher = fetch, now = new Date()): Promise<AcademySnapshot> {
   if (!token) throw new AcademySyncError('notion_not_configured');
   let requests = 0, blocks = 0; const seen = new Set<string>(); const documents: AcademyDocument[] = [];
-  async function api(path: string): Promise<any> {
+  const seenDatabases = new Set<string>(); let pages = 0;
+  async function api(path: string, body?: Record<string, unknown>): Promise<any> {
     if (++requests > 100) throw new AcademySyncError('notion_read_limit');
     if (requests > 1) await new Promise(resolve => setTimeout(resolve, 350));
     return JSON.parse(await limitedFetch('https://api.notion.com/v1/' + path, { headers: {
-      Authorization: 'Bearer ' + token, 'Notion-Version': '2022-06-28',
-    } }, fetcher));
+      Authorization: 'Bearer ' + token, 'Notion-Version': '2022-06-28', ...(body ? { 'Content-Type': 'application/json' } : {}),
+    }, ...(body ? { method: 'POST', body: JSON.stringify(body) } : {}) }, fetcher));
   }
-  async function page(id: string, depth: number) {
-    if (depth > 8 || documents.length > 60 || seen.has(id)) throw new AcademySyncError('notion_tree_limit');
+  async function page(id: string, depth: number, databaseRow?: any) {
+    if (depth > 8 || ++pages > 60 || seen.has(id)) throw new AcademySyncError('notion_tree_limit');
     seen.add(id);
-    const meta = await api('pages/' + id);
+    const meta = databaseRow ?? await api('pages/' + encodeURIComponent(id));
     if (meta.archived || meta.in_trash) throw new AcademySyncError('notion_page_unavailable');
     const title = Object.values(meta.properties ?? {}).map((v: any) => richText(v.title)).find(Boolean) || 'Wiki comercial';
-    const text = await children(id, depth);
-    if (text.trim().length < 30 || text.length > 250_000) throw new AcademySyncError('notion_content_invalid');
+    const body = await children(id, depth);
+    // Database rows may intentionally contain only their title, e.g. a weekly topic.
+    const text = databaseRow ? title + (body ? '\n' + body : '') : body;
+    if ((!databaseRow && text.trim().length < 30) || !text.trim() || text.length > 250_000) throw new AcademySyncError('notion_content_invalid');
     const url = 'https://www.notion.so/' + id.replaceAll('-', '');
     documents.push({ id, source: 'notion', title, url, text, sourceEditedAt: iso(meta.last_edited_time), hash: digest(title + '\n' + text) });
+  }
+  async function database(id: string, depth: number) {
+    if (depth > 8 || seenDatabases.has(id)) throw new AcademySyncError('notion_tree_limit');
+    seenDatabases.add(id); let cursor = '';
+    // Deliberately use the same pinned 2022 API as the block reader. Only query
+    // child_database IDs found in the fixed wiki tree, never search the workspace.
+    do {
+      const result = await api('databases/' + encodeURIComponent(id) + '/query', { page_size: 100, ...(cursor ? { start_cursor: cursor } : {}) });
+      if (!Array.isArray(result.results)) throw new AcademySyncError('notion_format_changed');
+      for (const row of result.results) {
+        if (typeof row.id !== 'string') throw new AcademySyncError('notion_format_changed');
+        if (row.archived || row.in_trash) continue;
+        if (row.object === 'page') {
+          if (row.parent?.database_id?.replaceAll('-', '') !== id.replaceAll('-', '')) throw new AcademySyncError('notion_unsupported_reference');
+          await page(row.id, depth + 1, row);
+        } else if (row.object === 'database') {
+          await database(row.id, depth + 1);
+        } else throw new AcademySyncError('notion_format_changed');
+      }
+      if (result.has_more && typeof result.next_cursor !== 'string') throw new AcademySyncError('notion_pagination_invalid');
+      cursor = result.has_more ? result.next_cursor : '';
+    } while (cursor);
   }
   async function children(id: string, depth: number): Promise<string> {
     if (depth > 16) throw new AcademySyncError('notion_tree_limit');
@@ -117,7 +142,8 @@ export async function fetchNotionSnapshot(token: string, fetcher = fetch, now = 
       for (const block of result.results as NotionBlock[]) {
         if (++blocks > 5000) throw new AcademySyncError('notion_read_limit');
         const content = block[block.type] as any;
-        if (block.type === 'child_database' || (block.type === 'synced_block' && content?.synced_from)) throw new AcademySyncError('notion_unsupported_reference');
+        if (block.type === 'child_database') { await database(block.id, depth + 1); continue; }
+        if (block.type === 'synced_block' && content?.synced_from) throw new AcademySyncError('notion_unsupported_reference');
         if (block.type === 'child_page') { await page(block.id, depth + 1); continue; }
         const value = richText(content?.rich_text ?? content?.caption) || (Array.isArray(content?.cells) ? content.cells.map(richText).join(' | ') : '');
         if (value) lines.push(value);

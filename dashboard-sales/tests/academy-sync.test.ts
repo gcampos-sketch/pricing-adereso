@@ -144,4 +144,33 @@ describe('bounded source reads preserve source statements', () => {
     const unsupported = (async (input: string) => input.includes('/pages/') ? Response.json({properties:{}}) : Response.json({results:[{id:'foreign',type:'synced_block',synced_block:{synced_from:{block_id:'other-root'}}}],has_more:false})) as typeof fetch;
     await expect(fetchNotionSnapshot('token',unsupported)).rejects.toThrow('notion_unsupported_reference');
   });
+  test('wiki child databases are paged, archived rows excluded and title-only weekly topics retained', async () => {
+    const queries: Record<string, unknown>[] = [];
+    const row = (id: string, title: string) => ({object:'page',id,parent:{database_id:'weekly'},properties:{title:{title:[{plain_text:title}]}}});
+    const fetcher = (async (input: string, init?: RequestInit) => {
+      if (input.includes('/pages/')) return Response.json({properties:{title:{title:[{plain_text:'Wiki comercial'}]}}});
+      if (input.endsWith('/databases/weekly/query')) {
+        expect(init?.method).toBe('POST');const body=JSON.parse(String(init?.body));queries.push(body);
+        return body.start_cursor ? Response.json({results:[row('topic-b','Tema B')],has_more:false}) :
+          Response.json({results:[row('topic-a','Tema A'),{...row('archived','Anterior'),archived:true}],has_more:true,next_cursor:'next-weekly'});
+      }
+      if (input.includes('/blocks/topic-')) return Response.json({results:[],has_more:false});
+      return Response.json({results:[{id:'intro',type:'paragraph',paragraph:{rich_text:[{plain_text:'Contenido de producto, con sus requisitos y condiciones.'}]}},{id:'weekly',type:'child_database'}],has_more:false});
+    }) as typeof fetch;
+    const result=await fetchNotionSnapshot('token',fetcher);
+    expect(queries).toEqual([{page_size:100},{page_size:100,start_cursor:'next-weekly'}]);
+    expect(result.documents.map(d=>d.title).sort()).toEqual(['Tema A','Tema B','Wiki comercial']);
+    expect(result.documents.find(d=>d.id==='topic-a')?.text).toBe('Tema A');
+  });
+  test('inaccessible wiki child databases and wrong-parent rows cannot publish partial content', async () => {
+    for(const inaccessible of [true,false]) {
+      const fetcher=(async(input:string)=>{
+        if(input.includes('/pages/'))return Response.json({properties:{}});
+        if(input.endsWith('/databases/weekly/query'))return inaccessible?new Response('not shared',{status:404}):Response.json({results:[{object:'page',id:'foreign',parent:{database_id:'elsewhere'}}],has_more:false});
+        return Response.json({results:[{id:'weekly',type:'child_database'}],has_more:false});
+      }) as typeof fetch;
+      await expect(fetchNotionSnapshot('token',fetcher)).rejects.toThrow(inaccessible?'source_http_404':'notion_unsupported_reference');
+    }
+  });
+
 });
