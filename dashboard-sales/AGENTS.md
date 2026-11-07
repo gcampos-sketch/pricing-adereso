@@ -67,3 +67,5 @@
 - Long HubSpot nextStep text is available through the row’s read-only next-step popover, not repeated under the deal name. Keep the original CRM value intact and do not infer commitments or customer-facing actions from internal notes.
 
 - DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
+
+- DealModal keeps filters visible and collapses surrounding chrome on downward list scrolling, restoring it on upward scrolling; horizontal movement must not toggle it. Default close-date ordering uses calendar days, then descending probability, with missing dates last; explicit drilldown ordering remains authoritative.

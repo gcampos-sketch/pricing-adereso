@@ -5345,3 +5345,30 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-month-total { padding-left:20px; border-left:1px solid var(--border-default); }
 .deal-month-remainder { display:flex; flex-wrap:wrap; gap:8px 20px; margin:10px 0 0; color:var(--muted); font-size:10px; }
 @media (max-width:640px) { .deal-month-summary { margin:10px 16px 12px; padding:10px 12px; } .deal-month-summary-row { gap:16px; } }
+
+/* The filter toolbar stays available while the surrounding chrome yields to the list. */
+.deal-modal-motion > .modal-head { flex:0 0 auto; padding:16px 24px 10px; gap:12px; transition:padding 240ms ease; }
+.deal-modal-intro { max-height:100px; opacity:1; overflow:hidden; transition:max-height 240ms ease, opacity 180ms ease; }
+.deal-modal-motion .deal-filter-toolbar { margin-top:10px; transition:margin-top 240ms ease; }
+.deal-modal-motion .deal-list { overflow-anchor:none; }
+.deal-modal-motion .deal-header { height:38px; min-height:38px; box-sizing:border-box; padding:3px 0; }
+.deal-modal-motion .deal-header > .deal-head-cell { flex-direction:row; justify-content:flex-start; align-items:center; white-space:nowrap; }
+.deal-modal-motion .deal-header .sort-button { line-height:18px; padding:2px 6px; }
+.deal-modal-motion .deal-month-summary { margin-top:8px; margin-bottom:8px; padding:10px 14px; transition:padding 240ms ease, margin 240ms ease; }
+.deal-modal-motion .deal-month-bucket { transition:column-gap 240ms ease; }
+.deal-modal-motion .deal-month-bucket > strong { transition:font-size 240ms ease; }
+.deal-modal-motion .deal-month-remainder { max-height:40px; overflow:hidden; transition:max-height 240ms ease, margin 240ms ease, opacity 180ms ease; }
+.deal-modal-motion[data-compact-header="true"] > .modal-head { padding-top:8px; padding-bottom:4px; }
+.deal-modal-motion[data-compact-header="true"] .deal-modal-intro { max-height:0; opacity:0; }
+.deal-modal-motion[data-compact-header="true"] .deal-filter-toolbar { margin-top:0; }
+.deal-modal-motion[data-compact-header="true"] .deal-modal-actions > :not(.modal-close) { display:none; }
+.deal-modal-motion[data-compact-header="true"] .modal-close { min-height:32px; min-width:32px; }
+.deal-modal-motion[data-compact-header="true"] .deal-month-summary { margin-top:4px; margin-bottom:4px; padding:5px 12px; border-color:transparent; background:transparent; }
+.deal-modal-motion[data-compact-header="true"] .deal-month-bucket { display:flex; align-items:baseline; min-width:0; gap:8px; white-space:nowrap; }
+.deal-modal-motion[data-compact-header="true"] .deal-month-bucket > span { font-size:10px; }
+.deal-modal-motion[data-compact-header="true"] .deal-month-bucket > span small,
+.deal-modal-motion[data-compact-header="true"] .deal-month-bucket > small { display:none; }
+.deal-modal-motion[data-compact-header="true"] .deal-month-bucket > strong { font-size:14px; }
+.deal-modal-motion[data-compact-header="true"] .deal-month-remainder { max-height:0; margin-top:0; opacity:0; }
+@media (max-width:640px) { .deal-modal-motion > .modal-head { padding-left:16px; padding-right:16px; } }
+@media (prefers-reduced-motion:reduce) { .deal-modal-motion .deal-modal-intro, .deal-modal-motion > .modal-head, .deal-modal-motion .deal-filter-toolbar, .deal-modal-motion .deal-month-summary, .deal-modal-motion .deal-month-bucket, .deal-modal-motion .deal-month-bucket > strong, .deal-modal-motion .deal-month-remainder { transition:none; } }

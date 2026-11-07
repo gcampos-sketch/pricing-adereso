@@ -5,6 +5,7 @@ import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { compareDealClosePriority } from "@/lib/deal-close-priority";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { markdownToHubspotHtml } from "@/lib/markdown";
 
@@ -1145,7 +1146,7 @@ const SORT_OPTIONS: GlassOption[] = [
   { value: "temp", label: "Temp." },
   { value: "probability", label: "% cierre" },
   { value: "amount", label: "Monto" },
-  { value: "closeDate", label: "Fecha de cierre" },
+  { value: "closeDate", label: "Fecha · % cierre" },
 ];
 
 /** Selector desplegable liquid glass: botón compacto + panel flotante translúcido. */
@@ -1220,9 +1221,22 @@ export function DealModal({
 
   const [simMode, setSimMode] = useState(false);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
-    key: "amount",
-    dir: "desc",
+    key: "closeDate",
+    dir: "asc",
   });
+  const [compactHeader, setCompactHeader] = useState(false);
+  const scrollDirection = useRef({ top: 0, travel: 0 });
+  const handleListScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
+    const top = Math.max(0, event.currentTarget.scrollTop);
+    const previous = scrollDirection.current;
+    const delta = top - previous.top;
+    previous.top = top;
+    if (top < 8) { previous.travel = 0; setCompactHeader(false); return; }
+    if (Math.abs(delta) < 1) return; // Horizontal scrolling never changes the header.
+    previous.travel = Math.sign(delta) === Math.sign(previous.travel) ? previous.travel + delta : delta;
+    if (previous.travel > 24) setCompactHeader(true);
+    if (previous.travel < -12) setCompactHeader(false);
+  }, []);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [nextStepOpen, setNextStepOpen] = useState<string | null>(null);
@@ -1305,6 +1319,8 @@ export function DealModal({
 
   useEffect(() => {
     if (!payloadKey) return;
+    setCompactHeader(false);
+    scrollDirection.current = { top: 0, travel: 0 };
     setQuery("");
     setSearchOpen(false);
     setNextStepOpen(null);
@@ -1313,7 +1329,7 @@ export function DealModal({
     setSort(
       requested
         ? { key: requested.key as SortKey, dir: requested.dir }
-        : { key: "amount", dir: "desc" },
+        : { key: "closeDate", dir: "asc" },
     );
     setNoteDeal(null);
     setTaskDeal(null);
@@ -1413,6 +1429,7 @@ export function DealModal({
       filtered = filtered.filter(deal => closeMonthKey(deal.closeDateValue) === month);
     }
     return [...filtered].sort((a, b) => {
+      if (sort.key === "closeDate") return compareDealClosePriority(a, b, sort.dir);
       const left = sortValue(a, sort.key);
       const right = sortValue(b, sort.key);
       if (left < right) return sort.dir === "asc" ? -1 : 1;
@@ -1725,13 +1742,6 @@ export function DealModal({
     [columns, hidden],
   );
 
-  useEffect(() => {
-    // Un orden pedido por la tarjeta (ej. cierre más reciente en E8) se mantiene
-    // aunque la columna esté oculta: la lista sigue ordenada igual.
-    if (hidden.includes(sort.key) && visiblePayload?.initialSort?.key !== sort.key)
-      setSort({ key: "adobo", dir: "desc" });
-  }, [hidden, sort.key, visiblePayload]);
-
   // Monto por comercial de los deals visibles (solo se muestra en la vista equipo).
   const ownerBars = useMemo(() => {
     if (!ownerBreakdown) return [] as { owner: string; amount: number; count: number }[];
@@ -1845,10 +1855,10 @@ export function DealModal({
         if (event.target === event.currentTarget) requestClose();
       }}
     >
-      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
+      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-compact-header={compactHeader} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
         <div className="modal-head">
           <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 className="pulse-h3">{visiblePayload.title}</h3>
+            <div className="deal-modal-intro"><h3 className="pulse-h3">{visiblePayload.title}</h3>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 14 }}>
               {visiblePayload.subtitle} · {deals.length} deals ·{" "}
               {new Intl.NumberFormat("en-US", {
@@ -1857,6 +1867,7 @@ export function DealModal({
                 maximumFractionDigits: 0,
               }).format(total)}
             </p>
+            </div>
             <div className="deal-filter-toolbar" aria-label="Filtros del listado">
               <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
                 <PopoverTrigger asChild><button type="button" className="deal-search-trigger" aria-label="Buscar deals" title={query ? `Buscar deals · filtro: ${query}` : 'Buscar deals'} data-active={!!query}><Search size={16} aria-hidden="true"/></button></PopoverTrigger>
@@ -1909,7 +1920,7 @@ export function DealModal({
                 options={SORT_OPTIONS}
                 activeValues={[sort.key]}
                 onSelect={(value) => {
-                  setSort({ key: value as SortKey, dir: "desc" });
+                  setSort({ key: value as SortKey, dir: value === "closeDate" ? "asc" : "desc" });
                   setOpenMenu(null);
                 }}
                 open={openMenu === "orden"}
@@ -2016,7 +2027,7 @@ export function DealModal({
 
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="deal-modal-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {simulation ? (
               <button
                 type="button"
@@ -2244,7 +2255,7 @@ export function DealModal({
             <TrendLine labels={pipelineTrend.labels} values={pipelineTrend.values} compact />
           </div>
         ) : null}
-        <div className="deal-list" role="region" aria-label="Listado de negocios" tabIndex={0}>
+        <div className="deal-list" role="region" aria-label="Listado de negocios" tabIndex={0} onScroll={handleListScroll}>
           {deals.length ? (
             <div className="deal-table">
               <div className="deal-row deal-header" style={{ gridTemplateColumns: gridTemplate }}>
@@ -2261,6 +2272,7 @@ export function DealModal({
                   <span key={column.key} className="deal-head-cell">
                     <button
                       className="sort-button"
+                      title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : undefined}
                       type="button"
                       data-active={sort.key === column.key}
                       onClick={() =>
