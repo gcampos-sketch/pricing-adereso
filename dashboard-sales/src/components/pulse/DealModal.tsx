@@ -809,7 +809,8 @@ type SortKey =
 type Column = {
   key: SortKey;
   label: string;
-  width: string;
+  width: number;
+  grow?: number;
   render: (deal: DealDTO) => React.ReactNode;
   caption: (deal: DealDTO) => string;
 };
@@ -1538,35 +1539,35 @@ export function DealModal({
       {
         key: "name",
         label: "Deal",
-        width: "226px",
-        render: (deal) => <a className="deal-name-link" href={deal.url} target="_blank" rel="noopener noreferrer" title="Abrir negocio en HubSpot">{deal.name}</a>,
+        width: 174, grow: 1.8,
+        render: (deal) => <a className="deal-name-link" href={deal.url} target="_blank" rel="noopener noreferrer" title={`${deal.name} · Abrir negocio en HubSpot`}>{deal.name}</a>,
         caption: () => "",
       },
       {
         key: "owner",
         label: "Comercial",
-        width: "96px",
+        width: 68, grow: .7,
         render: (deal) => deal.owner,
         caption: () => "",
       },
       {
         key: "closeDate",
         label: "Cierre",
-        width: "126px",
+        width: 114,
         render: (deal) => <InlineEdit deal={deal} field="closeDate" onSaved={applyEdit} />,
         caption: () => "",
       },
       {
         key: "amount",
         label: "Monto",
-        width: "86px",
+        width: 74,
         render: (deal) => deal.amount,
         caption: () => "",
       },
       {
         key: "probability",
         label: "% cierre",
-        width: "92px",
+        width: 74,
         render: (deal) => {
           const comparison=closingProbabilityComparison(comparedDeal(deal),Date.now());
           return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/>{comparison.delta!==null ? <span className="deal-value-trend" title={comparison.detail} aria-label={comparison.detail}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}</div>;
@@ -1576,21 +1577,21 @@ export function DealModal({
       {
         key: "adobo",
         label: "Adobo",
-        width: "92px",
+        width: 64,
         render: (deal) => <AdoboScoreCell deal={comparedDeal(deal)}/>,
         caption: () => "",
       },
       {
         key: "nextActivity",
         label: "Próx. act.",
-        width: "92px",
+        width: 90,
         render: (deal) => deal.nextActivity,
         caption: () => "",
       },
       {
         key: "activities",
         label: "Activ.",
-        width: "64px",
+        width: 62,
         render: (deal) => (deal.activities == null ? "s/d" : String(deal.activities)),
         caption: (deal) =>
           deal.lastContacted
@@ -1600,14 +1601,14 @@ export function DealModal({
       {
         key: "closeStatus",
         label: "Estado fecha",
-        width: "96px",
+        width: 74,
         render: (deal) => deal.closeStatus,
         caption: () => "",
       },
       {
         key: "stage",
         label: "Etapa",
-        width: "minmax(150px, 180px)",
+        width: 110, grow: 1,
         render: (deal) => deal.stageFull,
         caption: () => "",
       },
@@ -1616,7 +1617,7 @@ export function DealModal({
       base.push({
         key: "reason",
         label: "Motivo deal perdido",
-        width: "210px",
+        width: 168, grow: 1.3,
         render: (deal) =>
           deal.lostReason ? (
             <span className="chip" data-tone="bad">
@@ -1631,14 +1632,14 @@ export function DealModal({
     base.push({
       key: "country",
       label: "País",
-      width: "90px",
+      width: 68, grow: .65,
       render: (deal) => deal.country ?? "s/n",
       caption: () => "",
     },
     {
       key: "source",
       label: "Fuente",
-      width: "130px",
+      width: 88, grow: .8,
       render: (deal) => deal.source ?? "HubSpot",
       caption: () => "",
     });
@@ -1647,7 +1648,7 @@ export function DealModal({
     base.splice(1, 0, {
       key: "contact",
       label: "Contacto",
-      width: "170px",
+      width: 126, grow: 1.25,
       render: (deal) => {
         const info = contacts[deal.id];
         if (!info) return contactsState === "error" ? "s/n" : "…";
@@ -1665,7 +1666,7 @@ export function DealModal({
       base.splice(2, 0, {
         key: "sequence",
         label: "Secuencia",
-        width: "150px",
+        width: 108, grow: .8,
         render: (deal) => {
           const info = contacts[deal.id];
           if (!info) return contactsState === "error" ? "s/n" : "…";
@@ -1689,7 +1690,7 @@ export function DealModal({
         base.splice(key === "financeAlert" ? 1 : 2, 0, {
           key,
           label,
-          width: "180px",
+          width: 132, grow: 1,
           render: (deal) =>
             get(deal) ? (
               <span className="chip" data-tone="warn">{get(deal)}</span>
@@ -1753,7 +1754,8 @@ export function DealModal({
   const total = deals.reduce((sum, deal) => sum + deal.amountValue, 0);
   const ownerBarsMax = ownerBars.length ? Math.max(...ownerBars.map((row) => row.amount)) : 0;
 
-  const gridTemplate = `var(--deal-select-width, 34px) ${visibleColumns.map((column) => column.width).join(" ")}`;
+  const gridTemplate = `var(--deal-select-width, 28px) ${visibleColumns.map(column => column.grow ? `minmax(${column.width}px, ${column.grow}fr)` : `${column.width}px`).join(" ")}`;
+  const tableMinimum = `calc(var(--deal-select-width, 28px) + ${visibleColumns.reduce((sum,column)=>sum+column.width,0)}px + ${visibleColumns.length} * var(--deal-column-gap, 10px))`;
   const selectedIds = selected.filter((id) => deals.some((deal) => deal.id === id));
   const selectionTotal = dealSelectionTotal(deals, selectedIds, selectionQuota);
   const allSelected = deals.length > 0 && selectedIds.length === deals.length;
@@ -2194,7 +2196,7 @@ export function DealModal({
         ) : null}
         <div className="deal-list" role="region" aria-label="Listado de negocios" tabIndex={0} onScroll={handleListScroll}>
           {deals.length ? (
-            <div className="deal-table">
+            <div className="deal-table" style={{minWidth: tableMinimum}}>
               <div className="deal-row deal-header" style={{ gridTemplateColumns: gridTemplate }}>
                 <span className="deal-head-cell">
                   <input
@@ -2209,7 +2211,7 @@ export function DealModal({
                   <span key={column.key} className="deal-head-cell">
                     <button
                       className="sort-button"
-                      title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : column.key === "probability" ? "Probabilidad de cierre; a igual probabilidad, fecha de cierre más reciente primero" : undefined}
+                      title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : column.key === "probability" ? "Probabilidad de cierre; a igual probabilidad, fecha de cierre más reciente primero" : column.label}
                       type="button"
                       data-active={sort.key === column.key}
                       onClick={() =>
