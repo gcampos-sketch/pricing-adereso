@@ -68,4 +68,4 @@
 
 - DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
 
-- DealModal keeps filters visible and collapses surrounding chrome on downward list scrolling, restoring it on upward scrolling; horizontal movement must not toggle it. Default close-date ordering uses calendar days, then descending probability, with missing dates last; explicit drilldown ordering remains authoritative.
+- DealModal keeps filters visible and uses the shared useDealHeaderScroll hook for continuous, distance-driven chrome collapse/expansion with frame-based damping; do not restore binary compact-state switches or change summary layout modes mid-scroll. Horizontal movement and viewport-induced scroll clamping must not change progress. Default close-date ordering uses calendar days, then descending probability, with missing dates last; explicit drilldown ordering remains authoritative.

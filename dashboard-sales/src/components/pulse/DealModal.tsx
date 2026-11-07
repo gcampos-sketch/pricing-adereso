@@ -5,6 +5,7 @@ import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
 import { compareDealClosePriority } from "@/lib/deal-close-priority";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { markdownToHubspotHtml } from "@/lib/markdown";
@@ -1220,19 +1221,6 @@ export function DealModal({
     key: "closeDate",
     dir: "asc",
   });
-  const [compactHeader, setCompactHeader] = useState(false);
-  const scrollDirection = useRef({ top: 0, travel: 0 });
-  const handleListScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-    const top = Math.max(0, event.currentTarget.scrollTop);
-    const previous = scrollDirection.current;
-    const delta = top - previous.top;
-    previous.top = top;
-    if (top < 8) { previous.travel = 0; setCompactHeader(false); return; }
-    if (Math.abs(delta) < 1) return; // Horizontal scrolling never changes the header.
-    previous.travel = Math.sign(delta) === Math.sign(previous.travel) ? previous.travel + delta : delta;
-    if (previous.travel > 24) setCompactHeader(true);
-    if (previous.travel < -12) setCompactHeader(false);
-  }, []);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [nextStepOpen, setNextStepOpen] = useState<string | null>(null);
@@ -1313,10 +1301,10 @@ export function DealModal({
   // reiniciaba búsqueda/orden y robaba el foco (cortando lo que se estaba escribiendo).
   const payloadKey = visiblePayload ? `${visiblePayload.title}·${visiblePayload.subtitle}` : null;
 
+  const handleListScroll = useDealHeaderScroll(modalRef, payloadKey);
+
   useEffect(() => {
     if (!payloadKey) return;
-    setCompactHeader(false);
-    scrollDirection.current = { top: 0, travel: 0 };
     setQuery("");
     setSearchOpen(false);
     setNextStepOpen(null);
@@ -1837,10 +1825,10 @@ export function DealModal({
         if (event.target === event.currentTarget) requestClose();
       }}
     >
-      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-compact-header={compactHeader} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
+      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
         <div className="modal-head">
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="deal-modal-intro"><h3 className="pulse-h3">{visiblePayload.title}</h3>
+            <div className="deal-modal-intro"><div className="deal-modal-intro-content"><h3 className="pulse-h3">{visiblePayload.title}</h3>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 14 }}>
               {visiblePayload.subtitle} · {deals.length} deals ·{" "}
               {new Intl.NumberFormat("en-US", {
@@ -1849,7 +1837,7 @@ export function DealModal({
                 maximumFractionDigits: 0,
               }).format(total)}
             </p>
-            </div>
+            </div></div>
             <div className="deal-filter-toolbar" aria-label="Filtros del listado">
               <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
                 <PopoverTrigger asChild><button type="button" className="deal-search-trigger" aria-label="Buscar deals" title={query ? `Buscar deals · filtro: ${query}` : 'Buscar deals'} data-active={!!query}><Search size={16} aria-hidden="true"/></button></PopoverTrigger>
@@ -2009,7 +1997,8 @@ export function DealModal({
 
             </div>
           </div>
-          <div className="deal-modal-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="deal-modal-actions">
+            <div className="deal-modal-secondary"><div className="deal-modal-secondary-content">
             {simulation ? (
               <button
                 type="button"
@@ -2051,6 +2040,7 @@ export function DealModal({
             <CopyTextButton getText={allText} title="Copiar toda la tabla con sus links">
               Copiar todo
             </CopyTextButton>
+            </div></div>
             <button ref={closeRef} className="modal-close" type="button" onClick={requestClose} aria-label="Cerrar">
               ×
             </button>
