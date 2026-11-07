@@ -60,7 +60,8 @@
 
 - The bell combines authorized report operational tasks with the existing personal producer repository, one task per deal and all reasons preserved. Reuse report warning/hygiene drilldowns and executive populations; do not widen private Adobo reads. Owner/role/type/stage filters apply to every task, while year/Q do not hide current warnings. E4 missing dates require chronological before/after evidence and remain review candidates, never confirmed skips. Personal review checks use evidence fingerprints and do not resolve CRM alerts; changed evidence reopens a task.
 
-- DealModal headers own a stacking context above frozen body cells; frozen column offsets share the selection-width/gap variables. Reserve action-toolbar height so hover/focus does not move table rows. Keep keyboard scrolling on the deal-list region and never test editable CRM fields by changing their values.
+- DealModal headers own a stacking context above frozen body cells; frozen column offsets share the selection-width/gap variables. Row tools open from a compact portalled actions menu beside the deal title, so hover/focus never reserves another line or moves rows. Keep keyboard scrolling on the deal-list region and never test editable CRM fields by changing their values.
+- Deal cells omit captions duplicating their column headings; retain only useful context such as last activity date and multiple contacts. Contact names open mailto in one click, with email/title in the tooltip instead of a permanent extra line. Frozen name cells and checkboxes align centrally with the row data.
 
 - DealModal filters occupy one non-wrapping horizontal toolbar. Search is a circular trigger opening an autofocus overlay; search/filter panels portal above the modal so toolbar scrolling never clips them. Escape closes the active overlay before the deal modal; keep existing client filtering and avoid CRM writes while verifying.
 

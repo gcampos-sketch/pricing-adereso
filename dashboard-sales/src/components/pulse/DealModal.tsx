@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X } from "lucide-react";
+import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
@@ -1180,6 +1180,16 @@ function GlassSelect({
 }
 
 
+function DealActionMenu({name,children}:{name:string;children:React.ReactNode}) {
+  const [open,setOpen]=useState(false);
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger asChild><button type="button" className="deal-action-trigger" aria-label={`Acciones de ${name}`} title="Acciones del negocio"><MoreHorizontal size={16} aria-hidden="true"/></button></PopoverTrigger>
+    <PopoverContent className="deal-action-popup" align="start" sideOffset={6} collisionPadding={12} role="dialog" aria-label={`Herramientas de ${name}`} data-deal-action-popup="true" onEscapeKeyDown={event=>{event.preventDefault();event.stopPropagation();setOpen(false);}} onClick={()=>setOpen(false)}>
+      {children}
+    </PopoverContent>
+  </Popover>;
+}
+
 export function DealModal({
   payload,
   onClose,
@@ -1342,7 +1352,7 @@ export function DealModal({
   useEffect(() => {
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup]"))) return;
+      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup]"))) return;
       if (searchOpen) setSearchOpen(false);
       else if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
@@ -1537,21 +1547,21 @@ export function DealModal({
         label: "Comercial",
         width: "96px",
         render: (deal) => deal.owner,
-        caption: () => "Comercial",
+        caption: () => "",
       },
       {
         key: "closeDate",
         label: "Cierre",
         width: "126px",
         render: (deal) => <InlineEdit deal={deal} field="closeDate" onSaved={applyEdit} />,
-        caption: () => "Cierre (editable)",
+        caption: () => "",
       },
       {
         key: "amount",
         label: "Monto",
         width: "86px",
         render: (deal) => deal.amount,
-        caption: () => "Monto",
+        caption: () => "",
       },
       {
         key: "probability",
@@ -1561,21 +1571,21 @@ export function DealModal({
           const comparison=closingProbabilityComparison(comparedDeal(deal),Date.now());
           return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/>{comparison.delta!==null ? <span className="deal-value-trend" title={comparison.detail} aria-label={comparison.detail}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}</div>;
         },
-        caption: () => "% cierre (editable)",
+        caption: () => "",
       },
       {
         key: "adobo",
         label: "Adobo",
         width: "92px",
         render: (deal) => <AdoboScoreCell deal={comparedDeal(deal)}/>,
-        caption: () => "Adobo Score",
+        caption: () => "",
       },
       {
         key: "nextActivity",
         label: "Próx. act.",
         width: "92px",
         render: (deal) => deal.nextActivity,
-        caption: () => "Próxima actividad",
+        caption: () => "",
       },
       {
         key: "activities",
@@ -1584,22 +1594,22 @@ export function DealModal({
         render: (deal) => (deal.activities == null ? "s/d" : String(deal.activities)),
         caption: (deal) =>
           deal.lastContacted
-            ? `Actividades de venta · última ${new Date(deal.lastContacted).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })}`
-            : "Actividades de venta (llamadas, reuniones, correos)",
+            ? `Últ. ${new Date(deal.lastContacted).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" })}`
+            : "",
       },
       {
         key: "closeStatus",
         label: "Estado fecha",
         width: "96px",
         render: (deal) => deal.closeStatus,
-        caption: () => "Estado fecha",
+        caption: () => "",
       },
       {
         key: "stage",
         label: "Etapa",
         width: "minmax(150px, 180px)",
         render: (deal) => deal.stageFull,
-        caption: () => "Etapa",
+        caption: () => "",
       },
     ];
     if (hasLost) {
@@ -1615,7 +1625,7 @@ export function DealModal({
           ) : (
             <span style={{ color: "var(--label)" }}>sin motivo</span>
           ),
-        caption: () => "Motivo perdido",
+        caption: () => "",
       });
     }
     base.push({
@@ -1623,14 +1633,14 @@ export function DealModal({
       label: "País",
       width: "90px",
       render: (deal) => deal.country ?? "s/n",
-      caption: () => "País del deal",
+      caption: () => "",
     },
     {
       key: "source",
       label: "Fuente",
       width: "130px",
       render: (deal) => deal.source ?? "HubSpot",
-      caption: () => "Fuente de creación",
+      caption: () => "",
     });
     // Columna "Señal detectada" retirada: HubSpot no entrega la fecha real de la señal.
     void hasSignal;
@@ -1642,12 +1652,12 @@ export function DealModal({
         const info = contacts[deal.id];
         if (!info) return contactsState === "error" ? "s/n" : "…";
         if (!info.contactName && !info.contactEmail) return <span style={{ color: "var(--label)" }}>sin contacto</span>;
-        return <span title={contactLabel(info)}>{info.contactName ?? info.contactEmail}</span>;
+        return info.contactEmail ? <a className="deal-contact-link" href={`mailto:${encodeURIComponent(info.contactEmail)}`} title={contactLabel(info)} aria-label={`Escribir correo a ${info.contactName ?? 'este contacto'}`}><span>{info.contactName ?? 'Abrir correo'}</span><Mail size={13} aria-hidden="true"/></a> : <span title={info.contactTitle??undefined}>{info.contactName}</span>;
       },
       caption: (deal) => {
         const info = contacts[deal.id];
         if (!info) return "";
-        return [info.contactTitle, info.contactEmail].filter(Boolean).join(" · ") || (info.contactCount > 1 ? `${info.contactCount} contactos` : "");
+        return info.contactCount > 1 ? `${info.contactCount} contactos` : "";
       },
     });
     if (fix) {
@@ -1667,7 +1677,7 @@ export function DealModal({
         caption: (deal) => {
           const info = contacts[deal.id];
           if (!info) return contactsState === "error" ? "no se pudo revisar" : "revisando…";
-          return info.contactEmail ?? `${info.contactCount} contactos`;
+          return info.contactCount > 1 ? `${info.contactCount} contactos` : "";
         },
       });
     }
@@ -1686,7 +1696,7 @@ export function DealModal({
             ) : (
               <span style={{ color: "var(--label)" }}>sin alerta</span>
             ),
-          caption: () => label,
+          caption: () => "",
         });
       }
     }
@@ -2244,10 +2254,9 @@ export function DealModal({
                         className={column.key === "name" ? "deal-cell deal-cell-name" : "deal-cell"}
                       >
                         <strong>{column.render(deal)}</strong>
-                        <span>{column.caption(deal)}</span>
+                        {column.caption(deal) ? <span className="deal-cell-context">{column.caption(deal)}</span> : null}
                         {column.key === "name" ? (
-                          /* Las herramientas van bajo el nombre y aparecen al pasar el cursor
-                             o al enfocar con teclado; en táctil y en filas seleccionadas siempre. */
+                          <DealActionMenu name={deal.name}>
                           <div className="deal-actions" role="group" aria-label={`Herramientas de ${deal.name}`}>
                             <a
                               className="deal-tool"
@@ -2293,6 +2302,7 @@ export function DealModal({
                               )}
                             </button>
                           </div>
+                          </DealActionMenu>
                         ) : null}
                       </div>
                     ))}

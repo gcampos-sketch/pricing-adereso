@@ -2158,8 +2158,8 @@
     right: calc(-1 * var(--deal-column-gap));
     width: var(--deal-column-gap);
     background: inherit;
-    border-right: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent);
-    box-shadow: 9px 0 12px -6px oklch(0 0 0 / 60%);
+    border-right: 1px solid color-mix(in oklab, var(--foreground) 9%, transparent);
+    box-shadow: 7px 0 12px -7px oklch(0 0 0 / 45%);
     pointer-events: none;
   }
 
@@ -2211,17 +2211,21 @@
 
   .deal-row:not(.deal-header) > .deal-cell,
   .deal-row:not(.deal-header) > .deal-select {
-    padding-block: 12px;
+    padding-block: 10px;
   }
   .deal-row:not(.deal-header) > .deal-cell-name {
-    justify-content: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
   .deal-row:not(.deal-header) > .deal-cell-name > strong {
-    line-height: 22px;
+    min-width: 0;
+    flex: 1;
+    line-height: 20px;
   }
   .deal-row:not(.deal-header) > .deal-select {
-    justify-content: flex-start;
-    padding-top: 15px;
+    justify-content: center;
   }
   .deal-row:not(.deal-header) > .deal-select > input {
     width: 16px;
@@ -3287,6 +3291,20 @@
 .deal-probability-value input { min-width: 0; flex: 1 1 0; }
 .deal-row > *:nth-child(1), .deal-row > *:nth-child(2) { transition: background-color 220ms ease, box-shadow 220ms ease; }
 .deal-cell-name .deal-actions { background: transparent; border-color: transparent; }
+.deal-action-trigger {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 28px; height: 28px; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--muted); cursor: pointer;
+}
+.deal-action-trigger:hover, .deal-action-trigger[aria-expanded="true"] { background: color-mix(in oklab, var(--foreground) 5%, transparent); color: var(--foreground); }
+.deal-action-trigger:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.deal-action-popup { z-index: 1300; width: max-content; max-width: calc(100vw - 24px); padding: 5px; border: 1px solid var(--border-default); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-modal); }
+.deal-action-popup .deal-actions { padding: 0; border: 0; background: transparent; }
+.deal-row .deal-contact-link { display: inline-flex; align-items: center; gap: 5px; color: var(--foreground); font-weight: 400; }
+.deal-row .deal-contact-link > span { color: inherit; font-size: inherit; line-height: 20px; }
+.deal-contact-link svg { flex: 0 0 auto; color: var(--muted); opacity: .65; }
+.deal-row .deal-contact-link:hover { color: var(--brand); }
+.deal-row .deal-cell-context { font-size: 11px; line-height: 16px; margin-top: 3px; }
 @media (prefers-reduced-motion: reduce) {
   .deal-row, .deal-row > *:nth-child(1), .deal-row > *:nth-child(2), .adobo-score-trigger { transition: none; }
 }
@@ -3595,7 +3613,7 @@
 .deal-selection-actions > summary { cursor: pointer; width: fit-content; }
 .deal-selection-actions > .bulk-bar { margin: 8px 0 0; }
 .deal-row[data-selected="1"] {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--deal-fixed-fill, var(--surface));
 }
 .bulk-bar {
   display: flex;
