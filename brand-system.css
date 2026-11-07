@@ -33,6 +33,10 @@ button,input,select,textarea {font-family:var(--font-body);}
 .home-title {font-size:clamp(36px,5vw,52px);line-height:1.08;letter-spacing:-.035em;margin:28px 0 12px;}
 .home-sub {font-size:15px;line-height:1.65;max-width:560px;margin-bottom:40px;}
 .home-in {padding-top:64px;}
+/* Keep the sky anchored to the viewport while the home cards scroll.
+   A permanent will-change:transform would trap fixed descendants in this scroller. */
+.home-view {will-change:opacity;}
+#aiBg,.home-view::after {position:fixed;}
 .tool-brand {margin-bottom:28px;}
 .brand .adereso-wordmark {width:128px;}
 .brand>div {min-width:0;}
