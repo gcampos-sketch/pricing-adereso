@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal } from "lucide-react";
+import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
@@ -2050,11 +2050,16 @@ export function DealModal({
         </div>
         <section className="deal-month-summary" aria-label="Montos por mes según filtros">
           <div className="deal-month-summary-row">
-            {monthlySummary.months.map(month=><div className="deal-month-bucket" data-current={month.current} key={month.key}>
-              <span>{month.label} {monthlySummary.year}{month.current ? <small> · mes actual</small> : null}</span>
-              <strong>{monthMoney(month.amount)}</strong><small>{month.count} {month.count===1?'deal':'deals'}</small>
+            {[...monthlySummary.previous, ...monthlySummary.months].map(month=><div className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}>
+              <span className="deal-month-label">
+                {month.overdue>0 ? <TriangleAlert size={12} aria-label={`${month.overdue} negocios con cierre vencido`} /> : null}
+                <span className="deal-month-label-full">{month.label} {month.year}</span>
+                <span className="deal-month-label-short" aria-hidden="true">{month.label.slice(0,3)} {String(month.year).slice(-2)}</span>
+              </span>
+              <strong>{monthMoney(month.amount)}</strong>
+              <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} vencidos` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
             </div>)}
-            <div className="deal-month-bucket deal-month-total"><span>Total restante Q{monthlySummary.quarter}</span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} {monthlySummary.total.count===1?'deal':'deals'}</small></div>
+            <div className="deal-month-bucket deal-month-total"><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></div>
           </div>
           {monthlySummary.outside.count || monthlySummary.undated.count ? <p className="deal-month-remainder">
             {monthlySummary.outside.count ? <span>Fuera de estos meses: {monthMoney(monthlySummary.outside.amount)} · {monthlySummary.outside.count} deals</span> : null}

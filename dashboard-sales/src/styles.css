@@ -5542,13 +5542,20 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-modal-motion .deal-header { height:38px; min-height:38px; box-sizing:border-box; padding:3px 0; }
 .deal-modal-motion .deal-header > .deal-head-cell { flex-direction:row; justify-content:flex-start; align-items:center; white-space:nowrap; }
 .deal-modal-motion .deal-header .sort-button { line-height:18px; padding:2px 6px; }
-.deal-modal-motion .deal-month-summary { margin-top:calc(4px + 4px * var(--deal-open)); margin-bottom:calc(4px + 4px * var(--deal-open)); padding:calc(5px + 5px * var(--deal-open)) calc(12px + 2px * var(--deal-open)); border-color:rgb(255 255 255 / calc(.08 * var(--deal-open))); background:rgb(255 255 255 / calc(.02 * var(--deal-open))); }
-.deal-modal-motion .deal-month-summary-row { gap:calc(16px + 8px * var(--deal-open)); }
-.deal-modal-motion .deal-month-bucket { display:flex; align-items:baseline; min-width:0; gap:8px; white-space:nowrap; }
-.deal-modal-motion .deal-month-bucket > span { font-size:calc(10px + 1px * var(--deal-open)); }
-.deal-modal-motion .deal-month-bucket > strong { font-size:calc(14px + 4px * var(--deal-open)); }
-.deal-modal-motion .deal-month-bucket > small,
-.deal-modal-motion .deal-month-bucket > span small { display:inline-block; max-width:calc(74px * var(--deal-open)); opacity:var(--deal-open); overflow:hidden; vertical-align:bottom; }
+.deal-modal-motion .deal-month-summary { margin-top:calc(4px + 4px * var(--deal-open)); margin-bottom:calc(4px + 4px * var(--deal-open)); padding:calc(2px + 2px * var(--deal-open)); border-color:transparent; background:transparent; }
+.deal-modal-motion .deal-month-summary-row { gap:calc(10px + 2px * var(--deal-open)); }
+.deal-modal-motion .deal-month-bucket { position:relative; display:block; box-sizing:border-box; flex:1 0 190px; min-width:190px; height:calc(28px + 60px * var(--deal-open)); padding:0; border:1px solid rgb(255 255 255 / calc(.08 * var(--deal-open))); border-radius:calc(4px + 6px * var(--deal-open)); background:rgb(255 255 255 / calc(.025 * var(--deal-open))); }
+.deal-modal-motion .deal-month-label { position:absolute; display:flex; align-items:center; gap:5px; top:calc(5px + 6px * var(--deal-open)); left:calc(4px + 8px * var(--deal-open)); font-size:11px; line-height:16px; color:var(--muted); white-space:nowrap; }
+.deal-month-label-full { opacity:var(--deal-open); }
+.deal-month-label-short { position:absolute; left:0; opacity:calc(1 - var(--deal-open)); }
+.deal-month-label:has(svg) .deal-month-label-short { left:17px; }
+.deal-month-label svg { flex:0 0 auto; }
+.deal-modal-motion .deal-month-bucket > strong { position:absolute; top:calc(3px + 27px * var(--deal-open)); left:calc(84px - 72px * var(--deal-open)); font-size:calc(14px + 8px * var(--deal-open)); line-height:1.2; font-variant-numeric:tabular-nums; }
+.deal-modal-motion .deal-month-bucket > small { position:absolute; left:12px; bottom:9px; opacity:var(--deal-open); font-size:10px; white-space:nowrap; pointer-events:none; }
+.deal-modal-motion .deal-month-total { border-color:rgb(255 255 255 / calc(.12 * var(--deal-open))); }
+.deal-modal-motion .deal-month-bucket[data-overdue="true"] { border-color:color-mix(in srgb,var(--warning, #f3b547) calc(24% * var(--deal-open)),transparent); }
+.deal-modal-motion .deal-month-bucket[data-overdue="true"] .deal-month-label { color:var(--warning, #f3b547); }
+.deal-modal-motion .deal-month-bucket[data-overdue="true"] > small { color:var(--warning, #f3b547); }
 .deal-modal-motion .deal-month-remainder { max-height:calc(40px * var(--deal-open)); overflow:hidden; margin-top:calc(10px * var(--deal-open)); opacity:var(--deal-open); }
 @media (max-width:640px) { .deal-modal-motion > .modal-head { padding-left:16px; padding-right:16px; } }
 .commission-inline {display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:12px 0;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:12px;font-size:12px;color:var(--muted);}
