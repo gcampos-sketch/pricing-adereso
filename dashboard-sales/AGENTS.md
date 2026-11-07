@@ -50,6 +50,6 @@
 
 - Public /roi/ must contain only the extracted ROI section/formulas and standalone inputs, never the full Pricing document hidden by CSS. Share links may carry only monthly investment, conversation volume and optional all-in WhatsApp unit rate; no private Hub state or session.
 
-- Embedded dashboards use embedded=hub and ReportSidebar's toolbar presentation so the Hub remains the only left rail. Standalone dashboards retain the sidebar. Both modes share the same report definitions, Index selection/fetching, refresh and account controls; embedded is presentation only and never changes authorization.
+- Embedded dashboards use embedded=hub and ReportSidebar's panel presentation: a labeled, fully hideable report subnavigation beside the Hub rail, with a drawer on narrow screens. Standalone dashboards retain the sidebar. All presentations share report definitions, Index selection/fetching, refresh and account controls; embedded is presentation only and never changes authorization. Hiding navigation must preserve the selected view, loaded data and filters.
 
 - Dashboard neutral surfaces and typography follow the Hub’s root brand-system.css (Outfit headings, Work Sans body, flat page background). Preserve executive-summary semantic/chart colors when aligning presentation; never restore the page grid.

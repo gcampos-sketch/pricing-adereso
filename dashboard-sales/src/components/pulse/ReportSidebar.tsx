@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./ReportSidebar.css";
 import { BarChart3, BriefcaseBusiness, ChevronDown, Handshake, PanelLeftClose, PanelLeftOpen, Users, Workflow, X } from "lucide-react";
 import { AccountMenu } from "@/components/AuthGate";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ const groups = [
 
 export function ReportSidebar({ view, onView, collapsed, onCollapse, presentation = 'sidebar' }: {
   view: ReportView; onView: (view: ReportView) => void; collapsed: boolean; onCollapse: () => void;
-  presentation?: 'sidebar' | 'toolbar';
+  presentation?: 'sidebar' | 'toolbar' | 'panel';
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expanded, setExpanded] = useState<string[]>(["comercial"]);
@@ -48,6 +49,46 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
+
+  if (presentation === 'panel') return <>
+    <div className="report-subnav-bar" data-collapsed={collapsed}>
+      <Button variant="ghost" className="report-subnav-open" aria-label="Mostrar reportes" aria-controls="dashboard-report-panel" onClick={() => {
+        if (window.matchMedia('(max-width: 1050px)').matches) setMobileOpen(true);
+        else onCollapse();
+      }}><PanelLeftOpen aria-hidden="true" /><span>Reportes</span></Button>
+      <span className="report-subnav-current">{groups.flatMap<{ id: ReportView; label: string }>(group => group.children ?? [group]).find(item => item.id === view)?.label}</span>
+    </div>
+    {mobileOpen && <div className="report-subnav-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
+    <aside id="dashboard-report-panel" className="report-subnav" data-collapsed={collapsed} data-mobile-open={mobileOpen} aria-label="Reportes del dashboard">
+      <header className="report-subnav-header">
+        <div><span>Dashboard comercial</span><strong>Reportes</strong></div>
+        <Button variant="ghost" size="icon" aria-label="Ocultar reportes" onClick={() => {
+          setMobileOpen(false);
+          if (!window.matchMedia('(max-width: 1050px)').matches) onCollapse();
+        }}><PanelLeftClose aria-hidden="true" /></Button>
+      </header>
+      <nav className="report-subnav-links" aria-label="Vistas del dashboard">
+        {groups.map(group => {
+          const active = group.children ? group.children.some(child => child.id === view) : group.id === view;
+          const open = expanded.includes(group.id);
+          return <div className="report-subnav-group" key={group.id}>
+            <button type="button" className="report-subnav-item" data-active={active}
+              aria-current={!group.children && active ? 'page' : undefined}
+              aria-expanded={group.children ? open : undefined}
+              aria-controls={group.children ? `subnav-${group.id}` : undefined}
+              onClick={() => group.children ? setExpanded(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id]) : select(group.id)}>
+              <group.icon aria-hidden="true" /><span>{group.label}</span>
+              {group.children && <ChevronDown className="report-subnav-chevron" data-open={open} aria-hidden="true" />}
+            </button>
+            {group.children && <div className="report-subnav-children" id={`subnav-${group.id}`} hidden={!open}>
+              {group.children.map(child => <button type="button" key={child.id} aria-current={view === child.id ? 'page' : undefined} data-active={view === child.id} onClick={() => select(child.id)}>{child.label}</button>)}
+            </div>}
+          </div>;
+        })}
+      </nav>
+      <footer className="report-subnav-footer"><AccountMenu collapsed={false} /></footer>
+    </aside>
+  </>;
 
   if (presentation === 'toolbar') return <header className="report-toolbar">
     <span className="report-toolbar-label"><BarChart3 aria-hidden="true" />Reportes</span>

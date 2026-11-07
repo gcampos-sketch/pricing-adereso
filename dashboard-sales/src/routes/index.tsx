@@ -173,7 +173,7 @@ function ago(iso: string | undefined) {
 
 function Index({ embedded = false }: { embedded?: boolean }) {
   const [view, setView] = useState<View>("comercial");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(!embedded);
   const [simulateOwner, setSimulateOwner] = useState<string | undefined>(undefined);
   /** Rol comercial para todo el tablero: todos (predeterminado), AE o KAM. */
   const [roleFilter, setRoleFilter] = useState<"all" | "AE" | "KAM">("all");
@@ -188,7 +188,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   const meta = useQuery(metaQuery);
 
   useEffect(() => {
-    document.body.dataset["reportNavigation"] = embedded ? "embedded" : sidebarCollapsed ? "collapsed" : "expanded";
+    document.body.dataset["reportNavigation"] = embedded ? (sidebarCollapsed ? "embedded-panel-closed" : "embedded-panel") : sidebarCollapsed ? "collapsed" : "expanded";
     return () => { delete document.body.dataset["reportNavigation"]; };
   }, [embedded, sidebarCollapsed]);
 
@@ -330,7 +330,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
 
   const tabs = (
     <>
-      <ReportSidebar view={view} onView={setView} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((current) => !current)} presentation={embedded ? 'toolbar' : 'sidebar'} />
+      <ReportSidebar view={view} onView={setView} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((current) => !current)} presentation={embedded ? 'panel' : 'sidebar'} />
       {stamp ? (
         <p className="data-stamp">
           <span className="data-stamp-dot" data-live={active.isRefreshing} aria-hidden="true" />
