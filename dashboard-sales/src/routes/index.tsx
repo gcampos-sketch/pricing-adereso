@@ -174,6 +174,8 @@ function ago(iso: string | undefined) {
 function Index({ embedded = false }: { embedded?: boolean }) {
   const [view, setView] = useState<View>("comercial");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(!embedded);
+  // The embed flag resolves client-side after hydration; open its labeled panel once.
+  useEffect(() => { if (embedded) setSidebarCollapsed(false); }, [embedded]);
   const [simulateOwner, setSimulateOwner] = useState<string | undefined>(undefined);
   /** Rol comercial para todo el tablero: todos (predeterminado), AE o KAM. */
   const [roleFilter, setRoleFilter] = useState<"all" | "AE" | "KAM">("all");
