@@ -1607,7 +1607,7 @@ export function DealModal({
       {
         key:"adoboTrend",label:"Tendencia Adobo",width:"136px",
         render:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return <span title={comparison.detail}>{comparison.label}</span>;},
-        caption:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return comparison.delta===null ? `Registrada: ${deal.adobo?.scoreTrend??'sin dato'}` : comparison.detail;},
+        caption:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return comparison.delta===null ? `Registrada: ${deal.adobo?.scoreTrend??'sin dato'}` : `Antes ${deal.adoboScoreValue-comparison.delta} (${comparison.delta>0?'+':''}${comparison.delta})`;},
       },
       {
         key: "nextActivity",
