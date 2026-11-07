@@ -37,7 +37,7 @@ export function LoadingProgress({ tabs, estimateMs, title = "Preparando tu dashb
   const hasEstimate = typeof estimateMs === "number" && Number.isFinite(estimateMs) && estimateMs > 0;
   const estimate = Math.max(6000, hasEstimate ? estimateMs : 25_000);
 
-  useEffect(() => canvas.current ? mountStarfield(canvas.current) : undefined, []);
+  useEffect(() => canvas.current ? mountStarfield(canvas.current, { animate: false }) : undefined, []);
   useEffect(() => {
     const timer = setInterval(() => setElapsed(Date.now() - started.current), 250);
     return () => clearInterval(timer);
@@ -58,18 +58,15 @@ export function LoadingProgress({ tabs, estimateMs, title = "Preparando tu dashb
       <section className="report-loading" aria-labelledby="report-loading-title" aria-busy="true">
         <canvas ref={canvas} className="report-loading-sky" aria-hidden="true" />
         <div className="report-loading-content">
-          <div className="report-loading-signal" aria-hidden="true">
-            <span /><span /><span /><span /><span />
-          </div>
           <div className="report-loading-eyebrow"><span /> DASHBOARD COMERCIAL</div>
           <div className="report-loading-heading">
             <h2 id="report-loading-title">{title}</h2>
-            <p className="report-loading-message">{stale ? `Actualizando la copia de ${stale}.` : <span key={messageIndex}>{LOADING_MESSAGES[messageIndex]}</span>}</p>
+            {stale ? <p>Actualizando la copia de {stale}.</p> : null}
           </div>
           <div className="report-loading-panel">
             <div className="report-loading-current" role="status" aria-live="polite" aria-atomic="true">
               <span className="report-loading-orbit" aria-hidden="true"><stage.icon key={stage.label} className="report-loading-stage-icon" size={23} strokeWidth={1.5} /></span>
-              <div><span className="report-loading-caption">{late ? "LA CONSULTA SIGUE EN CURSO" : "PREPARANDO TU VISTA"}</span><strong key={late ? "waiting" : stage.label} className="report-loading-stage-message">{late ? "Esperando los datos de HubSpot" : stage.detail}<span className="report-loading-inline-dots" aria-hidden="true"><i /><i /><i /></span></strong></div>
+              <div><span className="report-loading-caption">{LOADING_MESSAGES[messageIndex]}</span><strong key={late ? "waiting" : stage.label} className="report-loading-stage-message">{late ? "Esperando los datos de HubSpot" : stage.detail}</strong></div>
             </div>
             <div className="report-loading-progress-meta"><span>Progreso estimado</span><strong>{Math.round(pct)}<small>%</small></strong></div>
             <div className="report-loading-track" role="progressbar" aria-label="Progreso estimado de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-valuetext={`${Math.round(pct)} por ciento estimado`}><span style={{ width: `${pct}%` }} /></div>

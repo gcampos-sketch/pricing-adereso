@@ -1,1 +1,1 @@
-export function mountStarfield(canvas: HTMLCanvasElement): () => void;
+export function mountStarfield(canvas: HTMLCanvasElement, options?: { animate?: boolean }): () => void;

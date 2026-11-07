@@ -1,8 +1,9 @@
 /** Shared visual sky for the Hub home and authentication screens.
  * @param {HTMLCanvasElement} c
+ * @param {{ animate?: boolean }} [options]
  * @returns {() => void} Dispose animation and event listeners.
  */
-export function mountStarfield(c) {
+export function mountStarfield(c, options = {}) {
 let aiRaf=0,aiStars=[],aiResize=null;
 const aiMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
 const aiM={x:0,y:0,on:false};
@@ -101,7 +102,7 @@ function aiBgStart(){
   };
   fit();aiResize=fit;
   const step=t=>{
-    const reduced=aiMotion.matches;
+    const reduced=aiMotion.matches||options.animate===false;
     const dt=previous?Math.min((t-previous)/1000,.05):0;previous=t;
     if(!reduced)clock+=dt;
     const rect=c.getBoundingClientRect();
@@ -179,7 +180,7 @@ let aiFitFrame=0;
 const aiFitObserver=new ResizeObserver(()=>{
   cancelAnimationFrame(aiFitFrame);
   aiFitFrame=requestAnimationFrame(()=>{
-    if(aiMotion.matches){aiBgStop();aiBgStart();}else if(aiResize)aiResize();
+    if(aiMotion.matches||options.animate===false){aiBgStop();aiBgStart();}else if(aiResize)aiResize();
   });
 });
 aiFitObserver.observe(c);
