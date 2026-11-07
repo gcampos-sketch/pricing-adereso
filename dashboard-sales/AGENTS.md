@@ -63,3 +63,5 @@
 - DealModal headers own a stacking context above frozen body cells; frozen column offsets share the selection-width/gap variables. Reserve action-toolbar height so hover/focus does not move table rows. Keep keyboard scrolling on the deal-list region and never test editable CRM fields by changing their values.
 
 - DealModal filters occupy one non-wrapping horizontal toolbar. Search is a circular trigger opening an autofocus overlay; search/filter panels portal above the modal so toolbar scrolling never clips them. Escape closes the active overlay before the deal modal; keep existing client filtering and avoid CRM writes while verifying.
+
+- Long HubSpot nextStep text is available through the row’s read-only next-step popover, not repeated under the deal name. Keep the original CRM value intact and do not infer commitments or customer-facing actions from internal notes.
