@@ -1,0 +1,22 @@
+.gcloudignore
+.git
+.git/**
+node_modules
+node_modules/**
+.output
+.output/**
+.tanstack
+.tanstack/**
+.nitro
+.nitro/**
+dist
+dist/**
+.env
+.env.*
+**/.env
+**/.env.*
+*.log
+.DS_Store
+
+# Private migration exports
+.migration-backups/

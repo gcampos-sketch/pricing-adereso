@@ -1,0 +1,28 @@
+name: Academy source sync
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: academy-source-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refresh only configured Academy sources
+        env:
+          ACADEMY_SYNC_SECRET: ${{ secrets.ACADEMY_SYNC_SECRET }}
+        shell: bash
+        run: |
+          if [ -z "$ACADEMY_SYNC_SECRET" ]; then
+            echo 'Academy sync is prepared; server secret and source connection still need activation.'
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 420 \
+            --request POST \
+            --header "Authorization: Bearer $ACADEMY_SYNC_SECRET" \
+            https://adereso-hub-comercial.onrender.com/api/academy/sync > "$RUNNER_TEMP/academy-result.json"
+          node -e 'const r=JSON.parse(require("fs").readFileSync(process.env.RUNNER_TEMP+"/academy-result.json","utf8")); console.log(JSON.stringify(r)); if(!Array.isArray(r.results)||r.results.some(s=>s.status==="failed_last_version_preserved"))process.exit(1)'

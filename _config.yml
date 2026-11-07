@@ -1,0 +1,31 @@
+# GitHub Pages publishes only the migration redirects. Render serves the authenticated application.
+title: Hub comercial Adereso
+url: https://gcampos-sketch.github.io
+baseurl: /pricing-adereso
+theme: null
+plugins: []
+exclude:
+  - "AGENTS.md"
+  - "DASHBOARD-SALES.md"
+  - "README.md"
+  - "academy-sync.js"
+  - "academy"
+  - "argumentaciones"
+  - "assets"
+  - "brand-system.css"
+  - "chapter-index.js"
+  - "commercial-guides.js"
+  - "dashboard-sales"
+  - "dashboard-settings.js"
+  - "dashboard"
+  - "e6e8672e.webp"
+  - "index.html"
+  - "logoadereso.webp"
+  - "operativa"
+  - "package.json"
+  - "playbook"
+  - "render.yaml"
+  - "roi-standalone.js"
+  - "scripts"
+  - "starfield.d.ts"
+  - "starfield.js"

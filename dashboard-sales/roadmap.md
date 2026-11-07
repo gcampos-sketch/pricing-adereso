@@ -1,0 +1,53 @@
+- [x] Tareas: presentarlas como tareas con casilla (marca local, no resuelve la alerta) y comunicarlas en modo mínimo: un solo estado visible, «🌤️ Nada que alertar. Sigue con tu día.» solo con lectura completa y corroborada, y filtro/owner/hora/trazabilidad bajo «Detalles de la lectura». 231 pruebas y compilación OK; escritorio y móvil revisados con fixtures sin desbordes. Sin publicar.
+- [ ] SALES-97: centro popup, sincronización conservadora, copia completa, aislamiento y pruebas; conservar detector/Higiene existentes. Sin publicación ni escrituras CRM.
+- [ ] SALES-97: correo propio, ejecutor de acciones con auditoría y fuentes upstream requieren conexiones/contratos corroborados; no activar operaciones externas.
+- [x] Acotar Adobo al año/Q por fecha de cierre, conservando filtros comerciales; tarjetas abren listas de 8 negocios por página y detalle expandible; 192 pruebas y compilación OK, interfaz aislada comprobada en escritorio/móvil sin desbordes. Sin publicar; datos reales pendientes de MFA.
+- [x] Ganados en servicio (E8 «listo») se abren ordenados por fecha de cierre, más reciente primero, incluidos los chips por segmento; 189 pruebas y compilación OK; sin publicar.
+- [x] Forecast real: 4 cuadritos lado a lado
+- [x] Corregir barra y listados: Comercial, Rol y Tipo aplicados, fechas ignoradas; contratos de ganados históricos del pipeline comercial Adereso. 197 pruebas aprobadas y compilación OK; sin publicar.
+- [ ] Verificar la barra y sus listados con datos reales: acceso confirmado hasta la pantalla de dos pasos, pendiente completar MFA sin omitirlo.
+- [x] Reducir memoria de Pulse: DTOs reutilizados, transporte/copia sin duplicados, reconstrucción deduplicada, reportes ocultos sin precarga e historial Adobo bajo demanda. 184 pruebas y compilación automática OK; no publicado.
+- [ ] Confirmar desaparición del error de memoria en la vista previa alojada y medir carga real: el navegador local quedó en el esqueleto de acceso tras 45 s; no llegó al reporte ni se omitió MFA. La prueba visual aislada no se completó; no acredita el flujo real.
+- [x] Adobo Intelligence: sección por owner/deal, auditoría de 42 propiedades verificadas y adaptador versionado sin datos inventados.
+- [x] Corregir validación de episodios: cobertura, cronología, vigencia del productor y ausencia confirmada; regresiones ejecutadas sin publicar.
+- [x] Bloquear agregados de contacto sin evidencia propia del conjunto exacto; aislamiento de owners/snapshots probado sin publicar.
+- [x] Corregir pending futuro y validar temporalmente contexto/evaluación/historial/compromisos; 115 pruebas aprobadas y compilación OK sin publicar.
+- [x] Corregir porcentaje de contacto y bloquear señales/caps sin evidencia validada, incluidos snapshots antiguos; probar contratos y filtros.
+- [x] Verificar Adobo Intelligence con fixtures en escritorio/móvil/teclado y compilación; sin publicar.
+- [ ] Validar Adobo Intelligence con datos reales en la interfaz: sesión disponible, pero requiere completar el código de dos pasos.
+- [x] Productor real: historial de propiedades Adobo de HubSpot (score, Pinzas y 8 variables) ligado al registro exacto, con fechas y marca de historial parcial; sin pruebas en vivo dentro del panel.
+- [x] Bandeja por owner con filtros rápidos, motivo, sugerencia (no compromiso) y fecha solo verificada.
+- [x] Cronología de evidencia desde historial registrado; ausencia explícita.
+- [x] Estado de revisión personal (pendiente/revisado/esperando cliente/resuelto) en este navegador, ligado a la huella de evidencia.
+- [x] Vigencia y cobertura de fuentes junto al score con reloj en vivo.
+- [x] Correcciones de revisión: adyacencia/conflictos/consistencia de historial, validación persistida del estado, huella con IDs de evidencia y owner, caché exacta invalidada al releer, evaluación vencida solo con contexto válido.
+- [ ] Episodios de seguimiento, evaluaciones fechadas, correo y Diio: pendientes de integración en esta app. Upstream: contrato de respuesta v2 (episodios de 30 días móviles, madurez configurable de 168 h por defecto, respondidos inmaduros siguen pendientes, plazos acordados explícitos mandan) aún no desplegado de forma continua; no se implementa ni se inventa fórmula de Closing.
+- [ ] Estado de revisión compartido por equipo: requiere aprobar una tabla nueva con permisos; hoy es personal.
+- [x] En riesgo de caer: candidatos a perdido lado a lado
+- [x] Tiempo por etapas con medianas reales y filtros
+- [x] Deal Velocity con datos reales
+- [x] Pipeline animado con hover y panel lateral de deals
+- [x] Validar escritorio, móvil, Escape y enlaces a HubSpot
+- [x] Resumen del pipeline: quitar "Ver deals" y hacerlo clickeable con flecha
+- [x] Comparación opcional por etapa y pérdidas dentro del pipeline animado
+- [x] Simulador: cumplimiento de cuota en Ganado y chips con contexto claro
+
+- [x] Trasladar menú al lateral, conservar orden y grupos, validar contracción y selección.
+
+- [x] Filtro de rol comercial (Todos/AE/KAM) en la barra de filtros, aplicado en el servidor y en todas las páginas.
+- [x] Tendencia mensual sutil en el cuadro de deals creados, con filtros compartidos.
+- [x] Historia comercial: Top of Funnel explícito, resultados del período separados de la foto actual y prioridades de hoy unificadas.
+- [x] Adobo Intelligence: orden de la lista por Score (mayor a menor, predeterminado), MRR y fecha de cierre; sin dato al final; prueba de regresión incluida.
+- [ ] Validar el recorrido reorganizado con datos reales: requiere iniciar sesión en la vista previa; no se pudo obtener una sesión para la cuenta solicitante.
+- [x] SALES-73: reproducir saltos de 19px y estabilizar transición; scroll lento ascendente/descendente verificado en interfaz aislada.
+- [x] SALES-71: WR y Generación y activación independientes; apertura, arrastre y datos sin cambios verificados con datos de prueba.
+- [x] SALES-70: iniciar contraído; expansión, contracción y opciones verificadas en escritorio y móvil.
+- [x] Comprobar compilación y pruebas de métricas; cambios no publicados.
+- [ ] Validar los tres tickets con la sesión real de Gonzalo: sesión propia no disponible y aprobación para la cuenta explícita no disponible; las pruebas aisladas no sustituyen esta verificación.
+- [x] E8 de la barra "Ganados → servicio": mostrar solo los 10 últimos en entrar a la etapa (por fecha real de entrada a E8) y aclararlo en la leyenda.
+- [x] SALES-86: exclusiones explícitas del cumplimiento (renovación, contracción, billetera pura) con regla única en quota-eligibility, aplicada a tarjetas, listados y desgloses; mixtos y sin dato cuentan pero quedan marcados para revisión; MRR=0 nunca decide solo. 219 pruebas y compilación OK; sin publicar.
+- [x] SALES-85 (preparación): propuesta de atribución por entrada real a E6 y pendientes de Q anteriores, sin aplicar al cumplimiento; reingresos/retrocesos/pérdidas posteriores quedan en revisión.
+- [ ] SALES-85: decisiones de negocio pendientes de JC (Q de atribución, momento de reconocimiento, reingresos/retrocesos/pérdidas tras E6); tickets no pasan a Done.
+- [ ] Validar SALES-85/86 con datos reales y sesión con dos pasos; contrastar montos, conteos, cumplimiento y listas.
+- [ ] Definir con diseño dónde va «Billeteras vendidas» (hoy chip con lista); falta publicar todo lo anterior.
+- [x] Herramientas de fila (HubSpot, nota, tarea, copiar, perdido) bajo el nombre del deal: aparecen al pasar el cursor o al enfocar con teclado, siempre visibles en táctil y en filas seleccionadas; se quitó la columna final de acciones. Verificado con datos de prueba en escritorio y teléfono; sin publicar.

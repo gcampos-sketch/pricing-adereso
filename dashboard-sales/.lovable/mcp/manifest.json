@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "sdk_version": "3.1.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://gffxrvqksmsyeovvnlfu.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "real-time-hub",
+      "version": "0.1.0",
+      "title": "Real-Time Hub"
+    },
+    "tools": [
+      {
+        "name": "get_team_summary",
+        "title": "Resumen del equipo comercial",
+        "description": "Resumen del trimestre actual: pipeline abierto, ponderado, ganado, cuota y win rate.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "role": {
+              "description": "Limitar a AE o KAM; vacío = todo el equipo.",
+              "type": "string",
+              "enum": [
+                "AE",
+                "KAM"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_owner_performance",
+        "title": "Rendimiento por comercial",
+        "description": "Pipeline abierto, ponderado y probabilidad promedio de cada comercial.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "role": {
+              "description": "Limitar a AE o KAM.",
+              "type": "string",
+              "enum": [
+                "AE",
+                "KAM"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_deal_alerts",
+        "title": "Deals con alertas",
+        "description": "Deals que requieren acción (ej. sin próxima actividad), con monto, comercial y link a HubSpot.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "owner": {
+              "description": "Filtrar por nombre del comercial.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Máximo de resultados (por defecto 25).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          "additionalProperties": false
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
