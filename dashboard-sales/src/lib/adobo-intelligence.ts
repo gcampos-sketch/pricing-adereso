@@ -230,7 +230,7 @@ export function intelligenceDeals(deals: DealDTO[], scope: { owner: string; role
 /* ── Real producer: HubSpot property history (timestamped versions of this exact deal record). ── */
 export const ADOBO_HISTORY_PROPS = ['adobo_closing_score', 'seguimiento_con_pinzas', 'adobo_score_driver_principal',
   'adobo_score_last_change_reason', 'adobo_icp_score', 'adobo_snapshot_confidence', 'adobo_current_urgencia',
-  'adobo_current_timing', 'adobo_current_objecion', 'adobo_next_step_claro'] as const;
+  'adobo_current_timing', 'adobo_current_objecion', 'adobo_next_step_claro', 'dealstage'] as const;
 export type AdoboHistoryProp = typeof ADOBO_HISTORY_PROPS[number];
 export const HISTORY_VERSION_CAP = 12;
 export type PropertyVersion = { value: string | null; at: string; sourceType: string | null };

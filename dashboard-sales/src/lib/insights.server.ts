@@ -1,3 +1,4 @@
+import {countDealWhatsApp} from "./whatsapp-count";
 import {
   getCached,
   getCommercialDeals,
@@ -6,7 +7,7 @@ import {
   TTL_SLOW,
 } from "./hubspot.server";
 
-type GhostCounts = { emails: number; calls: number; whatsapp: number };
+type GhostCounts = { emails: number; calls: number; whatsapp: number | null };
 
 /** IDs de objetos asociados por deal, vía batch read de asociaciones v4. */
 async function associationIds(dealIds: string[], type: string): Promise<Map<string, string[]>> {
@@ -14,13 +15,24 @@ async function associationIds(dealIds: string[], type: string): Promise<Map<stri
   for (let i = 0; i < dealIds.length; i += 100) {
     const chunk = dealIds.slice(i, i + 100);
     const res = await gateway<{
-      results: { from: { id: string }; to: { toObjectId: string | number }[] }[];
+      results: { from: { id: string }; to: { toObjectId: string | number }[]; paging?: {next?: {after?: string}} }[];
+      errors?: unknown[]; numErrors?: number;
     }>(`/crm/v4/associations/deals/${type}/batch/read`, {
       method: "POST",
       body: JSON.stringify({ inputs: chunk.map((id) => ({ id })) }),
     });
+    if (res.errors?.length || res.numErrors || chunk.some(id=>!res.results?.some(r=>r.from.id===id))) throw new Error('Lectura incompleta de asociaciones');
     for (const row of res.results ?? []) {
-      out.set(row.from.id, (row.to ?? []).map((t) => String(t.toObjectId)));
+      const ids=(row.to ?? []).map(t=>String(t.toObjectId));
+      let after=row.paging?.next?.after;
+      const seen=new Set<string>();
+      while(after) {
+        if(seen.has(after)) throw new Error('Paginación de asociaciones incompleta');
+        seen.add(after);
+        const page=await gateway<{results:{toObjectId:string|number}[];paging?:{next?:{after?:string}}}>(`/crm/v4/objects/deals/${row.from.id}/associations/${type}?limit=500&after=${encodeURIComponent(after)}`);
+        ids.push(...page.results.map(t=>String(t.toObjectId)));after=page.paging?.next?.after;
+      }
+      out.set(row.from.id,[...new Set(ids)]);
     }
   }
   return out;
@@ -28,24 +40,24 @@ async function associationIds(dealIds: string[], type: string): Promise<Map<stri
 
 /**
  * Cuenta correos, llamadas y WhatsApp asociados a cada deal perdido por
- * ghosting. Los WhatsApp se detectan como communications con canal WHATSAPP.
+ * ghosting. WhatsApp nativo usa el canal WHATS_APP; fallos se muestran sin dato.
  */
 function fetchGhostCounts(dealIds: string[]): Promise<Map<string, GhostCounts>> {
-  return getCached(`ghost:${dealIds.join(",")}`, TTL_SLOW, async () => {
+  return getCached(`ghost-v2:${dealIds.join(",")}`, TTL_SLOW, async () => {
     const [emails, calls, comms] = await Promise.all([
       associationIds(dealIds, "emails"),
       associationIds(dealIds, "calls"),
-      associationIds(dealIds, "communications").catch(() => new Map<string, string[]>()),
+      associationIds(dealIds, "communications"),
     ]);
 
-    // WhatsApp = communications cuyo canal es WHATSAPP.
+    // Native HubSpot uses WHATS_APP; retain old WHATSAPP values without counting foreign records.
     const commIds = [...new Set([...comms.values()].flat())];
-    const whatsappIds = new Set<string>();
+    const communicationRows: {id:string;properties:Record<string,string|null>}[]=[];
     for (let i = 0; i < commIds.length; i += 100) {
       const chunk = commIds.slice(i, i + 100);
       if (!chunk.length) break;
       const res = await gateway<{
-        results: { id: string; properties: Record<string, string | null> }[];
+        results: { id: string; properties: Record<string, string | null> }[]; errors?:unknown[]; numErrors?:number;
       }>("/crm/v3/objects/communications/batch/read", {
         method: "POST",
         body: JSON.stringify({
@@ -53,11 +65,8 @@ function fetchGhostCounts(dealIds: string[]): Promise<Map<string, GhostCounts>> 
           properties: ["hs_communication_channel_type"],
         }),
       });
-      for (const row of res.results ?? []) {
-        if ((row.properties["hs_communication_channel_type"] ?? "").toUpperCase() === "WHATSAPP") {
-          whatsappIds.add(row.id);
-        }
-      }
+      if(res.errors?.length || res.numErrors || chunk.some(id=>!res.results?.some(r=>r.id===id))) throw new Error("Lectura incompleta de comunicaciones");
+      communicationRows.push(...res.results);
     }
 
     const out = new Map<string, GhostCounts>();
@@ -65,7 +74,7 @@ function fetchGhostCounts(dealIds: string[]): Promise<Map<string, GhostCounts>> 
       out.set(id, {
         emails: emails.get(id)?.length ?? 0,
         calls: calls.get(id)?.length ?? 0,
-        whatsapp: (comms.get(id) ?? []).filter((commId) => whatsappIds.has(commId)).length,
+        whatsapp: countDealWhatsApp(comms.get(id) ?? [],communicationRows),
       });
     }
     return out;
@@ -317,7 +326,7 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     try {
       const counts = await fetchGhostCounts(ghostDeals.map((deal) => deal.id));
       for (const deal of ghostDeals) {
-        deal.ghost = counts.get(deal.id) ?? { emails: 0, calls: 0, whatsapp: 0 };
+        deal.ghost = counts.get(deal.id) ?? null;
       }
     } catch (error) {
       console.warn("No se pudieron cargar actividades de ghosting", error);

@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { AdoboRiskHygiene } from "./AdoboRiskHygiene";
+import { CommissionRate } from "./CommissionRate";
+import { quarterPace } from "@/lib/quarter-performance";
 import { NotificationCenter } from './NotificationCenter';
 import { dashboardTasks } from '@/lib/dashboard-tasks';
 import { CopySectionButton } from "./CopyControls";
@@ -84,6 +87,7 @@ export function Metric({
   chips,
   chipsTop,
   hero,
+  reference,
 }: {
   label: string;
   value: string;
@@ -107,14 +111,17 @@ export function Metric({
   chipsTop?: { label: string; value: string; tone?: Tone; onClick?: () => void }[];
   /** card héroe: más grande y prominente */
   hero?: boolean;
+  reference?: number | null;
 }) {
   const trendPoints = (trend ?? []).filter((v): v is number => v !== null && Number.isFinite(v));
+  let referenceY: number | null = null;
   let spark: string | null = null;
   let sparkDots: { x: number; y: number; label: string }[] = [];
   if (trend && trendPoints.length >= 2) {
-    const min = Math.min(...trendPoints);
-    const max = Math.max(...trendPoints);
+    const min = Math.min(...trendPoints, ...(reference != null ? [reference] : []));
+    const max = Math.max(...trendPoints, ...(reference != null ? [reference] : []));
     const span = max - min || 1;
+    referenceY = reference != null ? 17 - ((reference - min) / span) * 14 : null;
     const step = 66 / (trend.length - 1 || 1);
     spark = trend
       .map((v, i) => {
@@ -193,6 +200,7 @@ export function Metric({
       {spark ? (
         <span className="metric-trend" title="Pasa el cursor por cada punto para ver mes y monto">
           <svg viewBox="0 0 72 20" preserveAspectRatio="none">
+            {referenceY != null ? <line x1="3" x2="69" y1={referenceY} y2={referenceY} stroke="currentColor" strokeWidth=".6" strokeDasharray="2 2" opacity=".5"><title>WR histórico: {reference?.toFixed(1)}%</title></line> : null}
             <polyline points={spark} />
             {sparkDots.map((dot, i) => (
               <circle key={i} className="metric-trend-dot" cx={dot.x} cy={dot.y} r={2.6}>
@@ -903,6 +911,14 @@ export function PulseDashboard({
     }
     return map;
   }, [isTeam, report.periods.owners, report.periods.quotas, selectedPeriods]);
+  const performanceNow = useLiveNow(Date.parse(report.generatedAt));
+  const pace = selectedPeriods.length===1 ? quarterPace(selectedPeriods[0]!, periodQuota, periodWonAmount + (quotaPeriod.wonOtf ?? 0)/12, performanceNow) : null;
+  const historicalClosed = Object.values(report.periods.data).flatMap(bucket => {
+    const stats = isTeam ? bucket.team : bucket.owners[ownerFilter];
+    return stats ? [...stats.wonDeals.map(deal=>({deal,won:true})),...stats.lostDeals.map(deal=>({deal,won:false}))] : [];
+  }).filter(({deal})=>deal.amountValue>0 && matchesType(deal) && (role==='all'||roleOfOwner(deal.ownerId)===role));
+  const historicalUnique = [...new Map(historicalClosed.map(row=>[row.deal.id,row])).values()];
+  const historicalWr = historicalUnique.length ? historicalUnique.filter(row=>row.won).length/historicalUnique.length*100 : null;
   const periodQuotaPct = periodQuota ? (periodWonAmount / periodQuota) * 100 : 0;
   // Win rate y ticket solo consideran deals con monto > $0 para que los $0 no distorsionen.
   const periodWonPositive = (isTeam ? periodData?.team.wonDeals : periodData?.owners[ownerFilter]?.wonDeals ?? [])
@@ -1398,8 +1414,9 @@ export function PulseDashboard({
         <Metric
           label={`Cuota · ${rangeLabel}`}
           value={money(periodQuota)}
-          note={isTeam ? "suma de cuotas del equipo" : `cuota de ${ownerName}`}
-          tooltip="Meta de MRR del período seleccionado, sumada desde las cuotas registradas en HubSpot."
+          note={`${isTeam ? "suma de cuotas del equipo" : `cuota de ${ownerName}`}${pace ? ` · ${pace.state} del ritmo lineal` : ""}`}
+          chips={pace ? [{label:"Ritmo Q",value:`${pace.state} · ${pace.achieved.toFixed(1)}% / ${pace.expected.toFixed(1)}% esperado`,tone:pace.state==="Bajo"?"warn":"ok"}] : []}
+          tooltip={`Meta de MRR del período seleccionado. ${pace ? `Ritmo lineal con ${pace.elapsed}/${pace.days} días calendario, incluyendo hoy. Real ${pace.achieved.toFixed(1)}% vs. esperado ${pace.expected.toFixed(1)}%. En línea: coinciden al redondear a un decimal. No es forecast.` : "Selecciona un trimestre con cuota para ver el ritmo."}`}
         />
         <Metric
           hero
@@ -1434,7 +1451,39 @@ export function PulseDashboard({
         />
       </section>
 
+      <CommissionRate attainment={selectedPeriods.length===1 && periodQuota>0 ? totalAttainmentPct : null} scope={ownerFilter}/>
+
       <FoldList>
+      <Fold title="Estado actual" subtitle="Foto de hoy · no cambia al elegir otro trimestre · todos los tipos de deal">
+      <section className="grid-3">
+        <Metric
+          label={`Pipeline abierto hoy · ${openCount} deals`}
+          value={money(openAmount)}
+          note="E1–E5.1 · todos los tipos de deal"
+          onClick={() => setModalKey(openModalKey)}
+          tooltip="Foto actual del monto total de deals abiertos entre E1 y E5.1. Aplica Rol y Comercial; año, trimestre y Tipo deal no alteran este indicador."
+          {...(pipelineTrend && pipelineTrend.length ? { trend: pipelineTrend, trendLabels: monthly.months } : {})}
+        />
+        <Metric
+          label="Pipeline ponderado hoy"
+          value={money(weightedOpen)}
+          note="monto × probabilidad de etapa"
+          onClick={() => setModalKey(qOpenModalKey)}
+          tooltip="Foto actual del pipeline con cierre en el trimestre en curso, ponderado por la probabilidad de etapa."
+          {...(weightedTrend?.length ? { trend: weightedTrend, trendLabels: monthly.months } : {})}
+        />
+        <Metric
+          label="Cobertura actual del gap"
+          value={coverageText(scopedRisk.coverage)}
+          note={`${scopedRisk.riskReason} · mínimo sano ${COVERAGE_OK}x`}
+          tone={scopedRisk.risk}
+          onClick={() => setModalKey(qOpenModalKey)}
+          tooltip="Foto actual: pipeline ponderado del trimestre en curso dividido por lo que falta para la cuota."
+        />
+      </section>
+      </Fold>
+
+
       <AdoboFold deals={(report.stageJourneys ?? []).map(j => j.deal)} periods={selectedPeriods} rangeLabel={rangeLabel} scope={{ owner: ownerFilter, role, stages: stageFilter, matchesType }} readAt={report.generatedAt}/>
       <Fold title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>
       {/* Fila 3 — Win rate / Ticket prom / Perdido */}
@@ -1477,7 +1526,8 @@ export function PulseDashboard({
           onClick={() => openPeriods(isTeam ? null : ownerFilter, "won")}
           tooltip="Win rate por cantidad: ganados / (ganados + perdidos), considerando solo deals con monto mayor a $0. El chip $$$ muestra el win rate en dinero: MRR ganado / (MRR ganado + MRR perdido) del mismo periodo. Los demás chips desagregan el WR por segmento según el rol."
           {...(wrTrend?.length ? { trend: wrTrend, trendLabels: monthly.months } : {})}
-          chips={wrSegmentChips}
+          reference={historicalWr}
+          chips={[...wrSegmentChips,{label:"WR histórico",value:historicalWr==null?"Sin cerrados":`${historicalWr.toFixed(1)}% · ${historicalUnique.length} cerrados` }]}
         />
         <Metric
           label="Ticket promedio ganado"
@@ -1585,35 +1635,6 @@ export function PulseDashboard({
         onOwner={setOwnerFilter}
         onDealType={setDealType}
       />
-      </Fold>
-
-      <Fold title="Estado actual" subtitle="Foto de hoy · no cambia al elegir otro trimestre · todos los tipos de deal">
-      <section className="grid-3">
-        <Metric
-          label={`Pipeline abierto hoy · ${openCount} deals`}
-          value={money(openAmount)}
-          note="E1–E5.1 · todos los tipos de deal"
-          onClick={() => setModalKey(openModalKey)}
-          tooltip="Foto actual del monto total de deals abiertos entre E1 y E5.1. Aplica Rol y Comercial; año, trimestre y Tipo deal no alteran este indicador."
-          {...(pipelineTrend && pipelineTrend.length ? { trend: pipelineTrend, trendLabels: monthly.months } : {})}
-        />
-        <Metric
-          label="Pipeline ponderado hoy"
-          value={money(weightedOpen)}
-          note="monto × probabilidad de etapa"
-          onClick={() => setModalKey(qOpenModalKey)}
-          tooltip="Foto actual del pipeline con cierre en el trimestre en curso, ponderado por la probabilidad de etapa."
-          {...(weightedTrend?.length ? { trend: weightedTrend, trendLabels: monthly.months } : {})}
-        />
-        <Metric
-          label="Cobertura actual del gap"
-          value={coverageText(scopedRisk.coverage)}
-          note={`${scopedRisk.riskReason} · mínimo sano ${COVERAGE_OK}x`}
-          tone={scopedRisk.risk}
-          onClick={() => setModalKey(qOpenModalKey)}
-          tooltip="Foto actual: pipeline ponderado del trimestre en curso dividido por lo que falta para la cuota."
-        />
-      </section>
       </Fold>
 
       <Fold title="Calidad del forecast · hoy" subtitle="Cierres del mes, credibilidad, contactabilidad e higiene de fechas">
@@ -1891,6 +1912,7 @@ export function PulseDashboard({
         {warningScope ? <Metric label="Deals warning · E6.1" value={String(warningScope.count)} note={warningScope.reasons.map((reason) => `${reason.label} (${reason.count})`).join(" · ")} tone={warningScope.count ? "bad" : "ok"} onClick={() => setModalKey(warningScope.modal)} /> : null}
         {taskData ? <Metric label="Tareas para hoy" value={String(taskData.todayTaskCount)} note={`${taskData.todayTaskTotal} tareas vencen hoy`} tone={taskData.todayTaskCount ? "warn" : "ok"} onClick={() => setModalKey(taskData.todayTaskModal)} /> : null}
       </section>
+      <AdoboRiskHygiene scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}}/>
       <QGroup label="Seguimiento especial" tone="warn" />
       {track ? (
         <>
@@ -2154,7 +2176,7 @@ export function PulseDashboard({
                     <div className="trend-cell">
                       <strong>{wrText(row.wrQtd)}</strong>
                       <span className="trend-delta">{pp(row.wrQoQ)}</span>
-                      <MiniLine data={row.wrTrend} />
+                      <MiniLine data={row.wrTrend} reference={ownerRowData && ownerRowData.wrHist.won+ownerRowData.wrHist.lost>0 ? ownerRowData.wrHist.won/(ownerRowData.wrHist.won+ownerRowData.wrHist.lost)*100 : null}/>
                     </div>
                   </td>
                   {!dense ? <td>{wrText(ownerRowData?.wrHist ?? { won: 0, lost: 0 })}</td> : null}
@@ -2277,6 +2299,7 @@ export function PulseDashboard({
                 quota: periodQuota,
                 won: periodWonWithOtf,
                 label: `${isTeam ? "Equipo" : ownerName} · ${rangeLabel}`,
+                commissionScope: ownerFilter,
               }
             : null
         }

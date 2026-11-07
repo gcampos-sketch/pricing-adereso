@@ -109,7 +109,7 @@ export function TrendLine({
   );
 }
 
-export function MiniLine({ data }: { data: { period: string; rate: number }[] }) {
+export function MiniLine({ data, reference }: { data: { period: string; rate: number }[]; reference?: number | null }) {
   const width = 132;
   const step = data.length > 1 ? (width - 8) / (data.length - 1) : 0;
   const points = data
@@ -122,7 +122,7 @@ export function MiniLine({ data }: { data: { period: string; rate: number }[] })
   return (
     <span className="mini-line-wrap">
       <svg className="mini-line" viewBox="0 0 132 40" role="img" aria-label="Tendencia de win rate por trimestre">
-        <path d="M4 20H128" />
+        {reference!=null ? <path d={`M4 ${36-Math.min(100,Math.max(0,reference))/100*32}H128`} strokeDasharray="3 3" opacity=".45"><title>WR histórico: {reference.toFixed(1)}%</title></path> : null}
         <polyline points={points} />
         {data.map((item, index) => (
           <circle

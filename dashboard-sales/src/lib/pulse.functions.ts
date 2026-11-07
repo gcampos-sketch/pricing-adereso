@@ -50,7 +50,10 @@ export const getAdoboHistory = createServerFn({ method: 'POST' })
     const [{ getAdoboPropertyHistory, invalidateCache }, { toPropertyHistory }, { ADOBO_HISTORY_PROPS }] = await Promise.all([
       import('./hubspot.server'), import('./adobo.server'), import('./adobo-intelligence'),
     ]);
-    const history = await getAdoboPropertyHistory(data.ids, ADOBO_HISTORY_PROPS);
+    const {gateway,COMMERCIAL_PIPELINE}=await import('./hubspot.server');
+    const records=await gateway<{results:{id:string;properties:Record<string,string|null>}[]}>('/crm/v3/objects/deals/batch/read',{method:'POST',body:JSON.stringify({inputs:data.ids.map(id=>({id})),properties:['pipeline']})});
+    const authorized=records.results.filter(row=>row.properties['pipeline']===COMMERCIAL_PIPELINE).map(row=>row.id);
+    const history = authorized.length ? await getAdoboPropertyHistory(authorized, ADOBO_HISTORY_PROPS) : null;
     const result = Object.fromEntries(data.ids.map(id => {
       const raw = history?.byDeal.get(id);
       return [id, raw && history ? toPropertyHistory(id, `https://app.hubspot.com/contacts/23480943/deal/${id}`, history.fetchedAt, raw, history.complete) : null];
@@ -129,16 +132,18 @@ export const getReportMeta = createServerFn({ method: "GET" }).middleware([requi
 
 export const addDealNote = createServerFn({ method: "POST" })
   .middleware([requireMfa])
-  .inputValidator((input: { dealId: string; body: string }) => {
+  .inputValidator((input: { dealId: string; body: string; operationId:string }) => {
     const dealId = String(input["dealId"] ?? "").trim();
     const body = String(input["body"] ?? "").trim();
-    if (!dealId) throw new Error("Falta el deal");
+    if (!/^\d+$/.test(dealId)) throw new Error("Deal inválido");
+    if (!/^[0-9a-f-]{36}$/i.test(input.operationId)) throw new Error("Solicitud inválida");
+    if (body.length>8000) throw new Error("La nota supera los 8000 caracteres");
     if (!body) throw new Error("La nota está vacía");
-    return { dealId, body: body.slice(0, 8000) };
+    return { dealId, body,operationId:input.operationId };
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { createDealNote } = await import("./notes.server");
-    return createDealNote(data.dealId, data.body);
+    return createDealNote(data.dealId, data.body,context.userId,data.operationId);
   });
 
 /** Edita fecha de cierre y/o probabilidad en HubSpot (individual o masivo). */

@@ -1,3 +1,4 @@
+import { CommissionRate } from "./CommissionRate";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Info, Minus, Plus, RotateCcw, Save, SlidersHorizontal, Wand2, X } from "lucide-react";
 import type { DealDTO, Drilldown, PeriodStats, PulseReport, Tone } from "@/lib/pulse-types";
@@ -547,6 +548,7 @@ export function PipelineFunnel({
                         <span>{live ? "Cumplimiento simulado" : "Cumplimiento de cuota"}</span>
                         <strong>{attainment === null ? "Sin cuota" : formatPercent(attainment)}</strong>
                       </div>
+                      <CommissionRate attainment={attainment} scope={ownerFilter} simulated={live}/>
                       {attainment !== null ? (
                         <>
                           <progress className="funnel-quota-progress" max={100} value={clamp(attainment, 0, 100)} aria-label="Cumplimiento de cuota" />

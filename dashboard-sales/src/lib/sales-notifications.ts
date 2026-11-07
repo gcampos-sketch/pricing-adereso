@@ -126,3 +126,7 @@ export function taskState(repo: Repository, scope: NoticeScope, now: number, bus
   if (!repo.complete || uncertain > 0 || all.some(n => !attestation(n.record, now))) return { state: 'unknown', note: 'Falta corroborar la fuente; el conteo puede estar incompleto.', uncertain };
   return { state: 'clear', note: null, uncertain };
 }
+/** SALES-89 approved cross; measures retain their separate units and nulls. */
+export function riskScoreCross(record:RiskRecord) {
+ return record.inScope && record.state==="alertas_activas" && record.risks.length>0 && ((record.score!==null&&record.score>=76)||(record.probability!==null&&record.probability>70));
+}

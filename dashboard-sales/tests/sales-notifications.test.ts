@@ -31,3 +31,11 @@ test('lectura en curso, sin fuente o vencida nunca afirma día despejado',()=>{
  const stale=sync(undefined,[record('1','alertas_activas','2026-10-27T11:00:00Z')],true);expect(taskState(stale,scope,now).state).toBe('unknown');
  expect(taskState({...sync(undefined,[],true),complete:false,records:[record('1','cobertura_insuficiente','2026-10-29T11:00:00Z')]},scope,now).state).toBe('unknown');});
 test('fallo de sincronización se informa como error, no como ausencia de alertas',()=>{expect(taskState(sync(undefined,[],false),scope,now)).toMatchObject({state:'error'});expect(taskState({...sync(undefined,[],true),error:'caído'},scope,now)).toMatchObject({state:'error'});});test('deals abiertos sin riesgo verificado o en pausa dan día despejado',()=>{const p=sync(undefined,[record('1','sin_riesgo_verificado'),record('2','pausa_acordada')],true);expect(taskState(p,scope,now).state).toBe('clear');const r=record('3','sin_riesgo_verificado');r.evidence='sin contrato';expect(taskState(sync(undefined,[r],true),scope,now).state).toBe('unknown');});
+
+test('SALES-89 cross respects 76/75 and 70/71 boundaries, nulls and inactive states', async()=>{
+  const {riskScoreCross}=await import('../src/lib/sales-notifications');
+  const row={inScope:true,state:'alertas_activas',risks:['sin_contacto_comercial'],score:76,probability:null} as import('../src/lib/sales-notifications').RiskRecord;
+  expect(riskScoreCross(row)).toBe(true);expect(riskScoreCross({...row,score:75})).toBe(false);
+  expect(riskScoreCross({...row,score:null,probability:70})).toBe(false);expect(riskScoreCross({...row,score:null,probability:71})).toBe(true);
+  expect(riskScoreCross({...row,score:0,probability:0})).toBe(false);expect(riskScoreCross({...row,state:'pausa_acordada'})).toBe(false);
+});

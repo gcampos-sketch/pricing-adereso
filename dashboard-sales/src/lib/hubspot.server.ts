@@ -38,6 +38,10 @@ async function withSlot<T>(task: () => Promise<T>): Promise<T> {
 
 const FETCH_TIMEOUT_MS = 25_000;
 
+export class HubSpotRequestError extends Error {
+  constructor(public status:number, public correlationId:string|null) { super(`HubSpot ${status}${correlationId ? ` · referencia ${correlationId}` : ""}`); }
+}
+
 export async function gateway<T>(path: string, init?: RequestInit): Promise<T> {
   const config = hubspotConfig();
   const limiter = path.includes("/search") ? enqueue : withSlot;
@@ -50,15 +54,18 @@ export async function gateway<T>(path: string, init?: RequestInit): Promise<T> {
       if (res.ok) return (await res.json()) as T;
       lastStatus = res.status;
       lastBody = await res.text();
-      const retryable = res.status === 429 || res.status >= 500;
+      const readOnly = !init?.method || init.method === "GET" || /\/(search|batch\/read)$/.test(path);
+      const retryable = readOnly && (res.status === 429 || res.status >= 500);
       if (!retryable) break;
       const retryAfter = Number(res.headers.get("retry-after") ?? 0);
       const wait = retryAfter > 0 ? retryAfter * 1000 : Math.min(8000, 500 * 2 ** attempt);
       console.warn(`HubSpot ${res.status} en ${path}, reintento ${attempt + 1} en ${wait}ms`);
       await sleep(wait);
     }
-    console.error(`HubSpot gateway failed [${lastStatus}]: ${lastBody}`);
-    throw new Error(`HubSpot request failed [${lastStatus}]: ${lastBody}`);
+    let correlationId: string | null = null;
+    try { const parsed=JSON.parse(lastBody); if(typeof parsed.correlationId==="string" && /^[a-zA-Z0-9-]+$/.test(parsed.correlationId)) correlationId=parsed.correlationId; } catch { /* non-JSON upstream error */ }
+    console.error(`HubSpot gateway failed [${lastStatus}]${correlationId ? ` ref ${correlationId}` : ""}`);
+    throw new HubSpotRequestError(lastStatus,correlationId);
   });
 }
 

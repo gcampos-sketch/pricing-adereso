@@ -1,10 +1,11 @@
+import {segmentOf} from './pulse.server';
 import { gateway, COMMERCIAL_PIPELINE, type RawDeal } from './hubspot.server';
 import { RISK_PROPERTIES, corroboratedOwner, emptyRepository, reconcile, type Repository, type RiskRecord } from './sales-notifications';
 
 const VERSION = '2026-09';
 const paths = { owners: `/crm/owners/${VERSION}`, stages: `/crm/pipelines/${VERSION}/deals/${COMMERCIAL_PIPELINE}/stages`,
   search: `/crm/objects/${VERSION}/deals/search`, batch: `/crm/objects/${VERSION}/deals/batch/read` };
-const props = ['dealname','pipeline','dealstage','hubspot_owner_id','dealtype','adobo_closing_score','hs_deal_stage_probability',
+const props = ['dealname','pipeline','dealstage','hubspot_owner_id','dealtype','negocio_inbound','adobo_closing_score','hs_deal_stage_probability',
   'hs_mrr','amount','otf','deal_currency_code', ...RISK_PROPERTIES];
 const number = (s: string | null | undefined) => s?.trim() && Number.isFinite(Number(s)) ? Number(s) : null;
 const date = (s: string | null | undefined) => {
@@ -65,7 +66,7 @@ export async function syncSalesNotifications(userId: string, email: string): Pro
     const score=number(p['adobo_closing_score']), prob=number(p['hs_deal_stage_probability']);
     return {id:d.id,name:p['dealname'] || `Deal ${d.id}`,ownerId:owner,owner:knownOwner ? `${knownOwner.firstName ?? ''} ${knownOwner.lastName ?? ''}`.trim() : 'Sin owner confirmado',
       inScope:p['pipeline']===COMMERCIAL_PIPELINE && openStages.some(s=>s.id===p['dealstage']), stage:stageNames.get(p['dealstage'] ?? '') ?? 'sin etapa corroborada',
-      segment:p['dealtype'] ?? '',state:p['adobo_alertas_estado'] ?? '',risks:(p['adobo_alertas_riesgo'] ?? '').split(';').map(x=>x.trim()).filter(Boolean),
+      segment:segmentOf(p),state:p['adobo_alertas_estado'] ?? '',risks:(p['adobo_alertas_riesgo'] ?? '').split(';').map(x=>x.trim()).filter(Boolean),
       evidence:p['adobo_alertas_evidencia'] ?? '',reviewedAt:date(p['adobo_alertas_ultima_revision']),score:score!==null && score>=0 && score<=100 ? score : null,
       probability:prob!==null && prob>=0 && prob<=1 ? prob*100 : null,money};
   });

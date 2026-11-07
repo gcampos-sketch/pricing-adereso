@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
+import { adoboScoreComparison } from "@/lib/adobo-score-comparison";
+import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
+import { CommissionRate } from "./CommissionRate";
 import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
-import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
+import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, getAdoboHistory, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
 import { compareDealClosePriority, compareDealProbabilityPriority } from "@/lib/deal-close-priority";
@@ -240,6 +243,8 @@ function RichTextArea({
 
 /** Popup de bitácora: escribe una nota y la envía a uno o varios deals en HubSpot. */
 function NoteDialog({ deals, onClose }: { deals: DealDTO[]; onClose: () => void }) {
+  const request = useRef({body:'',id:crypto.randomUUID()});
+  const saving = useRef(false);
   const [text, setText] = useState("");
   const [state, setState] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [error, setError] = useState("");
@@ -249,18 +254,21 @@ function NoteDialog({ deals, onClose }: { deals: DealDTO[]; onClose: () => void 
     : `${deals[0]?.name ?? ""} · ${deals[0]?.owner ?? ""}`;
 
   const save = async () => {
-    if (!text.trim() || state === "saving") return;
+    if (!text.trim() || saving.current) return;
+    saving.current=true;
+    if(request.current.body!==text.trim()) request.current={body:text.trim(),id:crypto.randomUUID()};
     setState("saving");
     try {
       for (const deal of deals) {
-        await addDealNote({ data: { dealId: deal.id, body: text.trim() } });
+        const result=await addDealNote({ data: { dealId: deal.id, body: text.trim(),operationId:request.current.id } });
+        if(!result.ok) throw new Error(result.error);
       }
       setState("ok");
       setTimeout(onClose, 900);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar la nota");
       setState("error");
-    }
+    } finally {saving.current=false;}
   };
 
   return (
@@ -786,6 +794,7 @@ type SortKey =
   | "probability"
   | "score"
   | "adobo"
+  | "adoboTrend"
   | "nextActivity"
   | "activities"
   | "closeStatus"
@@ -1202,7 +1211,7 @@ export function DealModal({
   /** cuota del período por nombre de comercial (para el % de cumplimiento) */
   ownerQuotas?: Record<string, number> | null;
   /** habilita el modo simulación de cuota dentro del popup */
-  simulation?: { quota: number; won: number; label: string } | null;
+  simulation?: { quota: number; won: number; label: string; commissionScope?: string } | null;
   /** si viene, muestra el botón Fix con el problema que describe la tarjeta */
   fix?: { problem: string; mode?: "task" | "fup" } | null;
 }) {
@@ -1300,6 +1309,20 @@ export function DealModal({
   // reiniciaba búsqueda/orden y robaba el foco (cortando lo que se estaba escribiendo).
   const payloadKey = visiblePayload ? `${visiblePayload.title}·${visiblePayload.subtitle}` : null;
 
+  const [scoreHistory,setScoreHistory]=useState<Record<string,PropertyHistoryV1|null>>({});
+  useEffect(()=>{
+    let cancelled=false;setScoreHistory({});
+    if(!visiblePayload) return;
+    const ids=[...new Set(visiblePayload.deals.map(d=>d.id))];
+    void (async()=>{
+      for(let i=0;i<ids.length;i+=50) {
+        try {const batch=await getAdoboHistory({data:{ids:ids.slice(i,i+50)}});if(cancelled)return;setScoreHistory(current=>({...current,...batch}));}
+        catch {if(cancelled)return; /* missing history remains explicitly unknown */}
+      }
+    })();
+    return ()=>{cancelled=true;};
+  },[visiblePayload]);
+  const comparedDeal=(deal:DealDTO):DealDTO=>({...deal,adobo:{...deal.adobo,propertyHistory:scoreHistory[deal.id]??null}});
   const handleListScroll = useDealHeaderScroll(modalRef, payloadKey);
 
   useEffect(() => {
@@ -1582,6 +1605,11 @@ export function DealModal({
             : "Adobo scoring",
       },
       {
+        key:"adoboTrend",label:"Tendencia Adobo",width:"136px",
+        render:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return <span title={comparison.detail}>{comparison.label}</span>;},
+        caption:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return comparison.delta===null ? `Registrada: ${deal.adobo?.scoreTrend??'sin dato'}` : comparison.detail;},
+      },
+      {
         key: "nextActivity",
         label: "Próx. act.",
         width: "92px",
@@ -1702,7 +1730,7 @@ export function DealModal({
       }
     }
     return base;
-  }, [hasAlerts, hasLost, hasSignal, applyEdit, fix, contacts, contactsState]);
+  }, [hasAlerts, hasLost, hasSignal, applyEdit, fix, contacts, contactsState, scoreHistory]);
 
 
   const visibleColumns = useMemo(
@@ -2086,6 +2114,7 @@ export function DealModal({
                 <span style={{ fontSize: 13, color: "var(--muted)" }}>
                   {left ? `faltan ${fmt(left)}` : "cuota cubierta"}
                 </span>
+                <CommissionRate attainment={simulation.quota>0?attain:null} scope={simulation.commissionScope??simulation.label} simulated/>
                 <button type="button" className="copy-btn" onClick={() => setSelected([])}>
                   Limpiar selección
                 </button>

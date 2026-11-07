@@ -395,7 +395,7 @@ export function wrRate(stats: { won: number; lost: number }) {
   return total ? stats.won / total : 0;
 }
 
-function segmentOf(p: Props): string {
+export function segmentOf(p: Props): string {
   const type = p["dealtype"] ?? "";
   if (type.startsWith("Upsell")) return "Upsell";
   if (type.startsWith("Cross")) return "Cross sell";

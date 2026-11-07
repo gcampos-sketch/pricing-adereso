@@ -51,7 +51,7 @@ const ghostBreaches = (deal: InsightDeal) => {
   const out: string[] = [];
   if (deal.ghost.emails < GHOST_MIN.emails) out.push(`${deal.ghost.emails}/${GHOST_MIN.emails} correos`);
   if (deal.ghost.calls < GHOST_MIN.calls) out.push(`${deal.ghost.calls}/${GHOST_MIN.calls} llamadas`);
-  if (deal.ghost.whatsapp < GHOST_MIN.whatsapp) out.push(`${deal.ghost.whatsapp}/${GHOST_MIN.whatsapp} WhatsApp`);
+  if (deal.ghost.whatsapp != null && deal.ghost.whatsapp < GHOST_MIN.whatsapp) out.push(`${deal.ghost.whatsapp}/${GHOST_MIN.whatsapp} WhatsApp`);
   return out;
 };
 
@@ -125,6 +125,7 @@ export function LossDashboard({
     () => lost.filter((deal) => deal.ghost),
     [lost],
   );
+  const coveredGhostDeals=ghostDeals.filter(deal=>deal.ghost && deal.ghost.whatsapp!==null);
   const ghostWarn = useMemo(() => ghostDeals.filter((deal) => ghostBreaches(deal).length > 0), [ghostDeals]);
   const highScoreLost = useMemo(
     () => lost.filter((deal) => deal.adoboScoreValue > 60).sort((a, b) => b.adoboScoreValue - a.adoboScoreValue),
@@ -300,7 +301,7 @@ export function LossDashboard({
             <Metric
               label="Con poca actividad"
               value={String(ghostWarn.length)}
-              note="bajo el mínimo 2/2/2 en algún canal"
+              note={`bajo el mínimo 2/2/2 · cobertura ${coveredGhostDeals.length}/${ghostDeals.length}`}
               tone={ghostWarn.length ? "bad" : "ok"}
               onClick={() =>
                 open("Ghosting con poca actividad", "no cumplen 2 correos + 2 llamadas + 2 WhatsApp", ghostWarn)
@@ -310,8 +311,8 @@ export function LossDashboard({
             <Metric
               label="Correos prom."
               value={
-                ghostDeals.length
-                  ? (sum(ghostDeals, (d) => d.ghost?.emails ?? 0) / ghostDeals.length).toFixed(1)
+                coveredGhostDeals.length
+                  ? (sum(coveredGhostDeals, (d) => d.ghost?.emails ?? 0) / coveredGhostDeals.length).toFixed(1)
                   : "s/n"
               }
               note="por deal perdido por ghosting"
@@ -321,10 +322,10 @@ export function LossDashboard({
             <Metric
               label="Llamadas + WhatsApp prom."
               value={
-                ghostDeals.length
+                coveredGhostDeals.length
                   ? (
-                      sum(ghostDeals, (d) => (d.ghost?.calls ?? 0) + (d.ghost?.whatsapp ?? 0)) /
-                      ghostDeals.length
+                      sum(coveredGhostDeals, (d) => (d.ghost?.calls ?? 0) + (d.ghost?.whatsapp ?? 0)) /
+                      coveredGhostDeals.length
                     ).toFixed(1)
                   : "s/n"
               }
@@ -358,11 +359,11 @@ export function LossDashboard({
                       </td>
                       <td>{deal.owner}</td>
                       <td>{money(deal.amountValue)}</td>
-                      <td>{deal.ghost?.emails ?? 0}</td>
-                      <td>{deal.ghost?.calls ?? 0}</td>
-                      <td>{deal.ghost?.whatsapp ?? 0}</td>
+                      <td>{deal.ghost?.emails ?? "s/d"}</td>
+                      <td>{deal.ghost?.calls ?? "s/d"}</td>
+                      <td>{deal.ghost?.whatsapp ?? "s/d"}</td>
                       <td>
-                        {breaches.length ? (
+                        {!deal.ghost || deal.ghost.whatsapp == null ? <span className="chip">Cobertura sin verificar</span> : breaches.length ? (
                           <span className="chip" data-tone="bad">
                             falta: {breaches.join(" · ")}
                           </span>
