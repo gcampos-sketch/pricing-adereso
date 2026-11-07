@@ -537,7 +537,6 @@ export function PulseDashboard({
   const projectsOnly = section === "proyectos";
   const [modalKey, setModalKey] = useState<string | null>(null);
   const [periodPayload, setPeriodPayload] = useState<Drilldown | null>(null);
-  const [simModal, setSimModal] = useState(false);
   const [showAlerts, setShowAlerts] = useState(false);
   const [dense, setDense] = useState(true);
   const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
@@ -561,7 +560,6 @@ export function PulseDashboard({
   const closeModal = () => {
     setModalKey(null);
     setPeriodPayload(null);
-    setSimModal(false);
   };
 
   const scope = report.quality.find((item) => item.id === ownerFilter) ?? report.quality.find((item) => item.id === "team") ?? report.quality[0]!;
@@ -1104,6 +1102,17 @@ export function PulseDashboard({
   const totalAttainmentPct = periodQuotaPct + otfBonusPct;
   const periodWonWithOtf = periodWonAmount + periodOtfWon / 12;
   const periodGap = Math.max(0, periodQuota - periodWonWithOtf);
+  const payloadOwners=[...new Set(payload?.deals.map(deal=>deal.ownerId).filter(Boolean)??[])];
+  const selectionOwner=payloadOwners.length===1 ? payloadOwners[0]! : ownerFilter;
+  const selectionWon=quotaStats((selectionOwner==='team' ? periodData?.team.wonDeals : periodData?.owners[selectionOwner]?.wonDeals)??[]);
+  const selectionQuota={
+    quota:selectionOwner==='team' ? periodQuota : selectedPeriods.reduce((sum,period)=>sum+(report.periods.quotas[period]?.[selectionOwner]??0),0),
+    won:selectionWon.wonAmount+selectionWon.wonOtf/12,
+    label:`${selectionOwner==='team'?'Equipo':report.periods.owners[selectionOwner]??ownerName} · ${rangeLabel}`,
+    periods:selectedPeriods,
+    wonIds:selectionWon.eligible.map(deal=>deal.id),
+    openIds:openPipe.stages.flatMap(stage=>stage.deals.map(deal=>deal.id)),
+  };
   // Snapshots antiguos en caché pueden no traer la sección mensual.
   const monthly: MonthlyPulse = report.monthly ?? {
     months: [],
@@ -1442,13 +1451,12 @@ export function PulseDashboard({
         <Metric
           label="Falta para la cuota"
           value={money(periodGap)}
-          note={periodGap ? "clic para simular el cierre del gap" : "cuota cumplida"}
+          note={periodGap ? "selecciona negocios para sumar al ganado" : "cuota cumplida"}
           tone={periodGap ? "warn" : "ok"}
           onClick={() => {
-            setSimModal(true);
             setModalKey(qOpenModalKey);
           }}
-          tooltip="Cuota del período menos MRR ganado y OTF/12. La simulación usa como oportunidades el pipeline abierto del trimestre en curso."
+          tooltip="Cuota del período menos MRR ganado y OTF/12. Selecciona negocios abiertos para ver su aporte al cumplimiento del período seleccionado."
         />
       </section>
 
@@ -2294,16 +2302,7 @@ export function PulseDashboard({
             ? { labels: monthly.months, values: pipelineTrend }
             : null
         }
-        simulation={
-          simModal
-            ? {
-                quota: periodQuota,
-                won: periodWonWithOtf,
-                label: `${isTeam ? "Equipo" : ownerName} · ${rangeLabel}`,
-                commissionScope: ownerFilter,
-              }
-            : null
-        }
+        selectionQuota={selectionQuota}
       />
     </main>
   );

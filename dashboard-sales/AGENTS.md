@@ -70,6 +70,8 @@
 
 - DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
 
+- Checkbox selection immediately shows a compact amount summary, without a simulation mode/button or commission form. Commercial lists add eligible open selected deals to the same owner/role/type and selected-period won baseline (MRR + OTF/12), excluding already-won IDs, non-eligible rows and close dates outside that period. Bulk CRM actions stay collapsed and require their existing explicit actions; checking a row never writes to HubSpot.
+
 - DealModal keeps filters visible and uses the shared useDealHeaderScroll hook for continuous, distance-driven chrome collapse/expansion with frame-based damping; do not restore binary compact-state switches or change summary layout modes mid-scroll. Horizontal movement and viewport-induced scroll clamping must not change progress. Default ordering is descending close probability, then latest close calendar date; missing dates go last within a probability tie. Explicit drilldown ordering remains authoritative.
 
 - SALES-52 commission uses user-entered per-account/owner browser preference; exact attainment boundaries enter the upper band and percentages use half-up rounding to two decimals. Never imply the 9.09% example is a universal rate or calculate monetary payout without a verified base.

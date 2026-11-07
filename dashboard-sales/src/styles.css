@@ -3572,6 +3572,28 @@
   display: flex;
   align-items: center;
 }
+.deal-selection-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 14px;
+  flex: 0 0 auto;
+  margin: 0 24px 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  color: var(--muted);
+  background: color-mix(in oklab, var(--brand) 4%, var(--surface));
+  font-size: 12px;
+}
+.deal-selection-total strong { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.deal-selection-total .selection-result strong { color: var(--brand); }
+.deal-selection-total small { font-size: 11px; }
+.selection-period { font-size: 11px; }
+.deal-selection-total button { margin-left: auto; border: 0; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.deal-selection-actions { flex: 0 0 auto; margin: 0 24px 8px; font-size: 11px; color: var(--muted); }
+.deal-selection-actions > summary { cursor: pointer; width: fit-content; }
+.deal-selection-actions > .bulk-bar { margin: 8px 0 0; }
 .deal-row[data-selected="1"] {
   background: rgba(255, 255, 255, 0.05);
 }

@@ -3,7 +3,7 @@ import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X 
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
-import { CommissionRate } from "./CommissionRate";
+import { dealSelectionTotal, type SelectionQuota } from "@/lib/deal-selection-total";
 import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, getAdoboHistory, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
@@ -1185,7 +1185,7 @@ export function DealModal({
   onClose,
   initialStages,
   pipelineTrend,
-  simulation,
+  selectionQuota,
   fix,
   ownerBreakdown,
   ownerQuotas,
@@ -1199,8 +1199,8 @@ export function DealModal({
   ownerBreakdown?: boolean;
   /** cuota del período por nombre de comercial (para el % de cumplimiento) */
   ownerQuotas?: Record<string, number> | null;
-  /** habilita el modo simulación de cuota dentro del popup */
-  simulation?: { quota: number; won: number; label: string; commissionScope?: string } | null;
+  /** Base del período para sumar la selección sin una segunda modalidad. */
+  selectionQuota?: SelectionQuota | null;
   /** si viene, muestra el botón Fix con el problema que describe la tarjeta */
   fix?: { problem: string; mode?: "task" | "fup" } | null;
 }) {
@@ -1214,7 +1214,6 @@ export function DealModal({
   /** filtro de activación (solo cuando el payload trae los ids sin activar) */
   const [actFilter, setActFilter] = useState<"all" | "off" | "on">("all");
 
-  const [simMode, setSimMode] = useState(false);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
     key: "probability",
     dir: "desc",
@@ -1333,7 +1332,6 @@ export function DealModal({
     setBulkProb("");
     setBulkState("idle");
     setStageFilter(initialStages ?? []);
-    setSimMode(false);
     setActFilter(payload?.notActivatedIds?.length ? "off" : "all");
     const focusTimer = setTimeout(() => closeRef.current?.focus(), 380);
     return () => clearTimeout(focusTimer);
@@ -1747,6 +1745,7 @@ export function DealModal({
 
   const gridTemplate = `var(--deal-select-width, 34px) ${visibleColumns.map((column) => column.width).join(" ")}`;
   const selectedIds = selected.filter((id) => deals.some((deal) => deal.id === id));
+  const selectionTotal = dealSelectionTotal(deals, selectedIds, selectionQuota);
   const allSelected = deals.length > 0 && selectedIds.length === deals.length;
   const toggleAll = () => setSelected(allSelected ? [] : deals.map((deal) => deal.id));
   const toggleOne = (id: string) =>
@@ -1995,24 +1994,6 @@ export function DealModal({
           </div>
           <div className="deal-modal-actions">
             <div className="deal-modal-secondary"><div className="deal-modal-secondary-content">
-            {simulation ? (
-              <button
-                type="button"
-                className="copy-btn"
-                data-state={simMode ? "ok" : "idle"}
-                title="Simular el cierre de la cuota marcando los deals que crees ganables"
-                onClick={() => {
-                  const next = !simMode;
-                  setSimMode(next);
-                  if (next) {
-                    setSort({ key: "probability", dir: "desc" });
-                    setSelected([]);
-                  }
-                }}
-              >
-                {simMode ? "Salir de simulación" : "Simular"}
-              </button>
-            ) : null}
             {fix && payload ? (
               <>
                 {fixState === "ok" || fixState === "error" ? (
@@ -2055,44 +2036,20 @@ export function DealModal({
             {monthlySummary.undated.count ? <span>Sin fecha válida: {monthMoney(monthlySummary.undated.amount)} · {monthlySummary.undated.count} deals</span> : null}
           </p> : null}
         </section>
-        {simulation && simMode ? (
-          (() => {
-            const picked = deals.filter((deal) => selectedIds.includes(deal.id));
-            const pickedAmount = picked.reduce((acc, deal) => acc + deal.amountValue, 0);
-            const simulated = simulation.won + pickedAmount;
-            const attain = simulation.quota ? (simulated / simulation.quota) * 100 : 0;
-            const left = Math.max(0, simulation.quota - simulated);
-            const fmt = (value: number) =>
-              new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-                maximumFractionDigits: 0,
-              }).format(value);
-            return (
-              <div className="bulk-bar" role="group" aria-label="Simulación de cuota">
-                <strong>Simulación · {simulation.label}</strong>
-                <span className="bulk-divider" aria-hidden="true" />
-                <span style={{ fontSize: 13, color: "var(--muted)" }}>
-                  Cuota {fmt(simulation.quota)} · ganado {fmt(simulation.won)}
-                </span>
-                <span style={{ fontSize: 13 }}>
-                  <strong>{picked.length}</strong> deals marcados · {fmt(pickedAmount)}
-                </span>
-                <span className="chip" data-tone={attain >= 100 ? "ok" : attain >= 70 ? "warn" : "bad"}>
-                  {fmt(simulated)} · {Math.round(attain)}% de la cuota
-                </span>
-                <span style={{ fontSize: 13, color: "var(--muted)" }}>
-                  {left ? `faltan ${fmt(left)}` : "cuota cubierta"}
-                </span>
-                <CommissionRate attainment={simulation.quota>0?attain:null} scope={simulation.commissionScope??simulation.label} simulated/>
-                <button type="button" className="copy-btn" onClick={() => setSelected([])}>
-                  Limpiar selección
-                </button>
-              </div>
-            );
-          })()
-        ) : null}
-        {selectedIds.length > 0 && !simMode ? (
+        {selectionTotal.count>0 ? <section className="deal-selection-total" aria-label="Total de la selección" aria-live="polite">
+          <span>{selectionTotal.count} seleccionados · {monthMoney(selectionTotal.amount)}</span>
+          {selectionQuota && selectionTotal.total!==null ? <>
+            <span className="selection-period">{selectionQuota.label}</span>
+            <span>Ganado <strong>{monthMoney(selectionQuota.won)}</strong></span>
+            <span>+ Aporte <strong>{monthMoney(selectionTotal.contribution??0)}</strong></span>
+            <span className="selection-result">Total <strong>{monthMoney(selectionTotal.total)}</strong>{selectionTotal.attainment!==null ? <small> · {selectionTotal.attainment.toFixed(1)}% de cuota</small> : null}</span>
+            {selectionTotal.otfBonus>0 ? <small>Incluye {monthMoney(selectionTotal.otfBonus)} de OTF/12</small> : null}
+            {selectionTotal.excluded>0 ? <small title="Ya ganados, fuera del período seleccionado, fuera del pipeline abierto o no elegibles para cuota.">{selectionTotal.excluded} no suman a cuota</small> : null}
+          </> : null}
+          <button type="button" onClick={()=>setSelected([])}>Limpiar</button>
+        </section> : null}
+        {selectedIds.length > 0 ? (
+          <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>
           <div className="bulk-bar" role="group" aria-label="Herramientas para los deals seleccionados">
             <strong>{selectedIds.length} deals seleccionados</strong>
             <label>
@@ -2172,6 +2129,7 @@ export function DealModal({
             </button>
             {bulkState === "error" ? <span style={{ color: "var(--bad)", fontSize: 13 }}>{bulkError}</span> : null}
           </div>
+          </details>
         ) : null}
         {ownerBreakdown && ownerBars.length ? (
           <div className="modal-owner-bars">
