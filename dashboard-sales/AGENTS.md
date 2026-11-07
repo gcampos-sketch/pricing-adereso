@@ -57,3 +57,5 @@
 - Hidden embedded report navigation exposes a shadowed desktop edge: pointer/focus previews overlay the report and close on leave/Escape, while explicit open pins it. Hover must never change Index view/filter state or reserve layout width; touch continues using the drawer button.
 
 - The embedded dashboard has no Hub launch bar or report header strip; its iframe uses the full viewport and report content fills available width with compact gutters. Keep the edge control usable for touch/keyboard and preserve launch bars for other embedded tools.
+
+- The bell combines authorized report operational tasks with the existing personal producer repository, one task per deal and all reasons preserved. Reuse report warning/hygiene drilldowns and executive populations; do not widen private Adobo reads. Owner/role/type/stage filters apply to every task, while year/Q do not hide current warnings. E4 missing dates require chronological before/after evidence and remain review candidates, never confirmed skips. Personal review checks use evidence fingerprints and do not resolve CRM alerts; changed evidence reopens a task.

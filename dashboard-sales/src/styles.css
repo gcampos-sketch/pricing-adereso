@@ -5291,3 +5291,13 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .auth-scene .eyebrow { color: #a9a9b3; }
 .auth-scene .auth-email-input { background: rgba(9,11,17,.35); }
 @media (max-width: 480px) { .auth-scene { padding: 32px 16px; } .auth-scene-content { gap: 24px; } .auth-scene-logo { width: 160px; } }
+
+/* Actionable review queue: one deal, all its reasons. */
+.notification-filters { display:flex; flex-wrap:wrap; gap:6px; }
+.notification-filters button { padding:5px 9px; border:1px solid var(--border-default); border-radius:999px; font:400 10px var(--font-sans); color:var(--muted); cursor:pointer; }
+.notification-filters button[aria-pressed="true"] { color:var(--brand); border-color:color-mix(in srgb,var(--brand) 30%,transparent); background:color-mix(in srgb,var(--brand) 6%,transparent); }
+.notification-task-heading { display:flex; align-items:flex-start; gap:10px; }
+.notification-task-heading > a { flex:1; font-size:13px; }
+.notification-task-reasons { display:grid; gap:8px; padding:5px 0; }
+.notification-task-reasons strong { display:block; font-size:11px; font-weight:500; color:var(--warning); }
+.notification-task-reasons p { font-size:11px; color:var(--body); line-height:1.5; }

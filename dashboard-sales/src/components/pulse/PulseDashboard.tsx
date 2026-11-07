@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 
 import { Button } from "@/components/ui/button";
 import { NotificationCenter } from './NotificationCenter';
+import { dashboardTasks } from '@/lib/dashboard-tasks';
 import { CopySectionButton } from "./CopyControls";
 import { DealModal } from "./DealModal";
 import { AdoboIntelligence, useLiveNow } from './AdoboIntelligence';
@@ -916,6 +917,7 @@ export function PulseDashboard({
       yes: report.drilldowns[report.tracking?.find(t => t.id === "team")?.onTrackYesModal ?? ""]?.deals ?? [],
       no: report.drilldowns[report.tracking?.find(t => t.id === "team")?.onTrackNoModal ?? ""]?.deals ?? [],
     }, Date.parse(report.generatedAt), { owner: ownerFilter, role, matchesType }), [report, ownerFilter, role, matchesType]);
+  const operationalTasks = useMemo(() => dashboardTasks(report, { owner: ownerFilter, role, stages: stageFilter, matchesType }), [report, ownerFilter, role, stageFilter, matchesType]);
   const { openPipe, wonJourney } = executive;
   const executiveRange = shortPeriod(executive.period);
   const wonComparison = useMemo(() => {
@@ -1161,7 +1163,7 @@ export function PulseDashboard({
             Pipeline Comercial · gestionable E1-E5.1 · WR por closedate · datos en vivo
           </p>
         </div>
-        <div className="dashboard-tabs-wrap">{tabs}<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}}/></div>
+        <div className="dashboard-tabs-wrap">{tabs}<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}} tasks={operationalTasks} generatedAt={report.generatedAt}/></div>
       </div>
 
       <CompactFilterBar
