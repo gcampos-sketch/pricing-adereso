@@ -38,7 +38,8 @@ button,input,select,textarea {font-family:var(--font-body);}
 .brand>div {min-width:0;}
 .header-logo {margin-bottom:12px;}
 .header-logo .adereso-wordmark {width:126px;}
-.hg-card {border-radius:var(--r4);border-color:var(--b-default);background:linear-gradient(145deg,rgba(39,42,49,.94),rgba(27,29,34,.96));}
+.hg-grid {grid-auto-rows:minmax(128px,1fr);}
+.hg-card {min-height:128px;height:100%;border-radius:var(--r4);border-color:var(--b-default);background:linear-gradient(145deg,rgba(39,42,49,.94),rgba(27,29,34,.96));}
 .hg-txt b {font-family:var(--font-head);font-size:17px;font-weight:500;letter-spacing:-.015em;}
 .hg-txt small {line-height:1.5;}
 .hg-label {font-weight:500;letter-spacing:.12em;}
