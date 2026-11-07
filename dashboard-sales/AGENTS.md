@@ -55,3 +55,5 @@
 - Dashboard neutral surfaces and typography follow the Hub’s root brand-system.css (Outfit headings, Work Sans body, the same quiet atmospheric page gradients as Pricing in index.html, without patterns or animation). Preserve executive-summary semantic/chart colors when aligning presentation; never restore the page grid.
 
 - Hidden embedded report navigation exposes a shadowed desktop edge: pointer/focus previews overlay the report and close on leave/Escape, while explicit open pins it. Hover must never change Index view/filter state or reserve layout width; touch continues using the drawer button.
+
+- The embedded dashboard has no Hub launch bar or report header strip; its iframe uses the full viewport and report content fills available width with compact gutters. Keep the edge control usable for touch/keyboard and preserve launch bars for other embedded tools.

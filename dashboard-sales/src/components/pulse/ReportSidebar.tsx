@@ -89,8 +89,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
       <Button variant="ghost" className="report-subnav-open" aria-label="Mostrar reportes" aria-controls="dashboard-report-panel" onClick={() => {
         if (window.matchMedia('(max-width: 1050px)').matches) setMobileOpen(true);
         else onCollapse();
-      }}><PanelLeftOpen aria-hidden="true" /><span>Reportes</span></Button>
-      <span className="report-subnav-current">{groups.flatMap<{ id: ReportView; label: string }>(group => group.children ?? [group]).find(item => item.id === view)?.label}</span>
+      }}><PanelLeftOpen aria-hidden="true" /><span className="sr-only">Reportes</span></Button>
     </div>
     {mobileOpen && <div className="report-subnav-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
     <div className="report-subnav-hover-zone"
