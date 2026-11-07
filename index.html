@@ -2537,7 +2537,7 @@ const LESSONS = [
 <li><strong>Outbound:</strong> Cobro por mensaje enviado. Si el cliente responde → se descuenta de la bolsa inbound</li>
 <li><strong>¿Qué incluye?</strong> Centralización, métricas, licencias ilimitadas, encuestas GRATIS, plantillas WhatsApp GRATIS</li>
 <li><strong>Precio:</strong> $558/mes — bolsa de 2.000 conversaciones. Contrato anual con 40% ya aplicado</li>
-<li><strong>Setup:</strong> $990 pago único. Plan 1 (sin API) o Plan 2 (con Shopify+CRM, recomendado)</li>
+<li><strong>Setup:</strong> $990 pago único. Plan 1 (Shopify nativo + MCP, sin APIs a medida) o Plan 2 (4 endpoints API REST, recomendado)</li>
 </ol>
 <div class="tip">💡 Setup: ofrécelo siempre como <strong>pago 100% adelantado</strong>. Menciona 50/50 solo si el cliente lo negocia.</div>
 
@@ -3655,7 +3655,7 @@ bant: [
 ],
 pricing: [
   {q:"¿Cuánto cuesta Desk para la bolsa mínima de 2.000 conv?", opts:["$159/mes","$199/mes","$558/mes","$299/mes"], correct:1, explain:"Desk parte en $199/mes para la bolsa mínima de 2.000 conversaciones. El precio sube proporcionalmente con mayor volumen."},
-  {q:"¿Cuánto cuesta el setup de Studio?", opts:["$500","$750","$990","$1.500"], correct:2, explain:"$990 pago único. Plan 1 (sin API) o Plan 2 (con Shopify+CRM)."},
+  {q:"¿Cuánto cuesta el setup de Studio?", opts:["$500","$750","$990","$1.500"], correct:2, explain:"$990 pago único. Plan 1 (Shopify nativo + MCP, sin APIs a medida) o Plan 2 (4 endpoints API REST, recomendado)."},
   {q:"¿Cuánto es la mantención mensual del bot (Studio)?", opts:["$100/mes","$130/mes","$160/mes","$200/mes"], correct:2, explain:"La mantención bot de Studio cuesta $160/mes según el cotizador."},
   {q:"¿Adereso cobra por número de usuarios?", opts:["Sí, por licencia","No, agentes ilimitados","Solo en Enterprise","Desde el Plan 3"], correct:1, explain:"Agentes ilimitados. El precio sube por volumen de conversaciones, no por usuarios."},
   {q:"¿Cuál es la bolsa mínima de conversaciones?", opts:["1.000/mes","2.000/mes","5.000/mes","10.000/mes"], correct:1, explain:"Mínimo 2.000 conversaciones/mes tanto para Desk como para Studio."},
@@ -8736,7 +8736,7 @@ function priceForVolume(v,t=BAG){
 }
 const SETUP={
  estandar:{name:'Empaquetado Estándar',price:0,tag:'Rápido · 1 semana',hh:'Autogestionable',endpoints:'Preconfigurado',ses:'Adereso Academy',mant:'—'},
- esencial:{name:'Plan 1 · Esencial',fit:'Sólo documentación estática, sin integraciones',price:558,hh:'20 HH',endpoints:'Sin integración',epN:'—',epL:'Sin integración',sesDev:4,sesPost:1,mant:'2HH/mes'},
+ esencial:{name:'Plan 1 · Esencial',fit:'Documentación y una tienda Shopify vía integración nativa + MCP. Sin APIs a medida.',price:558,hh:'20 HH',endpoints:'Shopify nativo + MCP; sin APIs a medida',epN:'Shopify',epL:'Nativo + MCP · 1 tienda',sesDev:4,sesPost:1,mant:'2HH/mes'},
  inteligente:{name:'Plan 2 · Inteligente',fit:'Conecta el agente a tus sistemas clave',price:990,rec:true,hh:'30 HH',endpoints:'4 endpoints (API REST)',epN:'4',epL:'Endpoints · API REST',sesDev:6,sesPost:3,mant:'2HH/mes'},
  avanzado:{name:'Plan 3 · Avanzado',fit:'Varias integraciones y flujos más complejos',price:1600,hh:'40 HH',endpoints:'Hasta 8 (BFF)',epN:'Hasta 8',epL:'Endpoints · BFF',sesDev:10,sesPost:8,mant:'2HH/mes'},
  enterprise:{name:'Plan 4 · Enterprise',fit:'Arquitectura a medida para operaciones grandes',price:2700,hh:'60 HH',endpoints:'Hasta 16 (BFF)',epN:'Hasta 16',epL:'Endpoints · BFF',sesDev:4,sesPost:1,mant:'2HH/mes'}
@@ -9187,7 +9187,7 @@ function renderSetup(){
       <div class="onb"${di?' style="margin-top:20px"':''}><div class="onb-head"><span data-i="users" data-sz="16"></span><b>Onboarding Desk</b><span class="rn-tag">Sin costo</span></div>
       <ul class="onb-list"><li class="ok">Capacitación por cada rol de ejecutivo</li><li class="ok">Conexión de canales</li><li class="ok">Creación de usuarios, departamentos y etiquetas</li>${di?'':'<li class="no">No incluye integraciones a otros sistemas</li>'}</ul></div>`;
     if(di){const pc=(k)=>{const s=SETUP[k],sel=k===state.setup;return `<button class="plan ${sel?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="rec-chip">★ Recomendado</span>':''}</h3><div class="pfit">${s.fit}</div></div><span class="phh">${s.hh}</span>${sel?`<div class="pspecs-acc"><div class="pspecs"><div class="psp hh"><b>${parseInt(s.hh)}</b><small>Horas (HH)</small></div><div class="psp"><b>${s.epN}</b><small>${s.epL}</small></div><div class="psp"><b><em class="psp-up">Hasta</em>${s.sesDev} + ${s.sesPost}</b><small>Reuniones + post-entrega</small></div></div></div>`:''}</button>`;};
-      /* Plan 1 no incluye integraciones, así que no aplica acá */
+      /* La conexión nativa/MCP de Shopify del Plan 1 no añade APIs a medida para Desk. */
       const po=!!state.plansOpen,ks=SETUP_ORDER.filter(k=>k!=='esencial');
       /* igual que con agente: queda solo el plan elegido y los demás se despliegan con «Cambiar plan» */
       const slots=ks.map(k=>k===state.setup?`<div class="pslot sel-slot">${pc(k)}</div>`:`<div class="pslot"><div class="pslot-in">${pc(k)}</div></div>`).join('');
@@ -9240,6 +9240,7 @@ function renderSetup(){
         <div class="ag-foot">Con más de un agent / flow el proyecto completo se implementa <b>Acompañado</b>: cada uno lleva su plan de HH.</div>`;
       if(Array.from({length:nA},(_,i)=>i).some(i=>agentMode(i)==='paquetizado'))html+=`<div class="note" style="margin-top:14px"><span data-i="bolt"></span><div class="rn-wrap">${RAPID_NOTE}</div></div>`;
   }
+  if(!allRapid())html+=`<div class="head-links" style="margin-top:16px"><button type="button" class="pop-link" data-pop="shopifyScope">Ver alcance completo de Shopify ↗</button></div>`;
   /* Desk + Studio: el onboarding viene incluido en la implementación */
   if(state.desk&&state.studio&&!state.existing)html+=ONB_FULL;
   area.innerHTML=html;paintIcons(area);applyReveal(area,'.seg-opt,.plan');
@@ -10294,6 +10295,19 @@ window.addEventListener('resize',onScroll,{passive:true});
   window.addEventListener('touchend',()=>{ty=null;if(acc>0)release();},{passive:true});
 })();
 const POPS={
+ shopifyScope:{title:'Alcance de la conexión Shopify',html:`
+   <p>Incluida en los planes 1, 2, 3 y 4, si utilizas Shopify, mediante <b>integración nativa y MCP</b> para <b>una tienda</b>.</p>
+   <h4>Incluye</h4><ul>
+     <li>Catálogo, recomendaciones, carrito y enlace de checkout, según el canal y la configuración.</li>
+     <li>Consulta de pedidos y seguimiento disponible, con la tienda conectada.</li>
+     <li>Recuperación estándar de carritos/checkouts abandonados con Shopify Flow y WhatsApp habilitados.</li>
+   </ul>
+   <h4>Fuera del alcance nativo/MCP</h4><ul>
+     <li>APIs a medida, ERP/WMS, BFF, cambios o reembolsos de pedidos y desarrollo de la tienda.</li>
+     <li>Tiendas adicionales y funciones no expuestas por la integración; lógica B2B, mayorista o de precios que requiera desarrollo.</li>
+   </ul>
+   <p>Requiere accesos y configuración compatibles; para recuperación, plantilla aprobada y un plan Shopify que permita la acción Send HTTP Request de Flow. Consumo Meta aparte. El pago se completa en Shopify.</p>
+   <p><b>Plan 1:</b> no incluye conexiones adicionales de APIs por parte de Adereso. <b>Plan 2 · Recomendado:</b> conserva sus 30 HH y 4 endpoints API REST; no incluye BFF.</p>`},
  conversacion:{title:'¿Qué contempla una conversación?',html:`
    <p style="margin-bottom:14px;color:var(--z400)"><b style="color:#fff">No es un mensaje, es la conversación completa.</b> Y no importa dónde se genere (WhatsApp, webchat, correo o redes): lo que cuenta es que entra a Adereso.</p><div class="cm-chans" aria-label="Todos los canales cuentan como 1 conversación"><span class="ch" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.6-4.6A8.6 8.6 0 1 1 7.7 19.5z"/><path d="M8.6 8.2c.2-.6.6-.9 1-.9h.6l.9 2.1-.7.9c.6 1.3 1.6 2.3 2.9 2.9l.9-.7 2.1.9v.6c0 .4-.3.8-.9 1-2.9.9-7.7-3.9-6.8-6.8z"/></svg></span><span class="ch" title="Webchat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01"/></svg></span><span class="ch" title="Correo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg></span><span class="ch" title="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17 7h.01"/></svg></span><span class="ch" title="Facebook / Messenger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.3-1.5 1.6-1.5h1.6V4.1a21 21 0 0 0-2.4-.1c-2.4 0-4 1.4-4 4v2H8.5v3h2.8v8"/></svg></span><span class="ch" title="TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.2 4.3 5 4.5"/></svg></span><span class="ch" title="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M8 10.5V16"/><path d="M8 7.6h.01"/><path d="M12 16v-5.5"/><path d="M12 13c0-1.5 1-2.5 2.3-2.5s2.2 1 2.2 2.5v3"/></svg></span></div>
    <div class="cm-stage" id="cmStage"><div class="chatmock">
