@@ -13,6 +13,7 @@ dashboard-sales/*.log
 !index.html
 !brand-system.css
 !chapter-index.js
+!academy-sync.js
 !dashboard-settings.js
 !logoadereso.webp
 !e6e8672e.webp

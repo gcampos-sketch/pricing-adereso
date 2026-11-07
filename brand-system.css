@@ -384,3 +384,22 @@ body.v-embed:has(#evFrame[src*="dashboard=1"]) { padding-bottom:0; overflow:hidd
 #embedView:has(> #evFrame[src*="dashboard=1"]) { height:100dvh; }
 #embedView:has(> #evFrame[src*="dashboard=1"]) > .ev-bar { display:none; }
 #embedView > #evFrame[src*="dashboard=1"] { height:100dvh; background:#15171C; }
+
+/* Live learning sources share the Academy theme without touching personal progress. */
+.academy-source-intro,.academy-source-library {border:1px solid rgba(255,255,255,.1);border-radius:16px;background:rgba(255,255,255,.025);padding:20px;margin-bottom:24px;}
+.academy-source-intro {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.academy-source-intro strong,.academy-source-library>summary {font:500 18px/1.4 var(--font-head);color:#f4f4f5;}
+.academy-source-library>summary,.academy-source-doc>summary {cursor:pointer;}
+.academy-source-intro p,.academy-source-library p {font:400 12px/1.6 var(--font-body);color:#a1a1aa;margin:10px 0;}
+.academy-source-intro button,.academy-source-controls button {border:1px solid rgba(255,213,64,.22);border-radius:9px;background:transparent;color:#d7c98c;padding:8px 12px;font:500 12px var(--font-body);cursor:pointer;}
+.academy-source-controls button[aria-pressed=true] {background:rgba(255,213,64,.12);border-color:#c8af56;color:#ffe49c;}
+.academy-source-controls label {display:block;font-size:12px;margin:16px 0 7px;color:#d4d4d8;}
+.academy-source-controls input {box-sizing:border-box;display:block;width:100%;padding:12px 14px;border:1px solid #42444a;background:#141519;border-radius:10px;color:#f4f4f5;margin-bottom:12px;font:400 14px var(--font-body);}
+.academy-source-controls [role=group],.academy-source-links {display:flex;flex-wrap:wrap;gap:8px;}
+.academy-source-links {margin-top:16px;gap:18px;}
+.academy-source-links a,.academy-source-provenance a {color:#dbc681;font-size:12px;}
+.academy-source-doc {padding:14px 0;border-top:1px solid rgba(255,255,255,.08);}
+.academy-source-doc>summary {font:500 14px/1.5 var(--font-head);color:#e4e4e7;}
+.academy-source-provenance {display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11px;color:#92929c;margin:12px 0;}
+.academy-source-text {white-space:pre-wrap;overflow-wrap:anywhere;font:400 13px/1.8 var(--font-body);color:#c4c4cb;}
+.academy-source-library :is(button,input,a,summary):focus-visible,.academy-source-intro button:focus-visible {outline:2px solid #ffd540;outline-offset:3px;}

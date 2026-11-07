@@ -4,6 +4,7 @@ export const HUB_FILES: Record<string, string> = {
   'index.html': 'text/html; charset=utf-8',
   'brand-system.css': 'text/css; charset=utf-8',
   'chapter-index.js': 'text/javascript; charset=utf-8',
+  'academy-sync.js': 'text/javascript; charset=utf-8',
   'dashboard-settings.js': 'text/javascript; charset=utf-8',
   'logoadereso.webp': 'image/webp',
   'e6e8672e.webp': 'image/webp',

@@ -108,3 +108,33 @@ Implementación en `dashboard-sales/deployment/gmail-connection.md`. Cada usuari
 ## Calculadora ROI externa
 
 `https://adereso-partners.onrender.com/roi/` publica exclusivamente la calculadora y sus fórmulas extraídas de `index.html`, con contexto editable de `roi-standalone.js`. No entrega el documento completo de Pricing ni sus catálogos. El build estático publica el HTML independiente y solo CSS/logo; la ruta equivalente del servidor aplica una lista explícita de recursos. Compartir ROI usa esta dirección e incluye únicamente mensualidad, volumen y tarifa unitaria de plantilla cuando está definida. No se incluyen identidades, sesión, datos de clientes ni el resto de la cotización. El cliente puede cambiar los supuestos sin acceder al Hub.
+
+## Sales Academy · sincronización de fuentes (preparada, pendiente de activar)
+
+La biblioteca dentro de Academy consulta `GET /api/academy/content`, protegido por la misma sesión corporativa y MFA del Hub. Su material no se incluye en los archivos públicos ni se publica en el repositorio. El entrenamiento base, sus evaluaciones y la clave de avance `adereso_academy` no cambian. Esta primera fase publica documentos vigentes de las fuentes; no afirma haber regenerado las lecciones, preguntas ni escenarios históricos.
+
+Fuentes fijas:
+- Wiki comercial de producto: `3219c274-7df5-81a2-baeb-de4de645d487`, con sus páginas hijas. La ficha de Notion llamada “Wiki producto” enlaza a esta misma wiki.
+- Artículos de `https://help.adereso.ai/sitemap.xml`; se excluyen las categorías. Solo se extrae el cuerpo del artículo, en texto, con título, enlace, fecha de edición y huella del contenido. No se siguen otros sitios ni se ejecuta HTML.
+
+Notion aporta contexto comercial y anuncios; Help Center aporta instrucciones, requisitos y límites. Se mantienen como documentos separados con su procedencia; no se fusionan declaraciones contradictorias ni se convierten demos, beta o pendientes en disponibilidad general.
+
+### Activación de una sola vez
+
+1. Aplicar `dashboard-sales/supabase/migrations/20261107040000_academy_sync.sql` en el Supabase propio. Tablas y funciones son exclusivas de `service_role`, con RLS y sin permisos para anon/authenticated.
+2. Crear una conexión interna de Notion con capacidad **Read content**, sin escritura ni acceso a usuarios/comentarios. Compartir únicamente la wiki y sus descendientes con esa conexión. Guardar su token en Render como `ACADEMY_NOTION_TOKEN`; guardar también `ACADEMY_NOTION_INTEGRATION_ID` y `ACADEMY_NOTION_WORKSPACE_ID`. La autorización del conector de este chat no sustituye este token del servidor.
+3. Crear `ACADEMY_SYNC_SECRET` aleatorio, al menos 32 caracteres, en Render y como secreto de GitHub Actions con el mismo nombre. No pegar valores en el chat, documentos o commits. El endpoint `POST /api/academy/sync` solo acepta ese Bearer y procesa las fuentes configuradas. El Help Center no requiere credencial.
+4. Para Notion, habilitar temporalmente `ACADEMY_NOTION_SETUP_ENABLED=true`. Crear la suscripción HTTPS a `https://adereso-hub-comercial.onrender.com/api/academy/notion-webhook`, eventos `page.created`, `page.content_updated`, `page.properties_updated`, `page.deleted`, `page.undeleted`, `page.moved`. La verificación inicial se guarda como candidata cifrada, no se devuelve públicamente ni se utiliza para firmar automáticamente.
+5. Recuperar la candidata desde `POST /api/academy/notion-setup` con el Bearer del programador en una herramienta privada. Pegar el valor en la verificación de la conexión de Notion y, solo si Notion lo acepta, guardarlo en Render como `ACADEMY_NOTION_WEBHOOK_SECRET`. Deshabilitar el modo de alta y borrar la fila de `academy_webhook_setup`. Si una petición ajena ocupó la candidata antes de la auténtica, borrar esa fila y reenviar la verificación; nunca aceptar esa candidata sin la comprobación de Notion.
+6. Ejecutar una primera sincronización y verificar ambos estados, fuentes, fechas y contenido dentro de una sesión real del Hub. Confirmar que una petición anónima no puede leer el contenido y que Partners/ROI no lo contienen.
+7. Habilitar el programador. `.github/workflows/academy-sync.yml` está preparado para revisar la cola cada 5 minutos y comprobar fuentes cada 15 minutos. **Los horarios de GitHub Actions solo corren cuando el workflow está en la rama predeterminada**; mientras se itera en la rama del Hub se debe usar `workflow_dispatch` o un programador externo con el mismo endpoint. No se considera activado solo por desplegar Render. No se añade un cron de pago de Render ni se cambia `main` como parte de esta preparación.
+
+Los avisos de Notion se validan mediante HMAC, conexión, workspace y antigüedad. Solo marcan la fuente fija como pendiente; el identificador recibido no habilita lecturas de otras páginas. La cola persiste antes del 202. Un aviso nunca inicia trabajo en una promesa descartable después de responder. La espera será la agregación de Notion más el siguiente turno del programador; no se promete actualización instantánea. El Help Center se revisa periódicamente, sin asumir que ofrece webhooks propios. El Render Free puede añadir espera de arranque.
+
+### Publicación, errores y recuperación
+
+Cada fuente tiene una exclusión temporal en base de datos y una clave de versión por contenido. Una transacción comprueba la exclusión antes de publicar; un proceso viejo no puede reemplazar una versión nueva. Los eventos recibidos durante una lectura quedan pendientes para el siguiente turno. Las lecturas incompletas, límites, formatos inesperados o fallos conservan la última versión y marcan error. Se guardan hasta cinco versiones por fuente. La UI distingue fuente pendiente, error y comprobación atrasada; “fuente editada” no significa que una capacidad esté disponible.
+
+Help Center reutiliza artículos sin cambios según el sitemap y vuelve a leer todo al menos semanalmente. Cambios de navegación, referencias de Notion no soportadas y tamaños fuera de límites detienen esa fuente con aviso, sin publicar una copia parcial. Una nueva raíz o fuente requiere cambiar la configuración revisada en código.
+
+Pruebas: autenticación/MFA, aislamiento del endpoint del programador, firma y tamaño de webhooks, aislamiento de workspace, alta de firma en cuarentena, destinos de lectura permitidos, rechazo de redirecciones y respuestas grandes, extracción de artículo y conservación de límites en Notion. La activación productiva y una edición real de extremo a extremo siguen pendientes de credenciales, migración y programador.

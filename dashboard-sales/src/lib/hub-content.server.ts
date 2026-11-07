@@ -6,6 +6,7 @@ import { verifyHubIdentity } from './hub-auth.server';
 import { createRoiPublicGateway } from './roi-public';
 import { createPartnerPublicGateway } from './partner-public';
 import { handlePartnerMailRequest } from './partner-mail.server';
+import { handleAcademyRequest } from './academy-sync.server';
 
 // Private files are deliberately outside Nitro's public directory/CDN.
 const packaged = resolve(process.cwd(), 'private-hub');
@@ -16,5 +17,5 @@ const publicPartners = createPartnerPublicGateway(read);
 const privateHub = createHubGateway({ verify: verifyHubIdentity,
   publicOrigin: process.env['RENDER_EXTERNAL_URL'], read });
 export async function handleHubRequest(request: Request) {
-  return await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
+  return await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
 }

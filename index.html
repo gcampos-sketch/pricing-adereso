@@ -2161,6 +2161,7 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
 </style>
 <link rel="stylesheet" href="brand-system.css?v=share-compact-2">
 <script src="chapter-index.js?v=2" defer></script>
+<script src="/hub-content/academy-sync.js" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -2185,6 +2186,10 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
 
   <!-- Tab: Home -->
   <div class="main tab-content" id="tab-home">
+    <div class="academy-source-intro">
+      <div><strong>Tu biblioteca al día</strong><p id="academy-home-sync" role="status">Comprobando fuentes…</p></div>
+      <button type="button" id="academy-open-sources">Ver novedades y fuentes ↗</button>
+    </div>
     <div class="welcome-card animate-in">
       <div class="welcome-greeting">Bienvenido, Comercial 👋</div>
       <div class="welcome-sub" id="welcome-progress">Nivel Onboarding · 0 XP</div>
@@ -2310,6 +2315,23 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
   <div class="main tab-content" id="tab-products" style="display:none">
     <div class="section-title">🎓 Academias por Producto</div>
     <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Domina cada producto por separado. Cada academia tiene su ficha completa + evaluación específica. Aprueba (2/3) para dominarlo.</div>
+    <details id="academy-sources" class="academy-source-library">
+      <summary>Biblioteca actualizada · Wiki + Help Center</summary>
+      <p id="academy-sync-status" role="status">Comprobando fuentes…</p>
+      <p class="academy-source-guidance">La wiki aporta contexto comercial y novedades; el Help Center, funcionamiento y requisitos. Cada documento conserva su fuente, fecha y aclaraciones de disponibilidad. Las evaluaciones del entrenamiento base se conservan y no se regeneran automáticamente.</p>
+      <div class="academy-source-controls">
+        <label for="academy-source-search">Buscar en las fuentes</label>
+        <input id="academy-source-search" type="search" placeholder="Ej. Shopify, WhatsApp, Studio…" autocomplete="off">
+        <div role="group" aria-label="Filtrar fuentes">
+          <button type="button" data-academy-source="all" aria-pressed="true">Todas</button>
+          <button type="button" data-academy-source="notion" aria-pressed="false">Wiki comercial</button>
+          <button type="button" data-academy-source="help" aria-pressed="false">Help Center</button>
+        </div>
+      </div>
+      <div class="academy-source-links"><a href="https://app.notion.com/p/3219c2747df581a2baebde4de645d487" target="_blank" rel="noopener noreferrer">Abrir wiki ↗</a><a href="https://help.adereso.ai/" target="_blank" rel="noopener noreferrer">Abrir Help Center ↗</a></div>
+      <p id="academy-source-meta" aria-live="polite"></p>
+      <div id="academy-source-list"></div>
+    </details>
     <div id="product-academy-list"></div>
 
     <div class="section-title" style="margin-top:28px">🧩 Cómo se combinan los productos</div>
