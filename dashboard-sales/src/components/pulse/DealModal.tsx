@@ -1100,7 +1100,7 @@ function AdoboScoreCell({deal}:{deal:DealDTO}) {
     <PopoverTrigger asChild><button type="button" className="adobo-score-trigger" data-tone={shown<0?'none':shown>=65?'ok':shown>=45?'warn':'bad'} aria-label={`Adobo ${score}: ver detalle de ${deal.name}`} title="Ver composición y cambio del Adobo Score">
       {score}{comparison.delta!==null ? <span className="deal-value-trend" aria-label={comparison.label}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}
     </button></PopoverTrigger>
-    <PopoverContent className="adobo-score-popup" align="start" sideOffset={8} role="dialog" aria-label={`Adobo Score de ${deal.name}`} data-adobo-score-popup="true" onEscapeKeyDown={event=>event.stopPropagation()}>
+    <PopoverContent className="adobo-score-popup" align="start" sideOffset={8} collisionPadding={12} role="dialog" aria-label={`Adobo Score de ${deal.name}`} data-adobo-score-popup="true" onEscapeKeyDown={event=>{event.preventDefault();event.stopPropagation();setOpen(false);}}>
       <header className="adobo-score-popup-heading"><div><h3>Adobo Score · {score}</h3><p>{deal.name}</p></div><button type="button" onClick={()=>setOpen(false)} aria-label="Cerrar detalle Adobo"><X size={16}/></button></header>
       {shown>=0 && shown<deal.adoboScoreValue ? <p className="adobo-comparison-detail">Score bruto {deal.adoboScoreValue} · tope de contactabilidad {shown}. La tendencia compara el score bruto.</p> : null}
       {shown<0 ? <p className="adobo-comparison-detail">Sin score registrado. Los datos ausentes no equivalen a cero.</p> : null}
