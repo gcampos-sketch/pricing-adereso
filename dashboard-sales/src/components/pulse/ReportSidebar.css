@@ -44,3 +44,15 @@
   .report-subnav-backdrop { display: block; position: fixed; inset: 0; z-index: 74; background: rgba(0,0,0,.55); }
 }
 @media (prefers-reduced-motion: reduce) { .report-subnav, .report-subnav-chevron { transition: none; } }
+
+/* A quiet edge keeps hidden reports discoverable; hover previews never shift data. */
+.report-subnav-hover-zone { pointer-events: none; }
+.report-subnav-hover-zone > .report-subnav { pointer-events: auto; }
+.report-subnav-edge { display: none; }
+@media (min-width: 1051px) {
+  .report-subnav-edge { position: fixed; top: 52px; bottom: 0; left: 0; width: 14px; z-index: 64; display: flex; align-items: center; pointer-events: auto; background: linear-gradient(90deg, rgba(4,5,8,.5), rgba(19,21,26,.22) 55%, transparent); border-left: 1px solid rgba(255,255,255,.08); box-shadow: 6px 0 18px -10px rgba(0,0,0,.7); }
+  .report-subnav-edge::before { content: ''; position: absolute; left: 2px; top: calc(50% - 25px); width: 2px; height: 50px; border-radius: 3px; background: rgba(255,213,64,.35); }
+  .report-subnav-edge > button { display: grid; place-items: center; position: absolute; left: 0; width: 19px; height: 62px; padding: 0; border: 1px solid rgba(255,255,255,.09); border-left: 0; border-radius: 0 8px 8px 0; background: #1b1d22; box-shadow: 5px 0 16px rgba(0,0,0,.18); color: var(--muted); cursor: pointer; }
+  .report-subnav-edge > button svg { width: 13px; height: 13px; }
+  .report-subnav[data-collapsed="true"][data-peek="true"] { transform: translateX(0); visibility: visible; box-shadow: 18px 0 50px -20px rgba(0,0,0,.65); }
+}

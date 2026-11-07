@@ -53,3 +53,5 @@
 - Embedded dashboards use embedded=hub and ReportSidebar's panel presentation: a labeled, fully hideable report subnavigation beside the Hub rail, with a drawer on narrow screens. Standalone dashboards retain the sidebar. All presentations share report definitions, Index selection/fetching, refresh and account controls; embedded is presentation only and never changes authorization. Hiding navigation must preserve the selected view, loaded data and filters.
 
 - Dashboard neutral surfaces and typography follow the Hub’s root brand-system.css (Outfit headings, Work Sans body, the same quiet atmospheric page gradients as Pricing in index.html, without patterns or animation). Preserve executive-summary semantic/chart colors when aligning presentation; never restore the page grid.
+
+- Hidden embedded report navigation exposes a shadowed desktop edge: pointer/focus previews overlay the report and close on leave/Escape, while explicit open pins it. Hover must never change Index view/filter state or reserve layout width; touch continues using the drawer button.

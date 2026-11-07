@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./ReportSidebar.css";
 import { BarChart3, BriefcaseBusiness, ChevronDown, Handshake, PanelLeftClose, PanelLeftOpen, Users, Workflow, X } from "lucide-react";
 import { AccountMenu } from "@/components/AuthGate";
@@ -28,6 +28,38 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
   presentation?: 'sidebar' | 'toolbar' | 'panel';
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [peekOpen, setPeekOpen] = useState(false);
+  const peekTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelPeekClose = () => { clearTimeout(peekTimer.current); };
+  const showPeek = () => {
+    cancelPeekClose();
+    if (collapsed && window.matchMedia('(min-width: 1051px)').matches) setPeekOpen(true);
+  };
+  const hidePeek = () => {
+    cancelPeekClose();
+    peekTimer.current = setTimeout(() => {
+      if (!document.getElementById('dashboard-report-panel')?.contains(document.activeElement)) setPeekOpen(false);
+    }, 180);
+  };
+  useEffect(() => () => clearTimeout(peekTimer.current), []);
+  useEffect(() => {
+    setPeekOpen(false);
+    if (collapsed && presentation === 'panel' && document.getElementById('dashboard-report-panel')?.contains(document.activeElement)) {
+      document.querySelector<HTMLButtonElement>('.report-subnav-open')?.focus();
+    }
+  }, [collapsed, presentation]);
+  useEffect(() => {
+    if (!peekOpen) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      cancelPeekClose();
+      setPeekOpen(false);
+      const panel = document.getElementById('dashboard-report-panel');
+      if (panel?.contains(document.activeElement)) document.querySelector<HTMLButtonElement>('.report-subnav-open')?.focus();
+    };
+    document.addEventListener('keydown', escape);
+    return () => document.removeEventListener('keydown', escape);
+  }, [peekOpen]);
   const [expanded, setExpanded] = useState<string[]>(["comercial"]);
 
   useEffect(() => {
@@ -47,6 +79,8 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
   const select = (next: ReportView) => {
     onView(next);
     setMobileOpen(false);
+    setPeekOpen(false);
+    if (collapsed && presentation === 'panel') document.querySelector<HTMLButtonElement>('.report-subnav-open')?.focus();
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
@@ -59,13 +93,23 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
       <span className="report-subnav-current">{groups.flatMap<{ id: ReportView; label: string }>(group => group.children ?? [group]).find(item => item.id === view)?.label}</span>
     </div>
     {mobileOpen && <div className="report-subnav-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
-    <aside id="dashboard-report-panel" className="report-subnav" data-collapsed={collapsed} data-mobile-open={mobileOpen} aria-label="Reportes del dashboard">
+    <div className="report-subnav-hover-zone"
+      onPointerEnter={event => { if (event.pointerType === 'mouse') showPeek(); }}
+      onPointerLeave={hidePeek}
+      onFocusCapture={showPeek}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) hidePeek(); }}>
+      {collapsed && <div className="report-subnav-edge" data-peek={peekOpen}>
+        <button type="button" aria-label="Abrir reportes desde el borde" aria-controls="dashboard-report-panel" aria-expanded={peekOpen} onClick={onCollapse}>
+          <PanelLeftOpen aria-hidden="true" />
+        </button>
+      </div>}
+    <aside id="dashboard-report-panel" className="report-subnav" data-collapsed={collapsed} data-peek={peekOpen} data-mobile-open={mobileOpen} aria-label="Reportes del dashboard">
       <header className="report-subnav-header">
         <div><span>Dashboard comercial</span><strong>Reportes</strong></div>
-        <Button variant="ghost" size="icon" aria-label="Ocultar reportes" onClick={() => {
+        <Button variant="ghost" size="icon" aria-label={collapsed && peekOpen ? "Fijar reportes" : "Ocultar reportes"} title={collapsed && peekOpen ? "Dejar el menú abierto" : "Ocultar reportes"} onClick={() => {
           setMobileOpen(false);
           if (!window.matchMedia('(max-width: 1050px)').matches) onCollapse();
-        }}><PanelLeftClose aria-hidden="true" /></Button>
+        }}>{collapsed && peekOpen ? <PanelLeftOpen aria-hidden="true" /> : <PanelLeftClose aria-hidden="true" />}</Button>
       </header>
       <nav className="report-subnav-links" aria-label="Vistas del dashboard">
         {groups.map(group => {
@@ -88,6 +132,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
       </nav>
       <footer className="report-subnav-footer"><AccountMenu collapsed={false} /></footer>
     </aside>
+    </div>
   </>;
 
   if (presentation === 'toolbar') return <header className="report-toolbar">
