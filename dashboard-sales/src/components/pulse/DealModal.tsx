@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal } from "lucide-react";
+import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
@@ -1539,7 +1539,7 @@ export function DealModal({
         key: "name",
         label: "Deal",
         width: "226px",
-        render: (deal) => deal.name,
+        render: (deal) => <a className="deal-name-link" href={deal.url} target="_blank" rel="noopener noreferrer" title="Abrir negocio en HubSpot">{deal.name}</a>,
         caption: () => "",
       },
       {
@@ -2258,16 +2258,6 @@ export function DealModal({
                         {column.key === "name" ? (
                           <DealActionMenu name={deal.name}>
                           <div className="deal-actions" role="group" aria-label={`Herramientas de ${deal.name}`}>
-                            <a
-                              className="deal-tool"
-                              href={deal.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              title="Abrir el deal en HubSpot"
-                              aria-label="Abrir el deal en HubSpot"
-                            >
-                              <ExternalLink className="deal-tool-icon" />
-                            </a>
                             <button
                               type="button"
                               className="deal-tool"
