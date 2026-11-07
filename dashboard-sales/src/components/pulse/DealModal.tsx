@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap } from "lucide-react";
+import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { markdownToHubspotHtml } from "@/lib/markdown";
 
 /** Cambios locales aplicados sobre el reporte mientras no se recarga desde HubSpot. */
@@ -280,7 +281,7 @@ function NoteDialog({ deals, onClose }: { deals: DealDTO[]; onClose: () => void 
         }}
       >
         <div className="modal-head">
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="pulse-h3">{many ? "Nota para varios deals" : "Nota de bitácora"}</h3>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 14 }}>{subtitle}</p>
           </div>
@@ -368,7 +369,7 @@ function TaskDialog({ deal, onClose }: { deal: DealDTO; onClose: () => void }) {
     >
       <section className="modal note-modal" role="dialog" aria-modal="true" aria-label={`Tarea para ${deal.name}`}>
         <div className="modal-head">
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="pulse-h3">Nueva tarea</h3>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 14 }}>{deal.name} · {deal.owner}</p>
           </div>
@@ -625,7 +626,7 @@ function LostDialog({
     >
       <section className="modal note-modal" role="dialog" aria-modal="true" aria-label={`Cerrar perdido ${first.name}`}>
         <div className="modal-head">
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="pulse-h3">{many ? `Marcar ${deals.length} deals como perdidos` : "Marcar como Deal perdido"}</h3>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 14 }}>
               {many ? "El mismo motivo se aplica a todos los seleccionados" : `${first.name} · ${first.owner}`}
@@ -1166,47 +1167,19 @@ function GlassSelect({
   open: boolean;
   onToggle: () => void;
 }) {
-  return (
-    <div className="glass-select" data-open={open ? "1" : undefined}>
-      <button
-        type="button"
-        className="glass-select-trigger"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        aria-controls={`glass-menu-${id}`}
-        onClick={onToggle}
-      >
-        <span className="glass-select-label">{label}</span>
-        <span className="glass-select-value">{display}</span>
-        <svg className="glass-select-chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-          <path
-            d="M2 3.5 5 6.5 8 3.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {open ? (
-        <div className="glass-select-panel" role="listbox" id={`glass-menu-${id}`}>
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              role="option"
-              aria-selected={activeValues.includes(option.value)}
-              data-active={activeValues.includes(option.value)}
-              onClick={() => onSelect(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
+  return <div className="glass-select" data-open={open ? "1" : undefined}>
+    <Popover open={open} onOpenChange={next => { if (next !== open) onToggle(); }}>
+      <PopoverTrigger asChild>
+        <button type="button" className="glass-select-trigger" aria-expanded={open} aria-haspopup="listbox" aria-controls={`glass-menu-${id}`}>
+          <span className="glass-select-label">{label}</span><span className="glass-select-value">{display}</span>
+          <svg className="glass-select-chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={8} className="glass-select-panel deal-filter-popover" role="listbox" aria-label={label} id={`glass-menu-${id}`} onEscapeKeyDown={event=>event.stopPropagation()}>
+        {options.map(option=><button key={option.value} type="button" role="option" aria-selected={activeValues.includes(option.value)} data-active={activeValues.includes(option.value)} onClick={()=>onSelect(option.value)}>{option.label}</button>)}
+      </PopoverContent>
+    </Popover>
+  </div>;
 }
 
 
@@ -1250,6 +1223,7 @@ export function DealModal({
     dir: "desc",
   });
   const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [monthFilter, setMonthFilter] = useState<"all" | "this" | "next">("all");
   const [hidden, setHidden] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string[]>(initialStages ?? []);
@@ -1260,15 +1234,6 @@ export function DealModal({
   const [bulkProb, setBulkProb] = useState("");
   const [bulkState, setBulkState] = useState<"idle" | "saving" | "ok" | "error">("idle");
   const [bulkError, setBulkError] = useState("");
-  const filterMenusRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (!openMenu) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (filterMenusRef.current && !filterMenusRef.current.contains(event.target as Node)) setOpenMenu(null);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [openMenu]);
 
   const applyEdit = useCallback((id: string, patch: DealEdit) => {
     setEdits((current) => ({ ...current, [id]: { ...current[id], ...patch } }));
@@ -1339,6 +1304,8 @@ export function DealModal({
   useEffect(() => {
     if (!payloadKey) return;
     setQuery("");
+    setSearchOpen(false);
+    setOpenMenu(null);
     const requested = visiblePayload?.initialSort;
     setSort(
       requested
@@ -1365,14 +1332,16 @@ export function DealModal({
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (lostDeal) setLostDeal(null);
+      if (searchOpen) setSearchOpen(false);
+      else if (openMenu) setOpenMenu(null);
+      else if (lostDeal) setLostDeal(null);
       else if (taskDeal) setTaskDeal(null);
       else if (noteDeal) setNoteDeal(null);
       else requestClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [visiblePayload, requestClose, noteDeal, taskDeal, lostDeal]);
+  }, [visiblePayload, requestClose, noteDeal, taskDeal, lostDeal, searchOpen, openMenu]);
 
 
   /** Lista base con los cambios guardados en HubSpot ya reflejados. */
@@ -1879,7 +1848,7 @@ export function DealModal({
     >
       <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
         <div className="modal-head">
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h3 className="pulse-h3">{visiblePayload.title}</h3>
             <p style={{ margin: "8px 0 0", color: "var(--muted)", fontSize: 14 }}>
               {visiblePayload.subtitle} · {deals.length} deals ·{" "}
@@ -1889,15 +1858,15 @@ export function DealModal({
                 maximumFractionDigits: 0,
               }).format(total)}
             </p>
-            <div ref={filterMenusRef} style={{ marginTop: 16, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-              <input
-                className="modal-search"
-                style={{ flex: "1 1 240px", minWidth: 220, maxWidth: 360 }}
-                placeholder="Buscar deal, comercial, etapa o motivo…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                aria-label="Buscar en la lista de deals"
-              />
+            <div className="deal-filter-toolbar" aria-label="Filtros del listado">
+              <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
+                <PopoverTrigger asChild><button type="button" className="deal-search-trigger" aria-label="Buscar deals" title={query ? `Buscar deals · filtro: ${query}` : 'Buscar deals'} data-active={!!query}><Search size={16} aria-hidden="true"/></button></PopoverTrigger>
+                <PopoverContent align="start" sideOffset={10} className="deal-search-popover" onEscapeKeyDown={event=>event.stopPropagation()}>
+                  <div className="deal-search-heading"><label htmlFor="deal-list-search">Buscar en el listado</label><button type="button" aria-label="Cerrar búsqueda" onClick={()=>setSearchOpen(false)}><X size={16} aria-hidden="true"/></button></div>
+                  <input autoFocus id="deal-list-search" type="search" className="modal-search" placeholder="Deal, comercial, etapa o motivo…" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();setSearchOpen(false);}if(event.key==='Enter'){event.preventDefault();setSearchOpen(false);}}} aria-label="Buscar en la lista de deals"/>
+                  <div className="deal-search-footer"><span>{deals.length} resultados</span>{query ? <button type="button" onClick={()=>setQuery('')}>Limpiar búsqueda</button> : <span>Enter para volver al listado</span>}</div>
+                </PopoverContent>
+              </Popover>
               {actIds.size ? (
                 <GlassSelect
                   id="activacion"
@@ -1971,14 +1940,6 @@ export function DealModal({
                   onToggle={() => setOpenMenu(openMenu === "etapa" ? null : "etapa")}
                 />
               ) : null}
-              <button
-                type="button"
-                className="filter-chip"
-                title="Marcar o desmarcar todos los deals de la lista"
-                onClick={toggleAll}
-              >
-                {allSelected ? "Deseleccionar todos" : "Seleccionar todos"}
-              </button>
               <GlassSelect
                 id="tipo-oportunidad"
                 label="Tipo"
@@ -1996,9 +1957,6 @@ export function DealModal({
                 open={openMenu === "tipo-oportunidad"}
                 onToggle={() => setOpenMenu(openMenu === "tipo-oportunidad" ? null : "tipo-oportunidad")}
               />
-              <label className="filter-chip" title="Oculta deals cuyo Producto a contratar es Billetera Engage">
-                <input type="checkbox" checked={hideWallet} onChange={(e) => setHideWallet(e.target.checked)} /> Ocultar Billetera Engage
-              </label>
               <GlassSelect
                 id="secuencia"
                 label="Secuencia"
@@ -2045,6 +2003,18 @@ export function DealModal({
                 open={openMenu === "columnas"}
                 onToggle={() => setOpenMenu(openMenu === "columnas" ? null : "columnas")}
               />
+              <label className="filter-chip deal-wallet-toggle" title="Oculta deals cuyo Producto a contratar es Billetera Engage">
+                <input type="checkbox" checked={hideWallet} onChange={(e) => setHideWallet(e.target.checked)} aria-label="Ocultar Billetera Engage" /> Sin billeteras
+              </label>
+              <button
+                type="button"
+                className="filter-chip"
+                title="Marcar o desmarcar todos los deals de la lista"
+                onClick={toggleAll}
+              >
+                {allSelected ? "Deseleccionar" : "Seleccionar"}
+              </button>
+
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

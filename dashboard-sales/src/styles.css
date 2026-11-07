@@ -5311,3 +5311,20 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .notification-task-reasons { display:grid; gap:8px; padding:5px 0; }
 .notification-task-reasons strong { display:block; font-size:11px; font-weight:500; color:var(--warning); }
 .notification-task-reasons p { font-size:11px; color:var(--body); line-height:1.5; }
+
+/* Compact, single-line deal filters; portals escape the modal and scroll clipping. */
+.deal-filter-toolbar { display:flex; flex-wrap:nowrap; align-items:center; gap:6px; margin-top:14px; max-width:100%; overflow-x:auto; overflow-y:hidden; padding:2px 0 6px; scrollbar-width:thin; overscroll-behavior-x:contain; }
+.deal-filter-toolbar > * { flex:0 0 auto; }
+.deal-filter-toolbar > .glass-select { padding:0; background:transparent; }
+.deal-filter-toolbar .glass-select-trigger { height:32px; padding:0 10px; gap:6px; font-size:11px; font-weight:400; background:var(--surface); backdrop-filter:none; }
+.deal-filter-toolbar .glass-select-value { max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.deal-filter-toolbar .filter-chip { height:32px; padding:0 10px; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; font-size:11px; font-weight:400; }
+.deal-search-trigger { display:grid; place-items:center; width:32px; height:32px; padding:0; border:1px solid var(--border-default); border-radius:50%; background:var(--surface); color:var(--body); cursor:pointer; }
+.deal-search-trigger:hover, .deal-search-trigger[data-active="true"] { color:var(--brand); border-color:color-mix(in srgb,var(--brand) 35%,transparent); }
+.deal-search-popover { z-index:1300; width:min(420px,calc(100vw - 40px)); padding:16px; border:1px solid var(--border-default); border-radius:14px; background:var(--surface); box-shadow:var(--shadow-modal); }
+.deal-search-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; color:var(--foreground); font-size:13px; }
+.deal-search-heading > button { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; color:var(--muted); cursor:pointer; }
+.deal-search-popover .modal-search { width:100%; min-width:0; height:40px; padding:8px 12px; border-radius:10px; background:var(--background); }
+.deal-search-footer { display:flex; justify-content:space-between; gap:12px; margin-top:10px; color:var(--muted); font-size:11px; }
+.deal-search-footer > button { color:var(--brand); cursor:pointer; }
+.deal-filter-popover { position:relative; inset:auto; z-index:1300; width:max-content; min-width:180px; max-width:min(320px,calc(100vw - 32px)); max-height:min(360px,var(--radix-popover-content-available-height)); background:var(--surface); backdrop-filter:none; }
