@@ -1,16 +1,16 @@
 import { AuthScene } from '@/components/AuthScene';
 import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { UserRound, LogOut, RefreshCw, Fingerprint } from "lucide-react";
-import { supportsPasskeys, passkeyErrorMessage } from '@/lib/passkeys';
+import { supportsPasskeys, passkeyErrorMessage, officialPasskeyOrigin, HUB_SIGN_IN_URL } from '@/lib/passkeys';
 import { PasskeySettings } from '@/components/PasskeySettings';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRefreshMenu } from "@/contexts/RefreshContext";
 import { MfaGate } from "@/components/MfaGate";
-import { corporateEmail, EMAIL_OTP_LENGTH, emailSendErrorMessage, sendEmailCode, verifyEmailCode } from "@/lib/email-auth";
+import { corporateEmail } from "@/lib/email-auth";
 
 const AccountEmailContext = createContext<string | null>(null);
 export const useAccountEmail = () => useContext(AccountEmailContext);
@@ -24,122 +24,56 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [email, setEmail] = useState("");
-  const [sentTo, setSentTo] = useState<string | null>(null);
-  const [code, setCode] = useState("");
-  const [resendAt, setResendAt] = useState(0);
-  const [now, setNow] = useState(Date.now);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const passkeyRequest = useRef<AbortController | null>(null);
   useEffect(() => () => { passkeyRequest.current?.abort(); }, []);
   const signInWithPasskey = async () => {
-    if (busy || passkeyBusy) return;
+    if (passkeyBusy) return;
+    if (!officialPasskeyOrigin(window.location.hostname)) { window.location.assign(HUB_SIGN_IN_URL); return; }
     setPasskeyBusy(true); setError(null);
-    const controller = new AbortController();
-    passkeyRequest.current = controller;
+    const controller = new AbortController(); passkeyRequest.current = controller;
     try {
       const { data, error } = await supabase.auth.signInWithPasskey({ options: { signal: controller.signal } });
       if (error) throw error;
       if (!data?.session || !isAllowed(data.session)) {
-        await supabase.auth.signOut();
-        setError('Solo cuentas @adere.so pueden ingresar al Hub.');
+        await supabase.auth.signOut(); setError('Solo cuentas @adere.so pueden ingresar al Hub.');
       }
     } catch (error) { if (!controller.signal.aborted) setError(passkeyErrorMessage(error)); }
     finally { passkeyRequest.current = null; setPasskeyBusy(false); }
   };
-
-  useEffect(() => {
-    if (!resendAt) return;
-    const timer = window.setInterval(() => { const current = Date.now(); setNow(current); if (current >= resendAt) window.clearInterval(timer); }, 1000);
-    return () => window.clearInterval(timer);
-  }, [resendAt]);
-  const resendSeconds = Math.max(0, Math.ceil((resendAt - now) / 1000));
-
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
-      if (!next) void fetch("/api/hub/session", { method: "DELETE", credentials: "same-origin" });
+      if (!next) void fetch('/api/hub/session', { method: 'DELETE', credentials: 'same-origin' });
       setReady(true);
     });
-    supabase.auth.getSession().then(({ data: current }) => {
-      setSession(current.session);
-      setReady(true);
-    });
+    supabase.auth.getSession().then(({ data: current }) => { setSession(current.session); setReady(true); });
     return () => data.subscription.unsubscribe();
   }, []);
-
   useEffect(() => {
     if (ready && session && !isAllowed(session)) {
-      setError("Solo cuentas @adere.so pueden ver este reporte.");
-      void supabase.auth.signOut();
+      setError('Solo cuentas @adere.so pueden ingresar al Hub.'); void supabase.auth.signOut();
     }
   }, [ready, session]);
-
-
-  const requestCode = async (event?: FormEvent) => {
-    event?.preventDefault();
-    if (busy || (sentTo && resendSeconds > 0)) return;
-    if (!corporateEmail(sentTo ?? email)) { setError('Ingresa tu correo @adere.so.'); return; }
-    setBusy(true); setError(null);
-    try {
-      const normalized = await sendEmailCode(supabase.auth, sentTo ?? email);
-      setSentTo(normalized); setCode(''); setNow(Date.now()); setResendAt(Date.now() + 60_000);
-    } catch (error) { setError(emailSendErrorMessage(error)); }
-    finally { setBusy(false); }
-  };
-  const confirmCode = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!sentTo || busy) return;
-    setBusy(true); setError(null);
-    try { await verifyEmailCode(supabase.auth, sentTo, code); }
-    catch { setError('El código no es válido o ya expiró. Revisa el último correo.'); }
-    finally { setBusy(false); }
-  };
-
-  if (!ready) {
-    return (
-      <AuthScene>
-        <div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} />
-      </AuthScene>
-    );
-  }
-
-  if (session && isAllowed(session)) {
-    return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}>{children}</MfaGate></AccountEmailContext.Provider>;
-  }
-
-  return (
-    <AuthScene>
-      <div className="auth-card">
-        <h1 className="pulse-h2">Hub comercial</h1>
-        <p className="eyebrow">Un solo acceso para todas tus herramientas de Adereso.</p>
-        {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
-        {supportsPasskeys() && <div className="auth-passkey-option">
-          <button className="pill auth-passkey-button" type="button" disabled={busy || passkeyBusy} onClick={() => void signInWithPasskey()}><Fingerprint size={20} aria-hidden="true" />{passkeyBusy ? 'Confirma en tu dispositivo…' : 'Entrar con Touch ID / Face ID'}</button>
-          <p className="eyebrow">¿Primera vez? Ingresa por correo y activa tu passkey dentro del Hub.</p>
-          <span className="auth-method-divider">O usa tu correo @adere.so</span>
-        </div>}
-        <fieldset className="auth-email-fieldset" disabled={passkeyBusy}>
-        {sentTo ? <form className="auth-email-form" onSubmit={confirmCode}>
-          <p role="status">Enviamos un correo de acceso a <strong>{sentTo}</strong>. Abre el enlace del último correo para continuar. Si incluye un código, también puedes ingresarlo aquí.</p>
-          <label htmlFor="email-login-code">Código del correo, si lo recibiste</label>
-          <input id="email-login-code" className="auth-email-input auth-email-code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, EMAIL_OTP_LENGTH))}
-            inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{8}" minLength={EMAIL_OTP_LENGTH} maxLength={EMAIL_OTP_LENGTH} required autoFocus disabled={busy} />
-          <button className="pill" type="submit" disabled={busy || code.length !== EMAIL_OTP_LENGTH}>{busy ? 'Verificando…' : 'Continuar'}</button>
-          <div className="auth-email-actions">
-            <button type="button" disabled={busy || resendSeconds > 0} onClick={() => void requestCode()}>{resendSeconds > 0 ? 'Reenviar en ' + resendSeconds + ' s' : 'Reenviar correo'}</button>
-            <button type="button" disabled={busy} onClick={() => { setSentTo(null); setCode(''); setError(null); }}>Cambiar correo</button>
-          </div>
-        </form> : <form className="auth-email-form" onSubmit={requestCode}>
-          <label htmlFor="email-login-address">Correo de trabajo</label>
-          <input id="email-login-address" className="auth-email-input" type="email" autoComplete="email" placeholder="tu.nombre@adere.so" value={email} onChange={event => setEmail(event.target.value)} required disabled={busy} />
-          <button className="pill" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Recibir correo de acceso'}</button>
-        </form>}
-        </fieldset>
-      </div>
-    </AuthScene>
-  );
+  if (!ready) return <AuthScene><div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} /></AuthScene>;
+  if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}>{children}</MfaGate></AccountEmailContext.Provider>;
+  const official = officialPasskeyOrigin(window.location.hostname);
+  return <AuthScene><div className="auth-card">
+    <h1 className="pulse-h2">Hub comercial</h1>
+    <p className="eyebrow">Un solo acceso para todas tus herramientas de Adereso.</p>
+    {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
+    <div className="auth-passkey-option">
+      {!official ? <>
+        <p className="eyebrow">Tu passkey está registrada en el Hub oficial. Ábrelo para ingresar con Touch ID, Face ID o Keeper.</p>
+        <a className="pill auth-passkey-button" href={HUB_SIGN_IN_URL}><Fingerprint size={20} aria-hidden="true" />Abrir Hub oficial</a>
+      </> : supportsPasskeys() ? <>
+        <button className="pill auth-passkey-button" type="button" disabled={passkeyBusy} onClick={() => void signInWithPasskey()}><Fingerprint size={20} aria-hidden="true" />{passkeyBusy ? 'Confirma en tu dispositivo…' : 'Entrar con Touch ID / Face ID'}</button>
+        <p className="eyebrow">También puedes elegir tu passkey de Keeper.</p>
+      </> : <p role="status">Abre el Hub en un navegador compatible con passkeys para ingresar con tu dispositivo o Keeper.</p>}
+      <p className="eyebrow">Google Authenticator confirma el segundo factor con su código de 6 dígitos cuando el Hub lo solicite.</p>
+      <p className="eyebrow">Si todavía no tienes una passkey activada, contacta al administrador del Hub.</p>
+    </div>
+  </div></AuthScene>;
 }
 
 export function AccountMenu({ collapsed }: { collapsed: boolean }) {
