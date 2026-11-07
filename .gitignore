@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.output/
+.tanstack/
+.nitro/
+dist/
+*.log
+.DS_Store
+
+/partners-public/

@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791995385434,
+      "tag": "0000_migration",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792080978186,
+      "tag": "0001_lock_report_cache",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792330842918,
+      "tag": "0002_migration",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792330976027,
+      "tag": "0003_migration",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793276278173,
+      "tag": "0004_sales_notification_repository",
+      "breakpoints": true
+    }
+  ]
+}

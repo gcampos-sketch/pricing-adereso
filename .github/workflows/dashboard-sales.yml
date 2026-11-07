@@ -1,0 +1,26 @@
+name: Dashboard Sales
+on:
+  push:
+    paths: ['dashboard-sales/**', 'render.yaml', 'index.html', '*.css', '*.js', '*.webp', 'assets/**', 'academy/**', 'argumentaciones/**', 'operativa/**', 'playbook/**', 'dashboard/**', '.dockerignore', '.github/workflows/dashboard-sales.yml']
+  pull_request:
+    paths: ['dashboard-sales/**', 'render.yaml', '.github/workflows/dashboard-sales.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard-sales
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-sales/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

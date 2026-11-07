@@ -1,0 +1,1 @@
+ALTER TABLE public.coaching_events ADD COLUMN stage text;
