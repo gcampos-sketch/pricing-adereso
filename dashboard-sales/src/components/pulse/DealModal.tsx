@@ -1583,7 +1583,7 @@ export function DealModal({
         width: 74,
         render: (deal) => {
           const comparison=closingProbabilityComparison(comparedDeal(deal),Date.now());
-          return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/>{comparison.delta!==null ? <span className="deal-value-trend" title={comparison.detail} aria-label={comparison.detail}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}</div>;
+          return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/><span className="deal-value-trend" data-neutral={comparison.delta===null || comparison.delta===0} title={comparison.detail} aria-label={comparison.detail}>{comparison.delta!==null && comparison.delta!==0 ? comparison.delta>0?'↑':'↓' : '·'}</span></div>;
         },
         caption: () => "",
       },

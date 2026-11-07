@@ -3306,6 +3306,8 @@
 .adobo-score-trigger:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .deal-row .deal-value-trend { display: inline-flex; flex: 0 0 auto; color: inherit; font-size: 14px; line-height: 1; }
 .deal-probability-value { display: flex; align-items: center; gap: 4px; }
+.deal-probability-value .deal-value-trend { width: 10px; flex: 0 0 10px; justify-content: center; }
+.deal-probability-value .deal-value-trend[data-neutral="true"] { color: var(--muted); }
 .deal-probability-value input { min-width: 0; flex: 1 1 0; }
 .deal-row > *:nth-child(1), .deal-row > *:nth-child(2) { transition: background-color 220ms ease, box-shadow 220ms ease; }
 .deal-cell-name .deal-actions { background: transparent; border-color: transparent; }
