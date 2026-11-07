@@ -1183,9 +1183,22 @@ function GlassSelect({
 
 function DealActionMenu({name,children}:{name:string;children:React.ReactNode}) {
   const [open,setOpen]=useState(false);
-  return <Popover open={open} onOpenChange={setOpen}>
-    <PopoverTrigger asChild><button type="button" className="deal-action-trigger" aria-label={`Acciones de ${name}`} title="Acciones del negocio"><MoreHorizontal size={16} aria-hidden="true"/></button></PopoverTrigger>
-    <PopoverContent className="deal-action-popup" align="start" sideOffset={6} collisionPadding={12} role="dialog" aria-label={`Herramientas de ${name}`} data-deal-action-popup="true" onEscapeKeyDown={event=>{event.preventDefault();event.stopPropagation();setOpen(false);}} onClick={()=>setOpen(false)}>
+  const timer=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const hovering=useRef(false);
+  const content=useRef<HTMLDivElement>(null);
+  const cancel=()=>{if(timer.current){clearTimeout(timer.current);timer.current=null;}};
+  const close=()=>{cancel();setOpen(false);};
+  const leave=()=>{
+    cancel();
+    timer.current=setTimeout(()=>{
+      if(!content.current?.contains(document.activeElement)) setOpen(false);
+    },160);
+  };
+  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
+  return <Popover open={open} onOpenChange={next=>{cancel();setOpen(next);}}>
+    <PopoverTrigger asChild><button type="button" className="deal-action-trigger" aria-label={`Acciones de ${name}`} onPointerEnter={event=>{if(event.pointerType!=='mouse')return;cancel();hovering.current=true;timer.current=setTimeout(()=>setOpen(true),80);}} onPointerLeave={event=>{if(event.pointerType==='mouse')leave();}} onKeyDown={()=>{hovering.current=false;}}><MoreHorizontal size={16} aria-hidden="true"/></button></PopoverTrigger>
+    <PopoverContent ref={content} className="deal-action-popup" side="right" align="center" sideOffset={-28} collisionPadding={12} role="dialog" aria-label={`Herramientas de ${name}`} data-deal-action-popup="true" onPointerEnter={cancel} onPointerLeave={event=>{if(event.pointerType==='mouse')leave();}} onOpenAutoFocus={event=>{if(hovering.current)event.preventDefault();}} onEscapeKeyDown={event=>{event.preventDefault();event.stopPropagation();close();}} onClick={close}>
+      <button type="button" className="deal-action-collapse" aria-label="Contraer herramientas"><MoreHorizontal size={16} aria-hidden="true"/></button>
       {children}
     </PopoverContent>
   </Popover>;
@@ -1539,7 +1552,7 @@ export function DealModal({
       {
         key: "name",
         label: "Deal",
-        width: 174, grow: 1.8,
+        width: 164, grow: 1.6,
         render: (deal) => <a className="deal-name-link" href={deal.url} target="_blank" rel="noopener noreferrer" title={`${deal.name} · Abrir negocio en HubSpot`}>{deal.name}</a>,
         caption: () => "",
       },
@@ -1608,8 +1621,8 @@ export function DealModal({
       {
         key: "stage",
         label: "Etapa",
-        width: 110, grow: 1,
-        render: (deal) => deal.stageFull,
+        width: 50,
+        render: (deal) => <span className="deal-stage-code" title={deal.stageFull} aria-label={`${deal.stage} · ${deal.stageFull}`}>{deal.stage || "s/d"}</span>,
         caption: () => "",
       },
     ];
@@ -1648,7 +1661,7 @@ export function DealModal({
     base.splice(1, 0, {
       key: "contact",
       label: "Contacto",
-      width: 126, grow: 1.25,
+      width: 142, grow: 1.5,
       render: (deal) => {
         const info = contacts[deal.id];
         if (!info) return contactsState === "error" ? "s/n" : "…";
@@ -2208,7 +2221,7 @@ export function DealModal({
                   />
                 </span>
                 {visibleColumns.map((column) => (
-                  <span key={column.key} className="deal-head-cell">
+                  <span key={column.key} className={`deal-head-cell deal-head-${column.key}`}>
                     <button
                       className="sort-button"
                       title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : column.key === "probability" ? "Probabilidad de cierre; a igual probabilidad, fecha de cierre más reciente primero" : column.label}
@@ -2253,7 +2266,7 @@ export function DealModal({
                     {visibleColumns.map((column) => (
                       <div
                         key={column.key}
-                        className={column.key === "name" ? "deal-cell deal-cell-name" : "deal-cell"}
+                        className={`deal-cell deal-cell-${column.key}`}
                       >
                         <strong>{column.render(deal)}</strong>
                         {column.caption(deal) ? <span className="deal-cell-context">{column.caption(deal)}</span> : null}
