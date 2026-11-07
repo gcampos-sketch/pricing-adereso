@@ -1696,9 +1696,16 @@ export function DealModal({
   }, [hasAlerts, hasLost, hasSignal, applyEdit, fix, contacts, contactsState, scoreHistory]);
 
 
+  // This adapts every drilldown without persisting an automatic hide as a user preference.
+  const multipleOwners = new Set(deals.map(deal => deal.ownerId || deal.owner || "unassigned")).size > 1;
+  const availableColumns = useMemo(
+    () => columns.filter(column => column.key !== "owner" || multipleOwners),
+    [columns, multipleOwners],
+  );
+  const availableHidden = availableColumns.filter(column => hidden.includes(column.key)).length;
   const visibleColumns = useMemo(
-    () => columns.filter((column) => column.key === "name" || !hidden.includes(column.key)),
-    [columns, hidden],
+    () => availableColumns.filter((column) => column.key === "name" || !hidden.includes(column.key)),
+    [availableColumns, hidden],
   );
 
   // Monto por comercial de los deals visibles (solo se muestra en la vista equipo).
@@ -1948,15 +1955,15 @@ export function DealModal({
               <GlassSelect
                 id="columnas"
                 label="Columnas"
-                display={hidden.length ? `${hidden.length} ocultas` : "Todas"}
+                display={availableHidden ? `${availableHidden} ocultas` : "Todas"}
                 options={[
                   { value: "__all", label: "Mostrar todas" },
-                  ...columns.map((column) => ({ value: column.key, label: column.label })),
+                  ...availableColumns.map((column) => ({ value: column.key, label: column.label })),
                 ]}
                 activeValues={
-                  hidden.length === 0
+                  availableHidden === 0
                     ? ["__all"]
-                    : columns
+                    : availableColumns
                         .filter((column) => column.key === "name" || !hidden.includes(column.key))
                         .map((column) => column.key)
                 }
