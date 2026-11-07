@@ -7950,11 +7950,9 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
                 <div class="qb" id="qLeft"></div>
                 <div class="qb">
                   <div id="qRight"></div>
-                  <label class="hint" for="qName" style="display:block;margin-top:var(--s4)">Nombre del cliente</label>
-                  <div class="inp"><input id="qName" type="text" placeholder="Ej. Cliente nuevo"></div>
                 </div>
               </div>
-              <div class="qact"><button class="btn btn-o" id="editQuote">Editar costos</button><button class="btn btn-p" id="addClient"><svg class="ic sm"><use href="#i-plus"/></svg>Agregar como cliente ganado</button></div>
+              <div class="qact"><button class="btn btn-o" id="editQuote">Editar costos</button></div>
             </div>
           </div>
         </div>
@@ -8086,11 +8084,12 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     if(TKEYS.includes(incoming.get('categoria')))S.tier=incoming.get('categoria');
     ['rebase','soporte'].forEach(function(k){if(['0','1'].includes(incoming.get(k)))S[k]=incoming.get(k)==='1'});
   }
-  var clients=[
+  // Fixed example accounts: this portal is a mockup, not a client manager.
+  var clients=Object.freeze([
     {n:'Cliente A',mrr:558,bolsa:2000,c:[1500,1700,1850,1950,2150,1900]},
     {n:'Cliente B',mrr:1200,bolsa:5000,c:[3800,4200,4600,4400,4900,5300]},
     {n:'Cliente C',mrr:2400,bolsa:10000,c:[7200,8100,7600,8800,9400,9100]}
-  ];
+  ]);
 
   // ---------- Cálculos ----------
   function TI(){return TIERS_BY[S.ptype]}
@@ -8290,13 +8289,6 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
   });
   document.addEventListener('keydown',function(e){if(e.key==='Escape')$$('.tt.open').forEach(function(t){t.classList.remove('open')})});
 
-  $('#addClient').addEventListener('click',function(){
-    var c=calc();if(c.cli<=0)return;
-    var name=$('#qName').value.trim()||('Cliente '+String.fromCharCode(65+clients.length));
-    clients.push({n:name,mrr:c.cli,bolsa:S.bolsa,c:[0,0,0,0,0,0],isNew:true,fresh:true});
-    $('#qName').value='';S.sel=clients.length-1;S.pv='clientes';render();toast(name+' agregado');
-  });
-
   var toastT;function toast(t){var el=$('#toast');$('span',el).textContent=t;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('on')},2200)}
   /* Share the same live presentation; no separate copy can drift out of date. */
   var shareBtn=null;
@@ -8408,17 +8400,16 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     // Cotizador del portal
     $('#qLeft').innerHTML=[['Servicio',prodLabel()+(S.studio?' · '+S.agents+' '+S.kind.toLowerCase()+(S.agents>1?'s':''):'')],['Bolsa',fmt(S.bolsa)+' conv.'],['Implementación',S.studio?plan().n:'No aplica'],['Plazo',S.term+' año'+(S.term>1?'s':'')]].map(function(r){return '<div class="ln"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>'}).join('');
     $('#qRight').innerHTML='<div class="ln"><span>Setup</span><b>'+setupTxt+'</b></div><div class="ln"><span>Mensual al cliente</span><b>$'+fmt(c.cli)+'/mes</b></div><div class="ln"><span>Prepago Meta</span><b>$'+fmt(m.total)+'</b></div><div class="ln y"><span>'+(isRef()?'Tu comisión '+disc()+'%':'Tu precio Partner')+'</span><b>$'+fmt(isRef()?c.margin:c.pay)+'/mes</b></div>';
-    $('#addClient').disabled=c.cli<=0;
   }
   function renderPortal(){
     var d=disc()/100,grid=$('#grid');grid.innerHTML='';
     clients.forEach(function(cl,idx){
       var max=cl.bolsa*1.15,bars='';
       cl.c.forEach(function(v){bars+='<span class="'+(v>cl.bolsa?'over':'')+'" style="height:'+(v/max*100)+'%"></span>'});
-      var b=document.createElement('button');b.className='cl'+(S.sel===idx?' sel':'')+(cl.fresh?' new':'');cl.fresh=false;
+      var b=document.createElement('button');b.className='cl'+(S.sel===idx?' sel':'');
       b.setAttribute('aria-pressed',S.sel===idx);
-      b.innerHTML=(cl.isNew?'<span class="tagn">Nuevo</span>':'')+'<div class="nm">'+esc(cl.n)+'</div><div class="mrr">$'+fmt(cl.mrr)+' <small>USD/mes</small></div><span class="bo">Bolsa '+fmt(cl.bolsa)+' conv.</span>'+
-        '<div class="bars">'+bars+'<div class="cap" style="bottom:'+(100/1.15)+'%"></div></div><div class="lb"><span>may</span><span>'+(cl.isNew?'sin consumo aún':'oct')+'</span></div>';
+      b.innerHTML='<div class="nm">'+esc(cl.n)+'</div><div class="mrr">$'+fmt(cl.mrr)+' <small>USD/mes</small></div><span class="bo">Bolsa '+fmt(cl.bolsa)+' conv.</span>'+
+        '<div class="bars">'+bars+'<div class="cap" style="bottom:'+(100/1.15)+'%"></div></div><div class="lb"><span>may</span><span>oct</span></div>';
       b.addEventListener('click',function(){S.sel=S.sel===idx?null:idx;render()});
       grid.appendChild(b);
     });
@@ -8426,11 +8417,10 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
     if(S.sel!==null&&clients[S.sel]){
       var c=clients[S.sel],last=c.c[5],pct=Math.round(last/c.bolsa*100);
       det.hidden=false;
-      det.innerHTML='<h4>'+esc(c.n)+(c.isNew?'<button class="x" id="rm">Quitar</button>':'')+'</h4><table><tbody>'+(isRef()
+      det.innerHTML='<h4>'+esc(c.n)+'</h4><table><tbody>'+(isRef()
         ?'<tr><td>Paga el cliente a Adereso</td><td>$'+fmt(c.mrr)+'</td></tr><tr class="sel"><td>Tu comisión '+disc()+'%</td><td>$'+fmt(c.mrr*d)+'</td></tr>'
         :'<tr><td>Precio de lista</td><td>$'+fmt(c.mrr)+'</td></tr><tr><td>Fee de Partner '+disc()+'%</td><td>−$'+fmt(c.mrr*d)+'</td></tr><tr class="sel"><td>Paga el Partner a Adereso</td><td>$'+fmt(c.mrr*(1-d))+'</td></tr>')+
-        '<tr><td>Consumo último mes</td><td>'+(c.isNew?'—':fmt(last)+' conv. · '+pct+'% de la bolsa'+(pct>100?' · paga extras':''))+'</td></tr></tbody></table>';
-      var rm=$('#rm');if(rm)rm.addEventListener('click',function(e){e.stopPropagation();clients.splice(S.sel,1);S.sel=null;render()});
+        '<tr><td>Consumo último mes</td><td>'+(fmt(last)+' conv. · '+pct+'% de la bolsa'+(pct>100?' · paga extras':''))+'</td></tr></tbody></table>';
     }else det.hidden=true;
     var tl=0,body='';
     clients.forEach(function(c,idx){tl+=c.mrr;body+='<tr class="'+(S.sel===idx?'sel':'')+'"><td>'+esc(c.n)+'</td>'+(isRef()?'':'<td>$'+fmt(c.mrr*(1-d))+'</td>')+'<td>$'+fmt(c.mrr)+'</td><td class="partner-earned">$'+fmt(c.mrr*d)+'</td></tr>'});
