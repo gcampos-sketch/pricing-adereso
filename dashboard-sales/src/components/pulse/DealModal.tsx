@@ -792,7 +792,6 @@ type SortKey =
   | "reason"
   | "source"
   | "country"
-  | "temp"
   | "sequence"
   | "contact"
   | "signal";
@@ -836,8 +835,6 @@ function tempInfo(deal: DealDTO) {
 
 function sortValue(deal: DealDTO, key: SortKey): string | number {
   switch (key) {
-    case "temp":
-      return tempInfo(deal).rank;
     case "amount":
       return deal.amountValue;
     case "closeDate":
@@ -1143,7 +1140,6 @@ type GlassOption = { value: string; label: string };
 
 const SORT_OPTIONS: GlassOption[] = [
   { value: "adobo", label: "Adobo" },
-  { value: "temp", label: "Temp." },
   { value: "probability", label: "% cierre" },
   { value: "amount", label: "Monto" },
   { value: "closeDate", label: "Fecha · % cierre" },
@@ -1598,20 +1594,6 @@ export function DealModal({
           tempInfo(deal).cap !== null
             ? `Adobo scoring con tope ${tempInfo(deal).cap} por contactabilidad`
             : "Adobo scoring",
-      },
-      {
-        key: "temp",
-        label: "Temp.",
-        width: "104px",
-        render: (deal) => {
-          const info = tempInfo(deal);
-          return (
-            <span className="chip" {...(info.tone ? { "data-tone": info.tone } : { "data-empty": "1" })}>
-              {info.label}
-            </span>
-          );
-        },
-        caption: (deal) => tempInfo(deal).note || "Semáforo de contactabilidad",
       },
       {
         key: "nextActivity",
