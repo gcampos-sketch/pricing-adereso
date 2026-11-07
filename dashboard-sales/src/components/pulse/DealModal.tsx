@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
 import { compareDealClosePriority, compareDealProbabilityPriority } from "@/lib/deal-close-priority";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
+import { dealAgeDays } from "@/lib/deal-age";
 import { markdownToHubspotHtml } from "@/lib/markdown";
 
 /** Cambios locales aplicados sobre el reporte mientras no se recarga desde HubSpot. */
@@ -796,7 +797,8 @@ type SortKey =
   | "adobo"
   | "nextActivity"
   | "activities"
-  | "closeStatus"
+  | "setup"
+  | "age"
   | "stage"
   | "reason"
   | "source"
@@ -859,8 +861,10 @@ function sortValue(deal: DealDTO, key: SortKey): string | number {
       return deal.nextActivityValue || "9999";
     case "activities":
       return deal.activities ?? -1;
-    case "closeStatus":
-      return deal.closeStatusValue;
+    case "setup":
+      return deal.otfValue;
+    case "age":
+      return dealAgeDays(deal.createdAt, Date.now()) ?? -1;
     case "financeAlert":
       return (deal.financeAlert ?? "").toLowerCase();
     case "ssppAlert":
@@ -1141,7 +1145,9 @@ type GlassOption = { value: string; label: string };
 const SORT_OPTIONS: GlassOption[] = [
   { value: "adobo", label: "Adobo" },
   { value: "probability", label: "% cierre" },
-  { value: "amount", label: "Monto" },
+  { value: "amount", label: "MRR" },
+  { value: "setup", label: "Setup" },
+  { value: "age", label: "Días creado" },
   { value: "closeDate", label: "Fecha · % cierre" },
 ];
 
@@ -1572,9 +1578,16 @@ export function DealModal({
       },
       {
         key: "amount",
-        label: "Monto",
+        label: "MRR",
         width: 74,
         render: (deal) => deal.amount,
+        caption: () => "",
+      },
+      {
+        key: "setup",
+        label: "Setup",
+        width: 74,
+        render: (deal) => new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}).format(deal.otfValue ?? 0),
         caption: () => "",
       },
       {
@@ -1612,10 +1625,13 @@ export function DealModal({
             : "",
       },
       {
-        key: "closeStatus",
-        label: "Estado fecha",
-        width: 74,
-        render: (deal) => deal.closeStatus,
+        key: "age",
+        label: "Días creado",
+        width: 78,
+        render: (deal) => {
+          const days=dealAgeDays(deal.createdAt,Date.now());
+          return <span title={days===null ? 'Fecha de creación no disponible' : `Creado el ${new Date(deal.createdAt!).toLocaleString('es-CL')} · días completos transcurridos`}>{days===null ? 's/d' : days}</span>;
+        },
         caption: () => "",
       },
       {

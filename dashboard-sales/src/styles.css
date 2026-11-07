@@ -5545,6 +5545,8 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-modal-motion .deal-header > .deal-head-cell { flex-direction:row; justify-content:flex-start; align-items:center; white-space:nowrap; }
 .deal-modal-motion .deal-header > .deal-head-closeDate { display:flex; justify-content:center; }
 .deal-cell-closeDate { text-align:center; }
+.deal-modal-motion .deal-header > :is(.deal-head-amount, .deal-head-setup, .deal-head-age) { display:flex; justify-content:center; }
+.deal-row :is(.deal-cell-amount, .deal-cell-setup, .deal-cell-age) { text-align:center; font-variant-numeric:tabular-nums; }
 .deal-modal-motion .deal-header .sort-button { line-height:18px; padding:2px 6px; }
 .deal-modal-motion .deal-month-summary { margin-top:calc(4px + 4px * var(--deal-open)); margin-bottom:calc(4px + 4px * var(--deal-open)); padding:calc(2px + 2px * var(--deal-open)); border-color:transparent; background:transparent; }
 .deal-modal-motion .deal-month-summary-row { gap:calc(10px + 2px * var(--deal-open)); }
