@@ -2057,7 +2057,7 @@ export function DealModal({
                 <span className="deal-month-label-short" aria-hidden="true">{month.label.slice(0,3)} {String(month.year).slice(-2)}</span>
               </span>
               <strong>{monthMoney(month.amount)}</strong>
-              <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} vencidos` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
+              <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} ${month.overdue===1?'vencido':'vencidos'}` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
             </div>)}
             <div className="deal-month-bucket deal-month-total"><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></div>
           </div>
