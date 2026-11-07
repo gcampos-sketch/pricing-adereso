@@ -1565,7 +1565,7 @@ export function DealModal({
       },
       {
         key: "closeDate",
-        label: "Cierre",
+        label: "F. Cierre",
         width: 114,
         render: (deal) => <InlineEdit deal={deal} field="closeDate" onSaved={applyEdit} />,
         caption: () => "",
