@@ -3,6 +3,18 @@ import { readTicket } from './hub-gateway';
 
 export const notionCallback = 'https://adereso-hub-comercial.onrender.com/api/academy/notion/callback';
 export type AcademyOperator = { userId: string; email: string; expiresAt: number };
+export class NotionConnectionError extends Error {
+  constructor(public code: 'notion_invalid_client'|'notion_code_rejected'|'notion_wiki_access_missing'|'notion_token_response_invalid'|'notion_storage_unavailable'|'notion_queue_unavailable') { super(code); }
+}
+export function parseNotionGrant(value: unknown): { access_token: string; refresh_token: string | null; [key: string]: unknown } {
+  if(!value||typeof value!=='object'||Array.isArray(value))throw new NotionConnectionError('notion_token_response_invalid');
+  const grant=value as Record<string,unknown>;
+  if(typeof grant['access_token']!=='string'||!grant['access_token']||
+    (grant['refresh_token']!=null&&(typeof grant['refresh_token']!=='string'||!grant['refresh_token'])))throw new NotionConnectionError('notion_token_response_invalid');
+  // The current Notion schema explicitly allows a null refresh_token. Older
+  // grants may omit it; use the access token until Notion asks for authorization again.
+  return {...grant,access_token:grant['access_token'],refresh_token:typeof grant['refresh_token']==='string'?grant['refresh_token']:null};
+}
 export function encryptNotionGrant(value: unknown, key: string) {
   if (!/^[a-f0-9]{64}$/i.test(key)) throw new Error('notion_encryption_not_configured');
   const iv = randomBytes(12), cipher = createCipheriv('aes-256-gcm', Buffer.from(key, 'hex'), iv);
@@ -66,6 +78,20 @@ export function createNotionOAuthGateway(deps: {
       if(!code||code.length>4000) return json({error:'invalid_oauth_code'},400);
       await deps.service.exchange(code,user);
       return new Response('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Notion conectado</title><body style="background:#131415;color:#f4f4f5;font:18px system-ui;padding:48px;max-width:600px;margin:auto"><h1>Notion conectado</h1><p>La wiki quedó autorizada para Sales Academy. La próxima sincronización comprobará sus novedades.</p><a href="/" style="color:#ffd540">Volver al Hub comercial →</a></body></html>',{headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"}});
-    } catch {return json({error:'notion_connection_failed',message:'No se conectó Notion. Comprueba que autorizaste la Wiki comercial de producto y vuelve a intentarlo.'},503);}
+    } catch(error) {
+      const code=error instanceof NotionConnectionError?error.code:'notion_connection_failed';
+      const messages: Record<string,string>={
+        notion_invalid_client:'Notion no acepta las credenciales de esta conexión. Hay que actualizar el Client secret antes de volver a autorizar.',
+        notion_code_rejected:'Notion rechazó este intento de autorización. Inicia una autorización nueva desde el Hub.',
+        notion_wiki_access_missing:'La autorización no incluyó acceso a la Wiki comercial de producto. Reintenta y selecciona esa página.',
+        notion_token_response_invalid:'La respuesta de Notion no se pudo validar. La conexión no quedó guardada.',
+        notion_storage_unavailable:'No pudimos guardar la conexión. Inténtalo de nuevo en unos minutos.',
+        notion_queue_unavailable:'Notion quedó autorizado. La primera lectura de la wiki está pendiente de programación.',
+        notion_connection_failed:'No se pudo completar la conexión con Notion. Puedes iniciar un intento nuevo.',
+      };
+      const message=messages[code]!;
+      if(callback) return new Response('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Conexión con Notion</title><body style="background:#131415;color:#f4f4f5;font:18px/1.6 system-ui;padding:48px;max-width:640px;margin:auto"><h1>No se completó la conexión</h1><p>'+message+'</p><a href="/" style="color:#ffd540">Volver al Hub comercial →</a></body></html>',{status:503,headers:{...headers,'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"}});
+      return json({error:code,message},503);
+    }
   };
 }

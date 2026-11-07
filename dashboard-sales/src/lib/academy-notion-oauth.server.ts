@@ -3,7 +3,7 @@ import { supabaseAdmin } from '../integrations/supabase/client.server';
 import { verifyHubIdentity } from './hub-auth.server';
 import { ACADEMY_WIKI_ID } from './academy-content';
 import { AcademySyncError, limitedFetch } from './academy-fetch.server';
-import { createNotionOAuthGateway, decryptNotionGrant, encryptNotionGrant, notionCallback } from './academy-notion-oauth';
+import { createNotionOAuthGateway, decryptNotionGrant, encryptNotionGrant, notionCallback, NotionConnectionError, parseNotionGrant } from './academy-notion-oauth';
 import type { AcademyOperator } from './academy-notion-oauth';
 
 const db=supabaseAdmin as unknown as SupabaseClient;
@@ -27,12 +27,16 @@ export async function notionSourceToken() {
   return grant.access_token as string;
 }
 async function tokenRequest(body: Record<string,string>) {
-  const raw=await limitedFetch('https://api.notion.com/v1/oauth/token',{method:'POST',headers:{
-    'Content-Type':'application/json',Accept:'application/json',Authorization:'Basic '+Buffer.from(clientId()+':'+clientSecret()).toString('base64'),
-  },body:JSON.stringify(body)},fetch,100_000);
-  const grant=JSON.parse(raw);
-  if(typeof grant.access_token!=='string'||!grant.access_token||typeof grant.refresh_token!=='string'||!grant.refresh_token)throw new AcademySyncError('notion_token_invalid');
-  return grant;
+  let raw: string;
+  try {raw=await limitedFetch('https://api.notion.com/v1/oauth/token',{method:'POST',headers:{
+    'Content-Type':'application/json',Accept:'application/json','Notion-Version':'2026-03-11',Authorization:'Basic '+Buffer.from(clientId()+':'+clientSecret()).toString('base64'),
+  },body:JSON.stringify(body)},fetch,100_000);}
+  catch(error) {
+    if(error instanceof AcademySyncError&&error.code==='source_http_401')throw new NotionConnectionError('notion_invalid_client');
+    if(error instanceof AcademySyncError&&error.code==='source_http_400')throw new NotionConnectionError('notion_code_rejected');
+    throw error;
+  }
+  return parseNotionGrant(JSON.parse(raw));
 }
 // Called only by the durable Notion source worker after an HTTP 401. Rotation is
 // fenced to the exact encrypted grant read, so reconnecting cannot be overwritten.
@@ -63,12 +67,14 @@ const service={
   exchange:async(code:string,user:AcademyOperator)=>{
     const grant=await tokenRequest({grant_type:'authorization_code',code,redirect_uri:notionCallback});
     // Prove access to our immutable source ID before storing any credential.
-    const page=JSON.parse(await limitedFetch('https://api.notion.com/v1/pages/'+ACADEMY_WIKI_ID,{headers:{Authorization:'Bearer '+grant.access_token,'Notion-Version':'2022-06-28'}}));
-    if(page.id?.replaceAll('-','')!==ACADEMY_WIKI_ID.replaceAll('-','')||page.archived||page.in_trash||typeof grant.workspace_id!=='string')throw new Error('wiki_not_authorized');
-    const {error}=await db.from('academy_notion_connection').upsert({id:true,owner_user_id:user.userId,workspace_id:grant.workspace_id,
+    let page;
+    try {page=JSON.parse(await limitedFetch('https://api.notion.com/v1/pages/'+ACADEMY_WIKI_ID,{headers:{Authorization:'Bearer '+grant.access_token,'Notion-Version':'2022-06-28'}}));}
+    catch(error) {if(error instanceof AcademySyncError&&['source_http_403','source_http_404'].includes(error.code))throw new NotionConnectionError('notion_wiki_access_missing');throw error;}
+    if(page.id?.replaceAll('-','')!==ACADEMY_WIKI_ID.replaceAll('-','')||page.archived||page.in_trash||typeof grant['workspace_id']!=='string')throw new NotionConnectionError('notion_wiki_access_missing');
+    const {error}=await db.from('academy_notion_connection').upsert({id:true,owner_user_id:user.userId,workspace_id:grant['workspace_id'],
       encrypted_tokens:encryptNotionGrant(grant,key()),updated_at:new Date().toISOString()});
-    if(error)throw new Error('notion_storage_unavailable');
-    const queued=await db.rpc('academy_request_sync',{p_source:'notion'});if(queued.error)throw new Error('notion_queue_unavailable');
+    if(error)throw new NotionConnectionError('notion_storage_unavailable');
+    const queued=await db.rpc('academy_request_sync',{p_source:'notion'});if(queued.error)throw new NotionConnectionError('notion_queue_unavailable');
   },
 };
 export const handleNotionOAuthRequest=createNotionOAuthGateway({verify:verifyHubIdentity,service,
