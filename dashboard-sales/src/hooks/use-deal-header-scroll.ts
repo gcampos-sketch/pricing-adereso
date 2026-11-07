@@ -34,8 +34,8 @@ export function useDealHeaderScroll(modal: RefObject<HTMLElement | null>, key: s
     const intro = element.querySelector<HTMLElement>('.deal-modal-intro-content');
     const secondary = element.querySelector<HTMLElement>('.deal-modal-secondary-content');
     const measure = () => {
-      if (intro) element.style.setProperty('--deal-intro-height', `${intro.getBoundingClientRect().height}px`);
-      if (secondary) element.style.setProperty('--deal-secondary-width', `${secondary.getBoundingClientRect().width}px`);
+      if (intro) element.style.setProperty('--deal-intro-height', `${intro.scrollHeight}px`);
+      if (secondary) element.style.setProperty('--deal-secondary-width', `${secondary.scrollWidth}px`);
     };
     const observer = new ResizeObserver(measure);
     if (intro) observer.observe(intro);
