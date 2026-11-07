@@ -1920,6 +1920,9 @@
   }
 
   .deal-list {
+    min-height: 0;
+    isolation: isolate;
+    overscroll-behavior: contain;
     overflow: auto;
     padding: 8px 24px 24px;
     /* recorta lo que se desplaza hacia el margen izquierdo/derecho */
@@ -2076,6 +2079,8 @@
   }
 
   .deal-table {
+    --deal-select-width: 34px;
+    --deal-column-gap: 16px;
     min-width: max-content;
   }
 
@@ -2103,11 +2108,22 @@
 
   .deal-row > *:nth-child(1) {
     left: 0;
+    overflow: visible;
+  }
+
+  /* Fill the grid gutter as the scrollable cells pass below the frozen pair. */
+  .deal-row > *:nth-child(1)::after {
+    content: "";
+    position: absolute;
+    inset: 0 calc(-1 * var(--deal-column-gap)) 0 auto;
+    width: var(--deal-column-gap);
+    background: inherit;
+    pointer-events: none;
   }
 
   .deal-row > *:nth-child(2) {
-    left: 34px;
-    box-shadow: 12px 0 14px -12px oklch(0 0 0 / 70%);
+    left: calc(var(--deal-select-width) + var(--deal-column-gap));
+    box-shadow: 16px 0 0 var(--surface), 24px 0 14px -12px oklch(0 0 0 / 70%);
   }
 
   .deal-row > *:nth-child(2) strong {
@@ -2140,7 +2156,7 @@
     grid-template-columns:
       minmax(180px, 1.2fr) 96px 92px 86px 72px 72px 96px 80px
       minmax(160px, 1fr) 64px;
-    gap: 16px;
+    gap: var(--deal-column-gap, 16px);
     align-items: center;
     padding: 16px 0;
     border-bottom: 1px solid var(--border-subtle);
@@ -2175,8 +2191,9 @@
 
   .deal-header {
     position: sticky;
-    top: -8px;
-    z-index: 1;
+    top: 0;
+    /* One header stacking context must sit above ALL frozen body cells (z=6). */
+    z-index: 20;
     padding: 8px 0;
     background: var(--surface);
   }
@@ -3320,31 +3337,21 @@
    En táctil y en filas seleccionadas quedan siempre a la vista. */
 .deal-cell-name .deal-actions {
   align-self: flex-start;
-  max-height: 0;
-  margin-top: 0;
-  padding: 0 3px;
-  border-width: 0;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  margin-top: 7px;
+  padding: 3px;
+  border-width: 1px;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
-  transform: translateY(-3px);
-  transition:
-    max-height 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.18s ease,
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    margin-top 0.24s ease,
-    padding 0.24s ease,
-    border-width 0.24s ease;
+  transition: opacity .18s ease;
 }
 .deal-row:hover .deal-actions,
 .deal-row:focus-within .deal-actions,
 .deal-row[data-selected="1"] .deal-actions {
-  max-height: 40px;
-  margin-top: 7px;
-  padding: 3px;
-  border-width: 1px;
   opacity: 1;
-  transform: none;
   pointer-events: auto;
 }
 @media (hover: none) {

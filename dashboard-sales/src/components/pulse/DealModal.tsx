@@ -1801,7 +1801,7 @@ export function DealModal({
   const total = deals.reduce((sum, deal) => sum + deal.amountValue, 0);
   const ownerBarsMax = ownerBars.length ? Math.max(...ownerBars.map((row) => row.amount)) : 0;
 
-  const gridTemplate = `34px ${visibleColumns.map((column) => column.width).join(" ")}`;
+  const gridTemplate = `var(--deal-select-width, 34px) ${visibleColumns.map((column) => column.width).join(" ")}`;
   const selectedIds = selected.filter((id) => deals.some((deal) => deal.id === id));
   const allSelected = deals.length > 0 && selectedIds.length === deals.length;
   const toggleAll = () => setSelected(allSelected ? [] : deals.map((deal) => deal.id));
@@ -2262,7 +2262,7 @@ export function DealModal({
             <TrendLine labels={pipelineTrend.labels} values={pipelineTrend.values} compact />
           </div>
         ) : null}
-        <div className="deal-list">
+        <div className="deal-list" role="region" aria-label="Listado de negocios" tabIndex={0}>
           {deals.length ? (
             <div className="deal-table">
               <div className="deal-row deal-header" style={{ gridTemplateColumns: gridTemplate }}>
