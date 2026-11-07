@@ -9,12 +9,34 @@
   const meta = document.getElementById('academy-source-meta');
   const labels = { notion: 'Wiki comercial', help: 'Help Center' };
   let documents = [], source = 'all', loadedAt = 0, loading = false;
+  let connectButton;
   const normalized = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   function element(tag, text, cls) {
     const el = document.createElement(tag); if (text) el.textContent = text;
     if (cls) el.className = cls; return el;
   }
   function message(text) { status.textContent = text; homeStatus.textContent = text; }
+  async function oauthControl() {
+    try {
+      const response = await fetch('/api/academy/notion/status', { credentials: 'same-origin', cache: 'no-store' });
+      if (!response.ok) return; const info = await response.json();
+      if (!info.canConnect || !info.configured) return;
+      if (!connectButton) {
+        connectButton = element('button', 'Conectar Notion'); connectButton.type = 'button';
+        panel.querySelector('.academy-source-controls').append(connectButton);
+        connectButton.addEventListener('click', async () => {
+          connectButton.disabled = true;
+          try {
+            const r = await fetch('/api/academy/notion/connect', { method: 'POST', credentials: 'same-origin' });
+            if (!r.ok) throw new Error('connection failed'); const data = await r.json(); const u = new URL(data.url);
+            if (u.origin !== 'https://api.notion.com' || u.pathname !== '/v1/oauth/authorize') throw new Error('invalid redirect');
+            window.top.location.assign(u.href);
+          } catch { message('No se pudo abrir la autorización de Notion. Vuelve a iniciar sesión en el Hub e inténtalo otra vez.'); connectButton.disabled = false; }
+        });
+      }
+      connectButton.textContent = info.connected ? 'Reconectar Notion' : 'Conectar Notion';
+    } catch { /* Source reading and existing learning stay available. */ }
+  }
   function sourceLink(doc) {
     try {
       const u = new URL(doc.url);
@@ -60,7 +82,7 @@
         return labels[s.source] + ': ' + (stale ? 'comprobación atrasada · ' : 'comprobado ') + (date ? date.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) : 'sin fecha');
       });
       message(data.setupRequired ? 'Sincronización preparada · activación pendiente' : notes.join(' · '));
-      loadedAt = Date.now(); render();
+      loadedAt = Date.now(); render(); void oauthControl();
     } catch {
       message('No se pudo comprobar la actualización. El entrenamiento base y tu avance siguen disponibles.');
     } finally { loading = false; }

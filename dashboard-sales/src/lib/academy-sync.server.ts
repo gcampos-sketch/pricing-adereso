@@ -5,10 +5,11 @@ import { verifyHubIdentity } from './hub-auth.server';
 import { createAcademyGateway } from './academy-gateway';
 import { AcademySyncError, digest, fetchHelpSnapshot, fetchNotionSnapshot } from './academy-fetch.server';
 import type { AcademySnapshot, AcademySource, AcademySourceStatus } from './academy-content';
+import { notionSourceConfigured, notionSourceToken, refreshNotionSourceToken } from './academy-notion-oauth.server';
 
 // These tables have no browser grants/policies. Credentials and source material never enter Git.
 const db = supabaseAdmin as unknown as SupabaseClient;
-const configured = (source: AcademySource) => source === 'help' || Boolean(process.env['ACADEMY_NOTION_TOKEN']);
+const configured = async (source: AcademySource) => source === 'help' || await notionSourceConfigured();
 function setupKey() {
   const secret = process.env['ACADEMY_SYNC_SECRET'];
   if (!secret || secret.length < 32) throw new Error('setup_not_configured');
@@ -43,7 +44,7 @@ export async function readAcademyContent() {
   const sources: AcademySourceStatus[] = [], documents = [];
   for (const row of data ?? []) {
     const saved = await snapshot(row.source, row.version);
-    sources.push({ source: row.source, configured: configured(row.source), checkedAt: row.checked_at,
+    sources.push({ source: row.source, configured: await configured(row.source), checkedAt: row.checked_at,
       publishedAt: row.published_at, version: row.version, error: Boolean(row.error_code), pending: row.pending,
       documentCount: saved?.documents.length ?? 0 });
     if (saved) documents.push(...saved.documents);
@@ -53,14 +54,20 @@ export async function readAcademyContent() {
 export async function runAcademySync() {
   const results = [];
   for (const source of ['notion','help'] as const) {
-    if (!configured(source)) { results.push({ source, status: 'not_configured' }); continue; }
+    if (!await configured(source)) { results.push({ source, status: 'not_configured' }); continue; }
     const claim = await db.rpc('academy_claim_sync', { p_source: source });
     if (claim.error) throw new Error('academy_storage_unavailable');
     if (!claim.data) { results.push({ source, status: 'not_due_or_busy' }); continue; }
     const lease = claim.data.lease; let saved: AcademySnapshot; let version: string;
     try {
       const previous = await snapshot(source, claim.data.version);
-      saved = source === 'notion' ? await fetchNotionSnapshot(process.env['ACADEMY_NOTION_TOKEN']!) : await fetchHelpSnapshot(previous);
+      if(source==='notion') {
+        try {saved=await fetchNotionSnapshot(await notionSourceToken());}
+        catch(error) {
+          if(!(error instanceof AcademySyncError)||error.code!=='source_http_401')throw error;
+          saved=await fetchNotionSnapshot(await refreshNotionSourceToken());
+        }
+      } else saved=await fetchHelpSnapshot(previous);
       version = digest(JSON.stringify(saved.documents.map(d => [d.id,d.title,d.hash,d.sourceEditedAt]).sort((a,b) => String(a[0]).localeCompare(String(b[0])))));
     } catch (error) {
       const failed = await db.rpc('academy_finish_sync', { p_source: source, p_lease: lease, p_version: null, p_payload: null,
