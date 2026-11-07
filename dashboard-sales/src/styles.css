@@ -2146,7 +2146,21 @@
 
   .deal-row > *:nth-child(2) {
     left: calc(var(--deal-select-width) + var(--deal-column-gap));
-    box-shadow: 16px 0 0 var(--deal-fixed-fill, var(--surface)), 24px 0 18px -18px oklch(0 0 0 / 30%);
+    overflow: visible;
+  }
+
+  /* A full-height opaque gutter and a single edge separate frozen and scrolling cells. */
+  .deal-row > *:nth-child(2)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: calc(-1 * var(--deal-column-gap));
+    width: var(--deal-column-gap);
+    background: inherit;
+    border-right: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent);
+    box-shadow: 9px 0 12px -6px oklch(0 0 0 / 60%);
+    pointer-events: none;
   }
 
   .deal-row > *:nth-child(2) strong {
@@ -2184,15 +2198,36 @@
       minmax(160px, 1fr) 64px;
     gap: var(--deal-column-gap, 16px);
     align-items: center;
-    padding: 12px 0;
+    padding: 0;
     background: var(--surface);
     transition: background-color 220ms ease;
     border-bottom: 1px solid var(--border-subtle);
     font-size: 14px;
   }
 
-  .deal-row:last-child {
+  .deal-table > div:last-child > .deal-row {
     border-bottom: 0;
+  }
+
+  .deal-row:not(.deal-header) > .deal-cell,
+  .deal-row:not(.deal-header) > .deal-select {
+    padding-block: 12px;
+  }
+  .deal-row:not(.deal-header) > .deal-cell-name {
+    justify-content: flex-start;
+  }
+  .deal-row:not(.deal-header) > .deal-cell-name > strong {
+    line-height: 22px;
+  }
+  .deal-row:not(.deal-header) > .deal-select {
+    justify-content: flex-start;
+    padding-top: 15px;
+  }
+  .deal-row:not(.deal-header) > .deal-select > input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    flex: 0 0 auto;
   }
 
   .deal-row span {
