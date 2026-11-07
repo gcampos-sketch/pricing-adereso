@@ -17,10 +17,18 @@ function setup(email='gcampos@adere.so') {
 }
 test('Notion OAuth needs a server-verified Hub MFA session for every endpoint',async()=>{
  const {gateway}=setup();
- for(const path of ['connect','status','callback']) {
+ for(const path of ['connect','authorize','status','callback']) {
   const r=await gateway(new Request(origin+'/api/academy/notion/'+path,{method:path==='connect'?'POST':'GET',headers:{cookie:HUB_COOKIE+'=true'}}));
   expect(r?.status).toBe(401);
  }
+});
+test('direct navigation opens Notion with the same MFA, operator and one-use state protections',async()=>{
+ const {gateway,hash}=setup();const r=await gateway(new Request(origin+'/api/academy/notion/authorize',{headers:{cookie}}));
+ expect(r?.status).toBe(303);expect(r?.headers.get('cache-control')).toBe('private, no-store');
+ const target=new URL(r!.headers.get('location')!);expect(target.origin).toBe('https://api.notion.com');
+ expect(target.searchParams.get('redirect_uri')).toBe(notionCallback);
+ expect(hash()).toBe(notionStateHash(target.searchParams.get('state')!));
+ const other=setup('other@adere.so');expect((await other.gateway(new Request(origin+'/api/academy/notion/authorize',{headers:{cookie}})))?.status).toBe(403);expect(other.hash()).toBe('');
 });
 test('other corporate accounts cannot replace the shared source, and foreign origins cannot initiate it',async()=>{
  const {start}=setup('other@adere.so');expect((await start())?.status).toBe(403);

@@ -35,8 +35,9 @@ export function createNotionOAuthGateway(deps: {
   const json = (body: unknown,status=200) => Response.json(body,{status,headers});
   return async (request: Request): Promise<Response | null> => {
     const url=new URL(request.url), base='/api/academy/notion/';
-    if (!['status','connect','callback'].some(p=>url.pathname===base+p)) return null;
+    if (!['status','connect','authorize','callback'].some(p=>url.pathname===base+p)) return null;
     const callback=url.pathname.endsWith('/callback');
+    const direct=url.pathname.endsWith('/authorize');
     if(request.method!==(url.pathname.endsWith('/connect')?'POST':'GET')) return json({error:'method_not_allowed'},405);
     const ticket=readTicket(request);const user=ticket?await deps.verify(ticket.accessToken,ticket.trustToken):null;
     if(!user||user.expiresAt<=Date.now()) return json({error:'authentication_required'},401);
@@ -47,12 +48,15 @@ export function createNotionOAuthGateway(deps: {
     }
     if(!operator) return json({error:'notion_operator_required'},403);
     if(!deps.service.configured) return json({error:'notion_oauth_not_configured'},503);
-    if(!callback&&request.headers.get('origin')!==new URL(notionCallback).origin) return json({error:'origin_not_allowed'},403);
+    if(!callback&&!direct&&request.headers.get('origin')!==new URL(notionCallback).origin) return json({error:'origin_not_allowed'},403);
     try {
       if(!callback) {
         const state=randomBytes(32).toString('hex');await deps.service.saveState(user,notionStateHash(state));
         const authorize=new URL('https://api.notion.com/v1/oauth/authorize');
         authorize.search=new URLSearchParams({owner:'user',client_id:deps.service.clientId,redirect_uri:notionCallback,response_type:'code',state}).toString();
+        // A direct navigation starts the same MFA-backed, user-bound flow. It
+        // never exchanges a code or grants access without Notion's consent step.
+        if(direct)return new Response(null,{status:303,headers:{...headers,Location:authorize.href}});
         return json({url:authorize.href});
       }
       const state=url.searchParams.get('state')??'';
