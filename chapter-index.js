@@ -44,6 +44,8 @@
     // Keep the guides' fold state and persistence in their existing controllers.
     if(typeof setFold==='function')setFold(el,true);
     if(typeof phOpen==='function')phOpen(el);
+    // A live Notion heading can sit inside native details rather than a legacy fold.
+    for(let p=el;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;
     el.classList.add('seen');
     clickPending=setTimeout(()=>{
       const from=scrollY;

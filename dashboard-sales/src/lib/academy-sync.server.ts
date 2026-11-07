@@ -5,6 +5,7 @@ import { verifyHubIdentity } from './hub-auth.server';
 import { createAcademyGateway } from './academy-gateway';
 import { AcademySyncError, digest, fetchHelpSnapshot, fetchNotionSnapshot } from './academy-fetch.server';
 import type { AcademySnapshot, AcademySource, AcademySourceStatus } from './academy-content';
+import { runCommercialGuidesSync } from './commercial-guides.server';
 import { notionSourceConfigured, notionSourceToken, refreshNotionSourceToken } from './academy-notion-oauth.server';
 
 // These tables have no browser grants/policies. Credentials and source material never enter Git.
@@ -36,7 +37,7 @@ async function snapshot(source: AcademySource, version: string | null): Promise<
   if (error) throw new Error('academy_storage_unavailable'); return data.payload;
 }
 export async function readAcademyContent() {
-  const { data, error } = await db.from('academy_source_state').select('source,version,checked_at,published_at,error_code,pending');
+  const { data, error } = await db.from('academy_source_state').select('source,version,checked_at,published_at,error_code,pending').in('source', ['notion','help']);
   if (error) {
     if (['42P01','PGRST205'].includes(error.code)) return { schema: 'academy-content/v1', setupRequired: true, sources: [], documents: [] };
     throw new Error('academy_storage_unavailable');
@@ -79,6 +80,7 @@ export async function runAcademySync() {
     if (finished.error || !finished.data) throw new Error('academy_publish_failed');
     results.push({ source, status: version === claim.data.version ? 'unchanged' : 'published', documents: saved.documents.length });
   }
+  results.push(...await runCommercialGuidesSync());
   return { results };
 }
 export const handleAcademyRequest = createAcademyGateway({
