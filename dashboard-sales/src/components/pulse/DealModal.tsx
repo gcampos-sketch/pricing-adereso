@@ -5,6 +5,7 @@ import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { markdownToHubspotHtml } from "@/lib/markdown";
 
 /** Cambios locales aplicados sobre el reporte mientras no se recarga desde HubSpot. */
@@ -1408,15 +1409,8 @@ export function DealModal({
     }
 
     if (monthFilter !== "all") {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + (monthFilter === "next" ? 1 : 0);
-      filtered = filtered.filter((deal) => {
-        if (!deal.closeDateValue) return false;
-        const date = new Date(deal.closeDateValue);
-        if (Number.isNaN(date.getTime())) return false;
-        return date.getFullYear() === new Date(year, month).getFullYear() && date.getMonth() === new Date(year, month).getMonth();
-      });
+      const month = currentMonthKey(Date.now(), monthFilter === "next" ? 1 : 0);
+      filtered = filtered.filter(deal => closeMonthKey(deal.closeDateValue) === month);
     }
     return [...filtered].sort((a, b) => {
       const left = sortValue(a, sort.key);
@@ -1770,6 +1764,8 @@ export function DealModal({
       } as React.CSSProperties)
     : undefined;
 
+  const monthlySummary = summarizeDealMonths(deals, Date.now());
+  const monthMoney = (amount: number) => new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}).format(amount);
   const total = deals.reduce((sum, deal) => sum + deal.amountValue, 0);
   const ownerBarsMax = ownerBars.length ? Math.max(...ownerBars.map((row) => row.amount)) : 0;
 
@@ -2067,6 +2063,19 @@ export function DealModal({
             </button>
           </div>
         </div>
+        <section className="deal-month-summary" aria-label="Montos por mes según filtros">
+          <div className="deal-month-summary-row">
+            {monthlySummary.months.map(month=><div className="deal-month-bucket" data-current={month.current} key={month.key}>
+              <span>{month.label} {monthlySummary.year}{month.current ? <small> · mes actual</small> : null}</span>
+              <strong>{monthMoney(month.amount)}</strong><small>{month.count} {month.count===1?'deal':'deals'}</small>
+            </div>)}
+            <div className="deal-month-bucket deal-month-total"><span>Total restante Q{monthlySummary.quarter}</span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} {monthlySummary.total.count===1?'deal':'deals'}</small></div>
+          </div>
+          {monthlySummary.outside.count || monthlySummary.undated.count ? <p className="deal-month-remainder">
+            {monthlySummary.outside.count ? <span>Fuera de estos meses: {monthMoney(monthlySummary.outside.amount)} · {monthlySummary.outside.count} deals</span> : null}
+            {monthlySummary.undated.count ? <span>Sin fecha válida: {monthMoney(monthlySummary.undated.amount)} · {monthlySummary.undated.count} deals</span> : null}
+          </p> : null}
+        </section>
         {simulation && simMode ? (
           (() => {
             const picked = deals.filter((deal) => selectedIds.includes(deal.id));

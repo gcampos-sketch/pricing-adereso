@@ -5333,3 +5333,15 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-next-step-popover { z-index:1300; width:min(380px,calc(100vw - 40px)); padding:16px; border:1px solid var(--border-default); border-radius:14px; background:var(--surface); box-shadow:var(--shadow-modal); }
 .deal-next-step-source { margin:0 0 12px; font-size:11px; color:var(--muted); }
 .deal-next-step-text { margin:0; max-height:240px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:13px; line-height:1.6; color:var(--body); }
+
+/* Monthly close-date totals use the exact filtered list, not the unfiltered payload. */
+.deal-month-summary { flex:0 0 auto; min-width:0; margin:12px 24px 16px; padding:12px 16px; border:1px solid var(--border-subtle); border-radius:12px; background:rgba(255,255,255,.02); }
+.deal-month-summary-row { display:flex; gap:24px; overflow-x:auto; scrollbar-width:thin; }
+.deal-month-bucket { flex:0 0 auto; min-width:130px; display:grid; grid-template-columns:auto auto; align-items:baseline; column-gap:10px; row-gap:4px; }
+.deal-month-bucket > span { grid-column:1 / -1; font-size:11px; color:var(--muted); text-transform:capitalize; white-space:nowrap; }
+.deal-month-bucket > strong { font:500 20px/1.2 var(--font-display); color:var(--foreground); font-variant-numeric:tabular-nums; }
+.deal-month-bucket small { font-size:10px; color:var(--muted); white-space:nowrap; }
+.deal-month-bucket[data-current="true"] > span { color:var(--brand); }
+.deal-month-total { padding-left:20px; border-left:1px solid var(--border-default); }
+.deal-month-remainder { display:flex; flex-wrap:wrap; gap:8px 20px; margin:10px 0 0; color:var(--muted); font-size:10px; }
+@media (max-width:640px) { .deal-month-summary { margin:10px 16px 12px; padding:10px 12px; } .deal-month-summary-row { gap:16px; } }

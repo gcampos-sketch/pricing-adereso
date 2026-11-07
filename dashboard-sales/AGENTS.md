@@ -65,3 +65,5 @@
 - DealModal filters occupy one non-wrapping horizontal toolbar. Search is a circular trigger opening an autofocus overlay; search/filter panels portal above the modal so toolbar scrolling never clips them. Escape closes the active overlay before the deal modal; keep existing client filtering and avoid CRM writes while verifying.
 
 - Long HubSpot nextStep text is available through the row’s read-only next-step popover, not repeated under the deal name. Keep the original CRM value intact and do not infer commitments or customer-facing actions from internal notes.
+
+- DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
