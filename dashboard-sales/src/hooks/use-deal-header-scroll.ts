@@ -21,7 +21,10 @@ export function useDealHeaderScroll(modal: RefObject<HTMLElement | null>, key: s
     // A growing viewport can clamp scrollTop at the bottom. Do not interpret that
     // geometry correction as an upward user gesture on the next scroll event.
     const list = element.querySelector<HTMLElement>('.deal-list');
-    if (list) state.top = Math.max(0, list.scrollTop);
+    if (list) {
+      const actual = Math.max(0, list.scrollTop);
+      if (actual < state.top && actual >= list.scrollHeight - list.clientHeight - 1) state.top = actual;
+    }
     state.frame = state.value === state.target ? 0 : requestAnimationFrame(tick);
   }, [modal]);
 
