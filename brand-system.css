@@ -179,12 +179,12 @@ body.has-chapter-index>.sidenav {display:none!important;}
 body.has-chapter-index .layout,body.has-chapter-index.side-off .layout {
   display:block;max-width:1200px;padding-right:224px;
 }
-body.has-chapter-index .wrap {
+body.has-chapter-index .wrap,body.has-chapter-index .shell {
   max-width:1080px;
   margin-left:max(0px,calc((100% - 220px - 1080px)/2));
   margin-right:220px;
 }
-body.has-chapter-index .shell {padding-right:224px;}
+body.has-chapter-index .shell {padding-right:24px;}
 body.has-chapter-index .document-brand {display:block;}
 .chapter-resources {position:fixed;bottom:18px;right:24px;width:170px;z-index:46;color:#8d929e;}
 .chapter-resources summary {font:400 10px/1.4 var(--font-body);cursor:pointer;list-style:none;padding:8px 0;}
@@ -200,7 +200,7 @@ body.has-chapter-index .document-brand {display:block;}
   .chapter-item:hover .chapter-label,.chapter-item:focus-visible .chapter-label {opacity:1;visibility:visible;transform:none;}
   body.has-chapter-index .layout,body.has-chapter-index.side-off .layout {padding-right:58px;}
   body.has-chapter-index .wrap {max-width:calc(100% - 40px);margin-right:40px;}
-  body.has-chapter-index .shell {padding-right:58px;}
+  body.has-chapter-index .shell {max-width:calc(100% - 40px);margin-left:0;margin-right:40px;padding-right:12px;}
   .chapter-resources {right:8px;width:32px;}
   .chapter-resources summary {font-size:0;text-align:center;}
   .chapter-resources summary::before {font-size:16px;margin:0;}
@@ -212,7 +212,7 @@ body.has-chapter-index .document-brand {display:block;}
   .chapter-cursor {left:4px;}
   body.has-chapter-index .layout,body.has-chapter-index.side-off .layout {padding-left:18px;padding-right:40px;}
   body.has-chapter-index .wrap {padding-left:18px;padding-right:12px;max-width:calc(100% - 28px);margin-right:28px;}
-  body.has-chapter-index .shell {padding-right:38px;}
+  body.has-chapter-index .shell {padding-left:18px;padding-right:12px;max-width:calc(100% - 28px);margin-right:28px;}
 }
 @media(prefers-reduced-motion:reduce) {.chapter-item,.chapter-node,.chapter-label {transition:none;}}
 @media print {.chapter-index,.chapter-resources {display:none!important;}body.has-chapter-index .layout,body.has-chapter-index .wrap,body.has-chapter-index .shell {max-width:100%;margin-left:auto;margin-right:0;padding-right:24px;}}
