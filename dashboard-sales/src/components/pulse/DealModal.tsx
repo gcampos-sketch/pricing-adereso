@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
-import { adoboScoreComparison } from "@/lib/adobo-score-comparison";
+import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
 import { CommissionRate } from "./CommissionRate";
 import { CopyTextButton } from "./CopyControls";
@@ -794,7 +794,6 @@ type SortKey =
   | "probability"
   | "score"
   | "adobo"
-  | "adoboTrend"
   | "nextActivity"
   | "activities"
   | "closeStatus"
@@ -1008,19 +1007,12 @@ function adoboSignals(deal: DealDTO) {
   return { positive, risk, context, missing };
 }
 
-/** Acordeón "Composición Adobo score" bajo la fila del deal. */
-/** Ganados (E6 en adelante o 100%): la composición Adobo ya no aporta. */
-function isWonDeal(deal: DealDTO) {
-  return deal.probabilityValue >= 100 || /^\s*(6|7|8)/.test(deal.stageFull ?? "");
-}
-
-function AdoboRow({ deal }: { deal: DealDTO }) {
-  const [open, setOpen] = useState(false);
+/** Full evidence stays behind the score trigger, outside the table's scrolling layers. */
+function AdoboDetails({ deal }: { deal: DealDTO }) {
   const a = deal.adobo;
   const { positive, risk, context, missing } = useMemo(() => adoboSignals(deal), [deal]);
 
   const trend = a?.scoreTrend ?? null;
-  const trendSign: Sign = trend?.includes("sub") ? "ok" : trend?.includes("baj") ? "bad" : trend ? "warn" : "none";
   const upLabels = positive.filter((s) => s.sign === "ok").map((s) => `${s.label} (${s.value})`);
   const downLabels = risk.filter((s) => s.sign === "bad" || s.sign === "warn").map((s) => `${s.label} (${s.value})`);
 
@@ -1057,32 +1049,10 @@ function AdoboRow({ deal }: { deal: DealDTO }) {
     </div>
   );
 
+  const comparison=adoboScoreComparison(deal,Date.now());
   return (
-    <div className="adobo-row" data-open={open ? "1" : undefined}>
-      <button
-        className="adobo-toggle"
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        title="Ver la composición del Adobo score de este deal"
-      >
-        <span className="adobo-chevron" aria-hidden="true">
-          ›
-        </span>
-        Composición Adobo score
-      </button>
-      <div className="adobo-summary">
-        <span className="chip adobo-chip" data-tone={trendSign === "none" ? undefined : trendSign} data-empty={trendSign === "none" ? "1" : undefined}>
-          Tendencia: {trend ? pretty(trend) : NO_EVIDENCE}
-        </span>
-        {missing.length ? (
-          <span className="chip adobo-chip" data-empty="1">
-            {missing.length} sin evidencia
-          </span>
-        ) : null}
-      </div>
-      {open ? (
         <div className="adobo-panel">
+          <p className="adobo-comparison-detail">{comparison.detail}</p>
           <div className="adobo-panel-head">
             <div className="adobo-facts">
               <p>
@@ -1101,6 +1071,7 @@ function AdoboRow({ deal }: { deal: DealDTO }) {
           </div>
           {group("Positivo", positive, "ok")}
           {group("Riesgo", risk, "bad")}
+          <details className="adobo-extra-context"><summary>Contexto y datos pendientes · {missing.length} campos sin evidencia</summary>
           {group("Contexto", context, "warn")}
           <div className="adobo-explain">
             <p data-sign="ok">
@@ -1114,10 +1085,28 @@ function AdoboRow({ deal }: { deal: DealDTO }) {
               {missing.length ? missing.map((signal) => signal.label).join(" · ") : "ninguna propiedad vacía"}
             </p>
           </div>
+          </details>
         </div>
-      ) : null}
-    </div>
   );
+}
+
+function AdoboScoreCell({deal}:{deal:DealDTO}) {
+  const [open,setOpen]=useState(false);
+  const comparison=adoboScoreComparison(deal,Date.now());
+  const capped=deal.adobo?.contactVerified===true ? deal.adobo.cappedScore : null;
+  const shown=capped!==null && capped!==undefined && capped>=0 ? capped : deal.adoboScoreValue;
+  const score=shown<0 ? '—' : String(Math.round(shown));
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger asChild><button type="button" className="adobo-score-trigger" data-tone={shown<0?'none':shown>=65?'ok':shown>=45?'warn':'bad'} aria-label={`Adobo ${score}: ver detalle de ${deal.name}`} title="Ver composición y cambio del Adobo Score">
+      {score}{comparison.delta!==null ? <span className="deal-value-trend" aria-label={comparison.label}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}
+    </button></PopoverTrigger>
+    <PopoverContent className="adobo-score-popup" align="start" sideOffset={8} role="dialog" aria-label={`Adobo Score de ${deal.name}`} data-adobo-score-popup="true" onEscapeKeyDown={event=>event.stopPropagation()}>
+      <header className="adobo-score-popup-heading"><div><h3>Adobo Score · {score}</h3><p>{deal.name}</p></div><button type="button" onClick={()=>setOpen(false)} aria-label="Cerrar detalle Adobo"><X size={16}/></button></header>
+      {shown>=0 && shown<deal.adoboScoreValue ? <p className="adobo-comparison-detail">Score bruto {deal.adoboScoreValue} · tope de contactabilidad {shown}. La tendencia compara el score bruto.</p> : null}
+      {shown<0 ? <p className="adobo-comparison-detail">Sin score registrado. Los datos ausentes no equivalen a cero.</p> : null}
+      <AdoboDetails deal={deal}/>
+    </PopoverContent>
+  </Popover>;
 }
 
 /** Contacto principal del deal + si ya está en una secuencia activa de HubSpot. */
@@ -1355,7 +1344,7 @@ export function DealModal({
   useEffect(() => {
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup]"))) return;
       if (searchOpen) setSearchOpen(false);
       else if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
@@ -1570,44 +1559,18 @@ export function DealModal({
         key: "probability",
         label: "% cierre",
         width: "92px",
-        render: (deal) => <InlineEdit deal={deal} field="probability" onSaved={applyEdit} />,
+        render: (deal) => {
+          const comparison=closingProbabilityComparison(comparedDeal(deal),Date.now());
+          return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/>{comparison.delta!==null ? <span className="deal-value-trend" title={comparison.detail} aria-label={comparison.detail}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}</div>;
+        },
         caption: () => "% cierre (editable)",
       },
       {
         key: "adobo",
         label: "Adobo",
         width: "92px",
-        render: (deal) => {
-          if (deal.adoboScoreValue < 0) return <span style={{ color: "var(--label)" }}>s/n</span>;
-          const capped = deal.adobo?.contactVerified === true ? deal.adobo.cappedScore : null;
-          const shown =
-            capped !== null && capped !== undefined && capped >= 0 ? capped : deal.adoboScoreValue;
-          const limited = shown < deal.adoboScoreValue;
-          return (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <span
-                className="chip"
-                data-tone={shown >= 65 ? "ok" : shown >= 45 ? "warn" : "bad"}
-              >
-                {Math.round(shown)}
-              </span>
-              {limited ? (
-                <em style={{ color: "var(--label)", fontSize: 10, fontStyle: "normal" }}>
-                  bruto {Math.round(deal.adoboScoreValue)}
-                </em>
-              ) : null}
-            </span>
-          );
-        },
-        caption: (deal) =>
-          tempInfo(deal).cap !== null
-            ? `Adobo scoring con tope ${tempInfo(deal).cap} por contactabilidad`
-            : "Adobo scoring",
-      },
-      {
-        key:"adoboTrend",label:"Tendencia Adobo",width:"136px",
-        render:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return <span title={comparison.detail}>{comparison.label}</span>;},
-        caption:deal=>{const comparison=adoboScoreComparison(comparedDeal(deal),Date.now());return comparison.delta===null ? `Registrada: ${deal.adobo?.scoreTrend??'sin dato'}` : `Antes ${deal.adoboScoreValue-comparison.delta} (${comparison.delta>0?'+':''}${comparison.delta})`;},
+        render: (deal) => <AdoboScoreCell deal={comparedDeal(deal)}/>,
+        caption: () => "Adobo Score",
       },
       {
         key: "nextActivity",
@@ -2369,7 +2332,6 @@ export function DealModal({
                       </div>
                     ))}
                   </div>
-                  {!isWonDeal(deal) && <AdoboRow deal={deal} />}
                 </div>
               ))}
             </div>

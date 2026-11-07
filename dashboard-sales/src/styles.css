@@ -2155,13 +2155,13 @@
 
   /* La fila activa se distingue suave; el fondo se repite en las celdas fijas. */
   .deal-row:hover {
-    --deal-fixed-fill: color-mix(in oklab, var(--surface) 96%, white);
-    background: rgba(255, 255, 255, 0.035);
+    --deal-fixed-fill: color-mix(in oklab, var(--surface) 98%, white);
+    background: var(--deal-fixed-fill);
   }
 
   .deal-row:hover > *:nth-child(1),
   .deal-row:hover > *:nth-child(2) {
-    background: color-mix(in oklab, var(--surface) 96%, white);
+    background: var(--deal-fixed-fill);
   }
 
   .deal-row[data-selected="1"] { --deal-fixed-fill: color-mix(in oklab, var(--surface) 92%, white); }
@@ -2184,19 +2184,15 @@
       minmax(160px, 1fr) 64px;
     gap: var(--deal-column-gap, 16px);
     align-items: center;
-    padding: 16px 0;
+    padding: 12px 0;
+    background: var(--surface);
+    transition: background-color 220ms ease;
     border-bottom: 1px solid var(--border-subtle);
     font-size: 14px;
   }
 
   .deal-row:last-child {
     border-bottom: 0;
-  }
-
-  /* Cuando el deal trae su acordeón Adobo, la línea divisoria va debajo de ese acordeón */
-  .deal-row:has(+ .adobo-row) {
-    border-bottom: 0;
-    padding-bottom: 10px;
   }
 
   .deal-row span {
@@ -3211,6 +3207,53 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+}
+.adobo-score-popup {
+  z-index: 1300;
+  width: min(620px, calc(100vw - 32px));
+  max-height: min(78vh, var(--radix-popover-content-available-height));
+  overflow: auto;
+  padding: 18px;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  box-shadow: var(--shadow-modal);
+}
+.adobo-score-popup .adobo-panel { border: 0; padding: 0; margin: 14px 0 0; background: transparent; }
+.adobo-score-popup-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.adobo-score-popup-heading h3 { margin: 0; font-size: 17px; }
+.adobo-score-popup-heading p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+.adobo-score-popup-heading button { padding: 6px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.adobo-comparison-detail { font-size: 12px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; }
+.adobo-extra-context > summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 8px 0; }
+.adobo-score-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 9px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+.adobo-score-trigger[data-tone="ok"] { color: var(--success); border-color: color-mix(in oklab, var(--success) 40%, transparent); }
+.adobo-score-trigger[data-tone="warn"] { color: var(--warning); border-color: color-mix(in oklab, var(--warning) 40%, transparent); }
+.adobo-score-trigger[data-tone="bad"] { color: var(--danger); border-color: color-mix(in oklab, var(--danger) 40%, transparent); }
+.adobo-score-trigger:hover { background: color-mix(in oklab, var(--foreground) 5%, transparent); }
+.adobo-score-trigger:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+.deal-row .deal-value-trend { display: inline-flex; flex: 0 0 auto; color: inherit; font-size: 14px; line-height: 1; }
+.deal-probability-value { display: flex; align-items: center; gap: 4px; }
+.deal-probability-value input { min-width: 0; flex: 1 1 0; }
+.deal-row > *:nth-child(1), .deal-row > *:nth-child(2) { transition: background-color 220ms ease, box-shadow 220ms ease; }
+.deal-cell-name .deal-actions { background: transparent; border-color: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .deal-row, .deal-row > *:nth-child(1), .deal-row > *:nth-child(2), .adobo-score-trigger { transition: none; }
 }
 .adobo-facts {
   color: var(--muted);

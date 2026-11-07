@@ -66,6 +66,8 @@
 
 - HubSpot nextStep text and its arrow action are omitted from deal rows at the user’s request. Keep the original CRM value intact.
 
+- Deal rows keep Adobo composition and missing-evidence details in a portalled popup opened from the score. Verified Adobo trends appear beside the score instead of a separate column; CRM probability trends use exact hs_deal_stage_probability history in the same verified current-stage interval. Missing/partial/conflicting history stays unknown inside the detail, never a fabricated neutral trend. Preserve native probability editing and stable row/action geometry.
+
 - DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
 
 - DealModal keeps filters visible and uses the shared useDealHeaderScroll hook for continuous, distance-driven chrome collapse/expansion with frame-based damping; do not restore binary compact-state switches or change summary layout modes mid-scroll. Horizontal movement and viewport-induced scroll clamping must not change progress. Default ordering is descending close probability, then latest close calendar date; missing dates go last within a probability tie. Explicit drilldown ordering remains authoritative.
