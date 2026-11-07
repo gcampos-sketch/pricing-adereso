@@ -17,3 +17,10 @@ export function compareDealClosePriority(a: CloseDeal, b: CloseDeal, direction: 
   return probability(b.probabilityValue) - probability(a.probabilityValue)
     || a.name.localeCompare(b.name) || a.id.localeCompare(b.id);
 }
+
+/** Probability first; ties use the latest close date, with undated records last. */
+export function compareDealProbabilityPriority(a: CloseDeal, b: CloseDeal, direction: 'asc' | 'desc' = 'desc'): number {
+  const probability = (value: number) => Number.isFinite(value) ? value : -1;
+  const difference = probability(a.probabilityValue) - probability(b.probabilityValue);
+  return difference * (direction === 'asc' ? 1 : -1) || compareDealClosePriority(a, b, 'desc');
+}

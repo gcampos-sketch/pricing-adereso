@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { compareDealClosePriority } from '../src/lib/deal-close-priority';
+import { compareDealClosePriority, compareDealProbabilityPriority } from '../src/lib/deal-close-priority';
 
 const deal = (id: string, closeDateValue: string, probabilityValue: number) => ({ id, name: id, closeDateValue, probabilityValue });
 test('prioritizes earliest close day, then highest probability, with missing dates last', () => {
@@ -11,4 +11,10 @@ test('ties remain deterministic and a zero probability remains valid', () => {
   const a = deal('a','2026-11-10',0), b = deal('b','2026-11-10',NaN);
   expect(compareDealClosePriority(a,b)).toBeLessThan(0);
   expect(compareDealClosePriority(a,{...a,id:'z'})).toBeLessThan(0);
+});
+
+test('probability ordering keeps higher odds first and latest closing days first for ties', () => {
+  const rows = [deal('early','2026-11-10',80),deal('low','2026-12-31',20),deal('latest','2026-12-15',80),deal('undated','',80),deal('highest','2026-10-01',100)];
+  expect([...rows].sort((a,b)=>compareDealProbabilityPriority(a,b)).map(d=>d.id)).toEqual(['highest','latest','early','undated','low']);
+  expect([...rows].sort((a,b)=>compareDealProbabilityPriority(a,b,'asc')).map(d=>d.id)).toEqual(['low','latest','early','undated','highest']);
 });

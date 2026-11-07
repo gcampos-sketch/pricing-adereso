@@ -5329,11 +5329,6 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-search-footer > button { color:var(--brand); cursor:pointer; }
 .deal-filter-popover { position:relative; inset:auto; z-index:1300; width:max-content; min-width:180px; max-width:min(320px,calc(100vw - 32px)); max-height:min(360px,var(--radix-popover-content-available-height)); background:var(--surface); backdrop-filter:none; }
 
-/* Long CRM next-step notes stay available on demand, not underneath every deal name. */
-.deal-next-step-popover { z-index:1300; width:min(380px,calc(100vw - 40px)); padding:16px; border:1px solid var(--border-default); border-radius:14px; background:var(--surface); box-shadow:var(--shadow-modal); }
-.deal-next-step-source { margin:0 0 12px; font-size:11px; color:var(--muted); }
-.deal-next-step-text { margin:0; max-height:240px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:13px; line-height:1.6; color:var(--body); }
-
 /* Monthly close-date totals use the exact filtered list, not the unfiltered payload. */
 .deal-month-summary { flex:0 0 auto; min-width:0; margin:12px 24px 16px; padding:12px 16px; border:1px solid var(--border-subtle); border-radius:12px; background:rgba(255,255,255,.02); }
 .deal-month-summary-row { display:flex; gap:24px; overflow-x:auto; scrollbar-width:thin; }

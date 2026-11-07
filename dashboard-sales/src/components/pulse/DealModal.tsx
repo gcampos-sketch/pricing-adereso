@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X, ArrowRight } from "lucide-react";
+import { Trash2, CheckCircle2, ExternalLink, Pencil, ListChecks, Zap, Search, X } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { CopyTextButton } from "./CopyControls";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
-import { compareDealClosePriority } from "@/lib/deal-close-priority";
+import { compareDealClosePriority, compareDealProbabilityPriority } from "@/lib/deal-close-priority";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { markdownToHubspotHtml } from "@/lib/markdown";
 
@@ -1218,12 +1218,11 @@ export function DealModal({
 
   const [simMode, setSimMode] = useState(false);
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
-    key: "closeDate",
-    dir: "asc",
+    key: "probability",
+    dir: "desc",
   });
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [nextStepOpen, setNextStepOpen] = useState<string | null>(null);
   const [monthFilter, setMonthFilter] = useState<"all" | "this" | "next">("all");
   const [hidden, setHidden] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string[]>(initialStages ?? []);
@@ -1307,13 +1306,12 @@ export function DealModal({
     if (!payloadKey) return;
     setQuery("");
     setSearchOpen(false);
-    setNextStepOpen(null);
     setOpenMenu(null);
     const requested = visiblePayload?.initialSort;
     setSort(
       requested
         ? { key: requested.key as SortKey, dir: requested.dir }
-        : { key: "closeDate", dir: "asc" },
+        : { key: "probability", dir: "desc" },
     );
     setNoteDeal(null);
     setTaskDeal(null);
@@ -1336,7 +1334,6 @@ export function DealModal({
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (searchOpen) setSearchOpen(false);
-      else if (nextStepOpen) setNextStepOpen(null);
       else if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
       else if (taskDeal) setTaskDeal(null);
@@ -1345,7 +1342,7 @@ export function DealModal({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [visiblePayload, requestClose, noteDeal, taskDeal, lostDeal, searchOpen, openMenu, nextStepOpen]);
+  }, [visiblePayload, requestClose, noteDeal, taskDeal, lostDeal, searchOpen, openMenu]);
 
 
   /** Lista base con los cambios guardados en HubSpot ya reflejados. */
@@ -1413,6 +1410,7 @@ export function DealModal({
       filtered = filtered.filter(deal => closeMonthKey(deal.closeDateValue) === month);
     }
     return [...filtered].sort((a, b) => {
+      if (sort.key === "probability") return compareDealProbabilityPriority(a, b, sort.dir);
       if (sort.key === "closeDate") return compareDealClosePriority(a, b, sort.dir);
       const left = sortValue(a, sort.key);
       const right = sortValue(b, sort.key);
@@ -2244,7 +2242,7 @@ export function DealModal({
                   <span key={column.key} className="deal-head-cell">
                     <button
                       className="sort-button"
-                      title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : undefined}
+                      title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : column.key === "probability" ? "Probabilidad de cierre; a igual probabilidad, fecha de cierre más reciente primero" : undefined}
                       type="button"
                       data-active={sort.key === column.key}
                       onClick={() =>
@@ -2322,14 +2320,6 @@ export function DealModal({
                             >
                               <ListChecks className="deal-tool-icon" />
                             </button>
-                            {deal.nextStep?.trim() ? <Popover open={nextStepOpen === deal.id} onOpenChange={open=>setNextStepOpen(open ? deal.id : null)}>
-                              <PopoverTrigger asChild><button type="button" className="deal-tool" title="Ver próximo paso registrado" aria-label={`Ver próximo paso de ${deal.name}`}><ArrowRight className="deal-tool-icon" aria-hidden="true"/></button></PopoverTrigger>
-                              <PopoverContent side="right" align="start" sideOffset={12} className="deal-next-step-popover" aria-label={`Próximo paso de ${deal.name}`} onEscapeKeyDown={event=>event.stopPropagation()}>
-                                <div className="deal-search-heading"><strong>Próximo paso registrado</strong><button type="button" aria-label="Cerrar próximo paso" onClick={()=>setNextStepOpen(null)}><X size={16} aria-hidden="true"/></button></div>
-                                <p className="deal-next-step-source">Texto de HubSpot · {deal.name}</p>
-                                <p className="deal-next-step-text">{deal.nextStep}</p>
-                              </PopoverContent>
-                            </Popover> : null}
                             <CopyTextButton compact getText={() => dealLine(deal)} title="Copiar esta fila con su link" />
                             <button
                               type="button"

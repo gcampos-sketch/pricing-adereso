@@ -64,8 +64,8 @@
 
 - DealModal filters occupy one non-wrapping horizontal toolbar. Search is a circular trigger opening an autofocus overlay; search/filter panels portal above the modal so toolbar scrolling never clips them. Escape closes the active overlay before the deal modal; keep existing client filtering and avoid CRM writes while verifying.
 
-- Long HubSpot nextStep text is available through the row’s read-only next-step popover, not repeated under the deal name. Keep the original CRM value intact and do not infer commitments or customer-facing actions from internal notes.
+- HubSpot nextStep text and its arrow action are omitted from deal rows at the user’s request. Keep the original CRM value intact.
 
 - DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
 
-- DealModal keeps filters visible and uses the shared useDealHeaderScroll hook for continuous, distance-driven chrome collapse/expansion with frame-based damping; do not restore binary compact-state switches or change summary layout modes mid-scroll. Horizontal movement and viewport-induced scroll clamping must not change progress. Default close-date ordering uses calendar days, then descending probability, with missing dates last; explicit drilldown ordering remains authoritative.
+- DealModal keeps filters visible and uses the shared useDealHeaderScroll hook for continuous, distance-driven chrome collapse/expansion with frame-based damping; do not restore binary compact-state switches or change summary layout modes mid-scroll. Horizontal movement and viewport-induced scroll clamping must not change progress. Default ordering is descending close probability, then latest close calendar date; missing dates go last within a probability tie. Explicit drilldown ordering remains authoritative.
