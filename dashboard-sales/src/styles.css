@@ -1924,7 +1924,7 @@
     isolation: isolate;
     overscroll-behavior: contain;
     overflow: auto;
-    padding: 8px 24px 24px;
+    padding: 0 24px 24px;
     /* recorta lo que se desplaza hacia el margen izquierdo/derecho */
     clip-path: inset(0 24px);
   }
@@ -2123,7 +2123,7 @@
 
   .deal-row > *:nth-child(2) {
     left: calc(var(--deal-select-width) + var(--deal-column-gap));
-    box-shadow: 16px 0 0 var(--surface), 24px 0 14px -12px oklch(0 0 0 / 70%);
+    box-shadow: 16px 0 0 var(--deal-fixed-fill, var(--surface)), 24px 0 18px -18px oklch(0 0 0 / 30%);
   }
 
   .deal-row > *:nth-child(2) strong {
@@ -2132,6 +2132,7 @@
 
   /* La fila activa se distingue suave; el fondo se repite en las celdas fijas. */
   .deal-row:hover {
+    --deal-fixed-fill: color-mix(in oklab, var(--surface) 96%, white);
     background: rgba(255, 255, 255, 0.035);
   }
 
@@ -2139,6 +2140,8 @@
   .deal-row:hover > *:nth-child(2) {
     background: color-mix(in oklab, var(--surface) 96%, white);
   }
+
+  .deal-row[data-selected="1"] { --deal-fixed-fill: color-mix(in oklab, var(--surface) 92%, white); }
 
   .deal-row[data-selected="1"] > *:nth-child(1),
   .deal-row[data-selected="1"] > *:nth-child(2) {
