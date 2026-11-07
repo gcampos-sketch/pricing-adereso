@@ -194,6 +194,24 @@ body.has-chapter-index .document-brand {display:block;}
 .chapter-resource-panel .side-box {display:block!important;margin-bottom:14px;}
 .chapter-resource-panel .side-box:last-child {margin-bottom:0;}
 .chapter-resource-panel .chapter-reset {display:block;position:static;width:auto;height:auto;margin:0;padding:8px;border:1px solid var(--b-default);border-radius:8px;color:var(--t-body);font:400 12px var(--font-body);}
+/* Partners keeps the presentation central; the index is a quiet edge rail. */
+@media(min-width:720px) {
+  body.has-chapter-index .shell {
+    width:calc(100% - 80px);max-width:1440px;margin-left:auto;margin-right:auto;
+  }
+  body.has-chapter-index:has(>.shell) .chapter-index {right:12px;width:28px;}
+  body.has-chapter-index:has(>.shell) .chapter-label {
+    position:absolute;right:34px;width:max-content;max-width:180px;
+    padding:7px 11px;border:1px solid var(--b-default);border-radius:8px;
+    background:rgba(22,25,31,.97);box-shadow:var(--e1);
+    opacity:0;visibility:hidden;transform:translateX(4px);
+    transition:opacity .2s var(--ease),transform .2s var(--ease),visibility .2s;
+  }
+  body.has-chapter-index:has(>.shell) .chapter-item:hover .chapter-label,
+  body.has-chapter-index:has(>.shell) .chapter-item:focus-visible .chapter-label {
+    opacity:1;visibility:visible;transform:none;
+  }
+}
 @media(max-width:719px) {
   .chapter-index {right:10px;width:28px;}
   .chapter-label {position:absolute;right:32px;width:max-content;max-width:180px;background:rgba(22,25,31,.97);border:1px solid var(--b-default);border-radius:7px;padding:6px 10px;opacity:0;visibility:hidden;transform:translateX(3px);transition:opacity .2s var(--ease),transform .2s var(--ease),visibility .2s;}
@@ -215,7 +233,7 @@ body.has-chapter-index .document-brand {display:block;}
   body.has-chapter-index .shell {padding-left:18px;padding-right:12px;max-width:calc(100% - 28px);margin-right:28px;}
 }
 @media(prefers-reduced-motion:reduce) {.chapter-item,.chapter-node,.chapter-label {transition:none;}}
-@media print {.chapter-index,.chapter-resources {display:none!important;}body.has-chapter-index .layout,body.has-chapter-index .wrap,body.has-chapter-index .shell {max-width:100%;margin-left:auto;margin-right:0;padding-right:24px;}}
+@media print {body.has-chapter-index .shell {width:100%;}.chapter-index,.chapter-resources {display:none!important;}body.has-chapter-index .layout,body.has-chapter-index .wrap,body.has-chapter-index .shell {max-width:100%;margin-left:auto;margin-right:0;padding-right:24px;}}
 @media(min-width:720px) {
   #v-clientes .grid {grid-template-columns:repeat(3,minmax(0,1fr));}
   #v-clientes .kpis {grid-template-columns:repeat(3,minmax(0,1fr));}
