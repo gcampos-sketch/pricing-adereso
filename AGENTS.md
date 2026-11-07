@@ -12,3 +12,7 @@ Playbook and Operativa are live views of Notion, not independent copies of their
 - The Academy and guide worker shares durable leases, pending flags and versioned snapshots. Never clear a live lease or report a failed/partial read as a complete publication.
 
 For Dashboard Sales code, also follow `dashboard-sales/AGENTS.md`.
+
+# Publishing
+
+GitHub Pages is only a migration redirect, using `_config.yml` exclusions and `pages-redirect/` permalink pages. Never publish the Hub shell or internal material through Pages. Add new application assets to the Pages exclusions; the CI Pages boundary check must pass before merging. Render remains the official authenticated Hub and its independent public Partners/ROI site. Release changes through reviewed, passing GitHub commits; keep secrets and source snapshots untracked.
