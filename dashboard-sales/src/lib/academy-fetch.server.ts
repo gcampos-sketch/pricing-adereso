@@ -10,7 +10,9 @@ export class AcademySyncError extends Error {
 }
 // Never follow redirects with Notion credentials or fetch arbitrary links in source documents.
 export async function limitedFetch(url: string, init: RequestInit = {}, fetcher = fetch, max = 3_000_000) {
-  const response = await fetcher(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(20_000) });
+  let response: Response;
+  try { response = await fetcher(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(40_000) }); }
+  catch (error) { throw new AcademySyncError(error instanceof Error && ['TimeoutError','AbortError'].includes(error.name) ? 'source_timeout' : 'source_transport_error'); }
   if (!response.ok) throw new AcademySyncError('source_http_' + response.status);
   if (Number(response.headers.get('content-length')) > max) throw new AcademySyncError('source_too_large');
   const reader = response.body?.getReader();
@@ -22,7 +24,10 @@ export async function limitedFetch(url: string, init: RequestInit = {}, fetcher 
       length += value.length; if (length > max) throw new AcademySyncError('source_too_large');
       chunks.push(value);
     }
-  } finally { await reader.cancel(); }
+  } catch (error) {
+    if (error instanceof AcademySyncError) throw error;
+    throw new AcademySyncError(error instanceof Error && ['TimeoutError','AbortError'].includes(error.name) ? 'source_timeout' : 'source_transport_error');
+  } finally { try { await reader.cancel(); } catch { /* a timed-out stream is already closed */ } }
   return Buffer.concat(chunks).toString('utf8');
 }
 export function parseHelpSitemap(xml: string) {
@@ -39,10 +44,15 @@ export function parseHelpSitemap(xml: string) {
 }
 export function parseHelpArticle(html: string, url: string, modified: string | null): AcademyDocument {
   if (!validSourceUrl('help', url)) throw new AcademySyncError('invalid_source_url');
-  const $ = load(html); let metadata: Record<string, unknown> | undefined;
-  $('script[type="application/ld+json"]').each((_, el) => {
-    try { const value = JSON.parse($(el).text()); if (value['@type'] === 'Article') metadata = value; } catch { /* another metadata block */ }
-  });
+  let metadata: Record<string, unknown> | undefined;
+  // HelpKit embeds a large UI, CSS and serialized application state. Avoid building
+  // its entire DOM on the small web service; only article prose enters the parser.
+  for (const match of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi)) {
+    try { const value = JSON.parse(match[1]!); if (value['@type'] === 'Article') metadata = value; } catch { /* another metadata block */ }
+  }
+  const article = html.match(/<article\b[^>]*>[\s\S]*?<\/article\s*>/i)?.[0];
+  if (!article) throw new AcademySyncError('article_format_changed');
+  const $ = load(article);
   const main = $('article main.notion').first();
   if (!main.length || !metadata || typeof metadata['headline'] !== 'string') throw new AcademySyncError('article_format_changed');
   main.find('script,style,svg,iframe,form,button,noscript').remove();
@@ -57,15 +67,18 @@ export async function fetchHelpSnapshot(previous: AcademySnapshot | null, fetche
   const pages = parseHelpSitemap(await limitedFetch('https://help.adereso.ai/sitemap.xml', {}, fetcher));
   const full = !previous || now.getTime() - Date.parse(previous.fullScanAt) > 7 * 86_400_000;
   const old = new Map(previous?.documents.map(doc => [doc.url, doc]) ?? []);
-  const documents = new Array<AcademyDocument>(pages.length); let next = 0;
+  const documents = new Array<AcademyDocument>(pages.length); let next = 0, failure: unknown;
   // Bound concurrent parsing: each HelpKit page contains a large application payload.
-  await Promise.all(Array.from({ length: 3 }, async () => {
-    while (next < pages.length) {
+  await Promise.all(Array.from({ length: 2 }, async () => {
+    while (!failure && next < pages.length) {
       const index = next++, page = pages[index]!; const saved = old.get(page.url);
-      documents[index] = !full && saved && page.modified && saved.sourceEditedAt === page.modified ? saved :
-        parseHelpArticle(await limitedFetch(page.url, {}, fetcher), page.url, page.modified);
+      try {
+        documents[index] = !full && saved && page.modified && saved.sourceEditedAt === page.modified ? saved :
+          parseHelpArticle(await limitedFetch(page.url, {}, fetcher), page.url, page.modified);
+      } catch (error) { failure = error; }
     }
   }));
+  if (failure) throw failure;
   return { schema: 'academy-sources/v1', source: 'help', fetchedAt: now.toISOString(), fullScanAt: full ? now.toISOString() : previous!.fullScanAt, documents };
 }
 

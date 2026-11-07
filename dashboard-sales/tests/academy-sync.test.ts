@@ -90,6 +90,20 @@ describe('bounded source reads preserve source statements', () => {
     await expect(limitedFetch(url,{},(async (_,init) => { redirect = init?.redirect; return new Response(null,{ status:302,headers:{ location:'https://evil.test' } }); }) as typeof fetch)).rejects.toThrow('source_http_302');
     expect(redirect).toBe('manual');
     await expect(limitedFetch(url,{},(async () => new Response('a'.repeat(11))) as typeof fetch,10)).rejects.toThrow('source_too_large');
+    await expect(limitedFetch(url,{},(async () => { throw new DOMException('provider timeout','TimeoutError'); }) as typeof fetch)).rejects.toThrow('source_timeout');
+    await expect(limitedFetch(url,{},(async () => { throw new TypeError('transport failed'); }) as typeof fetch)).rejects.toThrow('source_transport_error');
+  });
+  test('a failed batch stops new reads and waits for its other in-flight article', async () => {
+    const urls = [url,url+'2',url+'3']; let secondFinished = false; const reads: string[] = [];
+    const fetcher = (async (input: string) => {
+      if (input.endsWith('sitemap.xml')) return new Response('<urlset>'+urls.map(u=>'<url><loc>'+u+'</loc></url>').join('')+'</urlset>');
+      reads.push(input);
+      if (input===url) return new Response('outage',{status:503});
+      await new Promise(resolve=>setTimeout(resolve,25));secondFinished=true;
+      return new Response(article('Condiciones y requisitos de esta funcionalidad del producto.'));
+    }) as typeof fetch;
+    await expect(fetchHelpSnapshot(null,fetcher)).rejects.toThrow('source_http_503');
+    expect(secondFinished).toBe(true); expect(reads).toHaveLength(2);expect(reads).not.toContain(url+'3');
   });
   test('partial Help Center failures cannot produce a replacement snapshot', async () => {
     const fetcher = (async (input: string) => input.endsWith('sitemap.xml') ? new Response(`<urlset><url><loc>${url}</loc></url></urlset>`) : new Response('outage',{status:503})) as typeof fetch;
