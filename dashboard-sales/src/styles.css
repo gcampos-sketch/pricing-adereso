@@ -5585,6 +5585,8 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .hub-welcome-brandword { position:absolute;inset:0;width:var(--welcome-word);height:100%;animation:hub-welcome-word-withdraw 7s linear both; }
 .hub-welcome-brandword img { left:calc(-1*var(--welcome-icon)); }
 .hub-welcome-greeting { position:absolute;inset:0;display:flex;align-items:center;width:var(--welcome-word);padding-left:calc(var(--welcome-icon)*.22);box-sizing:border-box;font:500 calc(var(--welcome-icon)*.78)/1 'Outfit',system-ui,sans-serif;letter-spacing:-.045em;white-space:nowrap;animation:hub-welcome-greeting 7s linear both; }
+.hub-welcome-greeting[data-personalized=true] { flex-direction:column;align-items:flex-start;justify-content:center;gap:calc(var(--welcome-icon)*.06);font-size:calc(var(--welcome-icon)*.62); }
+.hub-welcome-name { display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:calc(var(--welcome-icon)*.4);letter-spacing:-.025em;color:#d2d6df; }
 .hub-welcome-skip { position:absolute;bottom:max(32px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:22px;border:1px solid #ffffff24;border-radius:99px;padding:10px 18px;background:#ffffff05;color:#acb2be;font:400 12px 'Work Sans',system-ui,sans-serif;cursor:pointer;transition:background .2s,color .2s; }
 .hub-welcome-skip:hover { background:#ffffff10;color:#fff; }
 .hub-welcome-skip:focus-visible { outline:2px solid #ffd540;outline-offset:5px; }
