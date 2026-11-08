@@ -6,6 +6,7 @@ import { verifyHubIdentity } from './hub-auth.server';
 import { createRoiPublicGateway } from './roi-public';
 import { createPartnerPublicGateway } from './partner-public';
 import { handlePartnerMailRequest } from './partner-mail.server';
+import { handleHubWelcomeRequest } from './hub-welcome.server';
 import { handleCommercialGuidesRequest } from './commercial-guides.server';
 import { handleAcademyRequest } from './academy-sync.server';
 import { handleNotionOAuthRequest } from './academy-notion-oauth.server';
@@ -19,5 +20,5 @@ const publicPartners = createPartnerPublicGateway(read);
 const privateHub = createHubGateway({ verify: verifyHubIdentity,
   publicOrigin: process.env['RENDER_EXTERNAL_URL'], read });
 export async function handleHubRequest(request: Request) {
-  return await handleCommercialGuidesRequest(request) ?? await handleNotionOAuthRequest(request) ?? await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
+  return await handleHubWelcomeRequest(request) ?? await handleCommercialGuidesRequest(request) ?? await handleNotionOAuthRequest(request) ?? await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
 }

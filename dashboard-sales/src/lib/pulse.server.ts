@@ -346,6 +346,7 @@ export function toDTO(deal: RawDeal, ownerNames: Map<string, string>, now: numbe
       ? new Date(closeDateValue).toLocaleDateString("es-CL", { timeZone: "UTC" })
       : "s/f",
     closeDateValue,
+    createdAt: p["createdate"] ?? "",
     probability: probability ? `${Math.round(Number(probability) * 100)}%` : "s/n",
     probabilityValue: probability ? Number(probability) : 0,
     score: score ? `${Math.round(Number(score))}%` : "s/n",

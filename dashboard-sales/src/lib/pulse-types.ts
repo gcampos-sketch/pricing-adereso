@@ -22,6 +22,8 @@ export type DealDTO = {
   segment: string;
   closeDate: string;
   closeDateValue: string;
+  /** Fecha real de creación de HubSpot; ausente en snapshots antiguos. */
+  createdAt?: string;
   probability: string;
   probabilityValue: number;
   score: string;

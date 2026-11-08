@@ -6,8 +6,8 @@ const deals=[deal('2026-11-01T00:00:00Z',10),deal('2026-11-30',20),deal('2026-12
 test('current month through quarter end, with amounts/counts and explicit reconciliation',()=>{
  const s=summarizeDealMonths(deals,now);
  expect(s.months.map(m=>[m.key,m.amount,m.count])).toEqual([['2026-11',30,2],['2026-12',50,1]]);
- expect(s.total).toEqual({amount:80,count:3});expect(s.outside).toEqual({amount:15,count:2});expect(s.undated).toEqual({amount:13,count:2});
- expect(s.total.amount+s.outside.amount+s.undated.amount).toBe(deals.reduce((n,d)=>n+d.amountValue,0));
+ expect(s.total).toEqual({amount:80,count:3});expect(s.outside).toEqual({amount:8,count:1});expect(s.previous.map(m=>[m.key,m.amount,m.count])).toEqual([['2026-10',7,1]]);expect(s.undated).toEqual({amount:13,count:2});
+ expect(s.total.amount+s.previous.reduce((n,m)=>n+m.amount,0)+s.outside.amount+s.undated.amount).toBe(deals.reduce((n,d)=>n+d.amountValue,0));
 });
 test('only filtered rows contribute, and a local date edit moves the same amount between buckets',()=>{
  expect(summarizeDealMonths(deals.filter(d=>d.amountValue===50),now).total.amount).toBe(50);
@@ -27,4 +27,11 @@ test('business month honors local midnight, while HubSpot close dates keep their
 });
 test('empty filtered month retains zero buckets; zero amounts still count deals',()=>{
  const s=summarizeDealMonths([deal('2026-11-10',0)],now);expect(s.months[0]).toMatchObject({amount:0,count:1});expect(s.months[1]).toMatchObject({amount:0,count:0});
+});
+
+test('previous filtered months retain their own year; only open stages are overdue',()=>{
+ const s=summarizeDealMonths([{...deal('2025-12-31',12),stage:'E5.1'},{...deal('2026-10-12',30),stage:'E2'},{...deal('2026-10-20',40),stage:'E6'},{...deal('2026-11-01',50),stage:'E5'}],now);
+ expect(s.previous.map(m=>[m.key,m.year,m.amount,m.count,m.overdue])).toEqual([['2025-12',2025,12,1,1],['2026-10',2026,70,2,1]]);
+ expect(s.total).toEqual({amount:50,count:1});
+ expect(summarizeDealMonths([],now).previous).toEqual([]);
 });

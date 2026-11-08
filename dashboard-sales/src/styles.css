@@ -3306,6 +3306,8 @@
 .adobo-score-trigger:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .deal-row .deal-value-trend { display: inline-flex; flex: 0 0 auto; color: inherit; font-size: 14px; line-height: 1; }
 .deal-probability-value { display: flex; align-items: center; gap: 4px; }
+.deal-probability-value .deal-value-trend { width: 10px; flex: 0 0 10px; justify-content: center; }
+.deal-probability-value .deal-value-trend[data-neutral="true"] { color: var(--muted); }
 .deal-probability-value input { min-width: 0; flex: 1 1 0; }
 .deal-row > *:nth-child(1), .deal-row > *:nth-child(2) { transition: background-color 220ms ease, box-shadow 220ms ease; }
 .deal-cell-name .deal-actions { background: transparent; border-color: transparent; }
@@ -5541,17 +5543,56 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-modal-motion .deal-list { overflow-anchor:none; }
 .deal-modal-motion .deal-header { height:38px; min-height:38px; box-sizing:border-box; padding:3px 0; }
 .deal-modal-motion .deal-header > .deal-head-cell { flex-direction:row; justify-content:flex-start; align-items:center; white-space:nowrap; }
+.deal-modal-motion .deal-header > .deal-head-closeDate { display:flex; justify-content:center; }
+.deal-cell-closeDate { text-align:center; }
+.deal-modal-motion .deal-header > :is(.deal-head-amount, .deal-head-setup, .deal-head-age) { display:flex; justify-content:center; }
+.deal-row :is(.deal-cell-amount, .deal-cell-setup, .deal-cell-age) { text-align:center; font-variant-numeric:tabular-nums; }
 .deal-modal-motion .deal-header .sort-button { line-height:18px; padding:2px 6px; }
-.deal-modal-motion .deal-month-summary { margin-top:calc(4px + 4px * var(--deal-open)); margin-bottom:calc(4px + 4px * var(--deal-open)); padding:calc(5px + 5px * var(--deal-open)) calc(12px + 2px * var(--deal-open)); border-color:rgb(255 255 255 / calc(.08 * var(--deal-open))); background:rgb(255 255 255 / calc(.02 * var(--deal-open))); }
-.deal-modal-motion .deal-month-summary-row { gap:calc(16px + 8px * var(--deal-open)); }
-.deal-modal-motion .deal-month-bucket { display:flex; align-items:baseline; min-width:0; gap:8px; white-space:nowrap; }
-.deal-modal-motion .deal-month-bucket > span { font-size:calc(10px + 1px * var(--deal-open)); }
-.deal-modal-motion .deal-month-bucket > strong { font-size:calc(14px + 4px * var(--deal-open)); }
-.deal-modal-motion .deal-month-bucket > small,
-.deal-modal-motion .deal-month-bucket > span small { display:inline-block; max-width:calc(74px * var(--deal-open)); opacity:var(--deal-open); overflow:hidden; vertical-align:bottom; }
+.deal-modal-motion .deal-month-summary { margin-top:calc(4px + 4px * var(--deal-open)); margin-bottom:calc(4px + 4px * var(--deal-open)); padding:calc(2px + 2px * var(--deal-open)); border-color:transparent; background:transparent; }
+.deal-modal-motion .deal-month-summary-row { gap:calc(10px + 2px * var(--deal-open)); }
+.deal-modal-motion .deal-month-bucket { position:relative; display:block; box-sizing:border-box; flex:1 0 190px; min-width:190px; height:calc(28px + 60px * var(--deal-open)); padding:0; border:1px solid rgb(255 255 255 / calc(.08 * var(--deal-open))); border-radius:calc(4px + 6px * var(--deal-open)); background:rgb(255 255 255 / calc(.025 * var(--deal-open))); }
+.deal-modal-motion .deal-month-label { position:absolute; display:flex; align-items:center; gap:5px; top:calc(5px + 6px * var(--deal-open)); left:calc(4px + 8px * var(--deal-open)); font-size:11px; line-height:16px; color:var(--muted); white-space:nowrap; }
+.deal-month-label-full { opacity:var(--deal-open); }
+.deal-month-label-short { position:absolute; left:0; opacity:calc(1 - var(--deal-open)); }
+.deal-month-label:has(svg) .deal-month-label-short { left:17px; }
+.deal-month-label svg { flex:0 0 auto; }
+.deal-modal-motion .deal-month-bucket > strong { position:absolute; top:calc(3px + 27px * var(--deal-open)); left:calc(84px - 72px * var(--deal-open)); font-size:calc(14px + 8px * var(--deal-open)); line-height:1.2; font-variant-numeric:tabular-nums; }
+.deal-modal-motion .deal-month-bucket > small { position:absolute; left:12px; bottom:9px; opacity:var(--deal-open); font-size:10px; white-space:nowrap; pointer-events:none; }
+.deal-modal-motion .deal-month-total { border-color:rgb(255 255 255 / calc(.12 * var(--deal-open))); }
+.deal-modal-motion .deal-month-bucket[data-overdue="true"] { border-color:color-mix(in srgb,var(--warning, #f3b547) calc(24% * var(--deal-open)),transparent); }
+.deal-modal-motion .deal-month-bucket[data-overdue="true"] .deal-month-label { color:var(--warning, #f3b547); }
+.deal-modal-motion .deal-month-bucket[data-overdue="true"] > small { color:var(--warning, #f3b547); }
 .deal-modal-motion .deal-month-remainder { max-height:calc(40px * var(--deal-open)); overflow:hidden; margin-top:calc(10px * var(--deal-open)); opacity:var(--deal-open); }
 @media (max-width:640px) { .deal-modal-motion > .modal-head { padding-left:16px; padding-right:16px; } }
 .commission-inline {display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:12px 0;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:12px;font-size:12px;color:var(--muted);}
 .commission-inline label {display:inline-flex;align-items:center;gap:6px;}.commission-inline input {width:70px;padding:4px 6px;background:var(--surface);border:1px solid var(--border-default);border-radius:6px;color:var(--foreground);}.commission-inline strong {color:var(--brand);}.commission-inline details {position:relative;}.commission-inline table {border-collapse:collapse;}.commission-inline td,.commission-inline th {padding:5px 10px;text-align:left;}.commission-inline details[open] {flex-basis:100%;}.commission-inline summary {cursor:pointer;}
 .risk-hygiene {margin:18px 0;padding:16px;border:1px solid var(--border-subtle);border-radius:14px;}.risk-hygiene summary {cursor:pointer;color:var(--foreground);}.risk-hygiene p,.risk-hygiene small {font-size:12px;color:var(--muted);}.risk-hygiene select {background:var(--surface);color:var(--foreground);padding:6px;border-radius:8px;margin:8px;}.risk-hygiene-list {max-height:440px;overflow:auto;}.risk-hygiene article {padding:12px 0;border-bottom:1px solid var(--border-subtle);}.risk-hygiene article a {color:var(--brand);}
 .feedback-bubble {position:fixed;right:18px;bottom:76px;z-index:45;}.feedback-bubble>button {width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:var(--surface);border:1px solid var(--border-default);color:var(--muted);}.feedback-bubble section {position:absolute;bottom:46px;right:0;width:min(340px,calc(100vw - 40px));padding:16px;background:var(--surface);border:1px solid var(--border-default);border-radius:14px;box-shadow:var(--shadow-modal);}.feedback-bubble header {display:flex;justify-content:space-between;align-items:center;}.feedback-bubble p {font-size:12px;color:var(--muted);}.feedback-bubble textarea {width:100%;padding:8px;background:var(--background);color:var(--foreground);border:1px solid var(--border-default);border-radius:8px;}.feedback-bubble section button {padding:6px 10px;background:transparent;color:var(--brand);border:0;cursor:pointer;}
+
+/* One finite first-access sequence; the regular dashboard keeps its quiet background. */
+.hub-first-access-content { min-height:100dvh; }
+.hub-welcome-check,.hub-welcome { position:fixed;inset:0;z-index:10000;background:#080b11; }
+.hub-welcome { overflow:hidden;isolation:isolate;outline:none;animation:hub-welcome-exit 6.2s linear both;color:#f4f4f5;font-family:'Work Sans',system-ui,sans-serif; }
+.hub-welcome-sky,.hub-welcome-burst { position:absolute;inset:0;width:100%;height:100%;pointer-events:none; }
+.hub-welcome-sky { opacity:0;animation:hub-welcome-sky 6.2s linear both; }
+.hub-welcome-burst { z-index:1; }
+.hub-welcome-mark { position:absolute;left:50%;top:45%;width:min(330px,64vw);transform:translate(-50%,-50%);z-index:2; }
+.hub-welcome-mark img { display:block;width:100%;height:auto;animation:hub-welcome-logo 6.2s cubic-bezier(.22,.61,.36,1) both; }
+.hub-welcome-message { position:absolute;left:24px;right:24px;top:44%;text-align:center;z-index:2;animation:hub-welcome-copy 6.2s linear both; }
+.hub-welcome-message>span { display:block;font-size:10px;letter-spacing:.25em;color:#d9c48e;margin-bottom:18px; }
+.hub-welcome-message h1 { font:500 clamp(28px,4.2vw,54px)/1.15 'Outfit',system-ui,sans-serif;letter-spacing:-.045em;text-wrap:balance;margin:0; }
+.hub-welcome-message p { margin-top:16px;font-size:14px;color:#a6adbd; }
+.hub-welcome-skip { position:absolute;bottom:max(32px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:22px;border:1px solid #ffffff24;border-radius:99px;padding:10px 18px;background:#ffffff05;color:#acb2be;font:400 12px 'Work Sans',system-ui,sans-serif;cursor:pointer;transition:background .2s,color .2s; }
+.hub-welcome-skip:hover { background:#ffffff10;color:#fff; }
+.hub-welcome-skip:focus-visible { outline:2px solid #ffd540;outline-offset:5px; }
+@keyframes hub-welcome-logo { 0%{opacity:0;filter:blur(10px);transform:translateY(10px) scale(.94)}18%{opacity:1;filter:blur(0px) drop-shadow(0 0 18px #fff2);transform:translateY(0) scale(1)}32%{opacity:1;filter:blur(0px) drop-shadow(0 0 28px #ffe1a544);transform:scale(1.015)}43%{opacity:0;filter:blur(8px);transform:scale(.72)}100%{opacity:0;transform:scale(.72)} }
+@keyframes hub-welcome-sky { 0%,40%{opacity:0}73%,100%{opacity:1} }
+@keyframes hub-welcome-copy { 0%,57%{opacity:0;transform:translateY(12px);filter:blur(5px)}74%,88%{opacity:1;transform:translateY(0);filter:blur(0)}100%{opacity:0;transform:translateY(-5px);filter:blur(0)} }
+@keyframes hub-welcome-exit { 0%,88%{opacity:1}100%{opacity:0} }
+.hub-welcome[data-reduced=true] { animation:none; }
+.hub-welcome[data-reduced=true] .hub-welcome-sky { animation:none;opacity:.45; }
+.hub-welcome[data-reduced=true] .hub-welcome-mark { top:35%;width:min(240px,55vw); }
+.hub-welcome[data-reduced=true] .hub-welcome-mark img { animation:none; }
+.hub-welcome[data-reduced=true] .hub-welcome-message { top:50%;animation:none; }
+.hub-welcome[data-reduced=true] .hub-welcome-message>span { display:none; }
+@media(prefers-reduced-motion:reduce) { .hub-welcome * { transition:none!important; } }

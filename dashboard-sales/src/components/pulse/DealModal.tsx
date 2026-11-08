@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal } from "lucide-react";
+import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
 import { compareDealClosePriority, compareDealProbabilityPriority } from "@/lib/deal-close-priority";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
+import { dealAgeDays } from "@/lib/deal-age";
 import { markdownToHubspotHtml } from "@/lib/markdown";
 
 /** Cambios locales aplicados sobre el reporte mientras no se recarga desde HubSpot. */
@@ -796,7 +797,8 @@ type SortKey =
   | "adobo"
   | "nextActivity"
   | "activities"
-  | "closeStatus"
+  | "setup"
+  | "age"
   | "stage"
   | "reason"
   | "source"
@@ -859,8 +861,10 @@ function sortValue(deal: DealDTO, key: SortKey): string | number {
       return deal.nextActivityValue || "9999";
     case "activities":
       return deal.activities ?? -1;
-    case "closeStatus":
-      return deal.closeStatusValue;
+    case "setup":
+      return deal.otfValue;
+    case "age":
+      return dealAgeDays(deal.createdAt, Date.now()) ?? -1;
     case "financeAlert":
       return (deal.financeAlert ?? "").toLowerCase();
     case "ssppAlert":
@@ -1141,7 +1145,9 @@ type GlassOption = { value: string; label: string };
 const SORT_OPTIONS: GlassOption[] = [
   { value: "adobo", label: "Adobo" },
   { value: "probability", label: "% cierre" },
-  { value: "amount", label: "Monto" },
+  { value: "amount", label: "MRR" },
+  { value: "setup", label: "Setup" },
+  { value: "age", label: "Días creado" },
   { value: "closeDate", label: "Fecha · % cierre" },
 ];
 
@@ -1565,16 +1571,23 @@ export function DealModal({
       },
       {
         key: "closeDate",
-        label: "Cierre",
+        label: "F. Cierre",
         width: 114,
         render: (deal) => <InlineEdit deal={deal} field="closeDate" onSaved={applyEdit} />,
         caption: () => "",
       },
       {
         key: "amount",
-        label: "Monto",
+        label: "MRR",
         width: 74,
         render: (deal) => deal.amount,
+        caption: () => "",
+      },
+      {
+        key: "setup",
+        label: "Setup",
+        width: 74,
+        render: (deal) => new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}).format(deal.otfValue ?? 0),
         caption: () => "",
       },
       {
@@ -1583,7 +1596,7 @@ export function DealModal({
         width: 74,
         render: (deal) => {
           const comparison=closingProbabilityComparison(comparedDeal(deal),Date.now());
-          return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/>{comparison.delta!==null ? <span className="deal-value-trend" title={comparison.detail} aria-label={comparison.detail}>{comparison.delta>0?'↑':comparison.delta<0?'↓':'→'}</span> : null}</div>;
+          return <div className="deal-probability-value"><InlineEdit deal={deal} field="probability" onSaved={applyEdit}/><span className="deal-value-trend" data-neutral={comparison.delta===null || comparison.delta===0} title={comparison.detail} aria-label={comparison.detail}>{comparison.delta!==null && comparison.delta!==0 ? comparison.delta>0?'↑':'↓' : '·'}</span></div>;
         },
         caption: () => "",
       },
@@ -1612,10 +1625,13 @@ export function DealModal({
             : "",
       },
       {
-        key: "closeStatus",
-        label: "Estado fecha",
-        width: 74,
-        render: (deal) => deal.closeStatus,
+        key: "age",
+        label: "Días creado",
+        width: 78,
+        render: (deal) => {
+          const days=dealAgeDays(deal.createdAt,Date.now());
+          return <span title={days===null ? 'Fecha de creación no disponible' : `Creado el ${new Date(deal.createdAt!).toLocaleString('es-CL')} · días completos transcurridos`}>{days===null ? 's/d' : days}</span>;
+        },
         caption: () => "",
       },
       {
@@ -2050,11 +2066,16 @@ export function DealModal({
         </div>
         <section className="deal-month-summary" aria-label="Montos por mes según filtros">
           <div className="deal-month-summary-row">
-            {monthlySummary.months.map(month=><div className="deal-month-bucket" data-current={month.current} key={month.key}>
-              <span>{month.label} {monthlySummary.year}{month.current ? <small> · mes actual</small> : null}</span>
-              <strong>{monthMoney(month.amount)}</strong><small>{month.count} {month.count===1?'deal':'deals'}</small>
+            {[...monthlySummary.previous, ...monthlySummary.months].map(month=><div className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}>
+              <span className="deal-month-label">
+                {month.overdue>0 ? <TriangleAlert size={12} aria-label={`${month.overdue} negocios con cierre vencido`} /> : null}
+                <span className="deal-month-label-full">{month.label} {month.year}</span>
+                <span className="deal-month-label-short" aria-hidden="true">{month.label.slice(0,3)} {String(month.year).slice(-2)}</span>
+              </span>
+              <strong>{monthMoney(month.amount)}</strong>
+              <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} ${month.overdue===1?'vencido':'vencidos'}` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
             </div>)}
-            <div className="deal-month-bucket deal-month-total"><span>Total restante Q{monthlySummary.quarter}</span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} {monthlySummary.total.count===1?'deal':'deals'}</small></div>
+            <div className="deal-month-bucket deal-month-total"><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></div>
           </div>
           {monthlySummary.outside.count || monthlySummary.undated.count ? <p className="deal-month-remainder">
             {monthlySummary.outside.count ? <span>Fuera de estos meses: {monthMoney(monthlySummary.outside.amount)} · {monthlySummary.outside.count} deals</span> : null}
