@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
 import { dealSelectionTotal, type SelectionQuota } from "@/lib/deal-selection-total";
 import { CopyTextButton } from "./CopyControls";
+import { DealSelectionSummary } from "./DealSelectionSummary";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, getAdoboHistory, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
-import { compareDealClosePriority, compareDealProbabilityPriority } from "@/lib/deal-close-priority";
+import { compareDealSort, dealKind, initialDealSort, toggleDealSort, type DealKind, type DealSort, type SortKey } from "@/lib/deal-table-sort";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { dealAgeDays } from "@/lib/deal-age";
 import { markdownToHubspotHtml } from "@/lib/markdown";
@@ -785,29 +786,6 @@ function LostDialog({
 }
 
 
-type SortKey =
-  | "financeAlert"
-  | "ssppAlert"
-  | "name"
-  | "owner"
-  | "closeDate"
-  | "amount"
-  | "probability"
-  | "score"
-  | "adobo"
-  | "nextActivity"
-  | "activities"
-  | "setup"
-  | "age"
-  | "stage"
-  | "reason"
-  | "source"
-  | "country"
-  | "sequence"
-  | "contact"
-  | "signal";
-
-
 type Column = {
   key: SortKey;
   label: string;
@@ -845,41 +823,6 @@ function tempInfo(deal: DealDTO) {
   };
 }
 
-function sortValue(deal: DealDTO, key: SortKey): string | number {
-  switch (key) {
-    case "amount":
-      return deal.amountValue;
-    case "closeDate":
-      return deal.closeDateValue;
-    case "probability":
-      return deal.probabilityValue;
-    case "score":
-      return deal.scoreValue;
-    case "adobo":
-      return deal.adoboScoreValue;
-    case "nextActivity":
-      return deal.nextActivityValue || "9999";
-    case "activities":
-      return deal.activities ?? -1;
-    case "setup":
-      return deal.otfValue;
-    case "age":
-      return dealAgeDays(deal.createdAt, Date.now()) ?? -1;
-    case "financeAlert":
-      return (deal.financeAlert ?? "").toLowerCase();
-    case "ssppAlert":
-      return (deal.ssppAlert ?? "").toLowerCase();
-    case "reason":
-      return (deal.lostReason ?? "").toLowerCase();
-    case "source":
-      return (deal.source ?? "").toLowerCase();
-    case "country":
-      return (deal.country ?? "").toLowerCase();
-    default:
-      return String(deal[key as "name" | "owner" | "stage"] ?? "").toLowerCase();
-  }
-}
-
 const pretty = (raw: string | null) => {
   if (!raw) return "s/n";
   const clean = String(raw).replace(/_/g, " ").trim();
@@ -892,7 +835,6 @@ type Signal = { label: string; value: string; sign: Sign };
 
 const NO_EVIDENCE = "sin evidencia";
 
-const HIDDEN_COLS_KEY = "deal-modal-hidden-columns";
 
 const dateEs = (raw: string | null | undefined) => {
   if (!raw) return NO_EVIDENCE;
@@ -1125,8 +1067,6 @@ type ContactRow = {
 };
 
 const normText = (v: string) => v.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[_\s]+/g, " ");
-/** Upsell/Cross sell cuentan como upsell; el resto es oportunidad nueva. */
-export const isUpsellDeal = (deal: DealDTO) => /upsell|up sell|cross/.test(normText(deal.segment ?? ""));
 /** Producto a contratar = Billetera Engage. */
 export const isWalletEngage = (deal: DealDTO) => /billetera/.test(normText(deal.productToHire ?? ""));
 
@@ -1141,15 +1081,6 @@ const contactLabel = (info: ContactRow | undefined) => {
 };
 
 type GlassOption = { value: string; label: string };
-
-const SORT_OPTIONS: GlassOption[] = [
-  { value: "adobo", label: "Adobo" },
-  { value: "probability", label: "% cierre" },
-  { value: "amount", label: "MRR" },
-  { value: "setup", label: "Setup" },
-  { value: "age", label: "Días creado" },
-  { value: "closeDate", label: "Fecha · % cierre" },
-];
 
 /** Selector desplegable liquid glass: botón compacto + panel flotante translúcido. */
 function GlassSelect({
@@ -1214,16 +1145,21 @@ export function DealModal({
   payload,
   onClose,
   initialStages,
+  initialSummaryDate,
   pipelineTrend,
   selectionQuota,
   fix,
   ownerBreakdown,
   ownerQuotas,
+  executiveSummary,
 }: {
+  executiveSummary?: ReactNode;
   payload: Drilldown | null;
   onClose: () => void;
   /** etapas preseleccionadas por el filtro maestro del tablero */
   initialStages?: string[];
+  /** Initial month/quarter selection uses the same reversible summary filter as a month-card click. */
+  initialSummaryDate?: string | null;
   pipelineTrend?: { labels: string[]; values: number[] } | null;
   /** muestra barras de monto por comercial (solo vista equipo) */
   ownerBreakdown?: boolean;
@@ -1239,20 +1175,16 @@ export function DealModal({
   const [contacts, setContacts] = useState<Record<string, ContactRow>>({});
   const [contactsState, setContactsState] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [seqFilter, setSeqFilter] = useState<"all" | "active" | "past">("all");
-  const [kindFilter, setKindFilter] = useState<"all" | "opportunity" | "upsell">("all");
+  const [kindFilter, setKindFilter] = useState<"all" | DealKind>("all");
   const [hideWallet, setHideWallet] = useState(false);
   /** filtro de activación (solo cuando el payload trae los ids sin activar) */
   const [actFilter, setActFilter] = useState<"all" | "off" | "on">("all");
 
-  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({
-    key: "probability",
-    dir: "desc",
-  });
+  const [sort, setSort] = useState<DealSort[]>(() => initialDealSort(payload?.initialSort as DealSort | undefined));
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [summaryDateFilter, setSummaryDateFilter] = useState<string | null>(null);
+  const [summaryDateFilter, setSummaryDateFilter] = useState<string | null>(initialSummaryDate ?? null);
   const [monthFilter, setMonthFilter] = useState<"all" | "this" | "next">("all");
-  const [hidden, setHidden] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string[]>(initialStages ?? []);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, DealEdit>>({});
@@ -1264,22 +1196,6 @@ export function DealModal({
 
   const applyEdit = useCallback((id: string, patch: DealEdit) => {
     setEdits((current) => ({ ...current, [id]: { ...current[id], ...patch } }));
-  }, []);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(HIDDEN_COLS_KEY);
-      if (raw) setHidden(JSON.parse(raw) as string[]);
-    } catch {
-      /* preferencia local opcional */
-    }
-  }, []);
-  const persistHidden = useCallback((next: string[]) => {
-    setHidden(next);
-    try {
-      localStorage.setItem(HIDDEN_COLS_KEY, JSON.stringify(next));
-    } catch {
-      /* preferencia local opcional */
-    }
   }, []);
   const [noteDeal, setNoteDeal] = useState<DealDTO[] | null>(null);
   const [taskDeal, setTaskDeal] = useState<DealDTO | null>(null);
@@ -1347,15 +1263,11 @@ export function DealModal({
   useEffect(() => {
     if (!payloadKey) return;
     setQuery("");
-    setSummaryDateFilter(null);
+    setSummaryDateFilter(initialSummaryDate ?? null);
     setSearchOpen(false);
     setOpenMenu(null);
     const requested = visiblePayload?.initialSort;
-    setSort(
-      requested
-        ? { key: requested.key as SortKey, dir: requested.dir }
-        : { key: "probability", dir: "desc" },
-    );
+    setSort(initialDealSort(requested as DealSort | undefined));
     setNoteDeal(null);
     setTaskDeal(null);
     setSelected([]);
@@ -1436,7 +1348,7 @@ export function DealModal({
       filtered = filtered.filter((deal) => (actFilter === "off" ? actIds.has(deal.id) : !actIds.has(deal.id)));
     }
     if (kindFilter !== "all") {
-      filtered = filtered.filter((deal) => isUpsellDeal(deal) === (kindFilter === "upsell"));
+      filtered = filtered.filter((deal) => dealKind(deal) === kindFilter);
     }
     if (hideWallet) filtered = filtered.filter((deal) => !isWalletEngage(deal));
     if (seqFilter === "active") {
@@ -1451,15 +1363,8 @@ export function DealModal({
       const month = currentMonthKey(Date.now(), monthFilter === "next" ? 1 : 0);
       filtered = filtered.filter(deal => closeMonthKey(deal.closeDateValue) === month);
     }
-    return [...filtered].sort((a, b) => {
-      if (sort.key === "probability") return compareDealProbabilityPriority(a, b, sort.dir);
-      if (sort.key === "closeDate") return compareDealClosePriority(a, b, sort.dir);
-      const left = sortValue(a, sort.key);
-      const right = sortValue(b, sort.key);
-      if (left < right) return sort.dir === "asc" ? -1 : 1;
-      if (left > right) return sort.dir === "asc" ? 1 : -1;
-      return a.name.localeCompare(b.name);
-    });
+    const now = Date.now();
+    return [...filtered].sort((a, b) => compareDealSort(a, b, sort, contacts, now));
   }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet]);
 
   // This temporary drilldown never mutates the existing filters or their ordering.
@@ -1468,8 +1373,8 @@ export function DealModal({
   const deals = summaryDateFilter
     ? dealsBeforeSummary.filter(deal => {
         const month = closeMonthKey(deal.closeDateValue);
-        return summaryDateFilter === "remaining"
-          ? monthlySummary.months.some(bucket => bucket.key === month)
+        return summaryDateFilter === "quarter"
+          ? monthlySummary.quarterMonths.some(bucket => bucket.key === month)
           : month === summaryDateFilter;
       })
     : dealsBeforeSummary;
@@ -1755,11 +1660,7 @@ export function DealModal({
     () => columns.filter(column => column.key !== "owner" || multipleOwners),
     [columns, multipleOwners],
   );
-  const availableHidden = availableColumns.filter(column => hidden.includes(column.key)).length;
-  const visibleColumns = useMemo(
-    () => availableColumns.filter((column) => column.key === "name" || !hidden.includes(column.key)),
-    [availableColumns, hidden],
-  );
+  const visibleColumns = availableColumns;
 
   // Monto por comercial de los deals visibles (solo se muestra en la vista equipo).
   const ownerBars = useMemo(() => {
@@ -1860,6 +1761,7 @@ export function DealModal({
       setBulkState("error");
     }
   };
+  const OwnerBreakdownContainer = executiveSummary ? "details" : "div";
   const allText = () =>
     [
       `${visiblePayload.title} · ${visiblePayload.subtitle}`,
@@ -1934,19 +1836,6 @@ export function DealModal({
                 open={openMenu === "cierre"}
                 onToggle={() => setOpenMenu(openMenu === "cierre" ? null : "cierre")}
               />
-              <GlassSelect
-                id="orden"
-                label="Orden"
-                display={SORT_OPTIONS.find((option) => option.value === sort.key)?.label ?? sort.key}
-                options={SORT_OPTIONS}
-                activeValues={[sort.key]}
-                onSelect={(value) => {
-                  setSort({ key: value as SortKey, dir: value === "closeDate" ? "asc" : "desc" });
-                  setOpenMenu(null);
-                }}
-                open={openMenu === "orden"}
-                onToggle={() => setOpenMenu(openMenu === "orden" ? null : "orden")}
-              />
               {stagesPresent.length > 1 ? (
                 <GlassSelect
                   id="etapa"
@@ -1974,15 +1863,16 @@ export function DealModal({
               <GlassSelect
                 id="tipo-oportunidad"
                 label="Tipo"
-                display={kindFilter === "all" ? "Todos" : kindFilter === "upsell" ? "Upsell" : "Oportunidad"}
+                display={kindFilter === "all" ? "Todos" : kindFilter === "upsell" ? "Upsell" : kindFilter === "crossSell" ? "Cross sell" : "Oportunidad"}
                 options={[
                   { value: "all", label: "Todos" },
                   { value: "opportunity", label: "Oportunidad" },
                   { value: "upsell", label: "Upsell" },
+                  { value: "crossSell", label: "Cross sell" },
                 ]}
                 activeValues={[kindFilter]}
                 onSelect={(value) => {
-                  setKindFilter(value as "all" | "opportunity" | "upsell");
+                  setKindFilter(value as "all" | DealKind);
                   setOpenMenu(null);
                 }}
                 open={openMenu === "tipo-oportunidad"}
@@ -2007,45 +1897,9 @@ export function DealModal({
                 open={openMenu === "secuencia"}
                 onToggle={() => setOpenMenu(openMenu === "secuencia" ? null : "secuencia")}
               />
-              <GlassSelect
-                id="columnas"
-                label="Columnas"
-                display={availableHidden ? `${availableHidden} ocultas` : "Todas"}
-                options={[
-                  { value: "__all", label: "Mostrar todas" },
-                  ...availableColumns.map((column) => ({ value: column.key, label: column.label })),
-                ]}
-                activeValues={
-                  availableHidden === 0
-                    ? ["__all"]
-                    : availableColumns
-                        .filter((column) => column.key === "name" || !hidden.includes(column.key))
-                        .map((column) => column.key)
-                }
-                onSelect={(value) => {
-                  if (value === "__all") {
-                    persistHidden([]);
-                    setOpenMenu(null);
-                    return;
-                  }
-                  if (value === "name") return;
-                  persistHidden(hidden.includes(value) ? hidden.filter((key) => key !== value) : [...hidden, value]);
-                }}
-                open={openMenu === "columnas"}
-                onToggle={() => setOpenMenu(openMenu === "columnas" ? null : "columnas")}
-              />
               <label className="filter-chip deal-wallet-toggle" title="Oculta deals cuyo Producto a contratar es Billetera Engage">
                 <input type="checkbox" checked={hideWallet} onChange={(e) => setHideWallet(e.target.checked)} aria-label="Ocultar Billetera Engage" /> Sin billeteras
               </label>
-              <button
-                type="button"
-                className="filter-chip"
-                title="Marcar o desmarcar todos los deals de la lista"
-                onClick={toggleAll}
-              >
-                {allSelected ? "Deseleccionar" : "Seleccionar"}
-              </button>
-
             </div>
           </div>
           <div className="deal-modal-actions">
@@ -2079,7 +1933,7 @@ export function DealModal({
             </button>
           </div>
         </div>
-        <section className="deal-month-summary" aria-label="Montos por mes según filtros">
+        {executiveSummary ?? <section className="deal-month-summary" aria-label="Montos por mes según filtros">
           <div className="deal-month-summary-row">
             {[...monthlySummary.previous, ...monthlySummary.months].map(month=><button type="button" className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}
               aria-pressed={summaryDateFilter === month.key}
@@ -2095,29 +1949,18 @@ export function DealModal({
               <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} ${month.overdue===1?'vencido':'vencidos'}` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
             </button>)}
             <button type="button" className="deal-month-bucket deal-month-total"
-              aria-pressed={summaryDateFilter === "remaining"}
-              data-dimmed={!!summaryDateFilter && summaryDateFilter !== "remaining"}
-              title={summaryDateFilter === "remaining" ? "Quitar filtro y volver a los filtros anteriores" : "Filtrar por el mes actual y siguientes de este trimestre"}
-              onClick={() => toggleSummaryDate("remaining")}><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></button>
+              aria-pressed={summaryDateFilter === "quarter"}
+              data-dimmed={!!summaryDateFilter && summaryDateFilter !== "quarter"}
+              title={summaryDateFilter === "quarter" ? "Quitar filtro y volver a los filtros anteriores" : "Filtrar por todos los meses de este trimestre"}
+              onClick={() => toggleSummaryDate("quarter")}><span className="deal-month-label"><span className="deal-month-label-full">Total Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Total Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · trimestre completo</small></button>
           </div>
           {monthlySummary.outside.count || monthlySummary.undated.count ? <p className="deal-month-remainder">
             {monthlySummary.outside.count ? <span>Fuera de estos meses: {monthMoney(monthlySummary.outside.amount)} · {monthlySummary.outside.count} deals</span> : null}
             {monthlySummary.undated.count ? <span>Sin fecha válida: {monthMoney(monthlySummary.undated.amount)} · {monthlySummary.undated.count} deals</span> : null}
           </p> : null}
           <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
-        </section>
-        {selectionTotal.count>0 ? <section className="deal-selection-total" aria-label="Total de la selección" aria-live="polite">
-          <span>{selectionTotal.count} seleccionados · {monthMoney(selectionTotal.amount)}</span>
-          {selectionQuota && selectionTotal.total!==null ? <>
-            <span className="selection-period">{selectionQuota.label}</span>
-            <span>Ganado <strong>{monthMoney(selectionQuota.won)}</strong></span>
-            <span>+ Aporte <strong>{monthMoney(selectionTotal.contribution??0)}</strong></span>
-            <span className="selection-result">Total <strong>{monthMoney(selectionTotal.total)}</strong>{selectionTotal.attainment!==null ? <small> · {selectionTotal.attainment.toFixed(1)}% de cuota</small> : null}</span>
-            {selectionTotal.otfBonus>0 ? <small>Incluye {monthMoney(selectionTotal.otfBonus)} de OTF/12</small> : null}
-            {selectionTotal.excluded>0 ? <small title="Ya ganados, fuera del período seleccionado, fuera del pipeline abierto o no elegibles para cuota.">{selectionTotal.excluded} no suman a cuota</small> : null}
-          </> : null}
-          <button type="button" onClick={()=>setSelected([])}>Limpiar</button>
-        </section> : null}
+        </section>}
+        <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={() => setSelected([])} />
         {selectedIds.length > 0 ? (
           <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>
           <div className="bulk-bar" role="group" aria-label="Herramientas para los deals seleccionados">
@@ -2202,7 +2045,8 @@ export function DealModal({
           </details>
         ) : null}
         {ownerBreakdown && ownerBars.length ? (
-          <div className="modal-owner-bars">
+          <OwnerBreakdownContainer className="modal-owner-bars">
+            {executiveSummary ? <summary className="won-owner-toggle">GANADO POR COMERCIAL · {ownerBars.length} COMERCIALES</summary> : null}
             <div className="modal-pipeline-trend-head">
               <span>Ganado por comercial</span>
               <small>{`${ownerBars.length} comerciales · largo = vendido · relleno = % cuota`}</small>
@@ -2241,7 +2085,7 @@ export function DealModal({
                 );
               })}
             </div>
-          </div>
+          </OwnerBreakdownContainer>
         ) : null}
         {pipelineTrend?.values.length ? (
           <div className="modal-pipeline-trend">
@@ -2265,37 +2109,27 @@ export function DealModal({
                     title="Seleccionar todos los deals visibles"
                   />
                 </span>
-                {visibleColumns.map((column) => (
-                  <span key={column.key} className={`deal-head-cell deal-head-${column.key}`}>
+                {visibleColumns.map((column) => {
+                  const priority = sort.findIndex(item => item.key === column.key);
+                  const active = sort[priority];
+                  const direction = active?.dir === "desc" ? "descendente" : "ascendente";
+                  const nextAction = !active ? "ordenar descendente" : active.dir === "desc" ? "cambiar a ascendente" : "desactivar orden";
+                  const description = `${column.label}${active ? ` · prioridad ${priority + 1}, ${direction}` : " · sin orden"}. Clic para ${nextAction}. Las columnas se aplican en orden de activación.`;
+                  return <span key={column.key} className={`deal-head-cell deal-head-${column.key}`}>
                     <button
                       className="sort-button"
-                      title={column.key === "closeDate" ? "Fecha de cierre; a igual fecha, mayor probabilidad primero" : column.key === "probability" ? "Probabilidad de cierre; a igual probabilidad, fecha de cierre más reciente primero" : column.label}
+                      title={description}
+                      aria-label={description}
+                      aria-pressed={!!active}
                       type="button"
-                      data-active={sort.key === column.key}
-                      onClick={() =>
-                        setSort((current) =>
-                          current.key === column.key
-                            ? { key: column.key, dir: current.dir === "asc" ? "desc" : "asc" }
-                            : { key: column.key, dir: "asc" },
-                        )
-                      }
+                      data-active={!!active}
+                      onClick={() => setSort(current => toggleDealSort(current, column.key))}
                     >
-                      {column.label}
-                      {sort.key === column.key ? (sort.dir === "asc" ? " ↑" : " ↓") : ""}
+                      <span className="deal-sort-label">{column.label}</span>
+                      {active ? <span className="deal-sort-order" aria-hidden="true">{active.dir === "asc" ? "↑" : "↓"}<span className="deal-sort-priority">{priority + 1}</span></span> : null}
                     </button>
-                    {column.key === "name" ? null : (
-                      <button
-                        type="button"
-                        className="col-hide"
-                        title={`Ocultar columna ${column.label}`}
-                        aria-label={`Ocultar columna ${column.label}`}
-                        onClick={() => persistHidden([...hidden, column.key])}
-                      >
-                        ×
-                      </button>
-                    )}
-                  </span>
-                ))}
+                  </span>;
+                })}
               </div>
               {deals.map((deal) => (
                 <div key={deal.id}>

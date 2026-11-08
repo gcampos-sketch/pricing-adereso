@@ -44,5 +44,7 @@ export function summarizeDealMonths(deals: (Pick<DealDTO,'amountValue'|'closeDat
     bucket.count++;
     bucket.amount += Number.isFinite(deal.amountValue) ? deal.amountValue : 0;
   }
-  return {year,quarter,months:months.map(m=>({...m,year,overdue:0})),previous:[...previous.values()].sort((a,b)=>a.key.localeCompare(b.key)),outside,undated,total:{amount:months.reduce((n,m)=>n+m.amount,0),count:months.reduce((n,m)=>n+m.count,0)}};
+  const quarterStart = `${year}-${String((quarter-1)*3+1).padStart(2,'0')}`;
+  const quarterMonths = [...previous.values(), ...months].filter(m => m.key >= quarterStart);
+  return {year,quarter,quarterMonths,months:months.map(m=>({...m,year,overdue:0})),previous:[...previous.values()].sort((a,b)=>a.key.localeCompare(b.key)),outside,undated,total:{amount:quarterMonths.reduce((n,m)=>n+m.amount,0),count:quarterMonths.reduce((n,m)=>n+m.count,0)}};
 }

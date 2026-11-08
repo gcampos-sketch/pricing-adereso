@@ -3,11 +3,11 @@ import { closeMonthKey, currentMonthKey, summarizeDealMonths } from '../src/lib/
 const now=Date.parse('2026-11-07T12:00:00Z');
 const deal=(closeDateValue:string,amountValue:number)=>({closeDateValue,amountValue});
 const deals=[deal('2026-11-01T00:00:00Z',10),deal('2026-11-30',20),deal('2026-12-31',50),deal('2026-10-31',7),deal('2027-01-01',8),deal('',9),deal('bad',4)];
-test('current month through quarter end, with amounts/counts and explicit reconciliation',()=>{
+test('quarter total includes previous months in the same quarter, with explicit reconciliation',()=>{
  const s=summarizeDealMonths(deals,now);
  expect(s.months.map(m=>[m.key,m.amount,m.count])).toEqual([['2026-11',30,2],['2026-12',50,1]]);
- expect(s.total).toEqual({amount:80,count:3});expect(s.outside).toEqual({amount:8,count:1});expect(s.previous.map(m=>[m.key,m.amount,m.count])).toEqual([['2026-10',7,1]]);expect(s.undated).toEqual({amount:13,count:2});
- expect(s.total.amount+s.previous.reduce((n,m)=>n+m.amount,0)+s.outside.amount+s.undated.amount).toBe(deals.reduce((n,d)=>n+d.amountValue,0));
+ expect(s.total).toEqual({amount:87,count:4});expect(s.outside).toEqual({amount:8,count:1});expect(s.previous.map(m=>[m.key,m.amount,m.count])).toEqual([['2026-10',7,1]]);expect(s.undated).toEqual({amount:13,count:2});
+ expect(s.total.amount+s.outside.amount+s.undated.amount).toBe(deals.reduce((n,d)=>n+d.amountValue,0));
 });
 test('only filtered rows contribute, and a local date edit moves the same amount between buckets',()=>{
  expect(summarizeDealMonths(deals.filter(d=>d.amountValue===50),now).total.amount).toBe(50);
@@ -32,6 +32,7 @@ test('empty filtered month retains zero buckets; zero amounts still count deals'
 test('previous filtered months retain their own year; only open stages are overdue',()=>{
  const s=summarizeDealMonths([{...deal('2025-12-31',12),stage:'E5.1'},{...deal('2026-10-12',30),stage:'E2'},{...deal('2026-10-20',40),stage:'E6'},{...deal('2026-11-01',50),stage:'E5'}],now);
  expect(s.previous.map(m=>[m.key,m.year,m.amount,m.count,m.overdue])).toEqual([['2025-12',2025,12,1,1],['2026-10',2026,70,2,1]]);
- expect(s.total).toEqual({amount:50,count:1});
+ expect(s.total).toEqual({amount:120,count:3});
+ expect(s.quarterMonths.map(m=>m.key)).toEqual(['2026-10','2026-11','2026-12']);
  expect(summarizeDealMonths([],now).previous).toEqual([]);
 });
