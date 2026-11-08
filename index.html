@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="hub-booting">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Hub comercial · Adereso</title>
 <link rel="icon" type="image/svg+xml" href="/favicon-adereso.svg?v=1" />
 <style>
+  html.hub-booting body{visibility:hidden}
   :root{
     --brand:#FFD540; --brand-hover:#FFE37A; --brand-active:#E6C039;
     --bg1:#0E0F12; --surface:#1B1D22; --elevated:#2E3036;
@@ -8815,7 +8816,31 @@ const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* recuerda la cotización en este navegador: al recargar o volver a entrar, sigue donde quedó */
 const SAVE_KEY='adereso_pricing_v1';
 try{const sv=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(sv&&sv.state&&typeof sv.state==='object'){Object.keys(INITIAL_STATE).forEach(k=>{if(k in sv.state)state[k]=sv.state[k];});}}catch(e){}
-function saveSession(){if(new URLSearchParams(location.search).get('vista')==='partners')return;try{localStorage.setItem(SAVE_KEY,JSON.stringify({state,view:(typeof curView!=='undefined'?curView:'home'),y:window.scrollY,at:Date.now()}));}catch(e){}}
+/* Hub navigation persistence: per tab, separate from the saved quotation. */
+const HUB_NAV_KEY='adereso_hub_navigation_v1';
+function resolveHubNavigation(saved,tools,search){
+  const params=new URLSearchParams(search);
+  const validate=value=>{
+    if(value?.view==='home')return {view:'home',tool:'',y:Math.max(0,Number(value.y)||0)};
+    const tool=tools.find(t=>t.view===value?.view&&(value.view!=='embed'||t.k===value.tool));
+    return tool?{view:tool.view,tool:tool.view==='embed'?tool.k:'',y:Math.max(0,Number(value.y)||0)}:null;
+  };
+  if(params.get('vista')==='partners')return {view:'progpartners',tool:'',y:0};
+  const explicit=validate({view:params.get('hubView'),tool:params.get('hubTool')});
+  if(explicit){const previous=validate(saved);return {...explicit,y:previous?.view===explicit.view&&previous?.tool===explicit.tool?previous.y:0};}
+  if(params.get('vista')==='dashboard')return {view:'embed',tool:'dashboard',y:0};
+  return validate(saved)||{view:'home',tool:'',y:0};
+}
+function saveHubNavigation(){
+  if(new URLSearchParams(location.search).get('vista')==='partners')return;
+  const navigation={view:curView,tool:curTool,y:curView==='home'?(document.getElementById('homeView')?.scrollTop||0):window.scrollY};
+  try{sessionStorage.setItem(HUB_NAV_KEY,JSON.stringify(navigation));}catch(e){}
+  const update=target=>{const url=new URL(target.location.href);url.searchParams.set('hubView',curView);if(curView==='embed')url.searchParams.set('hubTool',curTool);else url.searchParams.delete('hubTool');target.history.replaceState(target.history.state,'',url);};
+  update(window);
+  try{if(parent!==window&&parent.document.querySelector('.hub-portal-frame')?.contentWindow===window)update(parent);}catch(e){}
+}
+/* End Hub navigation persistence. */
+function saveSession(){if(new URLSearchParams(location.search).get('vista')==='partners')return;try{saveHubNavigation();localStorage.setItem(SAVE_KEY,JSON.stringify({state,view:curView,tool:curTool,y:window.scrollY,at:Date.now()}));}catch(e){}}
 window.addEventListener('pagehide',saveSession);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveSession();});
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 const CHANNELS=[
@@ -10772,7 +10797,8 @@ function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool
   if(v==='home')aiBgStart();else aiBgStop();
   /* no se fuerza scroll arriba: al volver al cotizador sigues donde quedaste */
   renderAppRail();
-  if(v==='pricing'&&typeof snQueue==='function')snQueue();}
+  if(v==='pricing'&&typeof snQueue==='function')snQueue();
+  saveSession();}
 /* al entrar a una herramienta: cada tarjeta se achica mientras viaja a su ícono en la barra, para que se entienda dónde encontrarla después */
 const RAIL_SEEN='adereso_rail_seen';
 function cardsToRail(cards,pick){if(!Element.prototype.animate)return;
@@ -10819,15 +10845,16 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if
   if(k==='home')return goView('home',b);const t=ALL_TOOLS.find(x=>x.k===k);if(!t||t.soon)return;
   if(t.view)goView(t.view,b);else window.open(t.url,'_blank','noopener');});
 /* The login screen and home share one visual sky. */
-let aiCleanup=null,aiLoading=false;
-async function aiBgStart(){
-  if(aiCleanup||aiLoading||document.hidden)return;
+let aiCleanup=null,aiLoading=null;
+function aiBgStart(){
+  if(aiLoading)return aiLoading;
+  if(aiCleanup||document.hidden)return Promise.resolve();
   const canvas=document.getElementById('aiBg');if(!canvas)return;
-  aiLoading=true;
-  try{
+  aiLoading=(async()=>{try{
     const {mountStarfield}=await import('./starfield.js');
     if(curView==='home'&&!document.hidden)aiCleanup=mountStarfield(canvas);
-  }finally{aiLoading=false;}
+  }finally{aiLoading=null;}})();
+  return aiLoading;
 }
 function aiBgStop(){if(aiCleanup)aiCleanup();aiCleanup=null;}
 document.addEventListener('visibilitychange',()=>{
@@ -10887,11 +10914,28 @@ document.getElementById('discArea').addEventListener('input',e=>{const m=e.targe
   const pos=m.selectionStart;renderDisc();const n=document.querySelector('[data-dman]');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(_){}}});
 renderHome();
 /* vuelve a la vista y al punto del scroll donde estaba */
-(function(){let sv=null;try{sv=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch(e){}
-  const dashboardRequested=new URLSearchParams(location.search).get('vista')==='dashboard';
-  const v=PARTNERS_SHARED_VIEW?'progpartners':dashboardRequested?'embed':sv&&sv.view!=='embed'&&ALL_TOOLS.some(t=>t.view===sv.view)?sv.view:'home';setView(v,dashboardRequested?'dashboard':undefined);
-  if(!PARTNERS_SHARED_VIEW&&v!=='home'&&sv&&sv.y>0){const y=sv.y;requestAnimationFrame(()=>requestAnimationFrame(()=>{window.scrollTo({top:y,behavior:'instant'});if(typeof computeActive==='function')computeActive();}));}})();
+(function(){let saved=null;
+  try{saved=JSON.parse(sessionStorage.getItem(HUB_NAV_KEY)||'null');}catch(e){}
+  if(!saved)try{saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch(e){}
+  const navigation=resolveHubNavigation(saved,ALL_TOOLS,location.search);
+  setView(navigation.view,navigation.tool);
+  if(!PARTNERS_SHARED_VIEW&&navigation.y>0){requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(navigation.view==='home')document.getElementById('homeView').scrollTop=navigation.y;
+    else window.scrollTo({top:navigation.y,behavior:'instant'});
+    if(typeof computeActive==='function')computeActive();saveSession();
+  }));}})();
 setInterval(()=>{if(document.visibilityState==='visible')saveSession();},4000);
+/* Keep the parent loader until fonts, sky and the staggered cards have settled. */
+window.aderesoHubReady=(async()=>{
+  if(document.readyState!=='complete')await new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
+  const home=document.getElementById('homeView');
+  const activeFrame=document.getElementById({academy:'acadFrame',playbook:'pbFrame',argumentos:'argFrame',operativa:'opFrame',progpartners:'ppFrame'}[curView]);
+  const images=[...home.querySelectorAll('img')].map(img=>img.decode?.());
+  const cards=[...home.querySelectorAll('.hg-card')].flatMap(card=>card.getAnimations?.()||[]);
+  await Promise.allSettled([document.fonts?.ready,activeFrame?.contentDocument?.fonts?.ready,curView==='home'?aiBgStart():undefined,...images,...cards.map(animation=>animation.finished)]);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  document.documentElement.classList.remove('hub-booting');
+})();
 </script>
 </body>
 </html>

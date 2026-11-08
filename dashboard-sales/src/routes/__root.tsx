@@ -11,6 +11,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import hubLoadingCss from "../hub-loading.css?url";
+import { HubLoading } from "../components/HubLoading";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -87,6 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "stylesheet", href: hubLoadingCss },
       {
         rel: "stylesheet",
         href: appCss,
@@ -102,6 +105,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   shellComponent: RootShell,
   component: RootComponent,
+  pendingComponent: HubLoading,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });

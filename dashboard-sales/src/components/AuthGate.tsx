@@ -1,5 +1,6 @@
 import { HubFirstAccess } from '@/components/HubFirstAccess';
 import { AuthScene } from '@/components/AuthScene';
+import { HubLoading } from '@/components/HubLoading';
 import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
@@ -56,7 +57,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       setError('Solo cuentas @adere.so pueden ingresar al Hub.'); void supabase.auth.signOut();
     }
   }, [ready, session]);
-  if (!ready) return <AuthScene><div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} /></AuthScene>;
+  if (!ready) return <HubLoading />;
   if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}><HubFirstAccess key={session.user.id} userId={session.user.id}>{children}</HubFirstAccess></MfaGate></AccountEmailContext.Provider>;
   const official = officialPasskeyOrigin(window.location.hostname);
   return <AuthScene><div className="auth-card">

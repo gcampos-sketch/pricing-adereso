@@ -5,7 +5,8 @@ import { AccountMenu } from "@/components/AuthGate";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-export type ReportView = "comercial" | "proyectos" | "partners" | "equipo" | "crecimiento" | "simulador" | "embudo" | "perdidos" | "calidad";
+import type { ReportView } from '@/lib/report-navigation';
+export type { ReportView } from '@/lib/report-navigation';
 
 const groups = [
   { id: "comercial", label: "Pipeline Comercial", icon: BriefcaseBusiness, children: [
