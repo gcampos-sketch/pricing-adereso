@@ -33,23 +33,35 @@ export function LoadingProgress({ tabs, estimateMs, title = "Preparando tu dashb
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const started = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
+  const [{ elapsed, pct }, setProgress] = useState({ elapsed: 0, pct: 0 });
+  const progress = useRef(0);
   const hasEstimate = typeof estimateMs === "number" && Number.isFinite(estimateMs) && estimateMs > 0;
   const estimate = Math.max(6000, hasEstimate ? estimateMs : 25_000);
 
   useEffect(() => canvas.current ? mountStarfield(canvas.current, { animate: false }) : undefined, []);
   useEffect(() => {
-    const timer = setInterval(() => setElapsed(Date.now() - started.current), 250);
-    return () => clearInterval(timer);
-  }, []);
+    let frame: number;
+    let previousTime = performance.now();
+    const tick = (now: number) => {
+      const elapsed = Date.now() - started.current;
+      const ratio = elapsed / estimate;
+      // Estimated only: never claim completion before the report arrives.
+      const target = Math.min(97, ratio < 1 ? ratio * 90 : 90 + (1 - Math.exp(-(ratio - 1))) * 7);
+      // Damping absorbs late estimate changes without jumps or backwards motion.
+      const delta = Math.min(64, Math.max(0, now - previousTime));
+      progress.current += Math.max(0, target - progress.current) * (1 - Math.exp(-delta / 240));
+      previousTime = now;
+      setProgress({ elapsed, pct: progress.current });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [estimate]);
 
   const ratio = elapsed / estimate;
-  // Never claim completion before the report actually arrives.
-  const pct = Math.min(97, ratio < 1 ? ratio * 90 : 90 + (1 - Math.exp(-(ratio - 1))) * 7);
   const late = ratio > 1.4;
   let threshold = 0;
   const activeIndex = STEPS.findIndex(step => { threshold += step.weight; return pct <= threshold; });
-  const stage = STEPS[Math.max(0, activeIndex)]!;
   const messageIndex = Math.floor(elapsed / 4500) % LOADING_MESSAGES.length;
 
   return (
@@ -65,8 +77,18 @@ export function LoadingProgress({ tabs, estimateMs, title = "Preparando tu dashb
           </div>
           <div className="report-loading-panel">
             <div className="report-loading-current" role="status" aria-live="polite" aria-atomic="true">
-              <span className="report-loading-orbit" aria-hidden="true"><stage.icon key={stage.label} className="report-loading-stage-icon" size={23} strokeWidth={1.5} /></span>
-              <div><span className="report-loading-caption">{LOADING_MESSAGES[messageIndex]}</span><strong key={late ? "waiting" : stage.label} className="report-loading-stage-message">{late ? "Esperando los datos de HubSpot" : stage.detail}</strong></div>
+              <span className="report-loading-orbit" aria-hidden="true">
+                {STEPS.map((step, index) => <step.icon key={step.label} className="report-loading-stage-icon" data-visible={index === activeIndex} size={23} strokeWidth={1.5} />)}
+              </span>
+              <div className="report-loading-copy">
+                <div className="report-loading-caption report-loading-crossfade">
+                  {LOADING_MESSAGES.map((message, index) => <span key={message} data-visible={index === messageIndex} aria-hidden={index !== messageIndex}>{message}</span>)}
+                </div>
+                <div className="report-loading-crossfade">
+                  {STEPS.map((step, index) => <strong key={step.label} data-visible={!late && index === activeIndex} aria-hidden={late || index !== activeIndex}>{step.detail}</strong>)}
+                  <strong data-visible={late} aria-hidden={!late}>Esperando los datos de HubSpot</strong>
+                </div>
+              </div>
             </div>
             <div className="report-loading-progress-meta"><span>Progreso estimado</span><strong>{Math.round(pct)}<small>%</small></strong></div>
             <div className="report-loading-track" role="progressbar" aria-label="Progreso estimado de carga" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)} aria-valuetext={`${Math.round(pct)} por ciento estimado`}><span style={{ width: `${pct}%` }} /></div>

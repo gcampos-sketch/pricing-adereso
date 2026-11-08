@@ -1250,6 +1250,7 @@ export function DealModal({
   });
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [summaryDateFilter, setSummaryDateFilter] = useState<string | null>(null);
   const [monthFilter, setMonthFilter] = useState<"all" | "this" | "next">("all");
   const [hidden, setHidden] = useState<string[]>([]);
   const [stageFilter, setStageFilter] = useState<string[]>(initialStages ?? []);
@@ -1346,6 +1347,7 @@ export function DealModal({
   useEffect(() => {
     if (!payloadKey) return;
     setQuery("");
+    setSummaryDateFilter(null);
     setSearchOpen(false);
     setOpenMenu(null);
     const requested = visiblePayload?.initialSort;
@@ -1415,7 +1417,7 @@ export function DealModal({
   /** ids sin activar del listado actual (viene solo en los popups de generación) */
   const actIds = useMemo(() => new Set(visiblePayload?.notActivatedIds ?? []), [visiblePayload]);
 
-  const deals = useMemo(() => {
+  const dealsBeforeSummary = useMemo(() => {
     if (!visiblePayload) return [];
     const needle = query.trim().toLowerCase();
     let filtered = needle
@@ -1459,6 +1461,19 @@ export function DealModal({
       return a.name.localeCompare(b.name);
     });
   }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet]);
+
+  // This temporary drilldown never mutates the existing filters or their ordering.
+  const summaryNow = Date.now();
+  const monthlySummary = summarizeDealMonths(dealsBeforeSummary, summaryNow);
+  const deals = summaryDateFilter
+    ? dealsBeforeSummary.filter(deal => {
+        const month = closeMonthKey(deal.closeDateValue);
+        return summaryDateFilter === "remaining"
+          ? monthlySummary.months.some(bucket => bucket.key === month)
+          : month === summaryDateFilter;
+      })
+    : dealsBeforeSummary;
+  const toggleSummaryDate = (key: string) => setSummaryDateFilter(current => current === key ? null : key);
 
   // Con el botón Fix activo cargamos contactos y estado de secuencia de cada deal.
   const contactsLoadedRef = useRef(false);
@@ -1778,7 +1793,6 @@ export function DealModal({
       } as React.CSSProperties)
     : undefined;
 
-  const monthlySummary = summarizeDealMonths(deals, Date.now());
   const monthMoney = (amount: number) => new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}).format(amount);
   const total = deals.reduce((sum, deal) => sum + deal.amountValue, 0);
   const ownerBarsMax = ownerBars.length ? Math.max(...ownerBars.map((row) => row.amount)) : 0;
@@ -1913,6 +1927,7 @@ export function DealModal({
                 ]}
                 activeValues={[monthFilter]}
                 onSelect={(value) => {
+                  setSummaryDateFilter(null);
                   setMonthFilter(value as "all" | "this" | "next");
                   setOpenMenu(null);
                 }}
@@ -2066,7 +2081,11 @@ export function DealModal({
         </div>
         <section className="deal-month-summary" aria-label="Montos por mes según filtros">
           <div className="deal-month-summary-row">
-            {[...monthlySummary.previous, ...monthlySummary.months].map(month=><div className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}>
+            {[...monthlySummary.previous, ...monthlySummary.months].map(month=><button type="button" className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}
+              aria-pressed={summaryDateFilter === month.key}
+              data-dimmed={!!summaryDateFilter && summaryDateFilter !== month.key}
+              title={summaryDateFilter === month.key ? "Quitar filtro de mes y volver a los filtros anteriores" : `Filtrar por ${month.label} ${month.year}`}
+              onClick={() => toggleSummaryDate(month.key)}>
               <span className="deal-month-label">
                 {month.overdue>0 ? <TriangleAlert size={12} aria-label={`${month.overdue} negocios con cierre vencido`} /> : null}
                 <span className="deal-month-label-full">{month.label} {month.year}</span>
@@ -2074,13 +2093,18 @@ export function DealModal({
               </span>
               <strong>{monthMoney(month.amount)}</strong>
               <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} ${month.overdue===1?'vencido':'vencidos'}` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
-            </div>)}
-            <div className="deal-month-bucket deal-month-total"><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></div>
+            </button>)}
+            <button type="button" className="deal-month-bucket deal-month-total"
+              aria-pressed={summaryDateFilter === "remaining"}
+              data-dimmed={!!summaryDateFilter && summaryDateFilter !== "remaining"}
+              title={summaryDateFilter === "remaining" ? "Quitar filtro y volver a los filtros anteriores" : "Filtrar por el mes actual y siguientes de este trimestre"}
+              onClick={() => toggleSummaryDate("remaining")}><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></button>
           </div>
           {monthlySummary.outside.count || monthlySummary.undated.count ? <p className="deal-month-remainder">
             {monthlySummary.outside.count ? <span>Fuera de estos meses: {monthMoney(monthlySummary.outside.amount)} · {monthlySummary.outside.count} deals</span> : null}
             {monthlySummary.undated.count ? <span>Sin fecha válida: {monthMoney(monthlySummary.undated.amount)} · {monthlySummary.undated.count} deals</span> : null}
           </p> : null}
+          <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
         </section>
         {selectionTotal.count>0 ? <section className="deal-selection-total" aria-label="Total de la selección" aria-live="polite">
           <span>{selectionTotal.count} seleccionados · {monthMoney(selectionTotal.amount)}</span>

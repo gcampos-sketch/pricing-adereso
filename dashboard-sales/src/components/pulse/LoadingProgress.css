@@ -2,7 +2,7 @@
 .report-loading { position: relative; isolation: isolate; display: grid; align-items: center; min-height: min(740px, calc(100svh - 100px)); margin: -24px -24px 0; padding: 64px 28px; overflow: hidden; background: #080b13; border-radius: 18px; }
 .report-loading-sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
 .report-loading::before { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at center, rgba(8,11,19,.5), rgba(8,11,19,.05)); pointer-events: none; }
-.report-loading-content { width: min(100%, 760px); margin: auto; }
+.report-loading-content { width: min(100%, 760px); margin: auto; animation: report-loading-enter .55s ease-out both; }
 .report-loading-eyebrow { display: flex; align-items: center; justify-content: center; gap: 9px; color: #d6c998; font: 500 10px var(--font-sans); letter-spacing: .18em; }
 .report-loading-eyebrow > span, .report-loading-source > span { width: 5px; height: 5px; border-radius: 50%; background: #FFD540; box-shadow: 0 0 12px rgba(255,213,64,.45); }
 .report-loading-heading { text-align: center; margin: 24px 0 36px; }
@@ -10,13 +10,19 @@
 .report-loading-heading p { margin: 14px 0 0; color: #a1a1aa; font-size: 13px; line-height: 1.6; text-wrap: balance; }
 .report-loading-panel { padding: 28px; border: 1px solid rgba(255,255,255,.11); border-radius: 18px; background: rgba(21,24,32,.78); box-shadow: 0 24px 80px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.025); backdrop-filter: blur(16px); }
 .report-loading-current { min-height: 64px; display: flex; align-items: center; gap: 18px; }
-.report-loading-current > div { min-width: 0; }
-.report-loading-caption { display: block; font-size: 12px; font-weight: 500; letter-spacing: .01em; color: #a1a1aa; line-height: 1.5; }
+.report-loading-current > div { min-width: 0; flex: 1; }
+/* Keep every message in the same grid cell: fades never change card height. */
+.report-loading-crossfade { display: grid; }
+.report-loading-crossfade > * { grid-area: 1 / 1; opacity: 0; transform: translateY(4px); transition: opacity .45s ease, transform .45s ease; pointer-events: none; }
+.report-loading-crossfade > [data-visible='true'] { opacity: 1; transform: translateY(0); }
+.report-loading-stage-icon { grid-area: 1 / 1; opacity: 0; transform: scale(.9); transition: opacity .4s ease, transform .4s ease; }
+.report-loading-stage-icon[data-visible='true'] { opacity: 1; transform: scale(1); }
+.report-loading-caption { display: grid; font-size: 12px; font-weight: 500; letter-spacing: .01em; color: #a1a1aa; line-height: 1.5; }
 .report-loading-current strong { display: block; font: 500 19px/1.4 var(--font-display); letter-spacing: -.015em; color: #fafafa; margin-top: 5px; text-wrap: balance; }
 .report-loading-orbit { position: relative; flex: 0 0 52px; height: 52px; display: grid; place-items: center; color: #FFD540; border: 1px solid rgba(255,213,64,.16); border-radius: 50%; background: rgba(255,213,64,.035); }
 .report-loading-orbit::after { content: ''; position: absolute; inset: -5px; border: 2px dotted rgba(255,213,64,.65); border-radius: 50%; animation: report-loading-orbit 10s linear infinite; }
 .report-loading-progress-meta { margin-top: 24px; display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: #a1a1aa; }
-.report-loading-progress-meta strong { color: #f5f5f5; font: 400 27px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.report-loading-progress-meta strong { color: #f5f5f5; font: 400 27px/1 var(--font-display); font-variant-numeric: tabular-nums; min-width: 3.5ch; text-align: right; }
 .report-loading-progress-meta small { margin-left: 2px; color: #a1a1aa; font-size: 13px; }
 .report-loading-track { height: 3px; margin-top: 12px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
 .report-loading-track > span { display: block; height: 100%; border-radius: inherit; background: #FFD540; box-shadow: 0 0 16px rgba(255,213,64,.28); }
@@ -37,7 +43,8 @@
   .report-loading-milestones { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 4px; margin: 20px 0; }
   .report-loading-footnote { align-items: flex-start; gap: 14px; }
 }
-/* One continuous motion: the dotted ring around the current stage. */
+@keyframes report-loading-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
-  .report-loading-orbit::after { animation: none; }
+  .report-loading-content, .report-loading-orbit::after { animation: none; }
+  .report-loading-crossfade > *, .report-loading-stage-icon, .report-loading-milestones li { transition: none; transform: none; }
 }
