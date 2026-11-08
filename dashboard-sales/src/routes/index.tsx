@@ -30,6 +30,7 @@ import {
 import type { PulseReport } from "@/lib/pulse-types";
 import { unpackReport } from '@/lib/report-wire';
 import { supabase } from "@/integrations/supabase/client";
+import { readReportView, saveReportView } from '@/lib/report-navigation';
 
 /**
  * Cada reporte tiene dos consultas: la copia guardada (respuesta inmediata) y
@@ -175,7 +176,8 @@ function ago(iso: string | undefined) {
 }
 
 function Index({ embedded = false }: { embedded?: boolean }) {
-  const [view, setView] = useState<View>("comercial");
+  const [view, updateView] = useState<View>(readReportView);
+  const setView = useCallback((next: View) => { saveReportView(next); updateView(next); }, []);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(!embedded);
   // The embed flag resolves client-side after hydration; open its labeled panel once.
   useEffect(() => { if (embedded) setSidebarCollapsed(false); }, [embedded]);

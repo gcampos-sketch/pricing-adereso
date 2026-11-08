@@ -4,6 +4,7 @@ import {readTrustToken} from '@/lib/mfa-trust';
 import {mountStarfield} from '../../../starfield.js';
 import {mountWelcomeBurst} from '@/lib/welcome-burst';
 import wordmark from '../../../logoadereso.webp';
+import {HubLoading} from '@/components/HubLoading';
 
 /** Presentation is exported for isolated visual QA, not a public replay route. */
 export function HubWelcomeScene({onDone,name}:{onDone:()=>void;name?:string|undefined}){
@@ -62,7 +63,7 @@ export function HubFirstAccess({userId,children}:{userId:string;children:ReactNo
   return()=>{active=false;};
  },[userId,embedded]);
  return <><div className="hub-first-access-content" inert={phase!=='done'} aria-hidden={phase!=='done'?true:undefined}>{children}</div>
-  {phase==='checking'&&<div className="hub-welcome-check" aria-hidden="true" />}
+  {phase==='checking'&&<HubLoading />}
   {phase==='show'&&<HubWelcomeScene name={name} onDone={()=>setPhase('done')} />}
  </>;
 }

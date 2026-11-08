@@ -1,4 +1,5 @@
 import { AuthScene } from '@/components/AuthScene';
+import { HubLoading } from '@/components/HubLoading';
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { issueRecoveryCodes, redeemRecoveryCode } from "@/lib/mfa-recovery.functions";
@@ -135,6 +136,7 @@ export function MfaGate({ children }: { children: ReactNode }) {
 
   if (step.kind === "ok") return <>{children}</>;
   if (step.kind === "loading") {
+    if (!error) return <HubLoading />;
     return (
       <AuthScene>
         {error ? <p className="status" data-tone="bad">{error}</p> : <div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} />}
