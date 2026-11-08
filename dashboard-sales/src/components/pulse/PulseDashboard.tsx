@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { AdoboRiskHygiene } from "./AdoboRiskHygiene";
@@ -8,6 +8,12 @@ import { NotificationCenter } from './NotificationCenter';
 import { dashboardTasks } from '@/lib/dashboard-tasks';
 import { CopySectionButton } from "./CopyControls";
 import { DealModal } from "./DealModal";
+import { WonExecutiveSummary } from "./WonExecutiveSummary";
+import { WonStageChip, type WonStageDetail } from "./WonStageChip";
+import { wonStageBreakdown } from "@/lib/won-stage-breakdown";
+import { closeMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
+import { pipelineCoverage } from "@/lib/pipeline-coverage";
+type MetricChip = { label: string; value: string; tone?: Tone; onClick?: () => void; detail?: WonStageDetail };
 import { AdoboIntelligence, useLiveNow } from './AdoboIntelligence';
 import { adoboPeriodDeals } from '@/lib/adobo-period';
 import { intelligenceDeals } from '@/lib/adobo-intelligence';
@@ -63,8 +69,6 @@ const wrText = (stats: { won: number; lost: number }) => {
 
 const pp = (value: number) => `${value >= 0 ? "+" : "-"}${Math.abs(Math.round(value))}pp QoQ`;
 
-/** Etapas 6.2 en adelante: el monto que realmente se incorpora como ganado. */
-const STAGE_62_PLUS = new Set(["1086544542", "213244763", "171385868", "173990327"]);
 
 const shortPeriod = (period: string) => {
   const [year, q] = period.split("-Q");
@@ -81,13 +85,17 @@ export function Metric({
   onClick,
   progress,
   progressBonus,
+  progressLabel,
   tooltip,
   trend,
   trendLabels,
   chips,
+  chipAddon,
   chipsTop,
   hero,
   reference,
+  chipLayout,
+  footer,
 }: {
   label: string;
   value: string;
@@ -101,16 +109,20 @@ export function Metric({
   progress?: number;
   /** tramo extra de la barra (ej. bonus OTF/12) en puntos porcentuales */
   progressBonus?: number;
+  progressLabel?: string;
   tooltip?: string;
   /** serie sutil (últimos meses); null = sin dato */
   trend?: (number | null)[];
   trendLabels?: string[];
   /** chips sutiles al pie de la tarjeta (ej. WR por segmento) */
-  chips?: { label: string; value: string; tone?: Tone; onClick?: () => void }[];
+  chips?: MetricChip[];
+  chipAddon?: ReactNode;
   /** chips en la esquina superior derecha de la tarjeta */
   chipsTop?: { label: string; value: string; tone?: Tone; onClick?: () => void }[];
   /** card héroe: más grande y prominente */
   hero?: boolean;
+  chipLayout?: "won";
+  footer?: ReactNode;
   reference?: number | null;
 }) {
   const trendPoints = (trend ?? []).filter((v): v is number => v !== null && Number.isFinite(v));
@@ -138,16 +150,18 @@ export function Metric({
       return { x, y, label: `${month}: ${val}` };
     });
   }
+  const Card = chipAddon || footer ? 'div' : 'button';
   return (
-    <button
+    <Card
       className="metric"
       data-tone={tone}
       data-hero={hero ? "" : undefined}
+      data-chip-layout={chipLayout}
       data-has-tooltip={tooltip ? "" : undefined}
       type="button"
       onClick={onClick}
     >
-      <span className="metric-label">{label}</span>
+      {chipAddon || footer ? <button type="button" className="metric-label metric-label-action">{label}</button> : <span className="metric-label">{label}</span>}
       {chipsTop && chipsTop.length ? (
         <span className="metric-corner-chips" aria-hidden="true">
           {chipsTop.map((chip) => (
@@ -217,8 +231,9 @@ export function Metric({
           const bonus = Number.isFinite(progressBonus ?? NaN) ? Math.max(0, progressBonus!) : 0;
           const scale = Math.max(100, base + bonus);
           return (
-            <div className="metric-progress" aria-hidden="true">
+            <div className="metric-progress" aria-hidden={progressLabel ? undefined : true} role={progressLabel ? "img" : undefined} aria-label={progressLabel}>
               <div className="metric-progress-track">
+                {progressLabel ? <span className="metric-progress-label">{progressLabel}</span> : null}
                 <div
                   className="metric-progress-fill"
                   data-tone={tone}
@@ -240,9 +255,9 @@ export function Metric({
           );
         })()
       ) : null}
-      {chips && chips.length ? (
+      {chips?.length || chipAddon ? (
         <div className="metric-chips">
-          {chips.map((chip) => (
+          {chips?.map((chip) => chip.detail ? <WonStageChip key={chip.label} label={chip.label} value={chip.value} tone={chip.tone ?? "neutral"} detail={chip.detail} /> : (
             <span
               key={chip.label}
               className="metric-chip"
@@ -271,9 +286,11 @@ export function Metric({
               <span className="metric-chip-value">{chip.value}</span>
             </span>
           ))}
+          {chipAddon}
         </div>
       ) : null}
-    </button>
+      {footer}
+    </Card>
   );
 }
 
@@ -536,7 +553,8 @@ export function PulseDashboard({
 }) {
   const projectsOnly = section === "proyectos";
   const [modalKey, setModalKey] = useState<string | null>(null);
-  const [periodPayload, setPeriodPayload] = useState<Drilldown | null>(null);
+  const [gapInitialMonth, setGapInitialMonth] = useState<string | null>(null);
+  const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" }) | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const [dense, setDense] = useState(true);
   const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
@@ -558,6 +576,7 @@ export function PulseDashboard({
 
   const payload = periodPayload ?? (modalKey ? report.drilldowns[modalKey] ?? null : null);
   const closeModal = () => {
+    setGapInitialMonth(null);
     setModalKey(null);
     setPeriodPayload(null);
   };
@@ -871,7 +890,8 @@ export function PulseDashboard({
       title: `${quotaScopeName} · Ganados que suman a la cuota ${rangeLabel}`,
       subtitle: `${quotaPeriod.won} elegibles · fuera de cuota: ${quotaPeriod.excluded.length} (renovación, contracción o billetera)`,
       deals: quotaPeriod.eligible,
-    } as Drilldown);
+      presentation: "won",
+    });
   const quotaOutByKind = (kinds: string[]) => quotaPeriod.excluded.filter((d) => kinds.includes(classifyQuotaDeal(d).kind));
   // SALES-85 propuesta (no aplicada): entrados a E6 en un Q anterior que aún no llegan a 6.2.
   const stage6Proposal = useMemo(() => {
@@ -959,9 +979,9 @@ export function PulseDashboard({
 
   // ---------- Chips del cuadrito de ganado ----------
   // Debajo de la barra de cuota: comparación y monto real.
-  const wonChips = useMemo<{ label: string; value: string; tone?: Tone; onClick?: () => void }[]>(() => {
+  const wonChips = useMemo<MetricChip[]>(() => {
     const deals = quotaPeriod.eligible;
-    const chips: { label: string; value: string; tone?: Tone; onClick?: () => void }[] = [
+    const chips: MetricChip[] = [
       {
         label: wonComparison.label,
         value:
@@ -971,20 +991,15 @@ export function PulseDashboard({
         tone: wonComparison.value === null ? "neutral" : wonComparison.value >= 0 ? "ok" : "bad",
       },
     ];
-    // Monto real incorporado: solo deals que ya pasaron a 6.2 o más adelante.
-    const realDeals = deals.filter((deal) => STAGE_62_PLUS.has(deal.stageId));
-    const realAmount = realDeals.reduce((sum, deal) => sum + (deal.amountValue || 0), 0);
-    const realPct = periodQuota ? (realAmount / periodQuota) * 100 : null;
-    chips.push({
-      label: "6.2+",
-      value: `${money(realAmount)} · ${realDeals.length}`,
-      tone: realAmount ? "ok" : "neutral",
-    });
-    chips.push({
-      label: "% real",
-      value: realPct === null ? "s/n" : `${Math.round(realPct)}%`,
-      tone: realPct === null ? "neutral" : attainmentTone(realPct),
-    });
+    // Partition only the won deals already included in this period's eligible amount.
+    for (const group of wonStageBreakdown(deals, periodQuota)) {
+      chips.push({
+        label: group.label,
+        value: `${money(group.mrr)} · ${group.percentage === null ? "s/n" : `${group.percentage.toFixed(1)}%`} · ${group.deals.length}`,
+        tone: group.tone,
+        detail: { deals: group.deals, description: group.description, period: rangeLabel, quota: periodQuota, mrr: group.mrr, otfMonthly: group.otfMonthly },
+      });
+    }
     const wallets = quotaOutByKind(["wallet"]);
     const renewals = quotaOutByKind(["renewal", "contraction"]);
     const show = (title: string, subtitle: string, list: DealDTO[]) => () =>
@@ -992,10 +1007,15 @@ export function PulseDashboard({
     if (renewals.length) chips.push({ label: "Renov./contr. fuera", value: String(renewals.length), tone: "neutral", onClick: show("Renovaciones y contracciones", "No suman a la cuota", renewals) });
     if (wallets.length) chips.push({ label: "Billeteras vendidas", value: String(wallets.length), tone: "neutral", onClick: show("Billeteras vendidas", "Fuera de la cuota; su monto no es MRR", wallets) });
     if (quotaPeriod.review.length) chips.push({ label: "Revisar clasificación", value: String(quotaPeriod.review.length), tone: "warn", onClick: show("Clasificación a revisar", "Mixtos o sin dato de tipo/producto: hoy suman a la cuota", quotaPeriod.review) });
-    if (stage6Proposal.pending.length) chips.push({ label: "Pend. Q anteriores (propuesta)", value: String(stage6Proposal.pending.length), tone: "warn", onClick: show("Pendientes de Q anteriores", "Propuesta SALES-85 por validar con JC: entraron a E6 en un Q previo y no llegan a 6.2. No cambia el cumplimiento.", stage6Proposal.pending.map((r) => r.deal)) });
-    if (stage6Proposal.review.length) chips.push({ label: "E6 sin fecha confiable", value: String(stage6Proposal.review.length), tone: "warn", onClick: show("E6 a revisar", "Sin historial confiable, retroceso, reingreso o pérdida tras E6", stage6Proposal.review.map((r) => r.deal)) });
+    const previousDeals = stage6Proposal.pending.map(r => r.deal);
+    chips.push({ label: "PEND. Q ANT.", value: String(previousDeals.length), tone: "warn", detail: {
+      deals: previousDeals, period: "Q ANTERIORES", quota: 0, historical: true,
+      description: "Ganados atribuidos a un trimestre anterior por su entrada a E6 y que todavía no llegan a E6.2. Propuesta por validar; no suman al cumplimiento del período seleccionado.",
+      mrr: previousDeals.reduce((sum, d) => sum + (d.amountValue || 0), 0),
+      otfMonthly: previousDeals.reduce((sum, d) => sum + (d.otfValue || 0) / 12, 0),
+    } });
     return chips;
-  }, [isTeam, ownerFilter, periodData, periodQuota, wonComparison, quotaPeriod, stage6Proposal]);
+  }, [periodQuota, wonComparison, quotaPeriod, stage6Proposal, quotaScopeName, rangeLabel]);
 
   // Esquina superior derecha: último ganado (solo fecha DD/MM) y mezcla inb/out.
   const wonCornerChips = useMemo<{ label: string; value: string; tone?: Tone; onClick?: () => void }[]>(() => {
@@ -1054,7 +1074,7 @@ export function PulseDashboard({
       });
     }
     return chips;
-  }, [isTeam, ownerFilter, periodData]);
+  }, [isTeam, quotaPeriod]);
 
   // ---------- WR por segmento (chips al pie del cuadrito de WR) ----------
   const wrSegmentChips = useMemo<{ label: string; value: string; tone?: Tone; onClick?: () => void }[]>(() => {
@@ -1100,11 +1120,36 @@ export function PulseDashboard({
   // Bonus OTF/12 expresado como puntos de cuota y cumplimiento total (MRR + bonus).
   const otfBonusPct = periodQuota ? (periodOtfWon / 12 / periodQuota) * 100 : 0;
   const totalAttainmentPct = periodQuotaPct + otfBonusPct;
+  const wonAttainmentTone: Tone = periodQuota <= 0 ? "neutral" : totalAttainmentPct <= 40 ? "bad" : totalAttainmentPct <= 80 ? "warn" : "ok";
   const periodWonWithOtf = periodWonAmount + periodOtfWon / 12;
   const periodGap = Math.max(0, periodQuota - periodWonWithOtf);
   const payloadOwners=[...new Set(payload?.deals.map(deal=>deal.ownerId).filter(Boolean)??[])];
   const selectionOwner=payloadOwners.length===1 ? payloadOwners[0]! : ownerFilter;
   const selectionWon=quotaStats((selectionOwner==='team' ? periodData?.team.wonDeals : periodData?.owners[selectionOwner]?.wonDeals)??[]);
+  const gapPreviewDeals = (report.drilldowns[qOpenModalKey]?.deals ?? []).filter(d => !stageFilter.length || stageFilter.includes(d.stage));
+  const gapMonthSummary = summarizeDealMonths(gapPreviewDeals, performanceNow);
+  const gapMonths = Array.from({ length: 3 }, (_, index) => {
+    const month = (gapMonthSummary.quarter - 1) * 3 + index;
+    const key = `${gapMonthSummary.year}-${String(month + 1).padStart(2, "0")}`;
+    const bucket = gapMonthSummary.quarterMonths.find(m => m.key === key);
+    return { key, label: new Date(Date.UTC(gapMonthSummary.year, month, 1)).toLocaleDateString("es-CL", { month: "short", timeZone: "UTC" }).replace(".", "").toUpperCase(), amount: bucket?.amount ?? 0, count: bucket?.count ?? 0 };
+  });
+  const gapQuarterMonths = new Set(gapMonths.map(month => month.key));
+  const gapQuarterDeals = gapPreviewDeals.filter(deal => {
+    const key = closeMonthKey(deal.closeDateValue);
+    return key !== null && gapQuarterMonths.has(key);
+  });
+  const gapCoverage = pipelineCoverage(gapQuarterDeals, periodQuota, periodGap);
+  const gapCoverageSamePeriod = selectedPeriods.length === 1 && selectedPeriods[0] === `${gapMonthSummary.year}-Q${gapMonthSummary.quarter}`;
+  const gapCoverageValue = !gapCoverageSamePeriod ? "—" : periodQuota <= 0 ? "SIN CUOTA" : periodGap <= 0 ? "CUMPLIDA" : gapCoverage.coverage === null ? "S/D" : `${gapCoverage.coverage.toFixed(1)}×`;
+  const gapCoverageInfo = !gapCoverageSamePeriod
+    ? "La cobertura requiere seleccionar el mismo trimestre que el pipeline mostrado."
+    : `Cobertura ponderada = suma de MRR × probabilidad de cada negocio del trimestre ÷ falta para la cuota (MRR ganado + OTF/12 ya descontados). Pipeline ponderado: ${gapCoverage.weighted === null ? "sin datos completos de probabilidad" : money(gapCoverage.weighted)}. Faltante: ${money(periodGap)}.`;
+  const openGapDeals = (summaryDate: string | null = null) => {
+    setGapInitialMonth(summaryDate);
+    setPeriodPayload(null);
+    setModalKey(qOpenModalKey);
+  };
   const selectionQuota={
     quota:selectionOwner==='team' ? periodQuota : selectedPeriods.reduce((sum,period)=>sum+(report.periods.quotas[period]?.[selectionOwner]??0),0),
     won:selectionWon.wonAmount+selectionWon.wonOtf/12,
@@ -1127,7 +1172,6 @@ export function PulseDashboard({
   const weightedTrend = isTeam
     ? monthly.weighted?.team
     : monthly.weighted?.byOwner[ownerFilter];
-  const wonTrend = isTeam ? monthly.won : monthly.wonByOwner?.[ownerFilter];
   const lostTrend = isTeam ? monthly.lost : monthly.lostByOwner?.[ownerFilter];
   const wrTrend = isTeam ? monthly.winRate?.team : monthly.winRate?.byOwner[ownerFilter];
   const ticketTrend = isTeam ? monthly.avgWonTicket?.team : monthly.avgWonTicket?.byOwner[ownerFilter];
@@ -1420,7 +1464,7 @@ export function PulseDashboard({
       </div>
 
       {/* Fila 1 — Cuota / Ganado (héroe) / Falta */}
-      <section className="grid-hero">
+      <section className="grid-hero commercial-results">
         <Metric
           label={`Cuota · ${rangeLabel}`}
           value={money(periodQuota)}
@@ -1434,33 +1478,41 @@ export function PulseDashboard({
           value={money(periodWonAmount + periodOtfWon / 12)}
           note={
             periodOtfWon > 0
-              ? `${periodWonCount} deals · ${money(periodWonAmount)} MRR (${Math.round(periodQuotaPct)}% cuota) + ${money(
+              ? `${periodWonCount} deals · ${money(periodWonAmount)} MRR + ${money(
                   periodOtfWon / 12,
-                )} OTF/12 (+${Math.round(otfBonusPct * 10) / 10}%) → ${Math.round(totalAttainmentPct)}% total`
-              : `${periodWonCount} deals · ${Math.round(periodQuotaPct)}% de la cuota`
+                )} OTF/12`
+              : `${periodWonCount} deals · ${money(periodWonAmount)} MRR`
           }
-          tone={attainmentTone(totalAttainmentPct)}
+          tone={wonAttainmentTone}
           progress={periodQuotaPct}
+          progressLabel={periodQuota > 0 ? `${Math.round(totalAttainmentPct)}%` : "SIN CUOTA"}
           progressBonus={otfBonusPct}
           onClick={openQuotaWon}
           tooltip="Solo ganados elegibles: excluye renovaciones, contracciones y billeteras puras (se ven en «Fuera de la cuota»). Cumplimiento = MRR ganado del periodo + el OTF (pago único) ganado dividido en 12 meses. La barra clara es el MRR y el tramo rayado es el bonus OTF/12; la marca vertical es el 100% de la cuota."
-          chips={wonChips}
-          chipsTop={wonCornerChips}
-          {...(wonTrend?.length ? { trend: wonTrend, trendLabels: monthly.months } : {})}
+          chipLayout="won"
+          chips={["E6 POR MOVER", "E6.1 WARNING", "6.2 EN DESARROLLO", "PEND. Q ANT."].flatMap(label => wonChips.filter(chip => chip.label === label))}
+          chipAddon={<CommissionRate chipLabel="FACTOR COM." attainment={selectedPeriods.length === 1 && periodQuota > 0 ? totalAttainmentPct : null} scope={ownerFilter} />}
         />
         <Metric
           label="Falta para la cuota"
           value={money(periodGap)}
           note={periodGap ? "selecciona negocios para sumar al ganado" : "cuota cumplida"}
           tone={periodGap ? "warn" : "ok"}
-          onClick={() => {
-            setModalKey(qOpenModalKey);
-          }}
+          onClick={() => openGapDeals()}
+          footer={<div className="quota-close-preview" aria-label="Previsualización de cierres por mes del trimestre actual">
+            <span className="quota-close-preview-label">PIPELINE Q{gapMonthSummary.quarter} {gapMonthSummary.year} (MRR)</span>
+            <div className="quota-close-preview-months">{gapMonths.map(month => <button type="button" className="quota-close-month" key={month.key} aria-label={`Ver deals con cierre en ${month.label} ${gapMonthSummary.year}`} onClick={event => { event.stopPropagation(); openGapDeals(month.key); }}>
+              <span>{month.label}</span><strong>{money(month.amount)}</strong><small>{month.count} deals</small>
+            </button>)}</div>
+            <div className="quota-close-total-row">
+              <button type="button" className="quota-close-total" aria-label={`Ver todos los deals con cierre en Q${gapMonthSummary.quarter} ${gapMonthSummary.year}`} onClick={event => { event.stopPropagation(); openGapDeals("quarter"); }}><span>TOTAL Q</span><strong>{money(gapMonthSummary.total.amount)}</strong></button>
+              <span className="quota-pipeline-coverage" title={gapCoverageInfo} aria-label={`Cobertura ponderada del pipeline: ${gapCoverageValue}`}><span>COB. POND.</span><strong>{gapCoverageValue}</strong></span>
+            </div>
+            <small className="quota-close-preview-hint">{gapMonthSummary.total.count} deals · total MRR sin ponderar</small>
+          </div>}
           tooltip="Cuota del período menos MRR ganado y OTF/12. Selecciona negocios abiertos para ver su aporte al cumplimiento del período seleccionado."
         />
       </section>
-
-      <CommissionRate attainment={selectedPeriods.length===1 && periodQuota>0 ? totalAttainmentPct : null} scope={ownerFilter}/>
 
       <FoldList>
       <Fold title="Estado actual" subtitle="Foto de hoy · no cambia al elegir otro trimestre · todos los tipos de deal">
@@ -2277,6 +2329,20 @@ export function PulseDashboard({
       <DealModal
         payload={payload}
         onClose={closeModal}
+        initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}
+        executiveSummary={periodPayload?.presentation === "won" ? <WonExecutiveSummary
+          rangeLabel={rangeLabel} amount={periodWonAmount + periodOtfWon / 12} quota={periodQuota}
+          count={periodWonCount} mrr={periodWonAmount} otf={periodOtfWon / 12}
+          chips={wonChips} cornerChips={wonCornerChips}
+          commission={<CommissionRate chipLabel="FACTOR COM." attainment={selectedPeriods.length === 1 && periodQuota > 0 ? totalAttainmentPct : null} scope={ownerFilter} />}
+          deals={quotaPeriod.eligible} periods={selectedPeriods}
+          history={Object.keys(report.periods.data).filter(p => p <= [...selectedPeriods].sort().at(-1)!).sort().slice(-8).map(p => {
+            const bucket = report.periods.data[p]!;
+            const stats = isTeam ? bucket.team : bucket.owners[ownerFilter];
+            const scoped = quotaStats((stats?.wonDeals ?? []).filter(d => matchesType(d) && (role === "all" || roleOfOwner(d.ownerId) === role)));
+            return { label: shortPeriod(p), value: scoped.wonAmount, count: scoped.won };
+          })}
+        /> : undefined}
         fix={
           periodPayload
             ? null
