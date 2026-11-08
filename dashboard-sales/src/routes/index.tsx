@@ -17,6 +17,7 @@ import { QualityDashboard } from "@/components/pulse/QualityDashboard";
 import { LoadingProgress } from "@/components/pulse/LoadingProgress";
 import { AuthGate } from "@/components/AuthGate";
 import { HubPortal } from "@/components/HubPortal";
+import { HubEntryTracker } from "@/components/HubEntryTracker";
 import { RefreshProvider, useRegisterRefresh } from "@/contexts/RefreshContext";
 import {
   getCoachingReport,
@@ -154,6 +155,7 @@ function IndexRoute() {
   return (
     <RefreshProvider>
       <AuthGate>
+        <HubEntryTracker />
         {dashboard ? <Index embedded={embedded} /> : <HubPortal />}
       </AuthGate>
     </RefreshProvider>

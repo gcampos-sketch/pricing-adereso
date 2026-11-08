@@ -26,6 +26,8 @@ export async function verifyHubIdentity(accessToken: string, trustToken?: string
       const { verifyTrustToken } = await import('./mfa-trust.server');
       return verifyTrustToken(userId, token);
     });
-    return authorization ? { ...authorization, userId: data.claims.sub, email: String(data.claims.email).trim().toLowerCase() } : null;
+    return authorization ? { ...authorization, userId: data.claims.sub, email: String(data.claims.email).trim().toLowerCase(),
+      oauthClientId: typeof data.claims['client_id'] === 'string' ? data.claims['client_id'] : undefined,
+      sessionId: typeof data.claims['session_id'] === 'string' && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(data.claims['session_id']) ? data.claims['session_id'] : undefined } : null;
   } catch { return null; }
 }
