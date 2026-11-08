@@ -69,7 +69,7 @@
 
 - Deal rows keep Adobo composition and missing-evidence details in a portalled popup opened from the score. Verified Adobo trends appear beside the score instead of a separate column; CRM probability trends use exact hs_deal_stage_probability history in the same verified current-stage interval. Missing/partial/conflicting history stays unknown inside the detail, never a fabricated neutral trend. Preserve native probability editing and stable row/action geometry.
 
-- DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, from the current business month through quarter end. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
+- DealModal monthly totals reduce its final filtered/locally edited deals by close calendar date, across the current calendar quarter, including past months within that quarter. Month controls share the same date helper. Out-of-window and invalid-date totals remain explicit so the summary reconciles with the table; never sum the raw payload or selected checkboxes instead.
 
 - Checkbox selection immediately shows a compact amount summary, without a simulation mode/button or commission form. Commercial lists add eligible open selected deals to the same owner/role/type and selected-period won baseline (MRR + OTF/12), excluding already-won IDs, non-eligible rows and close dates outside that period. Bulk CRM actions stay collapsed and require their existing explicit actions; checking a row never writes to HubSpot.
 
@@ -89,3 +89,5 @@
 - The first-access welcome is claimed atomically per account in hub_first_access, after server-verified corporate MFA. It is consumed before playback, including when skipped/interrupted, and must never be keyed only by browser storage or reset on logout, a new device, or a release. Embedded dashboard frames do not claim or replay it. Keep the finite logo/light/starfield sequence skippable and honor reduced motion; there is no replay/reset product route. Visual QA uses an isolated fixture, not a real user's first-access claim.
 
 - Month-summary cards apply a separate, reversible table drilldown over the existing filtered/edited deals. Keep summary buckets stable while a card is selected and preserve all underlying filter state when toggling it off; never write to CRM from a summary click.
+
+- The month-summary total is labeled Total Q and includes every filtered deal in the current calendar quarter, including past months within that quarter. Its drilldown uses the exact same quarter buckets; older quarters stay excluded.

@@ -1468,8 +1468,8 @@ export function DealModal({
   const deals = summaryDateFilter
     ? dealsBeforeSummary.filter(deal => {
         const month = closeMonthKey(deal.closeDateValue);
-        return summaryDateFilter === "remaining"
-          ? monthlySummary.months.some(bucket => bucket.key === month)
+        return summaryDateFilter === "quarter"
+          ? monthlySummary.quarterMonths.some(bucket => bucket.key === month)
           : month === summaryDateFilter;
       })
     : dealsBeforeSummary;
@@ -2095,10 +2095,10 @@ export function DealModal({
               <small>{month.count} {month.count===1?'deal':'deals'}{month.overdue>0 ? ` · ${month.overdue} ${month.overdue===1?'vencido':'vencidos'}` : month.current ? ' · mes actual' : month.key < currentMonthKey(Date.now()) ? ' · mes anterior' : ''}</small>
             </button>)}
             <button type="button" className="deal-month-bucket deal-month-total"
-              aria-pressed={summaryDateFilter === "remaining"}
-              data-dimmed={!!summaryDateFilter && summaryDateFilter !== "remaining"}
-              title={summaryDateFilter === "remaining" ? "Quitar filtro y volver a los filtros anteriores" : "Filtrar por el mes actual y siguientes de este trimestre"}
-              onClick={() => toggleSummaryDate("remaining")}><span className="deal-month-label"><span className="deal-month-label-full">Restante Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Resto Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · mes actual y siguientes</small></button>
+              aria-pressed={summaryDateFilter === "quarter"}
+              data-dimmed={!!summaryDateFilter && summaryDateFilter !== "quarter"}
+              title={summaryDateFilter === "quarter" ? "Quitar filtro y volver a los filtros anteriores" : "Filtrar por todos los meses de este trimestre"}
+              onClick={() => toggleSummaryDate("quarter")}><span className="deal-month-label"><span className="deal-month-label-full">Total Q{monthlySummary.quarter}</span><span className="deal-month-label-short" aria-hidden="true">Total Q{monthlySummary.quarter}</span></span><strong>{monthMoney(monthlySummary.total.amount)}</strong><small>{monthlySummary.total.count} deals · trimestre completo</small></button>
           </div>
           {monthlySummary.outside.count || monthlySummary.undated.count ? <p className="deal-month-remainder">
             {monthlySummary.outside.count ? <span>Fuera de estos meses: {monthMoney(monthlySummary.outside.amount)} · {monthlySummary.outside.count} deals</span> : null}
