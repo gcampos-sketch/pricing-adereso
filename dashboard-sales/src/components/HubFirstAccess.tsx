@@ -27,8 +27,14 @@ export function HubWelcomeScene({onDone}:{onDone:()=>void}){
  }}>
   <canvas ref={sky} className="hub-welcome-sky" aria-hidden="true" />
   {!reduced&&<canvas ref={burst} className="hub-welcome-burst" aria-hidden="true" />}
-  <div className="hub-welcome-mark"><img src={wordmark} width={566} height={113} alt="Adereso" /></div>
-  <div className="hub-welcome-message"><span>UN NUEVO UNIVERSO COMERCIAL</span><h1 id="hub-welcome-title">Bienvenido al Hub comercial.</h1><p>Todo comienza aquí.</p></div>
+  <h1 id="hub-welcome-title" className="hub-welcome-accessible-title">Bienvenido al Hub comercial.</h1>
+  <div className="hub-welcome-lockup" aria-hidden="true">
+    <div className="hub-welcome-isotype"><img src={wordmark} width={566} height={113} alt="" /></div>
+    <div className="hub-welcome-wordmask">
+      <div className="hub-welcome-brandword"><img src={wordmark} width={566} height={113} alt="" /></div>
+      <span className="hub-welcome-greeting">Bienvenido</span>
+    </div>
+  </div>
   <button className="hub-welcome-skip" type="button" onClick={()=>done.current()}>Entrar al Hub <span aria-hidden="true">↗</span></button>
  </section>;
 }
