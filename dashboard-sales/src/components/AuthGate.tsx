@@ -1,3 +1,4 @@
+import { HubFirstAccess } from '@/components/HubFirstAccess';
 import { AuthScene } from '@/components/AuthScene';
 import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
@@ -56,7 +57,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [ready, session]);
   if (!ready) return <AuthScene><div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} /></AuthScene>;
-  if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}>{children}</MfaGate></AccountEmailContext.Provider>;
+  if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}><HubFirstAccess key={session.user.id} userId={session.user.id}>{children}</HubFirstAccess></MfaGate></AccountEmailContext.Provider>;
   const official = officialPasskeyOrigin(window.location.hostname);
   return <AuthScene><div className="auth-card">
     <h1 className="pulse-h2">Hub comercial</h1>
