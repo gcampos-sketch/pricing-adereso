@@ -34,3 +34,8 @@ test('the sharing controller is private and appears once in the Hub head',()=>{
  const script='<script src="/hub-content/wallet-share.js" defer></script>';
  expect(hub.slice(0,hub.indexOf('</head>'))).toContain(script);expect(hub.split(script)).toHaveLength(2);expect(hub).toContain('data-wallet-share');
 });
+
+test('wallet scripts are included in the private deployment package and excluded from Pages',async()=>{
+ const ignore=await readFile(resolve(root,'.dockerignore'),'utf8'),docker=await readFile(resolve(root,'dashboard-sales/Dockerfile'),'utf8'),pages=await readFile(resolve(root,'_config.yml'),'utf8');
+ for(const asset of ['wallet-share.js','wallet-standalone.js']){expect(ignore.split('\n')).toContain('!'+asset);expect(docker).toContain(asset);expect(pages).toContain('  - "'+asset+'"');}
+});
