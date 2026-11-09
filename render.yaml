@@ -17,6 +17,8 @@ services:
         - render.yaml
         - roi-standalone.js
         - roi-share.js
+        - wallet-standalone.js
+        - wallet-share.js
         - index.html
         - brand-system.css
         - chapter-index.js

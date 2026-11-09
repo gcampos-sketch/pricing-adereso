@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Hub comercial · Adereso</title>
 <script src="/hub-content/roi-share.js" defer></script>
+<script src="/hub-content/wallet-share.js" defer></script>
 <link rel="icon" type="image/svg+xml" href="/favicon-adereso.svg?v=1" />
 <style>
   html.hub-booting body{visibility:hidden}
@@ -8587,7 +8588,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
           <div class="level-kicker">Nivel 4 · Billetera Adereso–Meta</div>
           <h2>Billetera Adereso–Meta</h2>
           <p>El consumo de WhatsApp es prepago: <b>costo de Meta</b> (según el país) <b>+ fee de Adereso</b>.</p>
-          <div class="head-links"><button class="pop-link" data-pop="billetera"><span data-i="info" data-sz="16"></span> ¿Cómo funciona la billetera?</button></div>
+          <div class="head-links"><button class="pop-link" data-pop="billetera"><span data-i="info" data-sz="16"></span> ¿Cómo funciona la billetera?</button><button type="button" class="pop-link" data-wallet-share><span data-i="link" data-sz="16"></span> Compartir calculadora</button></div>
         </div>
         <div id="waArea"></div>
         <div class="continue reveal"><button data-next="s3">Continuar a implementación <span data-i="down"></span></button></div>
@@ -9320,6 +9321,9 @@ function renderSetup(target){
   area.innerHTML=html;paintIcons(area);syncPlanAccessibility(area,!!state.plansOpen);if(!target)applyReveal(area,'.seg-opt,.plan');
 }
 
+function walletShareContext(){return {existing:state.existing,country:state.wa.country,wallet:state.wa.wallet,fee:state.wa.fee??null,conversations:Math.max(0,Math.round(svRange()?.v||0)),messagesPerConversation:Math.max(1,Math.min(20,+state.wa.svPer||4)),quantities:{service:waService()?Math.max(0,+state.wa.service||0):0,marketing:waTemplates()?Math.max(0,+state.wa.marketing||0):0,utility:waTemplates()?Math.max(0,+state.wa.utility||0):0,authentication:waTemplates()?Math.max(0,+state.wa.authentication||0):0,minutes:waCalls()?Math.max(0,+state.wa.minutes||0):0},amount:walletAmount(),manual:walletManual()};}
+document.addEventListener('click',e=>{if(e.target.closest('[data-wallet-share]'))window.openWalletShare?.(walletShareContext());});
+
 /* Monto final de la billetera: lo que el cliente decide recargar (ya incluye el fee).
    Si no ingresa monto, se usa el estimado de la calculadora como referencia. */
 function walletManual(){return state.wa.amountSource==='manual'||(state.wa.amountSource!=='estimate'&&+state.wa.amount>0);}
@@ -9394,16 +9398,16 @@ function renderWa(){
   const rec=state.wa.wallet==='recurrente';
   let calc='';
   if(waService()){
-    calc+=`<div><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service <span class="sv-tip" tabindex="0" data-tip="En promedio, cada conversación tiene unos 4 mensajes.">ⓘ</span></span><span class="pl-price">${usd3(p.service)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. <mark class="hl">1.000 gratis al mes</mark> + <mark class="hl">1 semana gratis para leads de Meta Ads</mark>; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" value="${state.wa.service||''}" placeholder="0"><div class="sv-billing" data-sv-billing aria-live="polite"></div></div>${svHint()}</div></div>`;
+    calc+=`<div><div class="pl-grid"><div class="pl-card"><div class="pl-head"><span class="pl-name">Service <span class="sv-tip" tabindex="0" data-tip="En promedio, cada conversación tiene unos 4 mensajes.">ⓘ</span></span><span class="pl-price">${usd3(p.service)}<small>c/u</small>${fee}</span></div><div class="pl-desc">Cada respuesta IA/humano. <mark class="hl">1.000 gratis al mes</mark> + <mark class="hl">1 semana gratis para leads de Meta Ads</mark>; luego se cobra igual que Utilidad.</div><input type="number" min="0" step="100" data-wa-in="service" aria-label="Mensajes Service" value="${state.wa.service||''}" placeholder="0"><div class="sv-billing" data-sv-billing aria-live="polite"></div></div>${svHint()}</div></div>`;
   }
   /* Engage (saliente): plantillas y llamadas viven juntas en el mismo bloque */
   const callLbl=callConfirmed()?((state.wa.country==='CL'?'desde ':'')+usd3(waP().call))+'<small>/min</small>':'por confirmar';
-  const callCard=waCalls()?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas salientes por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}. Minutos al mes.</div><input type="number" min="0" step="100" data-wa-in="minutes" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div>`:'';
+  const callCard=waCalls()?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas de voz</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas salientes por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}. Minutos al mes.</div><input type="number" min="0" step="100" data-wa-in="minutes" aria-label="Minutos de llamadas" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div>`:'';
   const callOff=(state.engage&&!waCalls())?`<div class="note" style="margin-top:10px"><span data-i="info"></span><div><b>Llamadas salientes:</b> se cotizan con el canal WhatsApp Call de Engage. <button class="linkbtn" data-act="out-wacall">Activar WhatsApp Call →</button></div></div>`:'';
   if(waTemplates()){
     const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
     calc+=`<div><label class="wa-block-lbl">Engage · WhatsApp saliente <span class="u">— plantillas y llamadas, precio Meta</span></label><div class="pl-grid">
-      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd3(p[k])}<small>c/u</small>${fee}</span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}${callCard}
+      ${['marketing','utility','authentication'].map(k=>`<div class="pl-card"><div class="pl-head"><span class="pl-name">${WA_LABEL[k]}</span><span class="pl-price">${usd3(p[k])}<small>c/u</small>${fee}</span></div><div class="pl-desc">${PL_DESC[k]}</div><input type="number" min="0" step="100" data-wa-in="${k}" aria-label="Plantillas ${WA_LABEL[k]}" value="${state.wa[k]||''}" placeholder="0"></div>`).join('')}${callCard}
     </div>
     <div class="note warn" style="margin-top:12px"><span data-i="info"></span><div><b>¿Esperas respuestas a estas plantillas?</b> Cuando un cliente responde a una plantilla enviada, esa respuesta abre una conversación inbound y consume cupo de la <button class="linkbtn" data-goto="s2">bolsa de conversaciones contratada</button>.</div></div></div>`;
   }else if(state.engage){
