@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   classifyQuotaDeal,
+  isWalletOnlyDeal,
   quotaStats,
   proposeStage6Attribution,
   pendingFromPreviousQuarters,
@@ -20,6 +21,18 @@ const deal = (over: Partial<DealDTO> & { id: string }): DealDTO =>
     closeDateValue: '2026-10-01',
     ...over,
   }) as unknown as DealDTO;
+
+test('E6 review excludes pure wallets independently of type, retaining mixed and unknown products', () => {
+  const deals = [
+    deal({ id: 'wallet', dealType: 'Nuevo', productToHire: 'Billetera Engage' }),
+    deal({ id: 'renewal-wallet', dealType: 'Renovación', productToHire: 'Billetera Engage;Wallet Meta' }),
+    deal({ id: 'mixed', productToHire: 'Billetera Engage;SMS' }),
+    deal({ id: 'unknown' }),
+    deal({ id: 'empty', productToHire: '' }),
+    deal({ id: 'zero-mrr', amountValue: 0, productToHire: 'SMS' }),
+  ];
+  expect(deals.filter(row => !isWalletOnlyDeal(row)).map(row => row.id)).toEqual(['mixed', 'unknown', 'empty', 'zero-mrr']);
+});
 
 describe('SALES-86 · classifyQuotaDeal', () => {
   test('renovación por dealtype queda fuera del cumplimiento', () => {

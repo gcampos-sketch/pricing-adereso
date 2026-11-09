@@ -1141,6 +1141,9 @@ function DealActionMenu({name,children}:{name:string;children:React.ReactNode}) 
   </Popover>;
 }
 
+const WON_OMITTED_COLUMNS = new Set<SortKey>(['probability', 'adobo', 'activities', 'age', 'nextActivity']);
+const modalInitialSort = (requested: DealSort | undefined, won: boolean) => initialDealSort(requested).filter(sort => !won || !WON_OMITTED_COLUMNS.has(sort.key));
+
 export function DealModal({
   payload,
   onClose,
@@ -1153,7 +1156,7 @@ export function DealModal({
   ownerQuotas,
   executiveSummary,
 }: {
-  executiveSummary?: ReactNode;
+  executiveSummary?: ReactNode | ((context: { selectedOwner: string | null; onOwnerSelect: (owner: string | null) => void }) => ReactNode);
   payload: Drilldown | null;
   onClose: () => void;
   /** etapas preseleccionadas por el filtro maestro del tablero */
@@ -1170,6 +1173,8 @@ export function DealModal({
   /** si viene, muestra el botón Fix con el problema que describe la tarjeta */
   fix?: { problem: string; mode?: "task" | "fup" } | null;
 }) {
+  const isWonView = Boolean(executiveSummary);
+  const [summaryOwner, setSummaryOwner] = useState<string | null>(null);
   const [fixState, setFixState] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [fixMsg, setFixMsg] = useState("");
   const [contacts, setContacts] = useState<Record<string, ContactRow>>({});
@@ -1180,7 +1185,7 @@ export function DealModal({
   /** filtro de activación (solo cuando el payload trae los ids sin activar) */
   const [actFilter, setActFilter] = useState<"all" | "off" | "on">("all");
 
-  const [sort, setSort] = useState<DealSort[]>(() => initialDealSort(payload?.initialSort as DealSort | undefined));
+  const [sort, setSort] = useState<DealSort[]>(() => modalInitialSort(payload?.initialSort as DealSort | undefined, isWonView));
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [summaryDateFilter, setSummaryDateFilter] = useState<string | null>(initialSummaryDate ?? null);
@@ -1247,7 +1252,7 @@ export function DealModal({
   const [scoreHistory,setScoreHistory]=useState<Record<string,PropertyHistoryV1|null>>({});
   useEffect(()=>{
     let cancelled=false;setScoreHistory({});
-    if(!visiblePayload) return;
+    if(!visiblePayload || isWonView) return;
     const ids=[...new Set(visiblePayload.deals.map(d=>d.id))];
     void (async()=>{
       for(let i=0;i<ids.length;i+=50) {
@@ -1256,18 +1261,19 @@ export function DealModal({
       }
     })();
     return ()=>{cancelled=true;};
-  },[visiblePayload]);
+  },[visiblePayload,isWonView]);
   const comparedDeal=(deal:DealDTO):DealDTO=>({...deal,adobo:{...deal.adobo,propertyHistory:scoreHistory[deal.id]??null}});
   const handleListScroll = useDealHeaderScroll(modalRef, payloadKey);
 
   useEffect(() => {
     if (!payloadKey) return;
     setQuery("");
+    setSummaryOwner(null);
     setSummaryDateFilter(initialSummaryDate ?? null);
     setSearchOpen(false);
     setOpenMenu(null);
     const requested = visiblePayload?.initialSort;
-    setSort(initialDealSort(requested as DealSort | undefined));
+    setSort(modalInitialSort(requested as DealSort | undefined, isWonView));
     setNoteDeal(null);
     setTaskDeal(null);
     setSelected([]);
@@ -1286,7 +1292,7 @@ export function DealModal({
   useEffect(() => {
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup]"))) return;
+      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup], [data-won-distribution-popup]"))) return;
       if (searchOpen) setSearchOpen(false);
       else if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
@@ -1344,6 +1350,7 @@ export function DealModal({
     if (stageFilter.length) {
       filtered = filtered.filter((deal) => stageFilter.includes(deal.stage));
     }
+    if (isWonView && summaryOwner) filtered = filtered.filter(deal => (deal.owner || 'Sin comercial') === summaryOwner);
     if (actFilter !== "all" && actIds.size) {
       filtered = filtered.filter((deal) => (actFilter === "off" ? actIds.has(deal.id) : !actIds.has(deal.id)));
     }
@@ -1365,7 +1372,7 @@ export function DealModal({
     }
     const now = Date.now();
     return [...filtered].sort((a, b) => compareDealSort(a, b, sort, contacts, now));
-  }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet]);
+  }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet, isWonView, summaryOwner]);
 
   // This temporary drilldown never mutates the existing filters or their ordering.
   const summaryNow = Date.now();
@@ -1639,32 +1646,34 @@ export function DealModal({
         base.splice(key === "financeAlert" ? 1 : 2, 0, {
           key,
           label,
-          width: 132, grow: 1,
+          width: isWonView && key === 'financeAlert' ? 150 : 132, grow: 1,
           render: (deal) =>
             get(deal) ? (
-              <span className="chip" data-tone="warn">{get(deal)}</span>
+              isWonView
+                ? <span className="deal-alert-text">{get(deal)}</span>
+                : <span className="chip" data-tone="warn">{get(deal)}</span>
             ) : (
-              <span style={{ color: "var(--label)" }}>sin alerta</span>
+              <span style={{ color: "var(--label)" }}>{isWonView ? '—' : 'sin alerta'}</span>
             ),
           caption: () => "",
         });
       }
     }
     return base;
-  }, [hasAlerts, hasLost, hasSignal, applyEdit, fix, contacts, contactsState, scoreHistory]);
+  }, [hasAlerts, hasLost, hasSignal, applyEdit, fix, contacts, contactsState, scoreHistory, isWonView]);
 
 
   // This adapts every drilldown without persisting an automatic hide as a user preference.
   const multipleOwners = new Set(deals.map(deal => deal.ownerId || deal.owner || "unassigned")).size > 1;
   const availableColumns = useMemo(
-    () => columns.filter(column => column.key !== "owner" || multipleOwners),
-    [columns, multipleOwners],
+    () => columns.filter(column => (column.key !== "owner" || multipleOwners) && (!isWonView || !WON_OMITTED_COLUMNS.has(column.key))),
+    [columns, multipleOwners, isWonView],
   );
   const visibleColumns = availableColumns;
 
   // Monto por comercial de los deals visibles (solo se muestra en la vista equipo).
   const ownerBars = useMemo(() => {
-    if (!ownerBreakdown) return [] as { owner: string; amount: number; count: number }[];
+    if (!ownerBreakdown || isWonView) return [] as { owner: string; amount: number; count: number }[];
     const map = new Map<string, { owner: string; amount: number; count: number }>();
     for (const deal of deals) {
       const owner = deal.owner || "Sin comercial";
@@ -1674,7 +1683,7 @@ export function DealModal({
       map.set(owner, row);
     }
     return [...map.values()].sort((a, b) => b.amount - a.amount);
-  }, [deals, ownerBreakdown]);
+  }, [deals, ownerBreakdown, isWonView]);
 
   const [enrollState, setEnrollState] = useState<"idle" | "confirm" | "saving" | "done">("idle");
   const [enrollMsg, setEnrollMsg] = useState("");
@@ -1777,7 +1786,7 @@ export function DealModal({
         if (event.target === event.currentTarget) requestClose();
       }}
     >
-      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
+      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-won-view={isWonView} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
         <div className="modal-head">
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="deal-modal-intro"><div className="deal-modal-intro-content"><h3 className="pulse-h3">{visiblePayload.title}</h3>
@@ -1791,6 +1800,10 @@ export function DealModal({
             </p>
             </div></div>
             <div className="deal-filter-toolbar" aria-label="Filtros del listado">
+              {isWonView && ownerBreakdown ? <GlassSelect id="won-owner" label="Comercial" display={summaryOwner ?? 'Todos'}
+                options={[{ value: '__all', label: 'Todos' }, ...[...new Set(baseDeals.map(deal => deal.owner || 'Sin comercial'))].sort().map(owner => ({ value: owner, label: owner }))]}
+                activeValues={[summaryOwner ?? '__all']} onSelect={owner => { setSummaryOwner(owner === '__all' ? null : owner); setOpenMenu(null); }}
+                open={openMenu === 'won-owner'} onToggle={() => setOpenMenu(openMenu === 'won-owner' ? null : 'won-owner')} /> : null}
               <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
                 <PopoverTrigger asChild><button type="button" className="deal-search-trigger" aria-label="Buscar deals" title={query ? `Buscar deals · filtro: ${query}` : 'Buscar deals'} data-active={!!query}><Search size={16} aria-hidden="true"/></button></PopoverTrigger>
                 <PopoverContent align="start" sideOffset={10} className="deal-search-popover" onEscapeKeyDown={event=>event.stopPropagation()}>
@@ -1933,7 +1946,7 @@ export function DealModal({
             </button>
           </div>
         </div>
-        {executiveSummary ?? <section className="deal-month-summary" aria-label="Montos por mes según filtros">
+        {(typeof executiveSummary === 'function' ? executiveSummary({ selectedOwner: summaryOwner, onOwnerSelect: setSummaryOwner }) : executiveSummary) ?? <section className="deal-month-summary" aria-label="Montos por mes según filtros">
           <div className="deal-month-summary-row">
             {[...monthlySummary.previous, ...monthlySummary.months].map(month=><button type="button" className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}
               aria-pressed={summaryDateFilter === month.key}

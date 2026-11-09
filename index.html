@@ -10815,6 +10815,38 @@ const PARTNERS_SHARED_VIEW=new URLSearchParams(location.search).get('vista')==='
 document.body.classList.toggle('shared-partners',PARTNERS_SHARED_VIEW);
 if(PARTNERS_SHARED_VIEW)document.title='Programa de Partners · Adereso';
 let curView='home',curTool='';
+/* One top-level loader owns actual frame/content work. Inline and warm views skip it. */
+let hubViewLoadCancel=()=>{};
+function hubLoadingMessage(action,id,message,success){
+  try{if(top!==window&&top.location.origin===location.origin&&top.document.documentElement.dataset.hubLoadingHost==='true')top.postMessage({type:'adereso:loading/v1',action,id,message,success},location.origin);}catch(e){}
+}
+function trackHubViewLoad(v,k){
+  hubViewLoadCancel();hubLoadingMessage('navigate');
+  const ids={academy:'acadFrame',playbook:'pbFrame',argumentos:'argFrame',operativa:'opFrame',progpartners:'ppFrame',embed:'evFrame'};
+  const frame=document.getElementById(ids[v]);
+  if(!frame||frame.dataset.hubReady==='true')return;
+  const id=crypto.randomUUID(),label=ALL_TOOLS.find(tool=>tool.view===v&&(v!=='embed'||tool.k===k))?.name||'vista';
+  let canceled=false,removeListener=()=>{};
+  hubLoadingMessage('start',id,'Abriendo '+label);
+  hubViewLoadCancel=()=>{canceled=true;removeListener();hubLoadingMessage('cancel',id);};
+  const loaded=frame.dataset.hubNavigating==='true'||!frame.dataset.hubLoaded?new Promise(resolve=>{
+    const done=()=>{frame.dataset.hubLoaded='true';delete frame.dataset.hubNavigating;removeListener();resolve();};
+    removeListener=()=>frame.removeEventListener('load',done);frame.addEventListener('load',done,{once:true});
+  }):Promise.resolve();
+  loaded.then(async()=>{
+    if(canceled)return;
+    let success=true;
+    try{
+      const doc=frame.contentDocument,child=frame.contentWindow;
+      if(doc)await doc.fonts?.ready;
+      if(child&&child.aderesoContentReady)success=(await child.aderesoContentReady)!==false;
+    }catch(e){/* External CRM pages expose only their browser load event. */}
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(canceled)return;
+    frame.dataset.hubReady='true';hubLoadingMessage('end',id,'',success);
+  }).catch(()=>{if(!canceled)hubLoadingMessage('end',id,'',false);});
+}
+
 function renderAppRail(){const r=document.getElementById('apprail');if(!r)return;
   const it=t=>{const on=(t.view&&curView===t.view)||(t.url&&curView==='embed'&&curTool===t.k);
     const tail=t.soon?'<span class="ar-soon">Próximamente</span>':t.url&&!t.view?'<span class="ar-ext">Abrir en pestaña nueva ↗</span>':on?'<span class="ar-meta">En esta sección</span>':'';
@@ -10847,25 +10879,25 @@ function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool
   document.body.classList.toggle('v-home',v==='home');document.body.classList.toggle('v-embed',v==='embed');document.body.classList.toggle('v-desc',v==='descuentos');if(v==='descuentos')renderDisc();
   document.body.classList.toggle('v-acad',v==='academy');
   /* la academy se carga recién la primera vez que entras, y queda viva para no perder tu avance */
-  if(v==='academy'){const f=document.getElementById('acadFrame'),tp=document.getElementById('acadTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
+  if(v==='academy'){const f=document.getElementById('acadFrame'),tp=document.getElementById('acadTpl');if(f&&tp&&!f.srcdoc){f.dataset.hubNavigating='true';f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}}
   document.body.classList.toggle('v-pb',v==='playbook');
-  if(v==='playbook'){const f=document.getElementById('pbFrame'),tp=document.getElementById('pbTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
+  if(v==='playbook'){const f=document.getElementById('pbFrame'),tp=document.getElementById('pbTpl');if(f&&tp&&!f.srcdoc){f.dataset.hubNavigating='true';f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}}
   document.body.classList.toggle('v-arg',v==='argumentos');
-  if(v==='argumentos'){const f=document.getElementById('argFrame'),tp=document.getElementById('argTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
+  if(v==='argumentos'){const f=document.getElementById('argFrame'),tp=document.getElementById('argTpl');if(f&&tp&&!f.srcdoc){f.dataset.hubNavigating='true';f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}}
   document.body.classList.toggle('v-op',v==='operativa');
-  if(v==='operativa'){const f=document.getElementById('opFrame'),tp=document.getElementById('opTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}
+  if(v==='operativa'){const f=document.getElementById('opFrame'),tp=document.getElementById('opTpl');if(f&&tp&&!f.srcdoc){f.dataset.hubNavigating='true';f.srcdoc='<!DOCTYPE html><html lang="es">'+tp.innerHTML+'</html>';}}
   document.body.classList.toggle('v-pp',v==='progpartners');
-  if(v==='progpartners'){const f=document.getElementById('ppFrame'),tp=document.getElementById('ppTpl');if(f&&tp&&!f.srcdoc)f.srcdoc='<!DOCTYPE html><html lang="es" data-hub-mail="true">'+tp.innerHTML+'</html>';}
+  if(v==='progpartners'){const f=document.getElementById('ppFrame'),tp=document.getElementById('ppTpl');if(f&&tp&&!f.srcdoc){f.dataset.hubNavigating='true';f.srcdoc='<!DOCTYPE html><html lang="es" data-hub-mail="true">'+tp.innerHTML+'</html>';}}
   if(v==='embed'){const t=ALL_TOOLS.find(x=>x.k===k);const f=document.getElementById('evFrame');
     document.getElementById('evTitle').textContent=t.name;document.getElementById('evOpen').href=t.url;
     document.querySelector('.ev-note').hidden=k==='dashboard';
     document.getElementById('evOpen').textContent=k==='dashboard'?'Abrir dashboard ↗':'Abrir en pestaña nueva ↗';
-    if(f.dataset.src!==t.url){f.dataset.src=t.url;f.src=t.url;}}
+    if(f.dataset.src!==t.url){f.dataset.src=t.url;delete f.dataset.hubReady;delete f.dataset.hubLoaded;f.dataset.hubNavigating='true';f.src=t.url;}}
   if(v==='home')aiBgStart();else aiBgStop();
   /* no se fuerza scroll arriba: al volver al cotizador sigues donde quedaste */
   renderAppRail();
   if(v==='pricing'&&typeof snQueue==='function')snQueue();
-  saveSession();}
+  saveSession();trackHubViewLoad(v,k);}
 /* al entrar a una herramienta: cada tarjeta se achica mientras viaja a su ícono en la barra, para que se entienda dónde encontrarla después */
 const RAIL_SEEN='adereso_rail_seen';
 function cardsToRail(cards,pick){if(!Element.prototype.animate)return;

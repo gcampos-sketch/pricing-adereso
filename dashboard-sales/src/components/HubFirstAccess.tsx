@@ -30,7 +30,7 @@ export function HubWelcomeScene({onDone,name}:{onDone:()=>void;name?:string|unde
   {!reduced&&<canvas ref={burst} className="hub-welcome-burst" aria-hidden="true" />}
   <h1 id="hub-welcome-title" className="hub-welcome-accessible-title">Bienvenido{name?`, ${name}`:''} al Hub comercial.</h1>
   <div className="hub-welcome-lockup" aria-hidden="true">
-    <div className="hub-welcome-isotype"><img src={wordmark} width={566} height={113} alt="" /></div>
+    <div className="hub-welcome-isotype"><svg viewBox="0 0 113 113" aria-hidden="true"><image href={wordmark} width="566" height="113" /></svg></div>
     <div className="hub-welcome-wordmask">
       <div className="hub-welcome-brandword"><img src={wordmark} width={566} height={113} alt="" /></div>
       <span className="hub-welcome-greeting" data-personalized={Boolean(name)}><span>Bienvenido</span>{name&&<span className="hub-welcome-name">{name}</span>}</span>
@@ -63,7 +63,7 @@ export function HubFirstAccess({userId,children}:{userId:string;children:ReactNo
   return()=>{active=false;};
  },[userId,embedded]);
  return <><div className="hub-first-access-content" inert={phase!=='done'} aria-hidden={phase!=='done'?true:undefined}>{children}</div>
-  {phase==='checking'&&<HubLoading />}
+  {phase==='checking'&&<HubLoading message="Preparando tu bienvenida" />}
   {phase==='show'&&<HubWelcomeScene name={name} onDone={()=>setPhase('done')} />}
  </>;
 }

@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { handleReportStream } from "./lib/report-stream.server";
 import { handleHubRequest } from "./lib/hub-content.server";
 import { runtimeHealthResponse } from "./lib/runtime-health.server";
 
@@ -54,6 +55,8 @@ export default {
       return request.method === "HEAD" ? new Response(null, { status: health.status, headers: health.headers }) : health;
     }
     try {
+      const streamResponse = await handleReportStream(request);
+      if (streamResponse) return streamResponse;
       const hubResponse = await handleHubRequest(request);
       if (hubResponse) return hubResponse;
       const handler = await getServerEntry();

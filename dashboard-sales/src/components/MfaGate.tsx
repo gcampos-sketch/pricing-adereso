@@ -140,7 +140,7 @@ export function MfaGate({ children }: { children: ReactNode }) {
 
   if (step.kind === "ok") return <>{children}</>;
   if (step.kind === "loading") {
-    if (!error) return <HubLoading />;
+    if (!error) return <HubLoading message="Verificando tu acceso" />;
     return (
       <AuthScene>
         {error ? <p className="status" data-tone="bad">{error}</p> : <div className="skeleton" style={{ height: 44, width: 320, borderRadius: 12 }} />}

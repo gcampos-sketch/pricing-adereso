@@ -1,4 +1,5 @@
 import { FeedbackBubble } from "@/components/pulse/FeedbackBubble";
+import { HubEntryTracker } from "@/components/HubEntryTracker";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import {
   keepPreviousData,
@@ -15,16 +16,17 @@ import { SimulatorDashboard } from "@/components/pulse/SimulatorDashboard";
 import { LossDashboard } from "@/components/pulse/LossDashboard";
 import { QualityDashboard } from "@/components/pulse/QualityDashboard";
 import { LoadingProgress } from "@/components/pulse/LoadingProgress";
+import { useSharedReportLoading } from '@/components/useSharedReportLoading';
+import { useReportPhase } from '@/components/useReportPhase';
+import { fetchPulseStream } from '@/lib/pulse-stream-client';
 import { AuthGate } from "@/components/AuthGate";
 import { HubPortal } from "@/components/HubPortal";
-import { HubEntryTracker } from "@/components/HubEntryTracker";
 import { RefreshProvider, useRegisterRefresh } from "@/contexts/RefreshContext";
 import {
   getCoachingReport,
   getInsightsReport,
   getPartnerReport,
   getPulseReport,
-  getReportMeta,
   getTeamReport,
 } from "@/lib/pulse.functions";
 import type { PulseReport } from "@/lib/pulse-types";
@@ -36,18 +38,18 @@ import { readReportView, saveReportView } from '@/lib/report-navigation';
  * Cada reporte tiene dos consultas: la copia guardada (respuesta inmediata) y
  * la versión en vivo que se reconstruye desde HubSpot en segundo plano.
  */
-function reportQueries<T>(key: string, fn: (args: { data: { fresh: boolean } }) => Promise<T>) {
+function reportQueries<T>(key: string, fn: (args: { data: { fresh: boolean }; signal?: AbortSignal }) => Promise<T>) {
   return {
     snapshot: queryOptions({
       queryKey: [key, "snapshot"],
-      queryFn: () => fn({ data: { fresh: false } }),
+      queryFn: ({ signal }) => fn({ data: { fresh: false }, signal }),
       staleTime: Infinity,
       gcTime: 30 * 60_000,
       retry: 1,
     }),
     live: queryOptions({
       queryKey: [key, "live"],
-      queryFn: () => fn({ data: { fresh: true } }),
+      queryFn: ({ signal }) => fn({ data: { fresh: true }, signal }),
       refetchInterval: 60_000,
       refetchOnWindowFocus: true,
       placeholderData: keepPreviousData,
@@ -61,19 +63,18 @@ function reportQueries<T>(key: string, fn: (args: { data: { fresh: boolean } }) 
  * Cada rol guarda su propia copia para que el cambio de pestaña sea instantáneo.
  */
 const pulseQFor = (role: "all" | "AE" | "KAM") =>
-  reportQueries<PulseReport>(`pulse-report-${role.toLowerCase()}`, async (args) =>
-    unpackReport<PulseReport>(JSON.parse(await getPulseReport({ data: { fresh: args.data.fresh, role: role === "all" ? undefined : role } }))),
-  );
+  reportQueries<PulseReport>(`pulse-report-${role.toLowerCase()}`, async (args) => {
+    const scopedRole = role === 'all' ? undefined : role;
+    const packed = args.data.fresh
+      ? JSON.parse(await getPulseReport({ data: { fresh: true, role: scopedRole } }))
+      : await fetchPulseStream(`pulse-report-${role.toLowerCase()}`, scopedRole, args.signal);
+    return unpackReport<PulseReport>(packed);
+  });
 const partnerQ = reportQueries("partner-report", getPartnerReport);
 const teamQ = reportQueries("team-report", getTeamReport);
 const insightsQ = reportQueries("insights-report", getInsightsReport);
 const coachingQ = reportQueries("coaching-report", getCoachingReport);
 
-const metaQuery = queryOptions({
-  queryKey: ["report-meta"],
-  queryFn: () => getReportMeta(),
-  staleTime: 5 * 60_000,
-});
 
 type Report = { generatedAt: string };
 let lastAuthRecovery = 0;
@@ -192,7 +193,6 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   const team = useReport(teamQ, view === "equipo");
   const insights = useReport(insightsQ, insightsEnabled);
   const coaching = useReport(coachingQ, view === "calidad");
-  const meta = useQuery(metaQuery);
 
   useEffect(() => {
     document.body.dataset["reportNavigation"] = embedded ? (sidebarCollapsed ? "embedded-panel-closed" : "embedded-panel") : sidebarCollapsed ? "collapsed" : "expanded";
@@ -328,10 +328,15 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   }, [pulse.data]);
   useRegisterRefresh(active.refetch, active.isRefreshing, activeMrr);
 
-  const metaKey =
-    view === "calidad" ? "coaching" : view === "partners" ? "partner" : view === "equipo" ? "team" : view === "comercial" || view === "proyectos" || view === "embudo" ? (roleFilter === "all" ? "pulse" : `pulse-${roleFilter.toLowerCase()}`) : "insights";
-  const estimateMs = meta.data?.[metaKey]?.buildMs;
-
+  const loadingMessages: Record<View, string> = {
+    comercial: 'Consultando pipeline comercial', proyectos: 'Consultando proyectos', embudo: 'Consultando el embudo comercial',
+    partners: 'Consultando datos de Partners', equipo: 'Consultando resultados del equipo', crecimiento: 'Consultando crecimiento',
+    simulador: 'Preparando datos del simulador', perdidos: 'Consultando negocios perdidos', calidad: 'Consultando calidad comercial',
+  };
+  const reportPhase = useReportPhase(`pulse-report-${roleFilter.toLowerCase()}`);
+  const pulseView = view === 'comercial' || view === 'proyectos' || view === 'embudo';
+  const loadingMessage = pulseView && !active.data && reportPhase ? reportPhase : loadingMessages[view];
+  useSharedReportLoading(!active.data && !active.error, !!active.data, loadingMessage);
 
   const stamp = active.data ? ago(active.data.generatedAt) : undefined;
 
@@ -368,9 +373,8 @@ function Index({ embedded = false }: { embedded?: boolean }) {
     return (
       <LoadingProgress
         tabs={tabs}
-        estimateMs={estimateMs}
-        key={metaKey}
-        title="Preparando tu dashboard"
+        key={view}
+        title={loadingMessage}
       />
     );
   }

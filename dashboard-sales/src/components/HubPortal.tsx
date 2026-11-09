@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { readTrustToken } from '@/lib/mfa-trust';
 import { PasskeySettings } from '@/components/PasskeySettings';
 import { HubLoading } from '@/components/HubLoading';
 import { waitForHubFrame } from '@/lib/hub-frame-ready';
+import { useHubLoadingHost } from '@/components/useHubLoadingHost';
 
 /** Mounted only after the shared AuthGate and MfaGate have accepted the session. */
 export function HubPortal() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
-  const [passkeyOpen, setPasskeyOpen] = useState(false);
   const [frameReady, setFrameReady] = useState(false);
-  const [frameRevealed, setFrameRevealed] = useState(false);
+  const [passkeyOpen, setPasskeyOpen] = useState(false);
+  const frame = useRef<HTMLIFrameElement>(null);
+  const loading = useHubLoadingHost(frame, !frameReady);
+  // The child keeps the address in sync; unrelated renders must not reload its frame.
   const [frameSrc] = useState(() => '/hub-content/index.html' + window.location.search);
   useEffect(() => {
     let active = true;
@@ -32,15 +35,15 @@ export function HubPortal() {
     });
     return () => { active = false; data.subscription.unsubscribe(); };
   }, []);
-  if (!ready && !error) return <HubLoading />;
+  if (!ready && !error) return <HubLoading message="Abriendo el Hub" />;
   if (!ready) return <main className="pulse-main"><div className="auth-card"><h1 className="pulse-h2">Hub comercial</h1><p role="alert">No pudimos abrir tu sesión. Recarga la página o vuelve a ingresar.</p><button className="pill" onClick={() => { void supabase.auth.signOut(); }}>Volver al ingreso</button></div></main>;
   return <div className="hub-portal">
-    {!frameRevealed && <HubLoading complete={frameReady} onComplete={() => setFrameRevealed(true)} />}
-    <iframe className="hub-portal-frame" title="Hub comercial Adereso" onLoad={event => {
+    {loading.visible && <HubLoading complete={loading.complete} message={loading.message || 'Preparando tu página'} onComplete={loading.finish} />}
+    <iframe ref={frame} className="hub-portal-frame" title="Hub comercial Adereso" onLoad={event => {
       void waitForHubFrame(event.currentTarget).then(() => setFrameReady(true)).catch(() => {
         setReady(false); setError(true);
       });
-    }} inert={!frameRevealed} style={{ visibility: frameRevealed ? 'visible' : 'hidden' }} src={frameSrc} />
+    }} inert={loading.visible} style={{ visibility: loading.revealed ? 'visible' : 'hidden' }} src={frameSrc} />
     <div className="hub-account-actions"><button onClick={() => setPasskeyOpen(true)}>Touch ID / Face ID</button><button onClick={() => { void supabase.auth.signOut(); }}>Salir del Hub</button></div>
     <PasskeySettings open={passkeyOpen} onOpenChange={setPasskeyOpen} />
   </div>;
