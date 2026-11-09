@@ -25,7 +25,7 @@ export function PasskeyGate({ children }: { children: ReactNode }) {
     try { const { registered } = await getPasskeyStatus(); setStatus(registered ? 'ready' : 'missing'); }
     catch { setStatus('error'); }
   };
-  if (status === 'loading') return <HubLoading />;
+  if (status === 'loading') return <HubLoading message="Comprobando tu passkey" />;
   if (status === 'ready') return <>{children}</>;
   const official = officialPasskeyOrigin(window.location.hostname);
   return <AuthScene><div className="auth-card">

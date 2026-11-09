@@ -1,5 +1,7 @@
+import type { ReportPhase } from './report-phases';
 import { roleOwnerIds, type RoleFilter } from "./owner-roles";
 import { quotaStats } from "./quota-eligibility";
+import { serviceMrrDeals, SERVICE_MRR_CALCULATION } from "./service-mrr";
 import { buildExecutiveStrip } from './executive-strip';
 import type {
   AlertItem,
@@ -785,7 +787,8 @@ function buildDelivery(
 }
 
 
-export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter): Promise<PulseReport> {
+export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter, phase: (value: ReportPhase) => void = () => {}): Promise<PulseReport> {
+  phase('records');
   const [fetchedDeals, quotas, ownersRes, contractLabels, projectLabels] = await Promise.all([
     getCommercialDeals([...new Set([...[...MANAGED_STAGES, ...JOURNEY_STAGES].map((stage) => stage.id), "171385869"])]),
     fetchQuotasCached(),
@@ -793,6 +796,7 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
     getPropertyOptionLabels("status_contrato"),
     getPropertyOptionLabels("status_proyecto"),
   ]);
+  phase('metrics');
   CONTRACT_LABELS = contractLabels;
 
   const ownerNames = new Map<string, string>();
@@ -898,13 +902,14 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
 
   // MRR activo global: foto independiente de filtros. Conservamos snapshots diarios
   // dentro del reporte persistido para que futuras salidas por churn queden visibles.
-  const inServiceDeals = fetchedDeals.filter((deal) => deal.properties["dealstage"] === SERVICE_STAGE);
+  const inServiceDeals = serviceMrrDeals(fetchedDeals, SERVICE_STAGE);
   // Deals firmados (etapa 6) o en desarrollo (etapa 7): MRR que esperamos incorporar.
   const inDevDeals = fetchedDeals.filter((deal) => {
     const stage = deal.properties["dealstage"] ?? "";
     return stage === SIGNED_STAGE || stage === DEV_STAGE;
   });
   // Excluimos deals cuya empresa asociada tiene tipo de cliente = churn.
+  phase('mrr');
   const churnedIds = await getChurnedDealIds([...inServiceDeals, ...inDevDeals].map((deal) => deal.id));
   const liveDeals = inServiceDeals.filter((deal) => !churnedIds.has(deal.id));
   const churnedInService = inServiceDeals.length - liveDeals.length;
@@ -913,7 +918,9 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
   const inDevValue = inDevLiveDeals.reduce((sum, deal) => sum + mrrOf(deal), 0);
   const activeMrrValue = liveDeals.reduce((sum, deal) => sum + mrrOf(deal), 0);
   const today = new Date(now).toISOString().slice(0, 10);
-  let activeMrrHistory = [...(previous?.activeMrr?.history ?? [])];
+  // Aggregates from the previous rule cannot be corrected without per-deal history.
+  let activeMrrHistory = previous?.activeMrr?.calculation === SERVICE_MRR_CALCULATION
+    ? [...previous.activeMrr.history] : [];
   if (!activeMrrHistory.length) {
     const monthStarts = Array.from({ length: 11 }, (_, index) => {
       const date = new Date(now);
@@ -1100,11 +1107,13 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
 
   const todayStart = Date.UTC(nowDate.getUTCFullYear(), nowDate.getUTCMonth(), nowDate.getUTCDate());
   const todayEnd = todayStart + 86_399_999;
+  phase('tasks');
   const taskLoad = await fetchPendingTasks(
     openDeals.map((deal) => deal.id),
     todayEnd,
     todayStart,
   );
+  phase('assembling');
   const tasksOf = (deal: RawDeal) => taskLoad.get(deal.id) ?? { overdue: 0, today: 0 };
   const noActivityAll = (list: RawDeal[]) =>
     list.filter((d) => !d.properties["notes_next_activity_date"]);
@@ -2014,6 +2023,7 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
     currentLabel: `${shortPeriod(currentPeriod)} QTD`,
     roleScope: role ?? null,
     activeMrr: {
+      calculation: SERVICE_MRR_CALCULATION,
       value: activeMrrValue,
       count: liveDeals.length,
       history: activeMrrHistory,

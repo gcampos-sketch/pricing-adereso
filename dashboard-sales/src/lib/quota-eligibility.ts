@@ -18,9 +18,22 @@ const isWalletProduct = (v: string) => /billetera|wallet/.test(norm(v));
 
 type Classifiable = Pick<DealDTO, 'segment'> & { dealType?: string | null; productToHire?: string | null };
 
+/** Product identity is independent of deal type, amount and stage-history quality. */
+export function isWalletOnlyDeal(deal: { productToHire?: string | null }): boolean {
+  const products = (deal.productToHire ?? '').split(';').map(product => product.trim()).filter(Boolean);
+  return products.length > 0 && products.every(isWalletProduct);
+}
+
+/** Raw dealtype is authoritative; segment is only a fallback for legacy DTOs. */
+export function isRenewalDeal(deal: { dealType?: string | null; segment?: string }): boolean {
+  if (deal.dealType === undefined) return deal.segment === 'Renovación';
+  const type = norm(deal.dealType ?? '');
+  return type.startsWith('renovac') || type === 'renewal';
+}
+
 export function classifyQuotaDeal(deal: Classifiable): QuotaClass {
   const type = deal.dealType === undefined ? undefined : norm(deal.dealType ?? '');
-  if (type?.startsWith('renovac') || (type === undefined && deal.segment === 'Renovación'))
+  if (isRenewalDeal(deal))
     return { kind: 'renewal', counts: false, review: false, reason: 'Renovación' };
   if (type && /contracc|downsell|downgrade/.test(type))
     return { kind: 'contraction', counts: false, review: false, reason: 'Contracción' };
@@ -28,7 +41,7 @@ export function classifyQuotaDeal(deal: Classifiable): QuotaClass {
     return { kind: 'unknown', counts: true, review: true, reason: 'Producto sin dato en el reporte guardado' };
   const products = (deal.productToHire ?? '').split(';').map((s) => s.trim()).filter(Boolean);
   const wallets = products.filter(isWalletProduct);
-  if (products.length && wallets.length === products.length)
+  if (isWalletOnlyDeal(deal))
     return { kind: 'wallet', counts: false, review: false, reason: 'Billetera' };
   if (wallets.length) return { kind: 'mixed', counts: true, review: true, reason: 'Billetera + otro producto' };
   if (type === undefined) return { kind: 'unknown', counts: true, review: true, reason: 'Tipo de deal sin dato' };

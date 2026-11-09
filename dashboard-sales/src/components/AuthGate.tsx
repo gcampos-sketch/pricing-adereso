@@ -65,7 +65,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
       setError('Necesitas un correo @adere.so confirmado para ingresar al Hub.'); void supabase.auth.signOut();
     }
   }, [ready, session]);
-  if (!ready) return <HubLoading />;
+  if (!ready) return <HubLoading message="Comprobando tu sesión" />;
   if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}><PasskeyGate><HubFirstAccess key={session.user.id} userId={session.user.id}>{children}</HubFirstAccess></PasskeyGate></MfaGate></AccountEmailContext.Provider>;
   const official = officialPasskeyOrigin(window.location.hostname);
   if (official) return <AuthScene><UnifiedSignIn

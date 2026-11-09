@@ -21,19 +21,8 @@ export const getPulseReport = createServerFn({ method: "GET" })
   .middleware([requireMfa])
   .inputValidator(pulseInput)
   .handler(async ({ data }): Promise<string> => {
-    const [{ buildPulseReport }, { withSnapshot, readActiveMrrHistory }] = await Promise.all([
-      import("./pulse.server"),
-      import("./report-cache.server"),
-    ]);
-    // Cada rol tiene su propia copia guardada; "all" usa la clave base.
-    const key = data.role ? `pulse-${data.role.toLowerCase()}` : "pulse";
-    const report = await withSnapshot(key, data.fresh, async () => {
-      // Solo se necesita el historial de MRR; no cargar el reporte anterior completo.
-      if (data.fresh) (await import("./hubspot.server")).invalidateCache("adobo-history:");
-      const history = data.fresh ? await readActiveMrrHistory(key) : undefined;
-      const previous = history ? ({ activeMrr: { history } } as unknown as PulseReport) : undefined;
-      return buildPulseReport(previous, data.role);
-    });
+    const { readPulseReport } = await import('./pulse-loader.server');
+    const report = await readPulseReport(data.fresh, data.role);
     // A compact JSON string also avoids the server-function serializer expanding every DTO field.
     return JSON.stringify(packReport(report));
   });

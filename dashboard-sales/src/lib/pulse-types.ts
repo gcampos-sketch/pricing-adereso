@@ -582,8 +582,10 @@ export type PulseReport = {
   currentLabel: string;
   /** Alcance de rol con el que se construyó el reporte (null = todo el equipo). */
   roleScope?: RoleFilter | null;
-  /** MRR de todos los deals hoy en Inicio de servicio; nunca se filtra en la UI. */
+  /** MRR global de deals hoy en Inicio de servicio, sin renovaciones ni empresas en churn. */
   activeMrr?: {
+    /** Identifies compatible service-MRR snapshots and daily history. */
+    calculation?: string;
     value: number;
     count: number;
     history: { date: string; value: number; count: number }[];

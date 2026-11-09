@@ -5,3 +5,21 @@
 @media(prefers-reduced-motion:reduce) {
   .hub-loading-lobe { opacity:1; }
 }
+
+.hub-loading-center { position:relative;display:grid;justify-items:center; }
+.hub-loading-message { position:absolute;top:calc(100% + 24px);left:50%;transform:translateX(-50%);width:280px;margin:0;max-width:calc(100vw - 48px);text-align:center;font:400 12px/1.6 'Work Sans',system-ui,sans-serif;color:#a7adb8; }
+
+@supports ((background-clip:text) or (-webkit-background-clip:text)) {
+  .hub-loading-message {
+    color:transparent;background:linear-gradient(105deg,#8c94a2 0%,#8c94a2 35%,#f5f7fa 49%,#a5adba 58%,#8c94a2 70%);
+    background-size:200% 100%;background-clip:text;-webkit-background-clip:text;
+    animation:hub-loading-text-light 2.5s linear infinite,hub-loading-text-enter .2s ease-out both;
+  }
+}
+@keyframes hub-loading-text-light { from { background-position:150% 0; } to { background-position:-50% 0; } }
+@keyframes hub-loading-text-enter { from { opacity:.7; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) { .hub-loading-message { animation:none;background:none;color:#a7adb8; } }
+
+.hub-loading-task{display:block;animation:hub-loading-text-enter .35s ease-out both}
+.hub-loading-wait{display:block;margin-top:5px;font-size:11px;animation:hub-loading-text-enter .6s ease-out both}
+@media(prefers-reduced-motion:reduce){.hub-loading-task,.hub-loading-wait{animation:none}}

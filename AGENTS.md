@@ -15,4 +15,11 @@ For Dashboard Sales code, also follow `dashboard-sales/AGENTS.md`.
 
 # Publishing
 
+## Coordinación central de publicaciones
+
+- Preferencia de Gonzalo del 09/11/2026: el chat «Publicar» es el punto central de publicación de Hub comercial. Cuando Gonzalo diga «publica» en ese chat, revisar todos los chats activos del proyecto y los vinculados a este repositorio, incluidos los que no tengan projectId, antes de decidir qué publicar. Leer sus mensajes recientes; el título, el estado idle o el resumen del listado no prueban que un cambio esté listo.
+- La orden «publica» autoriza publicar los cambios pendientes que estén listos y verificados, aunque no se haya pedido publicar en cada chat individual. Conciliar los cambios con el estado real del repositorio, ramas, revisiones, comprobaciones y despliegues para no omitir ni duplicar trabajo. Respetar las indicaciones más recientes de cada chat, incluidas pausas, exclusiones y cambios aún en revisión.
+- Aislar cambios incompletos o bloqueados y continuar con los independientes que puedan publicarse sin arrastrarlos. No publicar todo el directorio de trabajo indiscriminadamente ni modificar chats o enviarles mensajes por esta regla. Si no se puede consultar un chat o verificar un cambio, mantenerlo pendiente y explicar la limitación.
+- Verificar la publicación efectiva en Render (y los snapshots del worker cuando corresponda) antes de informar éxito. Responder con lo publicado, lo que sigue pendiente y su motivo. Esta coordinación se ejecuta cuando Gonzalo la pide; no implica monitoreo periódico ni publicación por iniciativa propia.
+
 GitHub Pages is only a migration redirect, using `_config.yml` exclusions and `pages-redirect/` permalink pages. Never publish the Hub shell or internal material through Pages. Add new application assets to the Pages exclusions; the CI Pages boundary check must pass before merging. Render remains the official authenticated Hub and its independent public Partners/ROI site. Release changes through reviewed, passing GitHub commits; keep secrets and source snapshots untracked.

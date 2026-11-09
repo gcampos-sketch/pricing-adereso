@@ -4,6 +4,7 @@
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { packReport, unpackReport } from './report-wire';
+import { SERVICE_MRR_CALCULATION } from './service-mrr';
 
 export type SnapshotMeta = { generatedAt: string; buildMs: number };
 
@@ -46,10 +47,10 @@ async function saveSnapshot(key: string, payload: unknown, buildMs: number) {
  * `fresh=false` devuelve la copia guardada si existe (respuesta inmediata);
  * `fresh=true` reconstruye desde HubSpot y actualiza la copia.
  */
-export async function withSnapshot<T>(key: string, fresh: boolean, build: () => Promise<T>): Promise<T> {
+export async function withSnapshot<T>(key: string, fresh: boolean, build: () => Promise<T>, accepts: (report: T) => boolean = () => true): Promise<T> {
   if (!fresh) {
     const stored = await readSnapshot<T>(key);
-    if (stored) return stored.report;
+    if (stored && accepts(stored.report)) return stored.report;
   }
   // Sin singleflight entre peticiones: compartir una promesa en curso cuelga a
   // quien espera si la petición original se cancela.
@@ -64,11 +65,12 @@ export async function readActiveMrrHistory(key: string): Promise<unknown[] | und
   try {
     const { data, error } = await supabaseAdmin
       .from("report_cache")
-      .select("history:payload->activeMrr->history, compact_history:payload->payload->activeMrr->history")
+      .select("history:payload->activeMrr->history, compact_history:payload->payload->activeMrr->history, calculation:payload->activeMrr->calculation, compact_calculation:payload->payload->activeMrr->calculation")
       .eq("key", key)
       .maybeSingle();
     if (error || !data) return undefined;
-    const row = data as { history?: unknown; compact_history?: unknown };
+    const row = data as { history?: unknown; compact_history?: unknown; calculation?: unknown; compact_calculation?: unknown };
+    if ((row.compact_calculation ?? row.calculation) !== SERVICE_MRR_CALCULATION) return undefined;
     const history = row.compact_history ?? row.history;
     return Array.isArray(history) ? history : undefined;
   } catch {

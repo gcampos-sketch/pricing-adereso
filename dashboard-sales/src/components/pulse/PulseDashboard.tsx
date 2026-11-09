@@ -1017,65 +1017,6 @@ export function PulseDashboard({
     return chips;
   }, [periodQuota, wonComparison, quotaPeriod, stage6Proposal, quotaScopeName, rangeLabel]);
 
-  // Esquina superior derecha: último ganado (solo fecha DD/MM) y mezcla inb/out.
-  const wonCornerChips = useMemo<{ label: string; value: string; tone?: Tone; onClick?: () => void }[]>(() => {
-    const deals = quotaPeriod.eligible;
-    const chips: { label: string; value: string; tone?: Tone; onClick?: () => void }[] = [];
-    const latest = deals
-      .filter((deal) => deal.closeDateValue)
-      .sort((a, b) => Date.parse(b.closeDateValue) - Date.parse(a.closeDateValue))[0];
-    let latestShort = "s/n";
-    if (latest) {
-      const d = new Date(latest.closeDateValue);
-      if (!Number.isNaN(d.getTime())) {
-        latestShort = `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-      }
-    }
-    chips.push({
-      label: "Último",
-      value: latest ? latestShort : "s/n",
-      tone: latest ? "ok" : "neutral",
-    });
-    // Mezcla inbound / outbound del MRR ganado.
-    const total = deals.reduce((sum, deal) => sum + (deal.amountValue || 0), 0);
-    const inbound = deals
-      .filter((deal) => deal.segment === "Inbound")
-      .reduce((sum, deal) => sum + (deal.amountValue || 0), 0);
-    const outbound = deals
-      .filter((deal) => deal.segment === "Outbound")
-      .reduce((sum, deal) => sum + (deal.amountValue || 0), 0);
-    chips.push({
-      label: "Inb",
-      value: total ? `${Math.round((inbound / total) * 100)}%` : "s/n",
-      tone: total ? "ok" : "neutral",
-    });
-    chips.push({
-      label: "Out",
-      value: total ? `${Math.round((outbound / total) * 100)}%` : "s/n",
-      tone: total ? "warn" : "neutral",
-    });
-    // En vista equipo también mostramos upsell y cross sell.
-    if (isTeam) {
-      const sumFor = (segment: string) =>
-        deals
-          .filter((deal) => deal.segment === segment)
-          .reduce((sum, deal) => sum + (deal.amountValue || 0), 0);
-      const upsell = sumFor("Upsell");
-      const crossSell = sumFor("Cross sell");
-      chips.push({
-        label: "Up",
-        value: total ? `${Math.round((upsell / total) * 100)}%` : "s/n",
-        tone: total && upsell ? "ok" : "neutral",
-      });
-      chips.push({
-        label: "Cross",
-        value: total ? `${Math.round((crossSell / total) * 100)}%` : "s/n",
-        tone: total && crossSell ? "ok" : "neutral",
-      });
-    }
-    return chips;
-  }, [isTeam, quotaPeriod]);
-
   // ---------- WR por segmento (chips al pie del cuadrito de WR) ----------
   const wrSegmentChips = useMemo<{ label: string; value: string; tone?: Tone; onClick?: () => void }[]>(() => {
     const chipFor = (label: string, stats: { won: number; lost: number } | undefined) => {
@@ -2330,18 +2271,16 @@ export function PulseDashboard({
         payload={payload}
         onClose={closeModal}
         initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}
-        executiveSummary={periodPayload?.presentation === "won" ? <WonExecutiveSummary
-          rangeLabel={rangeLabel} amount={periodWonAmount + periodOtfWon / 12} quota={periodQuota}
-          count={periodWonCount} mrr={periodWonAmount} otf={periodOtfWon / 12}
-          chips={wonChips} cornerChips={wonCornerChips}
-          commission={<CommissionRate chipLabel="FACTOR COM." attainment={selectedPeriods.length === 1 && periodQuota > 0 ? totalAttainmentPct : null} scope={ownerFilter} />}
+        executiveSummary={periodPayload?.presentation === "won" ? ({ selectedOwner, onOwnerSelect }) => <WonExecutiveSummary
+          rangeLabel={rangeLabel}
+          periodWr={periodWr}
+          showOwners={isTeam}
+          ownerQuotas={ownerQuotaByName ?? {}}
+          selectedOwner={selectedOwner}
+          onOwnerSelect={onOwnerSelect}
+          ownerPeriodWr={Object.fromEntries(Object.entries(periodData?.owners ?? {}).map(([id, stats]) => [report.periods.owners[id] ?? 'Sin comercial', { won: stats.wonDeals.filter(deal => deal.amountValue > 0).length, lost: stats.lostDeals.filter(deal => deal.amountValue > 0).length }]))}
           deals={quotaPeriod.eligible} periods={selectedPeriods}
-          history={Object.keys(report.periods.data).filter(p => p <= [...selectedPeriods].sort().at(-1)!).sort().slice(-8).map(p => {
-            const bucket = report.periods.data[p]!;
-            const stats = isTeam ? bucket.team : bucket.owners[ownerFilter];
-            const scoped = quotaStats((stats?.wonDeals ?? []).filter(d => matchesType(d) && (role === "all" || roleOfOwner(d.ownerId) === role)));
-            return { label: shortPeriod(p), value: scoped.wonAmount, count: scoped.won };
-          })}
+
         /> : undefined}
         fix={
           periodPayload

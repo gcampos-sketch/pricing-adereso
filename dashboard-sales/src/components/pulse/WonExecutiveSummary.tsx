@@ -1,64 +1,94 @@
-import type { ReactNode } from 'react';
-import type { DealDTO, Tone } from '@/lib/pulse-types';
-import { WonStageChip, type WonStageDetail } from './WonStageChip';
+import { useId, useState, type CSSProperties } from 'react';
+import { ExternalLink, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type { DealDTO } from '@/lib/pulse-types';
+import { wonDistribution, wonOwnerBreakdown, type WonDistributionRow } from '@/lib/won-distribution';
 
-type Chip = { label: string; value: string; tone?: Tone; onClick?: () => void; detail?: WonStageDetail };
-type Point = { label: string; value: number; count: number };
-const money = (v: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
-const names: Record<string, string> = {
-  'Último': 'ÚLTIMO CIERRE', Inb: 'INBOUND', Out: 'OUTBOUND', Up: 'UPSELL', Cross: 'CROSS SELL',
-  'Renov./contr. fuera': 'RENOV. / CONTR.', 'Billeteras vendidas': 'BILLETERAS', 'Revisar clasificación': 'TIPO A REVISAR',
-};
-function Stat({ chip }: { chip: Chip }) {
-  if (chip.detail) return <WonStageChip label={chip.label} value={chip.value} tone={chip.tone ?? "neutral"} detail={chip.detail} />;
-  const contents = <><span>{names[chip.label] ?? chip.label.toUpperCase()}</span><strong>{chip.value}</strong></>;
-  return chip.onClick
-    ? <button type="button" className="won-exec-stat" data-tone={chip.tone} onClick={chip.onClick} title="Ver deals de este indicador">{contents}</button>
-    : <div className="won-exec-stat" data-tone={chip.tone}>{contents}</div>;
+type Measure = 'mrr' | 'count';
+const money = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+const percentage = (value: number) => `${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}%`;
+const share = (row: WonDistributionRow, measure: Measure) => measure === 'mrr' ? row.mrrShare ?? 0 : row.countShare;
+
+function DistributionOption({ row, measure, period, segment = false }: { row: WonDistributionRow; measure: Measure; period: string; segment?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const titleId = useId();
+  return <Popover open={open} onOpenChange={setOpen}>
+    <PopoverTrigger asChild>
+      {segment ? <button type="button" className="won-mix-segment" style={{ width: `${share(row, measure)}%`, background: row.color }} aria-label={`Ver ${row.count} negocios de ${row.label} · ${percentage(share(row, measure))}`} title={`${row.label} · ${percentage(share(row, measure))} · Ver negocios`} /> :
+        <button type="button" className="won-mix-option" style={{ '--mix-color': row.color } as CSSProperties} title={`Ver ${row.count} negocios de ${row.label}`}>
+          <i aria-hidden="true" /><div><strong>{row.label}</strong><small>{row.count} {row.count === 1 ? 'negocio' : 'negocios'} · {money(row.mrr)} MRR</small></div><b>{percentage(share(row, measure))}</b>
+        </button>}
+    </PopoverTrigger>
+    <PopoverContent className="won-mix-popover" data-won-distribution-popup="" align="start" sideOffset={8} collisionPadding={12} sticky="always" aria-labelledby={titleId} onKeyDown={event => event.stopPropagation()}>
+      <header><div><h4 id={titleId}>{row.label}</h4><p>{period} · {row.count} {row.count === 1 ? 'negocio' : 'negocios'} · {money(row.mrr)} MRR · {percentage(share(row, measure))} {measure === 'mrr' ? 'del MRR' : 'de los negocios'}</p></div><button type="button" aria-label="Cerrar negocios de la categoría" onClick={() => setOpen(false)}><X size={16} aria-hidden="true" /></button></header>
+      <ul>{row.deals.map(deal => <li key={deal.id}><a href={deal.url} target="_blank" rel="noopener noreferrer"><span>{deal.name}<small>{deal.owner}</small></span><ExternalLink size={13} aria-hidden="true" /></a><strong>{money(deal.amountValue || 0)}</strong></li>)}</ul>
+      <small className="won-mix-popup-note">Mismo período y filtros del tablero. Los enlaces abren el negocio en HubSpot.</small>
+    </PopoverContent>
+  </Popover>;
 }
-function Bars({ title, note, points }: { title: string; note: string; points: Point[] }) {
-  const max = Math.max(1, ...points.map(p => p.value));
-  return <figure className="won-exec-chart"><figcaption><strong>{title}</strong><small>{note}</small></figcaption>
-    {points.length ? <svg viewBox={`0 0 ${Math.max(points.length, 1) * 74} 108`} role="img" aria-label={`${title}. ${points.map(p => `${p.label}: ${money(p.value)}, ${p.count} deals`).join('; ')}`}>
-      {points.map((p, i) => {
-        const height = p.value / max * 62;
-        return <g key={p.label}><title>{p.label}: {money(p.value)} · {p.count} deals</title>
-          <text x={i * 74 + 37} y={Math.max(12, 76 - height)} textAnchor="middle" className="won-exec-bar-value">{money(p.value)}</text>
-          <rect x={i * 74 + 17} y={82 - height} width="40" height={height} rx="4" />
-          <text x={i * 74 + 37} y="101" textAnchor="middle">{p.label}</text>
-        </g>;
-      })}
-    </svg> : <p>Sin datos para este período.</p>}
+
+function Distribution({ title, note, rows, measure, period }: { title: string; note: string; rows: WonDistributionRow[]; measure: Measure; period: string }) {
+  const visible = rows.filter(row => measure === 'mrr' ? row.mrr > 0 : row.count > 0);
+  return <figure className="won-mix-chart">
+    <figcaption title={note}><h3>{title}</h3></figcaption>
+    {visible.length ? <>
+      <div className="won-mix-track" role="group" aria-label={`${title}: selecciona una categoría para ver sus negocios`}>
+        {visible.map(row => <DistributionOption key={row.key} row={row} measure={measure} period={period} segment />)}
+      </div>
+      <ul className="won-mix-legend">{visible.map(row => <li key={row.key}><DistributionOption row={row} measure={measure} period={period} /></li>)}</ul>
+    </> : <p className="won-mix-empty">{measure === 'mrr' ? 'Sin MRR ganado en este período. Puedes ver la distribución por negocios.' : 'Sin negocios ganados en este período.'}</p>}
   </figure>;
 }
 
-/** Supplied only by the Ganado card; the table's other entry points keep their own presentation. */
-export function WonExecutiveSummary({ rangeLabel, amount, quota, count, mrr, otf, chips, cornerChips, commission, deals, periods, history }: {
-  rangeLabel: string; amount: number; quota: number; count: number; mrr: number; otf: number;
-  chips: Chip[]; cornerChips: Chip[]; commission: ReactNode; deals: DealDTO[]; periods: string[]; history: Point[];
+/** Only the eligible won population for the selected period and dashboard filters. */
+export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, showOwners = false, ownerQuotas = {}, selectedOwner = null, onOwnerSelect, ownerPeriodWr = {} }: {
+  rangeLabel: string; deals: DealDTO[]; periods: string[]; periodWr: { won: number; lost: number }; showOwners?: boolean; ownerQuotas?: Record<string, number>;
+  selectedOwner?: string | null; onOwnerSelect?: (owner: string | null) => void; ownerPeriodWr?: Record<string, { won: number; lost: number }>;
 }) {
-  const months = periods.flatMap(p => {
-    const [year, quarter] = p.split('-Q').map(Number);
-    return Array.from({ length: 3 }, (_, i) => {
-      const month = (quarter! - 1) * 3 + i;
-      const key = `${year}-${String(month + 1).padStart(2, '0')}`;
-      const list = deals.filter(d => d.closeDateValue?.slice(0, 7) === key);
-      return { label: new Date(Date.UTC(year!, month, 1)).toLocaleDateString('es-CL', { month: 'short', timeZone: 'UTC' }).replace('.', '').toUpperCase(), value: list.reduce((sum, d) => sum + (d.amountValue || 0), 0), count: list.length };
-    });
-  });
-  const find = (labels: string[]) => labels.flatMap(label => chips.filter(c => c.label === label));
-  return <section className="won-executive" aria-label="Resumen ejecutivo de Ganado">
-    <header className="won-exec-heading"><span>RESUMEN EJECUTIVO · {rangeLabel}</span><small>Período y filtros del tablero · la búsqueda de la tabla no altera este resumen</small></header>
-    <div className="won-exec-story">
-      <div className="won-exec-result"><span>01 · RESULTADO</span><strong>{money(amount)} <small>/ {money(quota)} CUOTA</small></strong>
-        <p>{count} deals · {money(mrr)} MRR + {money(otf)} OTF/12</p>
-        <div className="won-exec-progress" role="img" aria-label={quota > 0 ? `${(amount / quota * 100).toFixed(1)}% de cuota` : 'Sin cuota'}><i style={{ width: `${quota > 0 ? Math.min(100, Math.max(0, amount / quota * 100)) : 0}%` }} /></div>
-        <div className="won-exec-inline"><b>{quota > 0 ? `${(amount / quota * 100).toFixed(1)}% CUOTA` : 'SIN CUOTA'}</b>{find(['QoQ', 'YoY']).map(c => <Stat key={c.label} chip={c} />)}{commission}</div>
+  const [measure, setMeasure] = useState<Measure>('mrr');
+  const teamMix = wonDistribution(deals, periods);
+  const mix = selectedOwner ? wonDistribution(teamMix.deals.filter(deal => (deal.owner || 'Sin comercial') === selectedOwner), periods) : teamMix;
+  const owners = showOwners ? wonOwnerBreakdown(teamMix.deals, ownerQuotas) : [];
+  const activeWr = selectedOwner ? ownerPeriodWr[selectedOwner] ?? { won: 0, lost: 0 } : periodWr;
+  const maxOwnerMrr = Math.max(0, ...owners.map(owner => owner.mrr));
+  const closed = activeWr.won + activeWr.lost;
+  const wr = closed > 0 ? activeWr.won / closed * 100 : null;
+  const methodology = `Base: ${money(mix.totalMrr)} MRR · ${mix.count} negocios · ${rangeLabel}. Aplica los filtros del tablero y el comercial seleccionado aquí; la búsqueda y los demás filtros del listado no alteran este resumen. Outbound: Prospección SDR Adereso. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Las demás fuentes se muestran aparte.`;
+  return <section className="won-executive won-mix-summary won-widget-summary" aria-label="Composición de los ganados del período">
+    <header className="won-mix-heading"><span title={methodology}>RESUMEN · {rangeLabel}{selectedOwner ? ` · ${selectedOwner}` : ''}</span>
+      <div className="won-mix-measure" role="group" aria-label="Medida de la distribución">
+        <button type="button" aria-pressed={measure === 'mrr'} onClick={() => setMeasure('mrr')}>Por MRR</button>
+        <button type="button" aria-pressed={measure === 'count'} onClick={() => setMeasure('count')}>Por negocios</button>
       </div>
-      <div className="won-exec-block"><h4>02 · MATERIALIZACIÓN</h4><div className="won-exec-stats">{find(['E6 POR MOVER', 'E6.1 WARNING', '6.2 EN DESARROLLO']).map(c => <Stat key={c.label} chip={c} />)}</div><p>Mismos ganados elegibles del período, agrupados por etapa actual. Cada porcentaje es MRR ÷ cuota; OTF/12 va separado.</p></div>
-      <div className="won-exec-block"><h4>03 · PENDIENTES</h4><div className="won-exec-stats">{find(['PEND. Q ANT.']).map(c => <Stat key={c.label} chip={c} />)}</div><p>Histórico por revisar · pendientes de Q previos son una propuesta y no suman a este cumplimiento.</p></div>
+    </header>
+    <div className="won-widgets-grid" data-with-owners={showOwners}>
+      {showOwners ? <article className="won-owners-widget" aria-label="Ganado por comercial">
+        <header><h3>Ganado por comercial</h3><small>{owners.length} comerciales · MRR</small></header>
+        <p className="won-owner-legend">Largo: MRR vendido · relleno: % de cuota</p>
+        <div className="won-owner-widget-list">{owners.map(row => <button type="button" className="won-owner-widget-row" key={row.owner} aria-label={`Filtrar ganados de ${row.owner}`} aria-pressed={selectedOwner === row.owner} data-muted={Boolean(selectedOwner && selectedOwner !== row.owner)} onClick={() => onOwnerSelect?.(selectedOwner === row.owner ? null : row.owner)}>
+          <div className="won-owner-widget-head"><span>{row.owner}</span><strong>{money(row.mrr)}</strong><small>{row.count} {row.count === 1 ? 'deal' : 'deals'}</small></div>
+          <div className="won-owner-widget-meter" title={`Cuota de ${row.owner} · ${rangeLabel}: ${row.quota > 0 ? money(row.quota) : 'sin cuota'}. Cumplimiento = MRR vendido ÷ cuota.`}>
+            <span className="owner-bar-track"><span className="owner-bar-sold" style={{ width: `${maxOwnerMrr > 0 ? row.mrr / maxOwnerMrr * 100 : 0}%` }}><span className="owner-bar-fill" style={{ width: `${Math.min(100, Math.max(0, row.attainment ?? 0))}%` }} /></span></span>
+            <small>{row.attainment === null ? 'Sin cuota' : `${percentage(row.attainment)} cuota`}</small>
+          </div>
+        </button>)}</div>
+        {!owners.length ? <p className="won-mix-empty">Sin ganados en este período.</p> : null}
+      </article> : null}
+      <Distribution title="Qué vendimos" note="Tipo de negocio registrado en HubSpot. Categorías en cero ocultas." rows={mix.types} measure={measure} period={rangeLabel} />
+      <Distribution title="De dónde vino" note="Outbound: Prospección SDR Adereso. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Otras fuentes se muestran aparte." rows={mix.sources} measure={measure} period={rangeLabel} />
+      <article className="won-wr-widget" title="WR = ganados ÷ (ganados + perdidos), con monto mayor a $0. Aplica el período, comercial, rol y tipo del tablero, además del comercial seleccionado aquí. Incluye todos los cierres de ese alcance, no solo los ganados elegibles para cuota. La búsqueda y los demás filtros de la tabla no cambian este indicador.">
+        <h3>WR del período filtrado</h3>
+        <p>{rangeLabel} · {selectedOwner ?? 'filtros actuales del tablero'}</p>
+        <div className="won-wr-split">
+          <div className="won-wr-donut" role="img" aria-label={wr === null ? 'Sin cierres en el período filtrado' : `${activeWr.won} de ${closed} cierres ganados: WR ${percentage(wr)}`}>
+            <svg viewBox="0 0 80 80" aria-hidden="true"><circle className="won-wr-ring-base" cx="40" cy="40" r="34" />{wr !== null ? <circle className="won-wr-ring-won" cx="40" cy="40" r="34" pathLength="100" strokeDasharray={`${wr} ${100 - wr}`} transform="rotate(-90 40 40)" /> : null}</svg>
+            <strong>{wr === null ? '—' : percentage(wr)}</strong>
+          </div>
+          <dl className="won-wr-outcomes"><div><dt><i aria-hidden="true" />Ganados</dt><dd>{activeWr.won}</dd></div><div><dt><i aria-hidden="true" />Perdidos</dt><dd>{activeWr.lost}</dd></div></dl>
+        </div>
+        <span className="won-wr-ratio">{closed ? `${activeWr.won} de ${closed} cierres se ganaron` : 'Sin negocios cerrados en este período'}</span>
+        <small>Solo negocios con monto &gt; $0</small>
+      </article>
     </div>
-    <div className="won-exec-charts"><Bars title="EVOLUCIÓN MENSUAL" note={`MRR elegible por cierre · ${rangeLabel} · mes en curso parcial`} points={months} /><Bars title="TRAYECTORIA TRIMESTRAL" note="MRR elegible · mismos filtros · trimestre en curso parcial" points={history} /></div>
-    <div className="won-exec-footer"><div><h4>ORIGEN DEL MRR</h4><div className="won-exec-stats">{cornerChips.map(c => <Stat key={c.label} chip={c} />)}</div></div><div><h4>FUERA DE CUOTA / CLASIFICACIÓN</h4><div className="won-exec-stats">{find(['Renov./contr. fuera', 'Billeteras vendidas', 'Revisar clasificación']).map(c => <Stat key={c.label} chip={c} />)}{!chips.some(c => ['Renov./contr. fuera', 'Billeteras vendidas', 'Revisar clasificación'].includes(c.label)) ? <span>Sin exclusiones ni clasificación por revisar.</span> : null}</div></div></div>
   </section>;
 }

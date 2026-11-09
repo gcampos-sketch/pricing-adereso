@@ -70,11 +70,12 @@
    const q=document.getElementById('q');if(q?.value)search(q.value);
   }
   async function load(force=false){if(busy)return;busy=true;refresh.disabled=true;
-   try{const r=await fetch('/api/guides/content?guide='+guide,{credentials:'same-origin',cache:'no-store'});if(!r.ok)throw Error('source unavailable');const data=await r.json();if(data.schema!=='commercial-guide/v1'||data.guide!==guide||!data.snapshot?.documents?.length)throw Error('format');
+   try{const r=await fetch('/api/guides/content?guide='+guide,{credentials:'same-origin',cache:'no-store',signal:AbortSignal.timeout(30000)});if(!r.ok)throw Error('source unavailable');const data=await r.json();if(data.schema!=='commercial-guide/v1'||data.guide!==guide||!data.snapshot?.documents?.length)throw Error('format');
     if(force||!version){mount(data);}
     else if(data.version!==version){pending=data;caption.textContent='Hay una versión nueva de Notion.';refresh.textContent='Ver cambios';}
     else if(data.error)caption.textContent='Última versión disponible · no se pudo comprobar Notion.';
-   }catch{caption.textContent=version?'Sin conexión · conservamos la última versión visible.':'No se pudo cargar Notion. Pulsa Actualizar para reintentar.';if(!version)loading.textContent='El contenido estará disponible al recuperar la conexión.';}
+    return true;
+   }catch{caption.textContent=version?'Sin conexión · conservamos la última versión visible.':'No se pudo cargar Notion. Pulsa Actualizar para reintentar.';if(!version)loading.textContent='El contenido estará disponible al recuperar la conexión.';return false;}
    finally{busy=false;refresh.disabled=false;}
   }
   refresh.onclick=()=>{if(pending)mount(pending);else load(true);refresh.textContent='Actualizar';};
@@ -82,7 +83,7 @@
   function search(value){const q=value.trim().toLocaleLowerCase();let count=0;for(const doc of host.querySelectorAll('.guide-doc')){const hit=!q||doc.textContent.toLocaleLowerCase().includes(q);doc.hidden=!hit;if(hit)count++;if(q&&hit)doc.querySelectorAll('details').forEach(x=>x.open=x.textContent.toLocaleLowerCase().includes(q));}const cnt=document.getElementById('cnt');if(cnt)cnt.textContent=q?count+' secciones':'';const empty=document.getElementById('empty');if(empty)empty.style.display=q&&!count?'block':'none';}
   document.getElementById('q')?.addEventListener('input',event=>{event.stopImmediatePropagation();search(event.target.value);},true);
   for(const id of ['openAll','closeAll'])document.getElementById(id)?.addEventListener('click',event=>{event.stopImmediatePropagation();host.querySelectorAll('details').forEach(x=>x.open=id==='openAll');},true);
-  load();setInterval(()=>{if(!document.hidden)load();},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
+  window.aderesoContentReady=load();setInterval(()=>{if(!document.hidden)load();},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
