@@ -18,7 +18,19 @@ export class LoadingPace {
   }
 }
 
-/** Change playback speed without restarting the three staggered animations. */
+/** A shared, broad wave illuminates whole sections with overlapping fades. */
+export function loadingLightLevels(phase: number): number[] {
+  const cycle = (phase % 1 + 1) % 1;
+  const order = [1, 0, 2];
+  const levels = [.16, .16, .16];
+  order.forEach((lobe, index) => {
+    const weight = Math.exp(1.15 * (Math.cos(2 * Math.PI * (cycle - index / 3)) - 1));
+    levels[lobe] = .16 + .84 * weight;
+  });
+  return levels;
+}
+
+/** Speed changes advance a single light clock, so the handoff cannot drift. */
 export function mountLoadingPace(root: HTMLElement): () => void {
   const page = root.ownerDocument.defaultView;
   if (!page) return () => {};
@@ -52,26 +64,37 @@ export function mountLoadingPace(root: HTMLElement): () => void {
     iframe.addEventListener('load', loaded);
     cleanups.push(() => iframe.removeEventListener('load', loaded));
   }
-  let animations: Animation[] = [];
-  const collectAnimations = () => { animations = [...root.querySelectorAll('.hub-loading-lobe')].flatMap(lobe => lobe.getAnimations()); };
-  collectAnimations();
+  const lobes = [...root.querySelectorAll<SVGElement>('.hub-loading-lobe')];
   const reduced = page.matchMedia('(prefers-reduced-motion: reduce)');
-  reduced.addEventListener('change', collectAnimations);
+  let phase = 0;
+  const paint = () => {
+    const levels = reduced.matches ? [1, 1, 1] : loadingLightLevels(phase);
+    lobes.forEach((lobe, index) => {
+      const level = levels[index]!;
+      const light = (level - .16) / .84;
+      lobe.style.opacity = level.toFixed(4);
+      lobe.style.filter = `drop-shadow(0 0 ${(light * 5).toFixed(2)}px rgba(255,255,255,${(light * .3).toFixed(3)}))`;
+    });
+  };
+  paint();
+  reduced.addEventListener('change', paint);
   let speed = 1;
   let previous = page.performance.now();
   let frame = 0;
   const tick = (now: number) => {
-    // Slow acceleration and continuous frame timing prevent a jerky tempo change.
-    speed += (pace.rate(now) - speed) * (1 - Math.exp(-Math.min(64, now - previous) / 1100));
+    const elapsed = Math.min(64, Math.max(0, now - previous));
+    speed += (pace.rate(now) - speed) * (1 - Math.exp(-elapsed / 1100));
     previous = now;
-    for (const animation of animations) animation.updatePlaybackRate(speed);
+    phase = (phase + elapsed * speed / 4800) % 1;
+    paint();
     frame = page.requestAnimationFrame(tick);
   };
   frame = page.requestAnimationFrame(tick);
   return () => {
     page.cancelAnimationFrame(frame);
-    reduced.removeEventListener('change', collectAnimations);
+    reduced.removeEventListener('change', paint);
     observers.forEach(observer => observer.disconnect());
     cleanups.forEach(cleanup => cleanup());
+    // Preserve the current brightness for the gradual completion fade.
   };
 }
