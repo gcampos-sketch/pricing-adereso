@@ -30,3 +30,5 @@ exclude:
   - "scripts"
   - "starfield.d.ts"
   - "starfield.js"
+  - "wallet-standalone.js"
+  - "wallet-share.js"
