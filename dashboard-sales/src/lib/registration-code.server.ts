@@ -14,7 +14,7 @@ export async function sendRegistrationCode(auth: Pick<SupabaseClient['auth'], 's
   if (!email) throw new Error('Usa tu correo @adere.so.');
   // Native signup requires a password. Generate and discard it server-side;
   // nobody receives it and there is no password form in the Hub.
-  const password = Array.from(crypto.getRandomValues(new Uint8Array(48)), b => b.toString(16).padStart(2, '0')).join('') + 'aA1!';
+  const password = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('') + 'aA1!';
   const { data, error } = await auth.signUp({ email, password });
   if (error) {
     if (error.code === 'user_already_exists') return { next: 'passkey' };

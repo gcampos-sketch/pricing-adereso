@@ -46,7 +46,8 @@ test('registration uses native signup, never routine email sign-in, and discards
   expect(await sendRegistrationCode(auth, ' PERSONA@ADERE.SO ')).toEqual({ next: 'email-code' });
   await sendRegistrationCode(auth, 'persona@adere.so');
   expect(calls[0]?.email).toBe('persona@adere.so');
-  expect(String(calls[0]?.password).length).toBeGreaterThanOrEqual(96);
+  expect(String(calls[0]?.password).length).toBeGreaterThanOrEqual(64);
+  expect(String(calls[0]?.password).length).toBeLessThanOrEqual(72);
   expect(calls[0]?.password).not.toBe(calls[1]?.password);
   expect(Object.keys(calls[0]!)).toEqual(['email', 'password']);
 });
