@@ -17,8 +17,8 @@ test('business type and source are independent axes; missing types are not inven
 
 test('channel uses exact creation-source values, never the old segment or a substring', () => {
   expect(wonAcquisitionSource(deal('a', { segment: 'Inbound' }))).toBe('outbound');
-  for (const source of ['Form de Contacto Inbound Adereso', 'Form de Contacto Inbound']) expect(wonAcquisitionSource({ source })).toBe('inbound');
-  for (const source of ['Prospección SDR', 'Prospeccion SDR Adereso']) expect(wonAcquisitionSource({ source })).toBe('outbound');
+  for (const source of ['Form de Contacto Inbound Adereso', 'Form de Contacto Inbound', 'Form de Contacto Inbound [Adereso]']) expect(wonAcquisitionSource({ source })).toBe('inbound');
+  for (const source of ['Prospección SDR', 'Prospeccion SDR Adereso', 'Prospección SDR [Adereso]']) expect(wonAcquisitionSource({ source })).toBe('outbound');
   expect(wonAcquisitionSource({ source: 'Prospección SDR Partner' })).toBe('other');
   expect(wonAcquisitionSource({ source: null })).toBe('unknown');
 });

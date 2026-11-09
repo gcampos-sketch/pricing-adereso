@@ -33,8 +33,8 @@ export function wonBusinessType(deal: Pick<DealDTO, 'dealType' | 'segment'>) {
 export function wonAcquisitionSource(deal: Pick<DealDTO, 'source'>) {
   const source = normalize(deal.source ?? '');
   if (!source) return 'unknown';
-  if (['prospeccion sdr', 'prospeccion sdr adereso'].includes(source)) return 'outbound';
-  if (['form de contacto inbound', 'form de contacto inbound adereso'].includes(source)) return 'inbound';
+  if (['prospeccion sdr', 'prospeccion sdr adereso', 'prospeccion sdr [adereso]'].includes(source)) return 'outbound';
+  if (['form de contacto inbound', 'form de contacto inbound adereso', 'form de contacto inbound [adereso]'].includes(source)) return 'inbound';
   if (source === 'customer success') return 'cs';
   if (['kam adereso', 'kam adereso recuperacion'].includes(source)) return 'kam';
   return 'other';
