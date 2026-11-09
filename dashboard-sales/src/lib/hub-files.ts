@@ -6,6 +6,7 @@ export const HUB_FILES: Record<string, string> = {
   'chapter-index.js': 'text/javascript; charset=utf-8',
   'commercial-guides.js': 'text/javascript; charset=utf-8',
   'academy-sync.js': 'text/javascript; charset=utf-8',
+  'roi-share.js': 'text/javascript; charset=utf-8',
   'dashboard-settings.js': 'text/javascript; charset=utf-8',
   'logoadereso.webp': 'image/webp',
   'e6e8672e.webp': 'image/webp',

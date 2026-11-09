@@ -26,6 +26,7 @@ exclude:
   - "playbook"
   - "render.yaml"
   - "roi-standalone.js"
+  - "roi-share.js"
   - "scripts"
   - "starfield.d.ts"
   - "starfield.js"
