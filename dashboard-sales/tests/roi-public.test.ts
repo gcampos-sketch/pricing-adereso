@@ -13,6 +13,12 @@ test('ROI export contains the calculator, not hidden Pricing sections or the Hub
  for(const privateMarker of ['id="homeGrid"','id="s1"','id="s5"','id="s7"','id="ppTpl"','const BAG=','const SETUP=','DASHBOARD_SALES_URL','data-next="s7"'])expect(page).not.toContain(privateMarker);
  const script=page.match(/<script>([\s\S]*?)<\/script>/)?.[1];expect(script).toBeDefined();expect(()=>new Script(script!)).not.toThrow();
 });
+test('deal sharing loads in the main Hub document rather than an embedded tool template',()=>{
+ const script='<script src="/hub-content/roi-share.js" defer></script>';
+ expect(hub.slice(0,hub.indexOf('</head>'))).toContain(script);
+ expect(hub.split(script)).toHaveLength(2);
+ expect(roiDocument(hub,context)).not.toContain('/hub-content/roi-share.js');
+});
 test('missing or ambiguous ROI source markers fail closed instead of publishing the Hub',()=>{
  expect(()=>roiDocument(hub.replace('<section class="lvl" id="s6"','<section id="other"'),context)).toThrow();
  expect(()=>roiDocument(hub+'/* ===== ROI · caso de negocio',context)).toThrow();
@@ -27,6 +33,15 @@ test('standalone ROI reuses the exact source formulas for revenue and variable c
 test('external numeric parameters are bounded and cannot inject markup or private state',()=>{
  const state=JSON.parse(runInNewContext(context+'\nJSON.stringify(state)',{URLSearchParams,location:{search:'?mensualidad=<script>&volumen=-20&plantilla=Infinity&vista=pricing&access_token=forged'}}));
  expect(state.externalCost).toBe(0);expect(state.vol).toBe(0);expect(state.externalRate).toBeNull();expect(state.access_token).toBeUndefined();
+});
+test('resharing a linked calculator keeps the deal link without carrying private or preview parameters',()=>{
+ const token='a'.repeat(64),location={origin,search:'?r='+token+'&preview=1&dealId=private&access_token=forged'};
+ const calculator=roiSources(hub).calculator;
+ const sandbox={URL,URLSearchParams,location,startStandaloneRoi(){},state:{out:{whatsapp:true},roiActive:{},roiVals:{}},document:{getElementById:()=>({addEventListener(){}}),addEventListener(){}},waP:()=>({marketing:0.1}),metaFeeRate:()=>0};
+ const result=runInNewContext(calculator+`\nroiCostValue=()=>558;roiVolume=()=>2000;roiShareUrl();`,sandbox);
+ const link=new URL(result);
+ expect(link.origin).toBe(origin);expect(link.searchParams.get('r')).toBe(token);
+ expect([...link.searchParams.keys()].sort()).toEqual(['mensualidad','plantilla','r','volumen']);
 });
 test('only ROI and its two visual dependencies are public; path and query flags cannot select Pricing',async()=>{
  const gateway=createRoiPublicGateway(read);

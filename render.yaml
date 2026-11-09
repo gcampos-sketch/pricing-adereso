@@ -16,6 +16,7 @@ services:
         - dashboard-sales/**
         - render.yaml
         - roi-standalone.js
+        - roi-share.js
         - index.html
         - brand-system.css
         - chapter-index.js

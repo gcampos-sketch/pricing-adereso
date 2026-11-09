@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Hub comercial · Adereso</title>
+<script src="/hub-content/roi-share.js" defer></script>
 <link rel="icon" type="image/svg+xml" href="/favicon-adereso.svg?v=1" />
 <style>
   html.hub-booting body{visibility:hidden}
@@ -8612,7 +8613,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
       <!-- 6 · ROI -->
       <section class="lvl" id="s6" data-title="ROI">
         <div class="level-head reveal">
-          <div class="level-kicker roi-kick">ROI · Caso de negocio <button class="roi-share-ico" type="button" data-share-roi title="Copiar link de la calculadora ROI" aria-label="Copiar link de la calculadora ROI"><span data-i="copy" data-sz="14"></span></button></div>
+          <div class="level-kicker roi-kick">ROI · Caso de negocio <button class="roi-share-ico" type="button" data-share-roi title="Compartir calculadora ROI" aria-label="Compartir calculadora ROI"><span data-i="link" data-sz="14"></span></button></div>
           <h2>Mídelo por lo que retorna. No por lo que cuesta.</h2>
           <p>Arma el caso de negocio: activa los casos de uso y compara la ganancia mensual contra la inversión en Adereso.</p>
         </div>
@@ -9925,7 +9926,7 @@ function renderRoi(){
     </div>
     <div class="roi-fee" id="roiFeeLine" style="display:none"></div>
     <div class="roi-empty" id="roiEmpty">Activa al menos un caso de uso para construir el caso de negocio.</div>
-    <div class="roi-cta"><button class="btn btn-primary" id="roiCopyBtn" title="Copia el caso de negocio para pegarlo en un correo o propuesta"><span data-i="copy"></span>Copiar caso</button><button class="btn roi-share-btn" type="button" data-share-roi title="Copia el link de la calculadora ROI"><span data-i="link"></span>Compartir calculadora</button><button class="btn roi-share-btn roi-cmp-btn ${state.cmpOn?'on':''}" type="button" data-roi-cmp aria-expanded="${!!state.cmpOn}" title="Compara el ROI con su proveedor actual"><span data-i="scale"></span>Comparar con su proveedor</button></div>
+    <div class="roi-cta"><button class="btn btn-primary" id="roiCopyBtn" title="Copia el caso de negocio para pegarlo en un correo o propuesta"><span data-i="copy"></span>Copiar caso</button><button class="btn roi-share-btn" type="button" data-share-roi title="Compartir la calculadora ROI"><span data-i="link"></span>Compartir calculadora</button><button class="btn roi-share-btn roi-cmp-btn ${state.cmpOn?'on':''}" type="button" data-roi-cmp aria-expanded="${!!state.cmpOn}" title="Compara el ROI con su proveedor actual"><span data-i="scale"></span>Comparar con su proveedor</button></div>
     <div class="roi-cmp ${state.cmpOn?'open':''}" id="roiCmp"><div class="cmp-wrap">${cmpHtml()}</div></div>
   </div>`;
   el.innerHTML=html;paintIcons(el);applyReveal(el,'.roi-card,.roi-panel');
@@ -9967,15 +9968,19 @@ function calcRoiNumbers(){
   ['Ventas','Postventa'].forEach(m=>{const s=document.getElementById('roiMacSum_'+m);if(s)s.textContent=usd(ROI_ORDER.filter(k=>ROI_CASES[k].macro===m&&state.roiActive[k]&&!roiPending(k)).reduce((a,k)=>a+ROI_CASES[k].gain(roiVals(k)),0))+'/mes';});
   calcCmp();
 }
-/* compartir calculadora ROI: copia el link público y avisa con un popup */
+/* Compartir ROI: vincular deal dentro del Hub; conservar el enlace en la vista pública. */
 const ROI_URL='https://adereso-partners.onrender.com/roi/';
-function roiShareUrl(){const url=new URL(ROI_URL);url.searchParams.set('mensualidad',String(Math.round(Math.max(0,roiCostValue())*100)/100));url.searchParams.set('volumen',String(Math.round(Math.max(0,roiVolume()))));const rate=roiTplUnit();if(rate!=null)url.searchParams.set('plantilla',String(rate));return url.href;}
+function roiShareUrl(){const linked=typeof startStandaloneRoi==='function'?new URLSearchParams(location.search).get('r'):null,valid=/^[a-f0-9]{64}$/.test(linked||'');const url=valid?new URL('/roi/',location.origin):new URL(ROI_URL);if(valid)url.searchParams.set('r',linked);url.searchParams.set('mensualidad',String(Math.round(Math.max(0,roiCostValue())*100)/100));url.searchParams.set('volumen',String(Math.round(Math.max(0,roiVolume()))));const rate=roiTplUnit();if(rate!=null)url.searchParams.set('plantilla',String(rate));return url.href;}
 function shareToast(ok){let t=document.getElementById('shareToast');
   if(!t){t=document.createElement('div');t.id='shareToast';t.className='share-toast';t.setAttribute('role','status');document.body.appendChild(t);}
   t.innerHTML=ok?`<i><span data-i="check" data-sz="16"></span></i><div><b>Link copiado en tu portapapeles</b><small>Listo para compartir: ${roiShareUrl()}</small></div>`:`<i style="background:rgba(245,185,66,0.14);color:var(--warning)">!</i><div><b>No se pudo copiar automáticamente</b><small>Copia este link: ${roiShareUrl()}</small></div>`;
   t.style.borderColor=ok?'':'rgba(245,185,66,0.4)';paintIcons(t);
   requestAnimationFrame(()=>t.classList.add('on'));clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2600);}
 function shareRoi(){
+  if(typeof startStandaloneRoi!=='function'){
+    if(window.openRoiShare)window.openRoiShare({mensualidad:Math.round(Math.max(0,roiCostValue())*100)/100,volumen:Math.round(Math.max(0,roiVolume())),plantilla:roiTplUnit()??null});
+    return;
+  }
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=roiShareUrl();ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();shareToast(ok);};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(roiShareUrl()).then(()=>shareToast(true),fallback);else fallback();}
 document.addEventListener('click',e=>{if(e.target.closest('[data-share-roi]'))shareRoi();});
