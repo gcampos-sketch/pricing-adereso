@@ -509,11 +509,13 @@
   .ag-add-row{display:flex;justify-content:center;margin-top:18px}
   .ag-add-row.w600{max-width:600px}.ag-add-row.w640{max-width:640px}
   /* agregar agente: sólo el «+»; al pasar el mouse se estira lento y sin rebote (curva tipo líquido) y el texto aparece de a poco */
-  .ag-add{--liq:cubic-bezier(.25,.8,.25,1);display:inline-flex;align-items:center;gap:0;padding:5px;border-radius:999px;border:1px dashed rgba(255,213,64,0.4);background:transparent;color:var(--z300);font:500 12.5px 'Work Sans',sans-serif;cursor:pointer;transition:border-color .9s var(--liq),background .9s var(--liq),color .9s var(--liq),gap .9s var(--liq),padding .9s var(--liq)}
+  .ag-add{--liq:cubic-bezier(.22,1,.36,1);display:inline-flex;align-items:center;gap:0;padding:6px;border-radius:999px;border:1px solid rgba(255,213,64,.3);background:linear-gradient(145deg,rgba(255,255,255,.09),rgba(255,213,64,.035));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 6px 20px rgba(0,0,0,.16);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);color:var(--z300);font:500 12.5px 'Work Sans',sans-serif;cursor:pointer;transition:border-color .7s var(--liq),background .7s var(--liq),box-shadow .7s var(--liq),color .7s var(--liq),gap .7s var(--liq),padding .7s var(--liq),transform .35s var(--liq)}
   .ag-add-i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:rgba(255,213,64,0.12);color:var(--brand);font:600 16px/1 'Outfit',sans-serif;flex:none;transition:transform 1s var(--liq),background .9s var(--liq)}
   .ag-add-t{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;filter:blur(2px);transition:max-width .9s var(--liq),opacity .7s var(--liq) .15s,filter .8s var(--liq) .1s}
   .ag-add:hover,.ag-add:focus-visible{border-color:rgba(255,213,64,0.75);background:rgba(255,213,64,0.06);color:#fff;gap:8px;padding:5px 14px 5px 5px}
-  .ag-add:hover .ag-add-i,.ag-add:focus-visible .ag-add-i{transform:rotate(90deg);background:rgba(255,213,64,0.2)}
+  .ag-add:hover .ag-add-i,.ag-add:focus-visible .ag-add-i{transform:rotate(180deg) scale(1.06);background:rgba(255,213,64,0.2)}
+  .ag-add:active{transform:scale(.95)}
+  .setup-add-ripple{position:fixed;z-index:1000;pointer-events:none;border:1px solid rgba(255,213,64,.45);border-radius:50%;background:radial-gradient(circle,rgba(255,213,64,.12),transparent 72%)}
   .ag-add:hover .ag-add-t,.ag-add:focus-visible .ag-add-t{max-width:84px;opacity:1;filter:blur(0)}
   @media(prefers-reduced-motion:reduce){.ag-add,.ag-add-i,.ag-add-t{transition:none}}
   /* «Cambiar plan» sobra: al tocar el plan elegido ya se despliegan los demás */
@@ -1045,6 +1047,7 @@
   .plan{background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);padding:16px 18px;transition:all .2s var(--ease);text-align:left;width:100%;display:flex;gap:16px;align-items:center}
   .plan:hover{border-color:rgba(255,255,255,0.2)}
   .plan.sel{border-color:var(--brand);background:linear-gradient(0deg,rgba(255,213,64,0.05),rgba(255,213,64,0.05)),var(--surface)}
+  #setupArea .plan:focus-visible{outline:2px solid var(--brand);outline-offset:-2px;box-shadow:none}
   .plan .ptick{width:20px;height:20px;border-radius:999px;border:1px solid var(--b-default);display:grid;place-items:center;color:transparent;flex:none;transition:all .2s var(--ease)}
   .plan.sel .ptick{background:var(--brand);border-color:var(--brand);color:#000}
   .plan-main{flex:1;min-width:0}
@@ -1073,20 +1076,22 @@
   @media(max-width:480px){.psp b{font-size:16px}.psp{padding:8px 9px}}
   /* despliegue en el lugar: los otros planes crecen alrededor del elegido y todo se achica un poco */
   .plans-wrap .plans{gap:0}
-  .pslot{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .45s cubic-bezier(.2,.8,.2,1),opacity .3s var(--ease)}
-  .pslot.sel-slot{display:block;opacity:1}
+  .pslot{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .7s cubic-bezier(.22,1,.36,1),opacity .5s ease;overflow-anchor:none}
+  .pslot.sel-slot{grid-template-rows:1fr;opacity:1}
   .pslot-in{overflow:hidden;min-height:0}
   .pslot>.plan,.pslot-in>.plan{margin:4px 0}
   .plans-wrap.open .pslot{grid-template-rows:1fr;opacity:1}
-  .plans-wrap:not(.open) .plan.sel .phh{display:none}
-  .pspecs-acc{flex-basis:100%;display:grid;grid-template-rows:1fr;transition:grid-template-rows .4s cubic-bezier(.2,.8,.2,1),opacity .25s var(--ease)}
+  .plans-wrap .phh{max-width:120px;overflow:hidden;transition:max-width .6s cubic-bezier(.22,1,.36,1),opacity .4s ease,padding .6s cubic-bezier(.22,1,.36,1),border-width .6s ease}
+  .plans-wrap:not(.open) .plan.sel .phh{max-width:0;opacity:0;padding-left:0;padding-right:0;border-width:0}
+  .pspecs-acc{flex-basis:100%;display:grid;grid-template-rows:1fr;transition:grid-template-rows .7s cubic-bezier(.22,1,.36,1),opacity .5s ease}
   .pspecs-acc>.pspecs{overflow:hidden;min-height:0}
   .plans-wrap.open .pspecs-acc{grid-template-rows:0fr;opacity:0}
-  .plan{transition:padding .35s var(--ease),border-color .2s var(--ease),background .2s var(--ease)}
+  #setupArea .plan{background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015)),var(--surface);box-shadow:inset 0 1px 0 rgba(255,255,255,.035);transition:padding .7s cubic-bezier(.22,1,.36,1),border-color .5s ease,background .5s ease,box-shadow .5s ease}
+  #setupArea .plan.sel{background:linear-gradient(145deg,rgba(255,213,64,.065),rgba(255,255,255,.02)),var(--surface)}
+  #setupArea .pspecs{animation:none}
   .plans-wrap.open .plan{padding:9px 14px}
-  .plans-wrap.open .plan-main h3{font-size:14px}
-  .plans-wrap.open .plan-main .pfit{font-size:12px}
-  .plans-wrap.open .phh{font-size:13px;padding:3px 10px}
+  .plans-wrap.open .phh{padding:3px 10px}
+  @media(prefers-reduced-motion:reduce){#setupArea .pslot,#setupArea .plan,#setupArea .phh,#setupArea .pspecs-acc{transition:none}}
   /* plazo de contrato: cajitas con %, chip de pago anticipado y descuento total */
   .tboxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;max-width:520px}
   @media(max-width:520px){.tboxes{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -9108,9 +9113,27 @@ document.getElementById('modgrid').addEventListener('click',e=>{const s=e.target
 document.getElementById('agentBox')?.addEventListener('click',e=>{const s=e.target.closest('[data-ag-step]');if(!s)return;
   state.extraAgents=Math.max(0,extraAgentsN()+(+s.dataset.agStep));const i=document.querySelector('#agentBox [data-ag]');if(i)i.value=state.extraAgents;agRefresh();});
 document.getElementById('setupArea').addEventListener('click',e=>{const a=e.target.closest('[data-ag-add]');if(!a)return;
+  animateSetupAddition(()=>{
   /* vigente: suma un bot nuevo (si solo había mejora, parte el primero) */
   if(state.existing){if(state.scope==='bolsa'){state.scope=(state.desk||state.studio)?'ambas':'bot';state.bots=1;}else state.bots=botsN()+1;renderMods();renderAll();refreshFlow();return;}
-  state.extraAgents=extraAgentsN()+1;renderMods();agRefresh();});
+  state.extraAgents=extraAgentsN()+1;renderMods();agRefresh();},a);});
+let setupAdditionMotion;
+function animateSetupAddition(update,button){
+  const area=document.getElementById('setupArea'),from=area.getBoundingClientRect().height;
+  const oldCards=area.querySelectorAll('.agcard').length,origin=button.getBoundingClientRect();
+  setupAdditionMotion?.cancel();update();
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||!area.animate)return;
+  const to=area.getBoundingClientRect().height,easing='cubic-bezier(.22,1,.36,1)';
+  setupAdditionMotion=area.animate([{height:from+'px',overflow:'clip'},{height:to+'px',overflow:'clip'}],{duration:760,easing});
+  [...area.querySelectorAll('.agcard')].slice(oldCards).forEach((card,i)=>card.animate([
+    {opacity:0,transform:'translateY(18px)',filter:'blur(5px)'},
+    {opacity:1,transform:'translateY(0)',filter:'blur(0)'}
+  ],{duration:680,delay:Math.min(i,3)*70,easing,fill:'backwards'}));
+  const ripple=document.createElement('span');ripple.className='setup-add-ripple';ripple.setAttribute('aria-hidden','true');
+  Object.assign(ripple.style,{left:origin.left+'px',top:origin.top+'px',width:origin.width+'px',height:origin.height+'px'});document.body.appendChild(ripple);
+  const pulse=ripple.animate([{transform:'scale(.92)',opacity:.65},{transform:'scale(1.8)',opacity:0}],{duration:650,easing});
+  pulse.finished.then(()=>ripple.remove(),()=>ripple.remove());
+}
 /* quitar un agente: se saca su tipo, modalidad y plan y los siguientes suben un lugar (el 1° usa el selector principal) */
 function removeAgent(i){const n=agentsN();if(n<=1)return;
   if(isImprove(i)){state.improve=false;renderMods();renderAll();refreshFlow();return;}
@@ -9212,8 +9235,8 @@ function updateSpot(){const box=document.getElementById('spotBox');if(box)box.cl
 
 const ONB_FULL=`<div class="onb" style="margin-top:22px"><div class="onb-head"><span data-i="users" data-sz="16"></span><b>Onboarding incluido en la implementación</b></div>
   <ul class="onb-list"><li class="ok">Configuración general: conexión de canales, usuarios, departamentos y metadatos</li><li class="ok">Desk: capacitación por cada rol de ejecutivo</li><li class="ok">Studio: capacitación en manejo de bots</li></ul></div>`;
-function renderSetup(){
-  const area=document.getElementById('setupArea');
+function renderSetup(target){
+  const area=target||document.getElementById('setupArea');
   const ttl=document.getElementById('s3title');if(ttl)ttl.textContent=iaSetup()?'¿Cómo implementamos el agente?':'¿Cómo implementamos Desk?';
   if(!iaSetup()){
     if(!state.desk){area.innerHTML=`<div class="note"><span data-i="info"></span><div>Sin agente de IA no hay proyecto de implementación.</div></div>`;paintIcons(area);return;}
@@ -9230,11 +9253,11 @@ function renderSetup(){
       /* La conexión nativa/MCP de Shopify del Plan 1 no añade APIs a medida para Desk. */
       const po=!!state.plansOpen,ks=SETUP_ORDER.filter(k=>k!=='esencial');
       /* igual que con agente: queda solo el plan elegido y los demás se despliegan con «Cambiar plan» */
-      const slots=ks.map(k=>k===state.setup?`<div class="pslot sel-slot">${pc(k)}</div>`:`<div class="pslot"><div class="pslot-in">${pc(k)}</div></div>`).join('');
+      const slots=ks.map(k=>`<div class="pslot ${k===state.setup?'sel-slot':''}" ${!po&&k!==state.setup?'inert':''}><div class="pslot-in">${pc(k)}</div></div>`).join('');
       h+=`<div class="level-kicker" style="margin:4px 0 12px">Plan de integración (HH)</div><div class="plans-wrap ${po?'open':''}" id="plansWrap"><div class="plans">${slots}</div><div class="plans-bar"><button class="plans-switch" data-plans-toggle aria-expanded="${po}"><span class="ps-lbl">${po?'Ocultar planes':'Cambiar plan'}</span><span class="ps-chev">⌄</span></button></div></div>`;}
       h+=epAddon();
     /* con integraciones, los planes van primero y el onboarding (incluido) queda abajo */
-    h+=onbBox;area.innerHTML=h;paintIcons(area);return;}
+    h+=onbBox;area.innerHTML=h;paintIcons(area);syncPlanAccessibility(area,!!state.plansOpen);return;}
   const nA=agentsN();
   /* tipo Agent / Flow: selector chico de una línea, para que no compita con la modalidad (que es la decisión principal) */
   const typeSeg=i=>{const f=agentType(i)==='flow';return `<div class="ag-type"><span class="ag-type-l">Tipo</span><span class="agp-grp" role="group" aria-label="Tipo">
@@ -9253,7 +9276,7 @@ function renderSetup(){
     const planCard=(k)=>{const s=SETUP[k],sel=k===state.setup;return `<button class="plan ${sel?'sel':''}" data-setup="${k}"><span class="ptick">✓</span><div class="plan-main"><h3>${s.name}${s.rec?'<span class="rec-chip">★ Recomendado</span>':''}</h3><div class="pfit">${s.fit}</div></div><span class="phh">${s.hh}</span>${sel?`<div class="pspecs-acc"><div class="pspecs"><div class="psp hh"><b>${parseInt(s.hh)}</b><small>Horas (HH)</small></div>${epPsp(0,s)}<div class="psp"><b><em class="psp-up">Hasta</em>${s.sesDev}</b><small>Reuniones de desarrollo</small><small>+ ${s.sesPost} sesiones durante marcha blanca</small></div></div></div>`:''}</button>`;};
     const po=!!state.plansOpen;
     /* todos los planes en su orden: el elegido queda en su lugar y los demás se despliegan arriba/abajo */
-    const slots=SETUP_ORDER.map(k=>k===state.setup?`<div class="pslot sel-slot">${planCard(k)}</div>`:`<div class="pslot"><div class="pslot-in">${planCard(k)}</div></div>`).join('');
+    const slots=SETUP_ORDER.map(k=>`<div class="pslot ${k===state.setup?'sel-slot':''}" ${!po&&k!==state.setup?'inert':''}><div class="pslot-in">${planCard(k)}</div></div>`).join('');
     html+=`<div class="level-kicker" style="margin:22px 0 12px">Plan de horas (HH)</div>
       <div class="plans-wrap ${po?'open':''}" id="plansWrap">
         <div class="plans">${slots}</div>
@@ -9283,7 +9306,7 @@ function renderSetup(){
   if(!allRapid())html+=`<div class="head-links" style="margin-top:16px"><button type="button" class="pop-link" data-pop="shopifyScope">Ver alcance completo de Shopify ↗</button></div>`;
   /* Desk + Studio: el onboarding viene incluido en la implementación */
   if(state.desk&&state.studio&&!state.existing)html+=ONB_FULL;
-  area.innerHTML=html;paintIcons(area);applyReveal(area,'.seg-opt,.plan');
+  area.innerHTML=html;paintIcons(area);syncPlanAccessibility(area,!!state.plansOpen);if(!target)applyReveal(area,'.seg-opt,.plan');
 }
 
 /* Monto final de la billetera: lo que el cliente decide recargar (ya incluye el fee).
@@ -10196,20 +10219,59 @@ document.getElementById('setupArea').addEventListener('click',e=>{
     /* abrir/cerrar sin re-render para que la animación se vea */
     setPlansOpen(!state.plansOpen);
     return;}
-  if(!p)return;state.setup=p.dataset.setup;renderSetup();renderRail();renderSummary();if(deskInteg())renderTerm();
-  /* el nuevo elegido queda en su lugar y los demás se recogen con animación */
-  requestAnimationFrame(()=>requestAnimationFrame(()=>setPlansOpen(false)));
+  if(!p)return;selectSetupPlan(p.dataset.setup);
 });
-/* Mantiene el plan elegido fijo en pantalla mientras los otros crecen o se recogen alrededor */
+/* Preserve the live cards while refreshing their data: replacing the selector
+   reset its grid transitions and caused an open/close flash on selection. */
+function selectSetupPlan(key){
+  cancelAnimationFrame(planMotionFrame);
+  const previous=document.getElementById('plansWrap');state.setup=key;
+  const draft=document.createElement('div');renderSetup(draft);
+  const next=draft.querySelector('#plansWrap');
+  if(previous&&next){
+    previous.querySelectorAll('[data-setup]').forEach(card=>{
+      const incoming=next.querySelector('[data-setup="'+card.dataset.setup+'"]');if(!incoming)return;
+      card.classList.toggle('sel',incoming.classList.contains('sel'));card.innerHTML=incoming.innerHTML;
+      card.closest('.pslot').classList.toggle('sel-slot',card.dataset.setup===key);
+      card.setAttribute('aria-pressed',String(card.dataset.setup===key));
+    });
+    if(deskInteg()){
+      const current=previous.parentElement.querySelector('.ep-add'),replacement=draft.querySelector('.ep-add');
+      if(current){if(replacement)current.replaceWith(replacement);else current.remove();}
+      else if(replacement)previous.after(replacement);
+    }
+    previous.querySelector('[data-setup="'+key+'"]').focus({preventScroll:true});
+    // Commit the expanded geometry before changing to the collapsed state.
+    previous.getBoundingClientRect();
+  }else renderSetup();
+  renderRail();renderSummary();if(deskInteg())renderTerm();
+  planMotionFrame=requestAnimationFrame(()=>setPlansOpen(false));
+}
+let planMotionFrame=0;
+function syncPlanAccessibility(root,open){
+  root.querySelectorAll('.pslot').forEach(slot=>{slot.inert=!open&&!slot.classList.contains('sel-slot');});
+  root.querySelectorAll('[data-setup]').forEach(card=>{
+    const chosen=card.classList.contains('sel');card.setAttribute('aria-pressed',String(chosen));
+    if(chosen)card.setAttribute('aria-expanded',String(open));else card.removeAttribute('aria-expanded');
+    card.querySelector('.phh')?.setAttribute('aria-hidden',String(chosen&&!open));
+    const details=card.querySelector('.pspecs-acc');if(details)details.inert=open;
+  });
+}
+/* Keep the chosen card anchored during the entire transition; a new action
+   cancels the previous anchor instead of running competing scroll loops. */
 function setPlansOpen(open){
+  cancelAnimationFrame(planMotionFrame);
   state.plansOpen=open;const w=document.getElementById('plansWrap');if(!w)return;
   const sel=w.querySelector('.plan.sel'),y0=sel?sel.getBoundingClientRect().top:0;
   w.classList.toggle('open',open);
+  syncPlanAccessibility(w,open);
   const b=w.querySelector('[data-plans-toggle]');if(b){b.setAttribute('aria-expanded',open);b.querySelector('.ps-lbl').textContent=open?'Ocultar planes':'Cambiar plan';}
-  if(!sel)return;const t0=performance.now();
-  const hold=now=>{const d=sel.getBoundingClientRect().top-y0;if(Math.abs(d)>0.5)window.scrollBy({top:d,behavior:'instant'});if(now-t0<520)requestAnimationFrame(hold);};
-  requestAnimationFrame(hold);
+  if(!sel||matchMedia('(prefers-reduced-motion: reduce)').matches)return;const t0=performance.now();
+  const hold=now=>{if(!sel.isConnected)return;const d=sel.getBoundingClientRect().top-y0;if(Math.abs(d)>.5)window.scrollBy({top:d,behavior:'instant'});if(now-t0<780)planMotionFrame=requestAnimationFrame(hold);};
+  planMotionFrame=requestAnimationFrame(hold);
 }
+window.addEventListener('wheel',()=>cancelAnimationFrame(planMotionFrame),{passive:true});
+window.addEventListener('touchstart',()=>cancelAnimationFrame(planMotionFrame),{passive:true});
 document.getElementById('waArea').addEventListener('click',e=>{
   const ct=e.target.closest('[data-wa-calc]');
   if(ct){state.wa.calcOpen=!state.wa.calcOpen;ct.classList.toggle('open',state.wa.calcOpen);ct.setAttribute('aria-expanded',state.wa.calcOpen);ct.nextElementSibling.classList.toggle('open',state.wa.calcOpen);return;}
