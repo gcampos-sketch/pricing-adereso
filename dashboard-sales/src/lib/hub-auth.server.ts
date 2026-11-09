@@ -22,12 +22,15 @@ export async function verifyHubIdentity(accessToken: string, trustToken?: string
     const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data, error } = await client.auth.getClaims(accessToken);
     if (error || !data?.claims) return null;
+    const { hasVerifiedIdentity, hasRegisteredPasskey } = await import('./account-enrollment.server');
+    if (!await hasVerifiedIdentity(client.auth, accessToken, data.claims.sub, String(data.claims.email ?? ''))) return null;
     const authorization = await authorizeHubClaims(data.claims, trustToken, async (userId, token) => {
       const { verifyTrustToken } = await import('./mfa-trust.server');
       return verifyTrustToken(userId, token);
     });
-    return authorization ? { ...authorization, userId: data.claims.sub, email: String(data.claims.email).trim().toLowerCase(),
+    if (!authorization || !await hasRegisteredPasskey(data.claims.sub)) return null;
+    return { ...authorization, userId: data.claims.sub, email: String(data.claims.email).trim().toLowerCase(),
       oauthClientId: typeof data.claims['client_id'] === 'string' ? data.claims['client_id'] : undefined,
-      sessionId: typeof data.claims['session_id'] === 'string' && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(data.claims['session_id']) ? data.claims['session_id'] : undefined } : null;
+      sessionId: typeof data.claims['session_id'] === 'string' && /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(data.claims['session_id']) ? data.claims['session_id'] : undefined };
   } catch { return null; }
 }

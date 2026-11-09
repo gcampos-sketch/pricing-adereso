@@ -48,6 +48,7 @@ function createSupabaseAdminClient() {
       fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY),
     },
     auth: {
+      experimental: { passkey: true },
       storage: undefined,
       persistSession: false,
       autoRefreshToken: false,

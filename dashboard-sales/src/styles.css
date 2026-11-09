@@ -5788,3 +5788,7 @@ button.won-exec-stat:hover { color:var(--brand); }
 .quota-pipeline-coverage { display:inline-flex; align-items:baseline; gap:6px; color:var(--body); cursor:help; }
 .quota-pipeline-coverage > span { font-size:9px; color:var(--muted); letter-spacing:.03em; }
 .quota-pipeline-coverage > strong { font-size:13px; font-weight:550; white-space:nowrap; }
+
+.auth-passkey-hint { font-size: 13px; margin: 0; }
+.auth-remember-device { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.auth-remember-device input { width: 18px; height: 18px; accent-color: var(--brand); }
