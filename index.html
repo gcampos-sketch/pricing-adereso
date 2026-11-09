@@ -8829,7 +8829,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={existing:false,scope:'bolsa',currentPay:0,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={existing:false,scope:'bolsa',currentPay:0,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* recuerda la cotización en este navegador: al recargar o volver a entrar, sigue donde quedó */
 const SAVE_KEY='adereso_pricing_v1';
@@ -8966,9 +8966,14 @@ function extraAgentsN(){return (!state.existing&&state.studio)?Math.max(0,Math.r
 function extraAgentsMant(){return BOT_MANT*extraAgentsN();}
 function bagDelta(){return scopeBag()?Math.max(0,bagPrice()-(+state.currentPay||0)):0;}
 function upsellMonthly(){return bagDelta()+newBotsMant();}
-/* Canal X: bolsa propia de 7.000 mensajes por USD 600/mes; excedentes a USD 0,08 por ticket. */
-const X_PRICE=600,X_MSGS=7000,X_EXTRA=0.08;
-function xCost(){return (hasService()&&state.chan.x&&(!state.existing||state.chanNew))?X_PRICE:0;}
+/* Canal X: bolsa independiente; ampliación contratada y excedentes tienen tarifas distintas. */
+const X_PRICE=600,X_MSGS=7000,X_EXTRA=0.0977,X_BAG_RATE=0.085;
+function xVolume(){const n=Number(state.xVolume);return Number.isFinite(n)?Math.max(X_MSGS,Math.floor(n)):X_MSGS;}
+function xBagAdded(){return xVolume()-X_MSGS;}
+function xBagAddedCost(){return Math.round(xBagAdded()*85/10)/100;}
+function xBagCost(){return X_PRICE+xBagAddedCost();}
+function xMoney(n){return n.toLocaleString('es-CL',{minimumFractionDigits:0,maximumFractionDigits:2});}
+function xCost(){return (hasService()&&state.chan.x&&(!state.existing||state.chanNew))?xBagCost():0;}
 /* Agentes a implementar: cada uno elige su plan de HH (el 1° usa el selector principal) y suma USD 160/mes de mantención */
 function agentsN(){if(!iaSetup())return 0;if(state.existing)return (state.scope!=='bolsa'?botsN():0)+improveN();return 1+extraAgentsN();}
 function agentPlan(i){if(i===0)return state.setup;const k=state.agentPlans[i-1];return SETUP[k]?k:state.setup;}
@@ -9677,11 +9682,13 @@ function renderSummary(){renderTerm();
   /* --- CANAL X · bolsa propia --- */
   let xCard='';
   if(xCost()>0){
+    const xRows=`<div class="rr"><span class="k">Bolsa base · ${X_MSGS.toLocaleString('es-CL')} conv.</span><span class="v">USD ${X_PRICE}/mes</span></div>${xBagAdded()>0?`<div class="rr"><span class="k">Ampliación · ${xBagAdded().toLocaleString('es-CL')} × USD ${X_BAG_RATE.toFixed(3)}</span><span class="v">USD ${xMoney(xBagAddedCost())}/mes</span></div>`:''}<div class="rr"><span class="k">Bolsa X contratada</span><span class="v">${xVolume().toLocaleString('es-CL')} conv./mes</span></div><div class="rr"><span class="k">Ticket extra X</span><span class="v">USD ${X_EXTRA.toFixed(4)} c/u</span></div>`;
     xCard=`
     <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>Mensual</span>
       <div class="rtitle"><span class="x-glyph">𝕏</span>Canal X</div>
-      <div class="rbig"><span class="n">${X_PRICE}</span><span class="u">USD/mes</span></div>
-      ${rdet('Bolsa mensual de X, aparte de la bolsa de conversaciones. Los tickets extra se cobran según consumo, por encima de la bolsa incluida.',`<div class="rr"><span class="k">Mensualidad X</span><span class="v">USD ${X_PRICE}/mes</span></div><div class="rr"><span class="k">Incluye</span><span class="v">Hasta ${X_MSGS.toLocaleString('es-CL')} mensajes/mes</span></div><div class="rr"><span class="k">Ticket extra X</span><span class="v">USD ${X_EXTRA.toFixed(2)} c/u</span></div>`,null,`<div class="rr"><span class="k">Incluye</span><span class="v">${X_MSGS.toLocaleString('es-CL')} mensajes/mes</span></div><div class="rr"><span class="k">Ticket extra X</span><span class="v">USD ${X_EXTRA.toFixed(2)} c/u</span></div>`)}
+      <div class="rbig"><span class="n">${xMoney(xBagCost())}</span><span class="u">USD/mes</span></div>
+      ${rdet('Bolsa exclusiva de X, separada de la bolsa principal. Amplíala por USD '+X_BAG_RATE.toFixed(3)+' por conversación contratada sobre las '+X_MSGS.toLocaleString('es-CL')+'. El ticket extra de USD '+X_EXTRA.toFixed(4)+' aplica solo al consumo que supere tu bolsa X contratada.',xRows,null,xRows)}
+      <div class="redit"><label class="re-ico" title="Editar bolsa X" aria-label="Editar bolsa X"><span data-i="edit" data-sz="14"></span></label><input type="number" min="${X_MSGS}" step="1" data-ed="xVol" value="${xVolume()}" aria-label="Conversaciones mensuales de la bolsa X"><span class="re-u">conv. X/mes</span></div>
     </div>`;
   }
 
@@ -10342,10 +10349,12 @@ document.getElementById('mSum').addEventListener('click',()=>document.getElement
 document.getElementById('sumCard').addEventListener('input',e=>{
   const el=e.target.closest('[data-ed]');if(!el)return;const t=el.dataset.ed;
   if(t==='vol'){const raw=+el.value||0;if(raw>0){state.volMode='custom';state.volCustom=raw;}renderVol();renderRail();renderSummary();syncRoiVolume();const n=document.querySelector('#sumCard [data-ed="vol"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
+  else if(t==='xVol'){const raw=el.value;const n=Number(raw);state.xVolume=Number.isFinite(n)?Math.max(X_MSGS,Math.floor(n)):X_MSGS;renderRail();renderSummary();if(!state.roiCostTouched)state.roiCost=null;renderRoi();const input=document.querySelector('#sumCard [data-ed="xVol"]');if(input){input.focus();input.value=raw;}}
   else if(t==='plan'){const val=el.value;if(val==='paquetizado'){state.setupMode='paquetizado';}else{state.setupMode='acompanada';state.setup=val;}renderSetup();renderRail();renderSummary();}
   else if(t==='casspPlan'){state.cassperPlan=el.value;renderRail();renderSummary();}
   else if(t==='casspRec'){state.cassperRecovered=Math.max(0,+el.value||0);renderSummary();const n=document.querySelector('#sumCard [data-ed="casspRec"]');if(n){n.focus();const v=n.value;n.value='';n.value=v;}}
 });
+document.getElementById('sumCard').addEventListener('change',e=>{if(e.target.matches('[data-ed="xVol"]'))e.target.value=xVolume();});
 document.getElementById('sumCard').addEventListener('click',e=>{
   const w=e.target.closest('[data-ed="wallet"]');if(!w)return;
   state.wa.wallet=w.dataset.val;renderWa();renderRail();renderSummary();calcRoiNumbers();
@@ -10370,7 +10379,7 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=iaSetup()?(allRapid()?'Rápida · paquetizado con mejores prácticas (Shopify/VTEX/Magento) — Gratis':(agentsN()>1?Array.from({length:agentsN()},(_,i)=>(agentType(i)==='flow'?'Flow ':'Agent ')+(i+1)+': '+(agentMode(i)==='paquetizado'?'Rápida':SETUP[agentPlan(i)].name+' (acompañada)')).join(' · ')+' — '+usd(s):(agentType(0)==='flow'?'Flow · ':'')+SETUP[state.setup].name+' (acompañada) — '+usd(s))):(deskInteg()?'Onboarding Desk sin costo + integraciones · '+SETUP[state.setup].name+' — '+usd(s):'Onboarding Desk (capacitación por rol, conexión de canales; sin integraciones) — Gratis');
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
-  if(hasService()){L.push('Servicio: '+(improveOnly()?'Mejora del agente actual (solo setup)':state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+((+state.currentPay||0)>0?' · hoy paga '+usd(+state.currentPay)+' → nuevo total '+usd((+state.currentPay)+m):'')+(state.scope!=='bolsa'?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+BOT_MANT:'')+(state.improve?' · mejora del agente actual: solo setup':'')):('Mensual (contrato a '+term().lbl+(state.prepay&&term().pre!=null?', pago anticipado':'')+'): '+usd(m)+'/mes'+(termAdj()?' · '+termTxt():'')));if(xCost()>0){L.push('Canal X — mensualidad: USD '+X_PRICE+'/mes (incluye hasta '+X_MSGS.toLocaleString('es-CL')+' mensajes/mes)');L.push('Canal X — ticket extra: USD '+X_EXTRA.toFixed(2)+' c/u, según consumo sobre la bolsa incluida');}if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
+  if(hasService()){L.push('Servicio: '+(improveOnly()?'Mejora del agente actual (solo setup)':state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(state.studio?(state.volMode==='custom'?state.volCustom.toLocaleString('es-CL')+' (a medida)':state.vol.toLocaleString('es-CL')):'2.000')+' conversaciones/mes');L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+((+state.currentPay||0)>0?' · hoy paga '+usd(+state.currentPay)+' → nuevo total '+usd((+state.currentPay)+m):'')+(state.scope!=='bolsa'?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+BOT_MANT:'')+(state.improve?' · mejora del agente actual: solo setup':'')):('Mensual (contrato a '+term().lbl+(state.prepay&&term().pre!=null?', pago anticipado':'')+'): '+usd(m)+'/mes'+(termAdj()?' · '+termTxt():'')));if(xCost()>0){L.push('Canal X — mensualidad: USD '+xMoney(xCost())+'/mes · bolsa propia de '+xVolume().toLocaleString('es-CL')+' conversaciones/mes');L.push('Canal X — bolsa base: USD '+X_PRICE+'/mes por '+X_MSGS.toLocaleString('es-CL')+' conversaciones');if(xBagAdded()>0)L.push('Canal X — ampliación contratada: '+xBagAdded().toLocaleString('es-CL')+' × USD '+X_BAG_RATE.toFixed(3)+' = USD '+xMoney(xBagAddedCost())+'/mes');L.push('Canal X — ticket extra fuera de su bolsa contratada: USD '+X_EXTRA.toFixed(4)+' c/u, según consumo');}if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
     const xt=extraTicket();if(xt)L.push('Conversación extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
   if(iaSetup())L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
@@ -10819,6 +10828,8 @@ const TI={
  clientes:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3"/><path d="M18 14.4c1.8.7 3 2.4 3 4.6"/>',
  progpartners:'<circle cx="6.5" cy="6" r="2.5"/><circle cx="17.5" cy="6" r="2.5"/><path d="M2.5 14.5a4 4 0 0 1 8 0"/><path d="M13.5 14.5a4 4 0 0 1 8 0"/><path d="M7 19h10"/><path d="m14.5 16.5 2.5 2.5-2.5 2.5"/><path d="m9.5 16.5-2.5 2.5 2.5 2.5"/>',
  partners:'<rect x="9" y="2.5" width="6" height="5" rx="1.2"/><rect x="2.5" y="16.5" width="6" height="5" rx="1.2"/><rect x="15.5" y="16.5" width="6" height="5" rx="1.2"/><path d="M12 7.5V12M5.5 16.5V12h13v4.5"/>',
+ datahub:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+ gieppeto:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m12 12 8-8M16 4h4v4"/>',
  academy:'<path d="M2 9.5 12 5l10 4.5-10 4.5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/><path d="M22 9.5V15"/>',
  todas:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/>'
 };
@@ -10841,9 +10852,11 @@ const TOOLS=[
   {k:'descuentos',name:'Descuentos a utilizar',desc:'Simula plazo, pago anticipado y descuento comercial.',view:'descuentos'},
   {k:'todas',name:'Ver todas',desc:'Todas las plataformas que usa un comercial, en Notion.',url:'https://app.notion.com/p/adereso/Plataformas-que-un-comercial-debe-usar-3fb9c2747df5802a8540cd281ba8b290?source=copy_link'}]},
  {g:'Portales',items:[
-  {k:'crm',name:'CRM SSPP',desc:'Cotizaciones, demos por industria y KPIs de proyectos.',url:'https://adereso-sp.web.app/propuestas'},
+  {k:'crm',name:'CRM SSPP',desc:'Cotizaciones, demos por industria y KPIs de proyectos.',view:'embed',url:'https://adereso-sp.web.app/propuestas'},
   {k:'clientes',name:'Portal Clientes',desc:'Acceso de clientes a su cuenta.',url:'https://adereso-sp-clientes.web.app/clientes/login'},
-  {k:'partners',name:'Portal Partners',desc:'Acceso de partners Adereso.',url:'https://adereso-sp-partners.web.app/partner/login'}]}
+  {k:'partners',name:'Portal Partners',desc:'Acceso de partners Adereso.',url:'https://adereso-sp-partners.web.app/partner/login'},
+  {k:'datahub',name:'Data Hub (CS)',desc:'Acceso al Data Hub de Customer Success.',url:'https://datahub.adere.so/'},
+  {k:'gieppeto',name:'Gieppeto',desc:'OKRs por equipos.',url:'https://okrs.adere.so/#/dashboard'}]}
 ];
 const tIco=(k,s)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${TI[k]}</svg>`;
 const ALL_TOOLS=TOOLS.flatMap(g=>g.items);
@@ -10884,11 +10897,17 @@ function trackHubViewLoad(v,k){
 }
 
 function renderAppRail(){const r=document.getElementById('apprail');if(!r)return;
-  const it=t=>{const on=(t.view&&curView===t.view)||(t.url&&curView==='embed'&&curTool===t.k);
+  const scroll=r.querySelector('.ar-sections')?.scrollTop||0;
+  const it=t=>{const on=t.view==='embed'?curView==='embed'&&curTool===t.k:(t.view&&curView===t.view)||(t.url&&curView==='embed'&&curTool===t.k);
     const tail=t.soon?'<span class="ar-soon">Próximamente</span>':t.url&&!t.view?'<span class="ar-ext">Abrir en pestaña nueva ↗</span>':on?'<span class="ar-meta">En esta sección</span>':'';
     return `<button type="button" class="ar-item ${on?'on':''} ${t.soon?'soon':''}" data-tool="${t.k}" aria-label="${t.name}" aria-describedby="ar-tip-${t.k}"${on?' aria-current="page"':''}><span class="ar-ico">${tIco(t.k,19)}</span><div class="ar-fly" role="tooltip" id="ar-tip-${t.k}"><b${on?' class="ar-cur"':''}>${t.name}</b>${tail}</div></button>`;};
-  r.innerHTML=`<button type="button" class="ar-brand ${curView==='home'?'on':''}" data-tool="home" aria-label="Inicio" title="Inicio"><img class="adereso-symbol" src="assets/adereso-symbol.svg" width="28" height="28" alt=""></button><div class="ar-sep"></div>`+
-    TOOLS.map((g,gi)=>(gi?'<div class="ar-sep"></div>':'')+g.items.map(it).join('')).join('');}
+  const labels=['Reunión','Aprender','Gestión','Portales'];
+  r.innerHTML=`<button type="button" class="ar-brand ${curView==='home'?'on':''}" data-tool="home" aria-label="Inicio" title="Inicio"><img class="adereso-symbol" src="assets/adereso-symbol.svg" width="28" height="28" alt=""></button><div class="ar-sections">`+
+    TOOLS.map((g,gi)=>`<div class="ar-group" role="group" aria-label="${g.g}"><span class="ar-group-label" aria-hidden="true">${labels[gi]}</span>${g.items.map(it).join('')}</div>`).join('')+'</div>';
+  r.querySelector('.ar-sections').scrollTop=scroll;}
+function positionRailTooltip(event){const item=event.target.closest?.('.apprail .ar-item');if(!item)return;const rect=item.getBoundingClientRect();item.style.setProperty('--ar-tip-y',Math.max(36,Math.min(innerHeight-36,rect.top+rect.height/2))+'px');}
+document.addEventListener('pointerover',positionRailTooltip);
+document.addEventListener('focusin',positionRailTooltip);
 /* secciones del home plegables: se recuerda cuáles cerraste */
 const HG_KEY='adereso_home_closed';
 function hgClosed(){try{return JSON.parse(localStorage.getItem(HG_KEY)||'[]');}catch(e){return [];}}

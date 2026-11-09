@@ -1,4 +1,3 @@
-import { FeedbackBubble } from "@/components/pulse/FeedbackBubble";
 import { HubEntryTracker } from "@/components/HubEntryTracker";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import {
@@ -342,7 +341,6 @@ function Index({ embedded = false }: { embedded?: boolean }) {
 
   const tabs = (
     <>
-      <FeedbackBubble view={view}/>
       <ReportSidebar view={view} onView={setView} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((current) => !current)} presentation={embedded ? 'panel' : 'sidebar'} />
       {stamp ? (
         <p className="data-stamp">
