@@ -22,7 +22,7 @@
   if (document.getElementById('roiShareStyles')) return;
   const style = document.createElement('style'); style.id = 'roiShareStyles';
   style.textContent = `
-  .roi-share-dialog{width:min(680px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:0;border:1px solid #34363f;border-radius:24px;background:#14161c;color:#f3f3f5;box-shadow:0 32px 100px #0009;font:14px/1.5 'Work Sans',sans-serif;overflow:auto;color-scheme:dark}
+  .roi-share-dialog{margin:auto;width:min(680px,calc(100vw - 32px));max-height:calc(100dvh - 40px);padding:0;border:1px solid #34363f;border-radius:24px;background:#14161c;color:#f3f3f5;box-shadow:0 32px 100px #0009;font:14px/1.5 'Work Sans',sans-serif;overflow:auto;color-scheme:dark}
   .roi-share-dialog::backdrop{background:#07090dbb;backdrop-filter:blur(7px)}
   .roi-share-dialog *{box-sizing:border-box}.roi-share-dialog [hidden]{display:none!important}
   .roi-share-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:28px 30px 18px}.roi-share-head h2{font:500 26px/1.2 Outfit,sans-serif;letter-spacing:-.7px;margin:0 0 8px}.roi-share-head p{margin:0;color:#a6a9b5}.roi-share-close{background:transparent;border:0;color:#a6a9b5;font-size:26px;cursor:pointer;line-height:1}
