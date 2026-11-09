@@ -9455,7 +9455,7 @@ function renderWaSplit(){
   if(!(s.total>0)){el.innerHTML='<span class="ws-empty">Ingresa el monto para ver cuánto va a Meta y cuánto es fee.</span>';return;}
   el.innerHTML=`<div class="ws-item"><span>Saldo para Meta</span><b>${usd2(s.meta)}</b></div><span class="ws-op">+</span><div class="ws-item"><span>Fee Adereso ${r}%</span><b>${usd2(s.fee)}</b></div>${walletIsEstimate()?'<span class="ws-tag">según estimado</span>':''}`;
 }
-/* detalle del estimado por tipo (service / plantillas / minutos): vive en el recuadro de la billetera y solo aparece si hay más de un tipo */
+/* Desglose de la recarga elegida y, por separado, estimado según las cantidades. */
 function metaParts(){
   const p=waP(),f=n=>n.toLocaleString('es-CL'),out=[];
   if(waService()&&(+state.wa.service||0)>0){const q=+state.wa.service;out.push({k:'Service',q:f(q)+' msj',c:Math.max(0,q-WA_SERVICE_FREE)*p.service});}
@@ -9469,15 +9469,20 @@ function renderWaLive(){
   if(billing){const q=Math.max(0,+state.wa.service||0),free=Math.min(q,WA_SERVICE_FREE),f=n=>n.toLocaleString('es-CL');billing.textContent=q>0?`${f(q)} mensajes − ${f(free)} gratis = ${f(q-free)} con cobro`:'Los primeros 1.000 mensajes Service del mes son gratis.';}
   const lv=document.getElementById('waLive');if(lv)lv.innerHTML='';
   const el=document.getElementById('waMix');if(!el)return;
-  const b=metaBase(),parts=metaParts();
-  if(b==null){el.innerHTML='<div class="wa-mix">Tarifa Meta por confirmar para este país.</div>';return;}
-  const r=walFee(),suggested=Math.round((metaEst()||0)*100)/100;
-  el.innerHTML=`<div class="wa-mix"><span class="wm-cap">Detalle del estimado</span>
+  const b=metaBase(),parts=metaParts(),manual=walletManual(),r=walFee(),split=walletSplit();
+  const recharge=manual?`<div class="wa-mix" data-wa-recharge-detail><span class="wm-cap">Detalle de tu recarga</span>
+    <div class="wm-row"><span>Saldo para Meta</span><b>${usd2(split.meta)}</b></div>
+    <div class="wm-row"><span>Fee Adereso <small>${r}%</small></span><b>${usd2(split.fee)}</b></div>
+    <div class="wm-row tot"><span>Total a recargar</span><b>${usd2(split.total)}</b></div></div>`:'';
+  if(b==null){el.innerHTML=recharge+'<div class="wa-mix">Tarifa Meta por confirmar para este país.</div>';return;}
+  if(manual&&!parts.length){el.innerHTML=recharge;return;}
+  const suggested=Math.round((metaEst()||0)*100)/100;
+  el.innerHTML=recharge+`<div class="wa-mix" data-wa-estimate-detail><span class="wm-cap">${manual?'Estimado por mensajes y minutos':'Detalle del estimado'}</span>
     ${parts.map(x=>`<div class="wm-row"><span>${x.k} <small>${x.q}</small></span><b>${usd2(x.c)}</b></div>`).join('')}
     <div class="wm-row"><span>Consumo Meta</span><b>${usd2(b)}</b></div>
     <div class="wm-row"><span>Fee Adereso <small>${r}%</small></span><b>${usd2(metaFee())}</b></div>
     <div class="wm-row tot"><span>Recarga sugerida</span><b id="waSuggested">${usd2(suggested)}</b></div>
-    ${walletManual()?`<span class="wm-manual">Tu recarga manual se conserva.</span>${suggested!==+state.wa.amount?`<button type="button" class="wm-use" data-wa-use>Usar recarga sugerida · ${usd2(suggested)}</button>`:''}`:''}</div>`;
+    ${manual?`<span class="wm-manual">Tu recarga manual se conserva.</span>${suggested!==+state.wa.amount?`<button type="button" class="wm-use" data-wa-use>Usar recarga sugerida · ${usd2(suggested)}</button>`:''}`:''}</div>`;
 }
 
 /* tarjetas del resultado en una misma fila: igualamos el título y bajamos el número grande para que quede a la misma altura (la tarjeta mensual suma el chip de contrato) */
