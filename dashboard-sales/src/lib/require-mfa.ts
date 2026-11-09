@@ -16,5 +16,7 @@ export const requireMfa = createMiddleware({ type: "function" })
       const ok = await verifyTrustToken(context.userId, getRequestHeader(TRUST_HEADER));
       if (!ok) throw new Error("Unauthorized: se requiere verificación en dos pasos");
     }
+    const { hasRegisteredPasskey } = await import('./account-enrollment.server');
+    if (!await hasRegisteredPasskey(context.userId)) throw new Error('Unauthorized: completa el registro de tu passkey');
     return next();
   });

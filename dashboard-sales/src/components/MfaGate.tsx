@@ -23,6 +23,7 @@ export function MfaGate({ children }: { children: ReactNode }) {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [rememberBrowser, setRememberBrowser] = useState(true);
 
   const resolve = async () => {
     // 1. Check Supabase session AAL first (already elevated in this session).
@@ -64,11 +65,14 @@ export function MfaGate({ children }: { children: ReactNode }) {
 
   const afterVerified = async (fresh: boolean) => {
     // Save device trust so the user isn't prompted again for 30 days.
-    try {
-      const { token, expiresAt } = await rememberDevice();
-      storeTrustToken(token, expiresAt);
-    } catch {
-      /* the code will simply be asked again next time */
+    if (rememberBrowser) {
+      try {
+        const { token, expiresAt } = await rememberDevice();
+        storeTrustToken(token, expiresAt);
+      } catch { /* the code will simply be asked again next time */ }
+    } else {
+      try { await forgetDevice(); } catch { /* still remove the local credential */ }
+      clearTrustToken();
     }
 
     try {
@@ -151,7 +155,7 @@ export function MfaGate({ children }: { children: ReactNode }) {
         <div className="auth-card">
           <h1 className="pulse-h2">Guarda tus códigos de recuperación</h1>
           <p className="eyebrow">
-            Si pierdes tu teléfono, usa uno de estos códigos para recuperar el acceso. Cada uno sirve una sola vez y no los volveremos a mostrar. Guárdalos en un lugar seguro, como 1Password.
+            Si pierdes tu teléfono, usa uno de estos códigos para recuperar el acceso. Cada uno sirve una sola vez y no los volveremos a mostrar. Guárdalos en un lugar seguro, como Keeper.
           </p>
           <pre style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 15, letterSpacing: "0.08em", margin: 0 }}>
             {step.codes.map((c) => <code key={c}>{c}</code>)}
@@ -200,7 +204,8 @@ export function MfaGate({ children }: { children: ReactNode }) {
   return (
     <AuthScene>
       <form className="auth-card" onSubmit={(e) => void submit(e)}>
-        <h1 className="pulse-h2">Verificación en dos pasos</h1>
+        {step.kind === 'enroll' && <p className="eyebrow">CONFIGURAR AUTHENTICATOR · PASO 2 DE 3</p>}
+        <h1 className="pulse-h2">{step.kind === 'enroll' ? 'Configura Authenticator' : 'Verificación en dos pasos'}</h1>
         {notice ? <p className="status">{notice}</p> : null}
         {step.kind === "enroll" ? (
           <>
@@ -228,6 +233,10 @@ export function MfaGate({ children }: { children: ReactNode }) {
           style={{ textAlign: "center", letterSpacing: "0.3em", fontSize: 18 }}
         />
         {error ? <p className="status" data-tone="bad">{error}</p> : null}
+        <label className="auth-remember-device">
+          <input type="checkbox" checked={rememberBrowser} onChange={event => setRememberBrowser(event.target.checked)} disabled={busy} />
+          Recordar este navegador por 30 días
+        </label>
         <button className="pill" type="submit" disabled={busy || code.length !== 6}>
           {busy ? "Verificando…" : "Verificar"}
         </button>
@@ -240,7 +249,7 @@ export function MfaGate({ children }: { children: ReactNode }) {
           Usar otra cuenta
         </button>
         <p className="eyebrow" style={{ opacity: 0.5, fontSize: 11 }}>
-          Tras verificar, este navegador no volverá a pedir el código por 30 días.
+          {rememberBrowser ? 'En este navegador recordado no volveremos a pedir el código durante 30 días.' : 'La próxima sesión podrá volver a pedir el código de Authenticator.'}
         </p>
       </form>
     </AuthScene>

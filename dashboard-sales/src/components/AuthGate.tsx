@@ -8,18 +8,22 @@ import type { Session } from "@supabase/supabase-js";
 import { UserRound, LogOut, RefreshCw, Fingerprint } from "lucide-react";
 import { supportsPasskeys, passkeyErrorMessage, officialPasskeyOrigin, HUB_SIGN_IN_URL } from '@/lib/passkeys';
 import { PasskeySettings } from '@/components/PasskeySettings';
+import type { PasskeyProvider } from '@/components/PasskeySignInOptions';
+import { UnifiedSignIn } from '@/components/UnifiedSignIn';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useRefreshMenu } from "@/contexts/RefreshContext";
 import { MfaGate } from "@/components/MfaGate";
-import { corporateEmail } from "@/lib/email-auth";
+import { PasskeyGate } from '@/components/PasskeyGate';
+import { verifiedCorporateUser, confirmRegistrationCode } from '@/lib/account-enrollment';
+import { continueWithCorporateEmail } from '@/lib/account-enrollment.functions';
+import { knownSignInDevice, rememberSignInDevice } from '@/lib/sign-in-journey';
 
 const AccountEmailContext = createContext<string | null>(null);
 export const useAccountEmail = () => useContext(AccountEmailContext);
 
 function isAllowed(session: Session | null) {
-  const email = session?.user?.email?.toLowerCase() ?? "";
-  return corporateEmail(email) !== null;
+  return verifiedCorporateUser(session?.user);
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
@@ -29,7 +33,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const passkeyRequest = useRef<AbortController | null>(null);
   useEffect(() => () => { passkeyRequest.current?.abort(); }, []);
-  const signInWithPasskey = async () => {
+  const signInWithPasskey = async (provider: PasskeyProvider = 'device') => {
     if (passkeyBusy) return;
     if (!officialPasskeyOrigin(window.location.hostname)) { window.location.assign(HUB_SIGN_IN_URL); return; }
     setPasskeyBusy(true); setError(null);
@@ -39,8 +43,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
       if (error) throw error;
       if (!data?.session || !isAllowed(data.session)) {
         await supabase.auth.signOut(); setError('Solo cuentas @adere.so pueden ingresar al Hub.');
+      } else {
+        try { rememberSignInDevice(localStorage); } catch { /* optional presentation hint */ }
       }
-    } catch (error) { if (!controller.signal.aborted) setError(passkeyErrorMessage(error)); }
+    } catch (error) { if (!controller.signal.aborted) setError(provider === 'keeper'
+      ? `${passkeyErrorMessage(error)} Comprueba que Keeper esté desbloqueado y tenga tu passkey del Hub. Puedes continuar con otro correo si lo necesitas.`
+      : passkeyErrorMessage(error)); }
     finally { passkeyRequest.current = null; setPasskeyBusy(false); }
   };
   useEffect(() => {
@@ -54,27 +62,23 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => {
     if (ready && session && !isAllowed(session)) {
-      setError('Solo cuentas @adere.so pueden ingresar al Hub.'); void supabase.auth.signOut();
+      setError('Necesitas un correo @adere.so confirmado para ingresar al Hub.'); void supabase.auth.signOut();
     }
   }, [ready, session]);
   if (!ready) return <HubLoading />;
-  if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}><HubFirstAccess key={session.user.id} userId={session.user.id}>{children}</HubFirstAccess></MfaGate></AccountEmailContext.Provider>;
+  if (session && isAllowed(session)) return <AccountEmailContext.Provider value={session.user.email ?? null}><MfaGate key={session.user.id}><PasskeyGate><HubFirstAccess key={session.user.id} userId={session.user.id}>{children}</HubFirstAccess></PasskeyGate></MfaGate></AccountEmailContext.Provider>;
   const official = officialPasskeyOrigin(window.location.hostname);
+  if (official) return <AuthScene><UnifiedSignIn
+    knownDevice={() => { try { return knownSignInDevice(localStorage); } catch { return false; } }}
+    continueWithEmail={email => continueWithCorporateEmail({ data: { email } })}
+    verifyEmail={(email, code) => confirmRegistrationCode(supabase.auth, email, code)}
+    onSignIn={provider => void signInWithPasskey(provider)} passkeyBusy={passkeyBusy} passkeyError={error}
+    passkeysAvailable={supportsPasskeys()} clearPasskeyError={() => setError(null)} /></AuthScene>;
   return <AuthScene><div className="auth-card">
     <h1 className="pulse-h2">Hub comercial</h1>
     <p className="eyebrow">Un solo acceso para todas tus herramientas de Adereso.</p>
-    {error && <p className="status" data-tone="bad" role="alert">{error}</p>}
-    <div className="auth-passkey-option">
-      {!official ? <>
-        <p className="eyebrow">Tu passkey está registrada en el Hub oficial. Ábrelo para ingresar con Touch ID, Face ID o Keeper.</p>
-        <a className="pill auth-passkey-button" href={HUB_SIGN_IN_URL}><Fingerprint size={20} aria-hidden="true" />Abrir Hub oficial</a>
-      </> : supportsPasskeys() ? <>
-        <button className="pill auth-passkey-button" type="button" disabled={passkeyBusy} onClick={() => void signInWithPasskey()}><Fingerprint size={20} aria-hidden="true" />{passkeyBusy ? 'Confirma en tu dispositivo…' : 'Entrar con Touch ID / Face ID'}</button>
-        <p className="eyebrow">También puedes elegir tu passkey de Keeper.</p>
-      </> : <p role="status">Abre el Hub en un navegador compatible con passkeys para ingresar con tu dispositivo o Keeper.</p>}
-      <p className="eyebrow">Google Authenticator confirma el segundo factor con su código de 6 dígitos cuando el Hub lo solicite.</p>
-      <p className="eyebrow">Si todavía no tienes una passkey activada, contacta al administrador del Hub.</p>
-    </div>
+    <p className="eyebrow">Continúa en el Hub oficial para verificar tu acceso.</p>
+    <a className="pill auth-passkey-button" href={HUB_SIGN_IN_URL}>Iniciar sesión</a>
   </div></AuthScene>;
 }
 

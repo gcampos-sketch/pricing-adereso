@@ -98,6 +98,11 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Error('Unauthorized: No user ID found in token');
     }
 
+    const { hasVerifiedIdentity } = await import('@/lib/account-enrollment.server');
+    if (!await hasVerifiedIdentity(supabase.auth, token, data.claims.sub, String(data.claims.email ?? ''))) {
+      throw new Error('Unauthorized: confirma tu correo @adere.so antes de continuar');
+    }
+
     return next({
       context: {
         supabase,

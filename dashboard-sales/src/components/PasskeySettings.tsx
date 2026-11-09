@@ -5,7 +5,7 @@ import { supportsPasskeys, passkeyErrorMessage, preparePasskeyEnrollment, type P
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 /** Render only inside AuthGate + MfaGate. Credentials are created by the user's OS. */
-export function PasskeySettings({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function PasskeySettings({ open, onOpenChange, onRegistered }: { open: boolean; onOpenChange: (open: boolean) => void; onRegistered?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function PasskeySettings({ open, onOpenChange }: { open: boolean; onOpenC
       const { data, error } = await supabase.auth.registerPasskey({ options: { signal: controller.signal } });
       if (error) throw error;
       if (!data) throw new Error('Missing verified credential');
-      if (!controller.signal.aborted) setRegistered(true);
+      if (!controller.signal.aborted) { setRegistered(true); onRegistered?.(); }
     } catch (error) {
       if (!controller.signal.aborted) {
         setError(passkeyErrorMessage(error));
@@ -59,18 +59,19 @@ export function PasskeySettings({ open, onOpenChange }: { open: boolean; onOpenC
   return <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="passkey-dialog">
       <Fingerprint size={30} aria-hidden="true" />
-      <DialogTitle>Acceso con Touch ID / Face ID</DialogTitle>
-      <DialogDescription>Activa una passkey para ingresar sin esperar un correo. Tu dispositivo puede usar huella, rostro, PIN o una llave de seguridad.</DialogDescription>
+      <DialogTitle>Tu passkey de acceso</DialogTitle>
+      <DialogDescription>Guárdala en Keeper o en tu dispositivo. Puedes usar huella, rostro, PIN o una llave de seguridad.</DialogDescription>
       <p className="eyebrow">Tu huella y tu rostro permanecen en tu dispositivo. Google Authenticator y los códigos de recuperación siguen disponibles; podemos pedir el segundo factor en un navegador nuevo.</p>
       {error && <p role="alert" className="status" data-tone="bad">{error}</p>}
-      {registered ? <><p role="status">Passkey activada. En tu próximo ingreso elige «Entrar con Touch ID / Face ID».</p><button className="pill" onClick={() => onOpenChange(false)}>Listo</button></> : step.kind === 'loading' ? <p role="status">Comprobando tu sesión…</p> : step.kind === 'verify' ?
+      {registered ? <><p role="status">Passkey activada. En tu próximo ingreso elige Keeper o tu dispositivo, según dónde la guardaste.</p><button className="pill" onClick={() => onOpenChange(false)}>Listo</button></> : step.kind === 'loading' ? <p role="status">Comprobando tu sesión…</p> : step.kind === 'verify' ?
         <form className="auth-email-form" onSubmit={event => void verify(event)}>
           <p className="eyebrow">Para crear tu passkey, confirma una vez el código de 6 dígitos de tu app de autenticación. Después podrás guardarla en Keeper.</p>
           <label htmlFor="passkey-mfa-code">Código de Authenticator</label>
           <input id="passkey-mfa-code" className="auth-email-input auth-email-code" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} required disabled={busy} />
           <button className="pill" type="submit" disabled={busy || code.length !== 6}>{busy ? 'Verificando…' : 'Confirmar código'}</button>
         </form> : step.kind === 'ready' ?
-        <><button className="pill" disabled={busy || !supportsPasskeys()} onClick={() => void register()}>{busy ? 'Confirma en tu dispositivo…' : 'Activar en este dispositivo'}</button>
+        <><p className="eyebrow">Para guardarla en Keeper, primero desbloquea su extensión. Al continuar, elige guardar la passkey en Keeper.</p>
+        <button className="pill" disabled={busy || !supportsPasskeys()} onClick={() => void register()}>{busy ? 'Confirma dónde guardarla…' : 'Crear passkey en Keeper o mi dispositivo'}</button>
         {!supportsPasskeys() && <p role="status">Abre el Hub en tu navegador habitual para activar una passkey.</p>}</> : <button className="pill" onClick={() => onOpenChange(false)}>Cerrar</button>}
     </DialogContent>
   </Dialog>;
