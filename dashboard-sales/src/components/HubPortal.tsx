@@ -11,6 +11,7 @@ export function HubPortal() {
   const [error, setError] = useState(false);
   const [passkeyOpen, setPasskeyOpen] = useState(false);
   const [frameReady, setFrameReady] = useState(false);
+  const [frameRevealed, setFrameRevealed] = useState(false);
   const [frameSrc] = useState(() => '/hub-content/index.html' + window.location.search);
   useEffect(() => {
     let active = true;
@@ -34,12 +35,12 @@ export function HubPortal() {
   if (!ready && !error) return <HubLoading />;
   if (!ready) return <main className="pulse-main"><div className="auth-card"><h1 className="pulse-h2">Hub comercial</h1><p role="alert">No pudimos abrir tu sesión. Recarga la página o vuelve a ingresar.</p><button className="pill" onClick={() => { void supabase.auth.signOut(); }}>Volver al ingreso</button></div></main>;
   return <div className="hub-portal">
-    {!frameReady && <HubLoading />}
+    {!frameRevealed && <HubLoading complete={frameReady} onComplete={() => setFrameRevealed(true)} />}
     <iframe className="hub-portal-frame" title="Hub comercial Adereso" onLoad={event => {
       void waitForHubFrame(event.currentTarget).then(() => setFrameReady(true)).catch(() => {
         setReady(false); setError(true);
       });
-    }} inert={!frameReady} style={{ visibility: frameReady ? 'visible' : 'hidden' }} src={frameSrc} />
+    }} inert={!frameRevealed} style={{ visibility: frameRevealed ? 'visible' : 'hidden' }} src={frameSrc} />
     <div className="hub-account-actions"><button onClick={() => setPasskeyOpen(true)}>Touch ID / Face ID</button><button onClick={() => { void supabase.auth.signOut(); }}>Salir del Hub</button></div>
     <PasskeySettings open={passkeyOpen} onOpenChange={setPasskeyOpen} />
   </div>;

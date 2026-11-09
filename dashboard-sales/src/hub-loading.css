@@ -1,12 +1,7 @@
-/* Stationary artwork; a soft light passes from one lobe to the next. */
+/* Stationary sections share a soft, overlapping wave of illumination. */
 .hub-loading { position:fixed;inset:0;z-index:9999;display:grid;place-items:center;min-height:100svh;padding:24px;box-sizing:border-box;overflow:hidden;background:#080b11; }
 .hub-loading-symbol { display:block;width:clamp(84px,13vw,106px);height:auto;overflow:visible; }
-.hub-loading-lobe { opacity:.36;animation:hub-loading-light 3.6s cubic-bezier(.37,0,.63,1) infinite; }
-.hub-loading-lobe-0 { animation-delay:-2.4s; }
-.hub-loading-lobe-1 { animation-delay:-3.6s; }
-.hub-loading-lobe-2 { animation-delay:-1.2s; }
-@keyframes hub-loading-light {
-  0%,100% { opacity:.36;filter:drop-shadow(0 0 0 rgba(255,255,255,0)); }
-  50% { opacity:1;filter:drop-shadow(0 0 4px rgba(255,255,255,.23)); }
+.hub-loading-lobe { opacity:.16; }
+@media(prefers-reduced-motion:reduce) {
+  .hub-loading-lobe { opacity:1; }
 }
-@media(prefers-reduced-motion:reduce) { .hub-loading-lobe { animation:none;opacity:1;transform:none;filter:none; } }
