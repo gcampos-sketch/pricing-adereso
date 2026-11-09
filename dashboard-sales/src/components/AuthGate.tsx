@@ -1,3 +1,5 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { HubFirstAccess } from '@/components/HubFirstAccess';
 import { AuthScene } from '@/components/AuthScene';
 import { HubLoading } from '@/components/HubLoading';
@@ -5,14 +7,13 @@ import { forgetDevice } from "@/lib/mfa-trust.functions";
 import { clearTrustToken } from "@/lib/mfa-trust";
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { UserRound, LogOut, RefreshCw, Fingerprint } from "lucide-react";
+import { UserRound, LogOut, Fingerprint } from "lucide-react";
 import { supportsPasskeys, passkeyErrorMessage, officialPasskeyOrigin, HUB_SIGN_IN_URL } from '@/lib/passkeys';
 import { PasskeySettings } from '@/components/PasskeySettings';
 import type { PasskeyProvider } from '@/components/PasskeySignInOptions';
 import { UnifiedSignIn } from '@/components/UnifiedSignIn';
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useRefreshMenu } from "@/contexts/RefreshContext";
 import { MfaGate } from "@/components/MfaGate";
 import { PasskeyGate } from '@/components/PasskeyGate';
 import { verifiedCorporateUser, confirmRegistrationCode } from '@/lib/account-enrollment';
@@ -84,36 +85,49 @@ export function AuthGate({ children }: { children: ReactNode }) {
 
 export function AccountMenu({ collapsed }: { collapsed: boolean }) {
   const email = useContext(AccountEmailContext);
-  const { onRefresh, isRefreshing } = useRefreshMenu();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [passkeyOpen, setPasskeyOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!menuOpen) return;
-    const onPointerDown = (e: PointerEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") setMenuOpen(false); };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => { document.removeEventListener("pointerdown", onPointerDown); document.removeEventListener("keydown", onKeyDown); };
-  }, [menuOpen]);
+    if (!profileOpen) return;
+    let active = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      const name = data.user?.user_metadata?.['full_name'] ?? data.user?.user_metadata?.['name'];
+      if (active) setProfileName(typeof name === 'string' && name.trim() ? name.trim() : null);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [profileOpen]);
 
-  return <div className="sidebar-account" ref={menuRef}>
-    <Button variant="ghost" className="sidebar-account-trigger" aria-label="Menú de cuenta" title={email ?? "Menú de cuenta"} aria-expanded={menuOpen} aria-haspopup="menu" onClick={() => setMenuOpen((open) => !open)}>
-      <UserRound aria-hidden="true" /><span>{email ?? "Mi cuenta"}</span>
-    </Button>
-    {menuOpen && <div className="auth-hamburger-menu sidebar-account-menu" data-collapsed={collapsed} role="menu" aria-label="Cuenta">
-      <span className="auth-hamburger-email">{email}</span>
-      <Button variant="ghost" className="auth-hamburger-item" role="menuitem" onClick={() => { setMenuOpen(false); setPasskeyOpen(true); }}><Fingerprint size={15} aria-hidden="true" />Touch ID / Face ID</Button>
-      {onRefresh && <Button variant="ghost" className="auth-hamburger-item" role="menuitem" disabled={isRefreshing} onClick={() => { onRefresh(); setMenuOpen(false); }}>
-        <RefreshCw className={isRefreshing ? "auth-refresh-spin" : undefined} size={15} aria-hidden="true" />{isRefreshing ? "Actualizando…" : "Refrescar ahora"}
-      </Button>}
-      <Button variant="ghost" className="auth-hamburger-item" role="menuitem" onClick={() => { setMenuOpen(false); void (async () => { try { await forgetDevice(); } catch { /* ignore */ } clearTrustToken(); await supabase.auth.signOut(); })(); }}><LogOut size={15} aria-hidden="true" />Cerrar sesión</Button>
-    </div>}
+  return <div className="sidebar-account" data-collapsed={collapsed}>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="sidebar-account-trigger" aria-label="Menú de cuenta" title={email ?? 'Mi cuenta'}>
+          <UserRound aria-hidden="true" /><span>{email ?? 'Mi cuenta'}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="sidebar-account-dropdown" side="top" align="start" sideOffset={10} collisionPadding={12}>
+        <DropdownMenuLabel className="sidebar-account-email">{email ?? 'Mi cuenta'}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => setProfileOpen(true)}><UserRound aria-hidden="true" />Ver perfil</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => setPasskeyOpen(true)}><Fingerprint aria-hidden="true" />Passkeys · Keeper y dispositivo</DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="sidebar-account-signout" onSelect={() => {
+          void (async () => { try { await forgetDevice(); } catch { /* ignore */ } clearTrustToken(); await supabase.auth.signOut(); })();
+        }}><LogOut aria-hidden="true" />Salir del Hub</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+    <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+      <DialogContent className="account-profile-dialog">
+        <DialogHeader><DialogTitle>Mi perfil</DialogTitle><DialogDescription>Tu cuenta de acceso al Hub comercial.</DialogDescription></DialogHeader>
+        <div className="account-profile-avatar"><UserRound size={28} aria-hidden="true" /></div>
+        <dl className="account-profile-details">
+          {profileName ? <div><dt>Nombre</dt><dd>{profileName}</dd></div> : null}
+          <div><dt>Correo</dt><dd>{email}</dd></div>
+          <div><dt>Cuenta</dt><dd>Adereso</dd></div>
+        </dl>
+      </DialogContent>
+    </Dialog>
     <PasskeySettings open={passkeyOpen} onOpenChange={setPasskeyOpen} />
   </div>;
 }

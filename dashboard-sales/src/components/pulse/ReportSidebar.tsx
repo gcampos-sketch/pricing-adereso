@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./ReportSidebar.css";
 import { BarChart3, BriefcaseBusiness, ChevronDown, Handshake, PanelLeftClose, PanelLeftOpen, Users, Workflow, X } from "lucide-react";
 import { AccountMenu } from "@/components/AuthGate";
+import { DashboardMenu } from "./DashboardMenu";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -130,7 +131,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
           </div>;
         })}
       </nav>
-      <footer className="report-subnav-footer"><AccountMenu collapsed={false} /></footer>
+      <footer className="report-subnav-footer"><DashboardMenu view={view} /></footer>
     </aside>
     </div>
   </>;
@@ -163,7 +164,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
         </optgroup> : <option key={group.id} value={group.id}>{group.label}</option>)}
       </select>
     </label>
-    <AccountMenu collapsed />
+    <DashboardMenu view={view} compact /><AccountMenu collapsed />
   </header>;
 
   return <>
@@ -210,7 +211,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
         })}
       </nav>
       <footer className="report-sidebar-footer">
-        <AccountMenu collapsed={collapsed} />
+        <DashboardMenu view={view} compact={collapsed} /><AccountMenu collapsed={collapsed} />
         <Button variant="ghost" className="report-collapse-toggle" aria-label={collapsed ? "Expandir menú" : "Contraer menú"} title={collapsed ? "Expandir menú" : "Contraer menú"} onClick={onCollapse}>
           {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}<span>Contraer menú</span>
         </Button>

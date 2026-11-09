@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { readTrustToken } from '@/lib/mfa-trust';
-import { PasskeySettings } from '@/components/PasskeySettings';
+import { AccountMenu } from '@/components/AuthGate';
 import { HubLoading } from '@/components/HubLoading';
 import { waitForHubFrame } from '@/lib/hub-frame-ready';
 import { useHubLoadingHost } from '@/components/useHubLoadingHost';
@@ -11,7 +11,6 @@ export function HubPortal() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
   const [frameReady, setFrameReady] = useState(false);
-  const [passkeyOpen, setPasskeyOpen] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const loading = useHubLoadingHost(frame, !frameReady);
   // The child keeps the address in sync; unrelated renders must not reload its frame.
@@ -44,7 +43,6 @@ export function HubPortal() {
         setReady(false); setError(true);
       });
     }} inert={loading.visible} style={{ visibility: loading.revealed ? 'visible' : 'hidden' }} src={frameSrc} />
-    <div className="hub-account-actions"><button onClick={() => setPasskeyOpen(true)}>Touch ID / Face ID</button><button onClick={() => { void supabase.auth.signOut(); }}>Salir del Hub</button></div>
-    <PasskeySettings open={passkeyOpen} onOpenChange={setPasskeyOpen} />
+    <div className="hub-account-dock"><AccountMenu collapsed /></div>
   </div>;
 }

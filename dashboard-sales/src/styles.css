@@ -5454,6 +5454,21 @@ body[data-report-navigation] { --sidebar-ease: cubic-bezier(.32,.72,0,1); transi
 .hub-account-actions { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; gap: 8px; }
 .hub-account-actions button { border: 1px solid var(--border-default); border-radius: 999px; padding: 8px 14px; background: var(--surface); color: var(--foreground); font: inherit; font-size: 12px; cursor: pointer; }
 .hub-account-actions button:hover { background: var(--surface-hover, #303035); }
+.hub-account-dock {position:fixed;left:0;bottom:0;z-index:95;display:grid;place-items:center;width:60px;height:70px;border-top:1px solid var(--border-subtle);background:#101216;}
+.hub-account-dock .sidebar-account {margin:0;}
+.hub-account-dock .sidebar-account-trigger {display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--border-default);border-radius:50%;background:var(--surface);color:var(--body);}
+.hub-account-dock .sidebar-account-trigger:hover,.hub-account-dock .sidebar-account-trigger[data-state="open"] {border-color:var(--brand);color:var(--brand);}
+.hub-account-dock .sidebar-account-trigger > span {display:none;}
+.hub-account-dock .sidebar-account-trigger > svg {width:19px;height:19px;}
+.dashboard-menu {display:flex;align-items:center;gap:6px;width:100%;}
+.dashboard-menu .dashboard-feedback-trigger {flex:1;justify-content:flex-start;gap:9px;min-width:0;padding:8px;color:var(--muted);font-size:11px;}
+.dashboard-menu .dashboard-refresh-trigger {flex-shrink:0;width:30px;height:30px;color:var(--muted);}
+.dashboard-menu svg {width:16px;height:16px;flex-shrink:0;}
+.dashboard-menu[data-compact="true"] {flex-direction:column;}
+.dashboard-menu[data-compact="true"] .dashboard-feedback-trigger {flex:none;width:36px;height:36px;justify-content:center;padding:0;}
+.dashboard-menu[data-compact="true"] .dashboard-feedback-trigger > span {display:none;}
+@media(max-width:719px){.hub-account-dock {left:12px;bottom:12px;width:44px;height:44px;border:0;border-radius:50%;box-shadow:var(--shadow-e1);}}
+
 .auth-email-fieldset { border: 0; padding: 0; margin: 0; width: 100%; min-width: 0; }
 .auth-passkey-option { width: 100%; display: grid; gap: 12px; }
 .auth-passkey-button { display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%; }
@@ -5613,7 +5628,23 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .commission-note {margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.5;}
 @media(max-width:420px) {.commission-popover {padding:12px;}.commission-table th,.commission-table td {padding:8px 4px;}.commission-current-label {display:block;margin:2px 0 0;}}
 .risk-hygiene {margin:18px 0;padding:16px;border:1px solid var(--border-subtle);border-radius:14px;}.risk-hygiene summary {cursor:pointer;color:var(--foreground);}.risk-hygiene p,.risk-hygiene small {font-size:12px;color:var(--muted);}.risk-hygiene select {background:var(--surface);color:var(--foreground);padding:6px;border-radius:8px;margin:8px;}.risk-hygiene-list {max-height:440px;overflow:auto;}.risk-hygiene article {padding:12px 0;border-bottom:1px solid var(--border-subtle);}.risk-hygiene article a {color:var(--brand);}
-.feedback-bubble {position:fixed;right:18px;bottom:76px;z-index:45;}.feedback-bubble>button {width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:var(--surface);border:1px solid var(--border-default);color:var(--muted);}.feedback-bubble section {position:absolute;bottom:46px;right:0;width:min(340px,calc(100vw - 40px));padding:16px;background:var(--surface);border:1px solid var(--border-default);border-radius:14px;box-shadow:var(--shadow-modal);}.feedback-bubble header {display:flex;justify-content:space-between;align-items:center;}.feedback-bubble p {font-size:12px;color:var(--muted);}.feedback-bubble textarea {width:100%;padding:8px;background:var(--background);color:var(--foreground);border:1px solid var(--border-default);border-radius:8px;}.feedback-bubble section button {padding:6px 10px;background:transparent;color:var(--brand);border:0;cursor:pointer;}
+.sidebar-account-dropdown {z-index:90;min-width:235px;max-width:calc(100vw - 24px);padding:6px;border:1px solid var(--border-default);border-radius:12px;background:var(--surface);color:var(--foreground);box-shadow:var(--shadow-modal);}
+.sidebar-account-dropdown [role="menuitem"] {gap:10px;padding:9px 10px;border-radius:7px;font-size:12px;cursor:pointer;}
+.sidebar-account-dropdown [role="menuitem"][data-highlighted] {background:var(--glass-track-hover);}
+.sidebar-account-email {max-width:260px;padding:8px 10px;color:var(--muted);font-size:11px;font-weight:400;overflow-wrap:anywhere;}
+.sidebar-account-dropdown [role="separator"] {background:var(--border-subtle);margin:5px 0;}
+.sidebar-account-signout {color:var(--danger);}
+.account-profile-dialog,.dashboard-feedback-dialog {z-index:100;width:min(460px,calc(100vw - 24px));max-height:calc(100dvh - 32px);overflow-y:auto;border:1px solid var(--border-default);border-radius:16px;background:var(--surface);color:var(--foreground);box-shadow:var(--shadow-modal);}
+.account-profile-avatar {display:grid;place-items:center;width:60px;height:60px;border-radius:50%;background:var(--glass-track);color:var(--brand);}
+.account-profile-details {display:grid;gap:16px;margin:0;}
+.account-profile-details dt {font-size:11px;color:var(--muted);margin-bottom:3px;}
+.account-profile-details dd {margin:0;font-size:14px;overflow-wrap:anywhere;}
+.dashboard-feedback-dialog textarea {width:100%;padding:10px 12px;background:var(--background);color:var(--foreground);border:1px solid var(--border-default);border-radius:8px;font:inherit;font-size:13px;resize:vertical;}
+.dashboard-feedback-dialog textarea:focus-visible {outline:2px solid var(--brand);outline-offset:2px;}
+.dashboard-feedback-dialog p,.dashboard-feedback-dialog details {font-size:12px;color:var(--muted);}
+.dashboard-feedback-actions {display:flex;gap:8px;}
+.dashboard-feedback-actions button {padding:8px 12px;border:1px solid var(--border-default);border-radius:8px;background:var(--brand);color:var(--brand-foreground);font-size:12px;cursor:pointer;}
+.dashboard-feedback-actions button:disabled {opacity:.5;cursor:default;}
 
 /* One finite first-access sequence; the regular dashboard keeps its quiet background. */
 .hub-first-access-content { min-height:100dvh; }

@@ -1166,15 +1166,7 @@ export function PulseDashboard({
 
   return (
     <main className="pulse-main">
-      <div className="dashboard-topbar">
-        <div className="dashboard-title-block">
-          <h1 className="dashboard-title">Panel comercial</h1>
-          <p className="dashboard-subtitle">
-            Pipeline Comercial · gestionable E1-E5.1 · WR por closedate · datos en vivo
-          </p>
-        </div>
-        {tabs ? <div className="dashboard-tabs-wrap">{tabs}</div> : null}
-      </div>
+      {tabs ? <div className="dashboard-tabs-wrap">{tabs}</div> : null}
 
       <CompactFilterBar
         years={report.periods.years}
