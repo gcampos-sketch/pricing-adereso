@@ -16,6 +16,7 @@ const groups = [
     { id: "crecimiento", label: "Expansión vs Venta Nueva" },
     { id: "perdidos", label: "Deals Perdidos" },
     { id: "calidad", label: "Calidad Comercial" },
+    { id: "diagnostico", label: "Diagnóstico comercial" },
   ] },
   { id: "partners", label: "Negocios de Partners", icon: Handshake },
   { id: "equipo", label: "Rendimiento del Equipo", icon: Users },
