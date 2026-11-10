@@ -1764,6 +1764,7 @@
 </style>
 <link rel="stylesheet" href="brand-system.css?v=share-compact-2">
 <script src="chapter-index.js?v=2" defer></script>
+<link rel="stylesheet" href="brochure.css">
 </head>
 <body>
   <header class="topbar">
@@ -10839,7 +10840,7 @@ const DASHBOARD_SALES_URL=window.ADERESO_DASHBOARD_URL || (['localhost','127.0.0
   : 'dashboard/');
 const TOOLS=[
  {g:'Para reunión',items:[
-  {k:'brochure',name:'Brochure',desc:'El valor agregado de Adereso y sus soluciones.',soon:true},
+  {k:'brochure',name:'Brochure',desc:'Una plataforma para conectar y mejorar tu operación.',view:'brochure'},
   {k:'pricing',name:'Pricing a tu medida',desc:'Cotiza servicios, canales, implementación y ROI.',view:'pricing'},
   {k:'progpartners',name:'Prog. Partners',desc:'Explicación del funcionamiento y fee asociado.',view:'progpartners'}]},
  {g:'Entrenamiento',items:[
@@ -10931,6 +10932,7 @@ document.getElementById('homeGrid').addEventListener('pointermove',e=>{
 function renderHome(){const g=document.getElementById('homeGrid');if(!g)return;
   g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map((t,i)=>`<button type="button" class="hg-card ${t.soon?'soon':''}" data-tool="${t.k}" style="--d:${i*60}ms"><span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small></span>${t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`).join('')}</div></div>`).join('');}
 function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool=k||'';
+  document.body.classList.toggle('v-brochure',v==='brochure');
   document.body.classList.toggle('v-home',v==='home');document.body.classList.toggle('v-embed',v==='embed');document.body.classList.toggle('v-desc',v==='descuentos');if(v==='descuentos')renderDisc();
   document.body.classList.toggle('v-acad',v==='academy');
   /* la academy se carga recién la primera vez que entras, y queda viva para no perder tu avance */
@@ -11091,5 +11093,8 @@ window.aderesoHubReady=(async()=>{
   document.documentElement.classList.remove('hub-booting');
 })();
 </script>
+<script src="brochure.js"></script>
+<script src="brochure-releases.js"></script>
+<script src="brochure-share.js"></script>
 </body>
 </html>
