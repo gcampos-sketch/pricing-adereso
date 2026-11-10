@@ -14,6 +14,9 @@ import { GrowthDashboard } from "@/components/pulse/GrowthDashboard";
 import { SimulatorDashboard } from "@/components/pulse/SimulatorDashboard";
 import { LossDashboard } from "@/components/pulse/LossDashboard";
 import { QualityDashboard } from "@/components/pulse/QualityDashboard";
+import { CommercialDiagnostic } from '@/components/pulse/CommercialDiagnostic';
+import { getCommercialDiagnostic } from '@/lib/commercial-diagnostic.functions';
+import type { DiagnosticReport } from '@/lib/commercial-diagnostic';
 import { LoadingProgress } from "@/components/pulse/LoadingProgress";
 import { useSharedReportLoading } from '@/components/useSharedReportLoading';
 import { useReportPhase } from '@/components/useReportPhase';
@@ -73,6 +76,7 @@ const partnerQ = reportQueries("partner-report", getPartnerReport);
 const teamQ = reportQueries("team-report", getTeamReport);
 const insightsQ = reportQueries("insights-report", getInsightsReport);
 const coachingQ = reportQueries("coaching-report", getCoachingReport);
+const diagnosticQ = reportQueries<DiagnosticReport>('commercial-diagnostic', () => getCommercialDiagnostic({ data: {} }));
 
 
 type Report = { generatedAt: string };
@@ -192,6 +196,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   const team = useReport(teamQ, view === "equipo");
   const insights = useReport(insightsQ, insightsEnabled);
   const coaching = useReport(coachingQ, view === "calidad");
+  const diagnostic = useReport(diagnosticQ, view === 'diagnostico');
 
   useEffect(() => {
     document.body.dataset["reportNavigation"] = embedded ? (sidebarCollapsed ? "embedded-panel-closed" : "embedded-panel") : sidebarCollapsed ? "collapsed" : "expanded";
@@ -276,7 +281,9 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   // Other reports are fetched only when selected, never competing with the home load.
 
   const active =
-    view === "calidad"
+    view === 'diagnostico'
+      ? diagnostic
+      : view === "calidad"
       ? coaching
       : view === "comercial" || view === "proyectos" || view === "embudo"
       ? pulse
@@ -331,6 +338,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
     comercial: 'Consultando pipeline comercial', proyectos: 'Consultando proyectos', embudo: 'Consultando el embudo comercial',
     partners: 'Consultando datos de Partners', equipo: 'Consultando resultados del equipo', crecimiento: 'Consultando crecimiento',
     simulador: 'Preparando datos del simulador', perdidos: 'Consultando negocios perdidos', calidad: 'Consultando calidad comercial',
+    diagnostico: 'Consultando las ediciones del diagnóstico comercial',
   };
   const reportPhase = useReportPhase(`pulse-report-${roleFilter.toLowerCase()}`);
   const pulseView = view === 'comercial' || view === 'proyectos' || view === 'embudo';
@@ -359,7 +367,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
           {tabs}
           <h1 className="pulse-h1">Sales Dashboard</h1>
           <div className="empty-state" style={{ marginTop: 24 }}>
-            No pudimos leer el pipeline en vivo.{" "}
+            {view === 'diagnostico' ? 'No pudimos leer las ediciones del diagnóstico.' : 'No pudimos leer el pipeline en vivo.'}{" "}
             {active.error instanceof Error ? active.error.message : ""}
           </div>
           <button className="tab" type="button" style={{ marginTop: 16 }} onClick={active.refetch}>
@@ -375,6 +383,10 @@ function Index({ embedded = false }: { embedded?: boolean }) {
         title={loadingMessage}
       />
     );
+  }
+
+  if (view === 'diagnostico' && diagnostic.data) {
+    return <CommercialDiagnostic report={diagnostic.data} tabs={tabs} />;
   }
 
   if (view === "partners" && partner.data) {
