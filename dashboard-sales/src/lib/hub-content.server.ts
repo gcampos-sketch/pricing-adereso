@@ -1,3 +1,5 @@
+import { handleBrochureSharingRequest } from './brochure-sharing.server';
+import { createBrochurePublicGateway } from './brochure-public';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -19,11 +21,12 @@ import { handleNotionOAuthRequest } from './academy-notion-oauth.server';
 const packaged = resolve(process.cwd(), 'private-hub');
 const contentRoot = existsSync(packaged) ? packaged : resolve(process.cwd(), '..');
 const read = (path: string) => readFile(resolve(contentRoot, path));
+const publicBrochure = createBrochurePublicGateway(read);
 const publicWallet = createWalletPublicGateway(read);
 const publicRoi = createRoiPublicGateway(read);
 const publicPartners = createPartnerPublicGateway(read);
 const privateHub = createHubGateway({ verify: verifyHubIdentity,
   publicOrigin: process.env['RENDER_EXTERNAL_URL'], read });
 export async function handleHubRequest(request: Request) {
-  return await handleWalletSharingRequest(request) ?? await publicWallet(request) ?? await handleRoiSharingRequest(request) ?? await handleHubEntryRequest(request) ?? await handleHubWelcomeRequest(request) ?? await handleCommercialGuidesRequest(request) ?? await handleNotionOAuthRequest(request) ?? await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
+  return await handleBrochureSharingRequest(request) ?? await publicBrochure(request) ?? await handleWalletSharingRequest(request) ?? await publicWallet(request) ?? await handleRoiSharingRequest(request) ?? await handleHubEntryRequest(request) ?? await handleHubWelcomeRequest(request) ?? await handleCommercialGuidesRequest(request) ?? await handleNotionOAuthRequest(request) ?? await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
 }

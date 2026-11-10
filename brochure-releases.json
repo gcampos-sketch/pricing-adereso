@@ -1,0 +1,81 @@
+{
+  "updatedAt": "2026-11-10",
+  "releases": [
+    {
+      "id": "epa-respuestas-naturales-2026-11-06",
+      "date": "2026-11-06",
+      "product": "Experience + Desk",
+      "title": "Encuestas que entienden a tu cliente",
+      "summary": "La encuesta entiende «Ya quedó solucionado» como un «Sí».",
+      "benefit": "Tu cliente responde con sus palabras y puede seguir con la encuesta.",
+      "details": [
+        "Si la respuesta no es clara, la encuesta vuelve a preguntar.",
+        "Se mantienen las opciones configuradas. Una frase no se convierte en una nota numérica."
+      ],
+      "availability": "Ya disponible en el flujo de encuesta post-atención actualizado. Se aplica automáticamente.",
+      "guide": "https://help.adereso.ai/administrador/8eb5QjUUPugzFCKxNAwGQB/satisfacci%C3%B3n-epa-/ePUu955xxJDrEgr6avLK2m",
+      "visual": "survey"
+    },
+    {
+      "id": "studio-proyectos-2026-11-06",
+      "date": "2026-11-06",
+      "product": "Studio",
+      "title": "Tus agentes, juntos en un proyecto",
+      "summary": "Ahora puedes reunir los agentes de un mismo objetivo y ver sus conexiones en un solo lugar.",
+      "benefit": "Revisas cómo se conectan tus agentes, sus pruebas y su actividad sin perderte entre pantallas.",
+      "details": [
+        "Tus bots actuales quedan en el Proyecto predeterminado. Siguen funcionando igual y sus versiones publicadas siguen activas.",
+        "Desde el proyecto puedes revisar agentes, pruebas, métricas y monitoreo."
+      ],
+      "availability": "En Studio → Proyectos → Proyecto predeterminado → Agentes.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
+      "visual": "agents"
+    },
+    {
+      "id": "studio-tester-2026-11-06",
+      "date": "2026-11-06",
+      "product": "Studio",
+      "title": "Prueba con audios y archivos",
+      "summary": "Renovamos el chat de pruebas: puedes usar audios y archivos mientras ajustas tu agente.",
+      "benefit": "Pruebas más situaciones de tus clientes antes de poner los cambios en uso.",
+      "details": [
+        "El chat de pruebas se abre al costado: puedes seguir configurando el agente.",
+        "Puedes revisar el chat junto a Contexto o Debug, citar mensajes y buscar en la conversación."
+      ],
+      "availability": "En Studio → Probar, o con Cmd/Ctrl + P. Disponible en ambos modos de prueba.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
+      "visual": "tester"
+    },
+    {
+      "id": "engage-respuestas-boton-2026-10-27",
+      "date": "2026-10-27",
+      "product": "Engage",
+      "title": "Ve qué botones eligen tus clientes",
+      "summary": "Ahora ves las respuestas a cada botón de una campaña de WhatsApp en un mismo panel.",
+      "benefit": "Comparas qué opciones interesan a tus clientes sin abrir cada conversación.",
+      "details": [
+        "Aplica a campañas nuevas de Adereso BSP con botones de respuesta rápida. No recupera campañas históricas.",
+        "Una persona puede elegir varias veces: selecciones y usuarios son cifras distintas. El porcentaje se calcula sobre selecciones válidas.",
+        "No incluye enlaces, llamadas, Flows, carruseles ni otros proveedores. Si faltan datos, «No disponible» no significa cero respuestas."
+      ],
+      "availability": "En Analítica → Engage → Campañas. Para campañas nuevas de Adereso BSP con respuestas rápidas.",
+      "guide": "https://help.adereso.ai/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFuc3QJXWBTqY5e/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFw31hv5oYRktX9",
+      "visual": "campaign"
+    },
+    {
+      "id": "desk-email-proactivo-2026-10-26",
+      "date": "2026-10-26",
+      "product": "Desk",
+      "title": "Escribe primero desde Desk",
+      "summary": "Puedes iniciar un correo desde Desk y continuar la atención en un ticket.",
+      "benefit": "Haces seguimiento al cliente sin esperar a que te escriba primero.",
+      "details": [
+        "Puedes agregar destinatarios, CC, CCO y adjuntos, y revisar el correo antes de enviarlo.",
+        "El ticket se crea cuando Desk acepta el envío. Eso no confirma que el correo llegó: la entrega se informa por separado."
+      ],
+      "availability": "Requiere envío proactivo habilitado y una cuenta de correo accesible para tu usuario.",
+      "guide": "https://help.adereso.ai/gesti%C3%B3n-del-agente-ejecutivo/wyPWvKJunzeTwyUof2BLCc/enviar-mensajes-proactivos-nuevo-ticket/78f9N27ekHR2ca4KPu5Y2h",
+      "visual": "email"
+    }
+  ]
+}

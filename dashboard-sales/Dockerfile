@@ -12,6 +12,8 @@ RUN npm run build
 WORKDIR /app
 COPY index.html starfield.js roi-standalone.js roi-share.js wallet-standalone.js wallet-share.js brand-system.css chapter-index.js academy-sync.js commercial-guides.js dashboard-settings.js logoadereso.webp e6e8672e.webp ./private-hub/
 COPY assets/adereso-symbol.svg ./private-hub/assets/adereso-symbol.svg
+COPY assets/brochure-logos/ ./private-hub/assets/brochure-logos/
+COPY brochure.css brochure.js brochure-pdf.js brochure-share.js brochure-activity.js brochure-releases.js brochure-releases.json ./private-hub/
 COPY academy/index.html ./private-hub/academy/index.html
 COPY argumentaciones/index.html ./private-hub/argumentaciones/index.html
 COPY operativa/index.html ./private-hub/operativa/index.html

@@ -41,3 +41,14 @@ dashboard-sales/*.log
 
 !wallet-standalone.js
 !wallet-share.js
+
+# Authored brochure assets; source snapshots remain excluded.
+!brochure-activity.js
+!brochure-pdf.js
+!brochure.js
+!brochure-releases.json
+!brochure.css
+!brochure-releases.js
+!brochure-share.js
+!assets/brochure-logos/
+!assets/brochure-logos/*.svg
