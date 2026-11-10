@@ -112,3 +112,6 @@
 - Data Hub (CS) (https://datahub.adere.so/) y Gieppeto (OKRs por equipos, https://okrs.adere.so/#/dashboard) son enlaces de Portales que abren en pestaña nueva. La barra del Hub agrupa las herramientas y permite desplazarse sin tapar el menú de cuenta inferior.
 - Perfil, passkeys y salida pertenecen al menú global del Hub; feedback y refresco pertenecen al menú de reportes. Conservar HubEntryTracker, autenticación y MFA; la reorganización visual no activa el acceso OAuth de la vista local.
 - La bolsa de X es independiente de la principal: 7.000 conversaciones cuestan USD 600/mes, cada conversación adicional contratada USD 0,085 y cada excedente fuera de la bolsa elegida USD 0,0977. Editar la bolsa X actualiza total y ROI; no cobra un canal ya existente salvo que sea nuevo.
+
+- La barra de Ganado conserva sólido MRR y rayado OTF/12 dentro de un solo contorno, sin bordes redondeados internos. Falta para la cuota omite la frase de selección redundante.
+- Los chips E6/E6.1/E6.2 incluyen información accesible por botón y dentro de su detalle. La explicación de kick-off y contabilización oficial es la solicitada por Gonzalo; no cambia poblaciones ni fórmulas de cuota y nunca mueve etapas.

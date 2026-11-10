@@ -234,18 +234,20 @@ export function Metric({
             <div className="metric-progress" aria-hidden={progressLabel ? undefined : true} role={progressLabel ? "img" : undefined} aria-label={progressLabel}>
               <div className="metric-progress-track">
                 {progressLabel ? <span className="metric-progress-label">{progressLabel}</span> : null}
-                <div
-                  className="metric-progress-fill"
-                  data-tone={tone}
-                  style={{ width: `${(Math.min(base, scale) / scale) * 100}%` }}
-                />
-                {bonus > 0 ? (
+                <div className="metric-progress-value" style={{ width: `${((base + bonus) / scale) * 100}%` }}>
                   <div
-                    className="metric-progress-bonus"
+                    className="metric-progress-fill"
                     data-tone={tone}
-                    style={{ width: `${(bonus / scale) * 100}%` }}
+                    style={{ width: `${(base / (base + bonus || 1)) * 100}%` }}
                   />
-                ) : null}
+                  {bonus > 0 ? (
+                    <div
+                      className="metric-progress-bonus"
+                      data-tone={tone}
+                      style={{ width: `${(bonus / (base + bonus)) * 100}%` }}
+                    />
+                  ) : null}
+                </div>
                 <span
                   className="metric-progress-tick"
                   style={{ left: `${(100 / scale) * 100}%` }}
@@ -997,7 +999,7 @@ export function PulseDashboard({
         label: group.label,
         value: `${money(group.mrr)} · ${group.percentage === null ? "s/n" : `${group.percentage.toFixed(1)}%`} · ${group.deals.length}`,
         tone: group.tone,
-        detail: { deals: group.deals, description: group.description, period: rangeLabel, quota: periodQuota, mrr: group.mrr, otfMonthly: group.otfMonthly },
+        detail: { deals: group.deals, description: group.description, period: rangeLabel, quota: periodQuota, mrr: group.mrr, otfMonthly: group.otfMonthly, countsOfficially: group.key === 'real' },
       });
     }
     const wallets = quotaOutByKind(["wallet"]);
@@ -1429,7 +1431,7 @@ export function PulseDashboard({
         <Metric
           label="Falta para la cuota"
           value={money(periodGap)}
-          note={periodGap ? "selecciona negocios para sumar al ganado" : "cuota cumplida"}
+          note={periodGap ? undefined : "cuota cumplida"}
           tone={periodGap ? "warn" : "ok"}
           onClick={() => openGapDeals()}
           footer={<div className="quota-close-preview" aria-label="Previsualización de cierres por mes del trimestre actual">

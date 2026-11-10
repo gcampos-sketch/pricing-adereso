@@ -548,10 +548,18 @@
     background: oklch(0.3 0.02 92.4);
     overflow: visible;
   }
-  /* Tramo extra: bonus OTF/12 sobre el MRR ganado */
-  .metric > .metric-progress > .metric-progress-track > .metric-progress-bonus {
+  .metric-progress-value {
+    display: flex;
+    flex-shrink: 0;
     height: 100%;
-    border-radius: 999px;
+    border-radius: inherit;
+    overflow: hidden;
+    transition: width 320ms var(--ease-out);
+  }
+  /* Solid MRR and striped OTF share one outline, with a straight internal join. */
+  .metric-progress-value > .metric-progress-bonus {
+    height: 100%;
+    flex-shrink: 0;
     transition: width 320ms var(--ease-out);
     background-image: repeating-linear-gradient(
       -45deg,
@@ -561,21 +569,21 @@
     background-color: oklch(0.34 0.04 145);
     opacity: 0.9;
   }
-  .metric > .metric-progress > .metric-progress-track > .metric-progress-fill {
+  .metric-progress-value > .metric-progress-fill {
     height: 100%;
-    border-radius: 999px;
+    flex-shrink: 0;
     transition: width 320ms var(--ease-out);
   }
-  .metric > .metric-progress > .metric-progress-track > .metric-progress-fill[data-tone="neutral"] {
+  .metric-progress-value > .metric-progress-fill[data-tone="neutral"] {
     background: var(--muted);
   }
-  .metric > .metric-progress > .metric-progress-track > .metric-progress-fill[data-tone="ok"] {
+  .metric-progress-value > .metric-progress-fill[data-tone="ok"] {
     background: var(--success);
   }
-  .metric > .metric-progress > .metric-progress-track > .metric-progress-fill[data-tone="warn"] {
+  .metric-progress-value > .metric-progress-fill[data-tone="warn"] {
     background: var(--warning);
   }
-  .metric > .metric-progress > .metric-progress-track > .metric-progress-fill[data-tone="bad"] {
+  .metric-progress-value > .metric-progress-fill[data-tone="bad"] {
     background: var(--danger);
   }
   .metric > .metric-progress > .metric-progress-tick {
@@ -5752,7 +5760,15 @@ button.won-exec-stat:hover { color:var(--brand); }
 .modal-owner-bars[open] > .won-owner-toggle { margin-bottom:12px; }
 
 /* Stage chips belong to Ganado's exact selected-period population. */
-.won-stage-chip { display:inline-flex; max-width:100%; }
+.won-stage-chip { position:relative; display:inline-flex; max-width:100%; }
+.won-stage-chip:has(.won-stage-info) .metric-chip-label {padding-right:16px;}
+.won-stage-info {position:absolute;top:6px;right:6px;display:grid;place-items:center;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;}
+.won-stage-info:hover,.won-stage-info[data-state="delayed-open"],.won-stage-info[data-state="instant-open"] {background:var(--glass-track-hover);color:var(--foreground);}
+.won-stage-info:focus-visible {outline:2px solid var(--brand);outline-offset:2px;}
+.won-stage-tooltip {z-index:1400;max-width:min(300px,calc(100vw - 24px));padding:10px 12px;border:1px solid var(--border-default);border-radius:10px;background:var(--surface);color:var(--body);font-size:11px;line-height:1.55;box-shadow:var(--shadow-modal);}
+.won-stage-description {display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid var(--border-subtle);border-radius:9px;background:var(--glass-track);}
+.won-stage-description > svg {flex-shrink:0;margin-top:2px;color:var(--muted);}
+.won-stage-popover .won-stage-description > p {margin:0;color:var(--body);}
 .won-stage-chip button.metric-chip { display:inline-flex; align-items:baseline; gap:6px; padding:4px 8px; border:1px solid var(--border-default); border-radius:999px; background:transparent; cursor:pointer; font-family:inherit; font-size:11px; line-height:1.3; color:inherit; text-align:left; }
 .won-stage-chip button.metric-chip:hover { border-color:var(--brand); }
 .won-stage-chip button.metric-chip:focus-visible { outline:2px solid var(--brand); outline-offset:3px; }

@@ -2,11 +2,11 @@ import type { DealDTO, Tone } from './pulse-types';
 
 const groups = [
   { key: 'real', label: '6.2 EN DESARROLLO', stages: ['1086544542', '213244763', '171385868', '173990327'], tone: 'ok' as Tone,
-    description: 'Ganados elegibles del período seleccionado que hoy están en desarrollo (E6.2) o etapas posteriores. Es una parte del ganado de ese período, no todos los proyectos actualmente en desarrollo.' },
+    description: 'Negocios que ya tuvieron el kick-off con el Project Manager y están en desarrollo o etapas posteriores. Su valor cuenta oficialmente para el cumplimiento de la cuota.' },
   { key: 'pending', label: 'E6 POR MOVER', stages: ['174677684'], tone: 'warn' as Tone,
-    description: 'Ganados elegibles del período seleccionado que siguen en E6 · Propuesta comercial firmada. Falta avanzar hacia desarrollo; el chip no mueve los deals de etapa.' },
+    description: 'Negocios con propuesta firmada que aún no cuentan oficialmente para la cuota. Prioriza el traspaso y el kick-off con el Project Manager para que comiencen a contabilizar.' },
   { key: 'warning', label: 'E6.1 WARNING', stages: ['1278792585'], tone: 'bad' as Tone,
-    description: 'Ganados elegibles del período seleccionado que hoy están en E6.1 · Deal Warning. Requieren atención antes de avanzar a desarrollo.' },
+    description: 'Negocios con una alerta que requiere revisión: el kick-off puede estar pendiente o puede existir otro bloqueo que impida iniciar o continuar el desarrollo. Revisa la causa y resuélvela antes de avanzar.' },
 ];
 
 /** Input is the exact eligible won population used by the Ganado card, already scoped to its period and filters. */
