@@ -52,3 +52,7 @@ dashboard-sales/*.log
 !brochure-share.js
 !assets/brochure-logos/
 !assets/brochure-logos/*.svg
+
+!assets/brochure-credentials/
+!assets/brochure-credentials/*.png
+!assets/brochure-credentials/*.webp

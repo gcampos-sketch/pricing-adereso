@@ -18,6 +18,11 @@ export const HUB_FILES: Record<string, string> = {
   'logoadereso.webp': 'image/webp',
   'e6e8672e.webp': 'image/webp',
   'assets/adereso-symbol.svg': 'image/svg+xml',
+  'assets/brochure-credentials/meta-business-partner.webp': 'image/webp',
+  'assets/brochure-credentials/nyce-iso-27001.png': 'image/png',
+  'assets/brochure-credentials/iqnet-recognized-certification.png': 'image/png',
+  'assets/brochure-credentials/insight-soc2-type1.png': 'image/png',
+
   'assets/brochure-logos/walmart.svg': 'image/svg+xml',
   'assets/brochure-logos/cencosud.svg': 'image/svg+xml',
   'assets/brochure-logos/falabella.svg': 'image/svg+xml',

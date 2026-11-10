@@ -1387,34 +1387,28 @@ export function DealModal({
     : dealsBeforeSummary;
   const toggleSummaryDate = (key: string) => setSummaryDateFilter(current => current === key ? null : key);
 
-  // Con el botón Fix activo cargamos contactos y estado de secuencia de cada deal.
-  const contactsLoadedRef = useRef(false);
+  // Load every row in bounded batches, including when another drilldown opens.
+  const contactIdsKey = [...new Set(visiblePayload?.deals.map(deal => deal.id) ?? [])].sort().join(",");
   useEffect(() => {
-    if (!baseDeals.length || contactsLoadedRef.current) return;
-    contactsLoadedRef.current = true;
-    const ids = baseDeals.map((deal) => deal.id);
+    let cancelled = false;
+    setContacts({});
+    if (!contactIdsKey) { setContactsState("idle"); return; }
+    const ids = contactIdsKey.split(",");
     setContactsState("loading");
-    void getDealContacts({ data: { ids } })
-      .then((list) => {
-        const map: Record<string, ContactRow> = {};
-        for (const item of list) {
-          map[item.dealId] = {
-            contactCount: item.contactCount,
-            sequenceActive: item.sequenceActive,
-            sequenceEver: item.sequenceEver,
-            contactName: item.contactName,
-            contactEmail: item.contactEmail,
-            contactTitle: item.contactTitle,
-          };
-        }
-        setContacts(map);
-        setContactsState("ready");
-      })
-      .catch(() => {
-        setContactsState("error");
-      });
-  }, [baseDeals]);
-
+    void (async () => {
+      let failed = false;
+      for (let offset = 0; offset < ids.length; offset += 100) {
+        if (cancelled) return;
+        try {
+          const list = await getDealContacts({ data: { ids: ids.slice(offset, offset + 100) } });
+          if (cancelled) return;
+          setContacts(current => ({ ...current, ...Object.fromEntries(list.map(item => [item.dealId, item])) }));
+        } catch { failed = true; }
+      }
+      if (!cancelled) setContactsState(failed ? "error" : "ready");
+    })();
+    return () => { cancelled = true; };
+  }, [contactIdsKey]);
 
 
   /** Prompt para pegar en Codex: deals + contactos, sin los que ya están en secuencia. */
@@ -1607,7 +1601,7 @@ export function DealModal({
       width: 142, grow: 1.5,
       render: (deal) => {
         const info = contacts[deal.id];
-        if (!info) return contactsState === "error" ? "s/n" : "…";
+        if (!info) return contactsState === "error" || contactsState === "ready" ? <span title="No se pudo cargar el contacto asociado">No disponible</span> : "…";
         if (!info.contactName && !info.contactEmail) return <span style={{ color: "var(--label)" }}>sin contacto</span>;
         return info.contactEmail ? <a className="deal-contact-link" href={`mailto:${encodeURIComponent(info.contactEmail)}`} title={contactLabel(info)} aria-label={`Escribir correo a ${info.contactName ?? 'este contacto'}`}><span>{info.contactName ?? 'Abrir correo'}</span><Mail size={13} aria-hidden="true"/></a> : <span title={info.contactTitle??undefined}>{info.contactName}</span>;
       },
@@ -1625,7 +1619,7 @@ export function DealModal({
         width: 108, grow: .8,
         render: (deal) => {
           const info = contacts[deal.id];
-          if (!info) return contactsState === "error" ? "s/n" : "…";
+          if (!info) return contactsState === "error" || contactsState === "ready" ? <span title="No se pudo cargar el contacto asociado">No disponible</span> : "…";
           if (info.sequenceActive === true) return <span className="chip" data-tone="ok">En secuencia</span>;
           if (info.sequenceEver === true) return <span className="chip" data-tone="warn">Estuvo en secuencia</span>;
           if (!info.contactCount) return <span className="chip" data-tone="warn">Sin contacto</span>;
