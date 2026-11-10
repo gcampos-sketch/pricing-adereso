@@ -21,6 +21,7 @@ window.createBrochurePdf=async(root,onProgress)=>{
  function copy(selector){const element=root.querySelector(selector);if(!element)throw Error('missing section');const result=element.cloneNode(true);result.removeAttribute('id');result.classList.add('br-seen');result.querySelectorAll('details').forEach(item=>item.remove());result.querySelectorAll('[id]').forEach(item=>item.removeAttribute('id'));result.querySelectorAll('img').forEach(image=>image.src=new URL(image.getAttribute('src'),location.href).href);result.querySelectorAll('button,a').forEach(control=>{if(control.tagName==='A'&&/^https:\/\//.test(control.getAttribute('href')||''))control.dataset.pdfUrl=control.href;control.removeAttribute('href');control.removeAttribute('tabindex');});return result;}
  const plans=[
   {title:'Adereso · Tu plataforma all in one',parts:['.br-business-hero','#br-credentials']},
+  {title:'Seguridad y credenciales · Alcance de cada evaluación',security:true,parts:['#br-credentials > .br-proof-security','#br-credentials > .br-certification-scope']},
   {title:'Las consultas que podemos resolver',parts:['#br-usecases']},
   {title:'Cómo funciona Adereso',parts:['.br-journey-intro','.br-journey-index']},
   ...Array.from({length:5},(_,i)=>({title:['Desk · Atención omnicanal','Studio · Agentes de IA','Desk + Studio · Atención humana','Engage · Seguimiento proactivo','Experience · Satisfacción'][i],parts:['#br-journey-'+i]})),
@@ -39,8 +40,9 @@ window.createBrochurePdf=async(root,onProgress)=>{
    const content=page.querySelector('.br-pdf-page-content');
    if(plan.releases)content.innerHTML='<div class="br-pdf-news"><span class="br-kicker">NOVEDADES DE ADERESO</span><h2>Qué cambió. <em>Qué ganas tú.</em></h2><div>'+releaseData.releases.slice(0,8).map(item=>'<article><small>'+escape(item.product)+' · '+escape(item.date)+'</small><h3>'+escape(item.title)+'</h3><label>QUÉ CAMBIÓ</label><p>'+escape(item.summary)+'</p><label>QUÉ GANAS TÚ</label><b>'+escape(item.benefit)+'</b><span>'+escape(item.availability)+'</span></article>').join('')+'</div></div>';
    else plan.parts.forEach(selector=>content.append(copy(selector)));
-   if(index===0){const note=pdfDocument.createElement('p');note.className='br-pdf-evidence-note';note.textContent=[...root.querySelectorAll('#br-credentials details p')].map(item=>item.textContent).join(' ');content.append(note);}
-   if(index===1){const note=pdfDocument.createElement('p');note.className='br-pdf-evidence-note';note.textContent=root.querySelector('#br-usecases .br-source-note p').textContent;content.append(note);}
+   if(index===0){content.querySelectorAll('.br-proof-security,.br-certification-scope').forEach(item=>item.remove());const note=pdfDocument.createElement('p');note.className='br-pdf-evidence-note';note.textContent=root.querySelector('#br-credentials details p').textContent;content.append(note);}
+   if(plan.security){const note=pdfDocument.createElement('p');note.className='br-pdf-evidence-note';note.textContent=[...root.querySelectorAll('#br-credentials details p')].slice(1).map(item=>item.textContent).join(' ');content.append(note);}
+   if(plan.parts?.includes('#br-usecases')){const note=pdfDocument.createElement('p');note.className='br-pdf-evidence-note';note.textContent=root.querySelector('#br-usecases .br-source-note p').textContent;content.append(note);}
    workspace.replaceChildren(page);
    await pdfDocument.fonts.ready;await Promise.all([...page.querySelectorAll('img')].map(image=>image.decode()));
    // Bake logo filters into pixels: DOM renderers do not consistently apply SVG CSS filters.

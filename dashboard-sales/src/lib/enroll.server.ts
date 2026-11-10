@@ -13,7 +13,7 @@ export type EnrollResult = {
 export async function enrollDealsInTouchpoint(dealIds: string[]): Promise<EnrollResult[]> {
   const [owners, contacts, dealsRes] = await Promise.all([
     getOwners(),
-    getDealContacts(dealIds),
+    getDealContacts(dealIds, { preferMeetingOwner: false }),
     gateway<{ results: { id: string; properties: Props }[] }>("/crm/v3/objects/deals/batch/read", {
       method: "POST",
       body: JSON.stringify({ properties: ["hubspot_owner_id"], inputs: dealIds.map((id) => ({ id })) }),
