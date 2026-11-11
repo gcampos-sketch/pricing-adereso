@@ -4,6 +4,7 @@ import { Check, Copy, ExternalLink, GitCompareArrows, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OwnerFilterMenu, SingleFilterMenu } from "./FilterBar";
 import type { DealDTO, StageJourney } from "@/lib/pulse-types";
+import { flowStageDate, journeyInPeriods, stageInPeriods, type FlowDateBasis } from '@/lib/stage-date-scope';
 
 type StageKey = "E0" | "E1" | "E2" | "E4" | "E5" | "E5.1" | "E6" | "E6.1" | "E6.2" | "E8";
 type FlowKind = "advance" | "won" | "warning" | "lost" | "lostDev" | "anomaly";
@@ -26,6 +27,7 @@ const SALES_LOST = new Set(["171385869"]);
 const DEV_LOST = new Set(["1372234925", "213417520", "178228041"]);
 
 type Flow = {
+  dateBasis?: FlowDateBasis;
   id: string;
   from: StageKey;
   to: StageKey | "Perdido" | "Perdido desarrollo";
@@ -39,12 +41,6 @@ type Flow = {
   path: string;
   labelX: number;
   labelY: number;
-};
-
-const dateQuarter = (iso: string) => {
-  const date = new Date(iso);
-  if (!Number.isFinite(date.getTime())) return "";
-  return `${date.getUTCFullYear()}-Q${Math.floor(date.getUTCMonth() / 3) + 1}`;
 };
 
 const quarterIndex = (period: string) => {
@@ -92,7 +88,7 @@ function flowContext(flow: Flow) {
   if (flow.kind === "lostDev") return "Deals ganados que se cayeron en desarrollo";
   if (flow.kind === "anomaly") return "⚠ Transición inválida — salta E4 obligatoria";
   if (flow.kind === "warning") return "Deals firmados que entraron en warning";
-  return `Avanzaron a la siguiente etapa · ${flow.percent}% de ${flow.from}`;
+  return flow.dateBasis === 'entry' ? `${flow.percent}% de las salidas registradas desde ${flow.from} en el período · fecha de entrada a destino` : `Avanzaron a la siguiente etapa · ${flow.percent}% de ${flow.from} · cohorte por cierre`;
 }
 
 function dealDays(journey: StageJourney, stage: StageKey) {
@@ -149,6 +145,7 @@ export function StageVelocity({
   const [open, setOpen] = useState(false);
   const [activeFlow, setActiveFlow] = useState<Flow | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [dateBasis, setDateBasis] = useState<FlowDateBasis>('entry');
   const [compareMode, setCompareMode] = useState<"prev" | "yoy">("prev");
   const isQuarterFiltered = Boolean(quarter && quarter !== "all");
   const effectiveCompareMode = isQuarterFiltered ? compareMode : "prev";
@@ -188,30 +185,24 @@ export function StageVelocity({
 
   const scoped = useMemo(() => {
     const periods = new Set(selectedPeriods);
-    return ownerAndTypeScoped.filter((journey) => {
-      const dates = [journey.createdAt, journey.deal.closeDateValue, ...Object.values(journey.entered)].filter(Boolean);
-      return dates.some((date) => periods.has(dateQuarter(date)));
-    });
-  }, [ownerAndTypeScoped, selectedPeriods]);
+    return ownerAndTypeScoped.filter(journey => journeyInPeriods(journey, periods, dateBasis));
+  }, [ownerAndTypeScoped, selectedPeriods, dateBasis]);
 
-  const previousScoped = useMemo(() => ownerAndTypeScoped.filter((journey) => {
-    const dates = [journey.createdAt, journey.deal.closeDateValue, ...Object.values(journey.entered)].filter(Boolean);
-    return dates.some((date) => comparisonPeriods.has(dateQuarter(date)));
-  }), [comparisonPeriods, ownerAndTypeScoped]);
+  const previousScoped = useMemo(() => ownerAndTypeScoped.filter(journey => journeyInPeriods(journey, comparisonPeriods, dateBasis)), [comparisonPeriods, ownerAndTypeScoped, dateBasis]);
 
   const previousCounts = useMemo(() => {
     const stages = new Map<StageKey, number>(STAGES.map((stage) => [stage.key, 0]));
     const losses = new Map<string, number>();
     for (const journey of previousScoped) {
       const visited = STAGES.filter((stage) => journey.entered[stage.key]);
-      for (const stage of visited) stages.set(stage.key, (stages.get(stage.key) ?? 0) + 1);
+      for (const stage of visited) if (stageInPeriods(journey, stage.key, comparisonPeriods, dateBasis)) stages.set(stage.key, (stages.get(stage.key) ?? 0) + 1);
       const last = visited[visited.length - 1];
       if (!last) continue;
-      if (SALES_LOST.has(journey.deal.stageId)) losses.set(`${last.key}->Perdido`, (losses.get(`${last.key}->Perdido`) ?? 0) + 1);
-      if (DEV_LOST.has(journey.deal.stageId)) losses.set(`${last.key}->Perdido desarrollo`, (losses.get(`${last.key}->Perdido desarrollo`) ?? 0) + 1);
+      if (SALES_LOST.has(journey.deal.stageId) && stageInPeriods(journey, 'Perdido', comparisonPeriods, dateBasis)) losses.set(`${last.key}->Perdido`, (losses.get(`${last.key}->Perdido`) ?? 0) + 1);
+      if (DEV_LOST.has(journey.deal.stageId) && stageInPeriods(journey, 'Perdido desarrollo', comparisonPeriods, dateBasis)) losses.set(`${last.key}->Perdido desarrollo`, (losses.get(`${last.key}->Perdido desarrollo`) ?? 0) + 1);
     }
     return { stages, losses };
-  }, [previousScoped]);
+  }, [previousScoped, comparisonPeriods, dateBasis]);
 
   const periodDurations = useMemo(() => {
     const currentPeriods = new Set(selectedPeriods);
@@ -228,16 +219,16 @@ export function StageVelocity({
         const to = visited[index + 1];
         if (!from || !to) continue;
         const duration = journey.days[from.key] ?? diffDays(journey.entered[from.key], journey.entered[to.key]);
-        const exitPeriod = dateQuarter(journey.entered[to.key] ?? "");
         if (duration <= 0) continue;
-        if (currentPeriods.has(exitPeriod)) current.get(from.key)?.push(duration);
-        if (comparisonPeriods.has(exitPeriod)) previous.get(from.key)?.push(duration);
+        if (stageInPeriods(journey, to.key, currentPeriods, dateBasis)) current.get(from.key)?.push(duration);
+        if (stageInPeriods(journey, to.key, comparisonPeriods, dateBasis)) previous.get(from.key)?.push(duration);
       }
     }
     return { current, previous };
-  }, [comparisonPeriods, ownerAndTypeScoped, selectedPeriods]);
+  }, [comparisonPeriods, ownerAndTypeScoped, selectedPeriods, dateBasis]);
 
   const model = useMemo(() => {
+    const periods = new Set(selectedPeriods);
     const entries = new Map<StageKey, StageJourney[]>();
     const exitedDays = new Map<StageKey, number[]>();
     const monthlyDays = new Map<StageKey, Map<string, number[]>>();
@@ -248,6 +239,7 @@ export function StageVelocity({
       monthlyDays.set(stage.key, new Map());
     }
     const pushFlow = (from: StageKey, to: StageKey | "Perdido" | "Perdido desarrollo", item: StageJourney) => {
+      if (!stageInPeriods(item, to, periods, dateBasis)) return;
       const key = `${from}->${to}`;
       const list = flowDeals.get(key) ?? new Map<string, StageJourney>();
       list.set(item.deal.id, item);
@@ -258,14 +250,14 @@ export function StageVelocity({
       // HubSpot entrega la última entrada a cada etapa. Para evitar regresiones y
       // reingresos duplicados, el río sigue el orden canónico de las etapas visitadas.
       const visited = STAGES.filter((stage) => journey.entered[stage.key]);
-      for (const stage of visited) entries.get(stage.key)?.push(journey);
+      for (const stage of visited) if (stageInPeriods(journey, stage.key, periods, dateBasis)) entries.get(stage.key)?.push(journey);
       for (let index = 0; index < visited.length - 1; index += 1) {
         const from = visited[index];
         const to = visited[index + 1];
         if (!from || !to) continue;
         pushFlow(from.key, to.key, journey);
         const duration = journey.days[from.key] ?? diffDays(journey.entered[from.key], journey.entered[to.key]);
-        if (duration > 0) {
+        if (duration > 0 && stageInPeriods(journey, to.key, periods, dateBasis)) {
           exitedDays.get(from.key)?.push(duration);
           const month = journey.entered[to.key]?.slice(0, 7) ?? "";
           const bucket = monthlyDays.get(from.key)?.get(month) ?? [];
@@ -281,7 +273,8 @@ export function StageVelocity({
     const originTotals = new Map<StageKey, number>();
     for (const [key, list] of flowDeals) {
       const from = key.split("->")[0] as StageKey;
-      originTotals.set(from, entries.get(from)?.length ?? list.size);
+      if (dateBasis === 'close') originTotals.set(from, entries.get(from)?.length ?? list.size);
+      else originTotals.set(from, (originTotals.get(from) ?? 0) + list.size);
     }
     const flows: Flow[] = [...flowDeals.entries()].map(([id, dealMap]) => {
       const deals = [...dealMap.values()];
@@ -308,6 +301,7 @@ export function StageVelocity({
       const mainlineLabel = from === "E4" && to === "E5";
       return {
         id,
+        dateBasis,
         from,
         to,
         kind,
@@ -336,10 +330,10 @@ export function StageVelocity({
       };
     });
     return { flows, stageStats };
-  }, [periodDurations, scoped]);
+  }, [periodDurations, scoped, selectedPeriods, dateBasis]);
 
   const cycle = (from: StageKey, to: StageKey, periods: Set<string>) => median(ownerAndTypeScoped
-    .filter((item) => periods.has(dateQuarter(item.entered[to] ?? "")))
+    .filter((item) => stageInPeriods(item, to, periods, dateBasis))
     .map((item) => diffDays(item.entered[from], item.entered[to]))
     .filter((value) => value > 0));
   const currentPeriods = new Set(selectedPeriods);
@@ -349,14 +343,14 @@ export function StageVelocity({
   const previousSalesCycle = cycle("E1", "E6", comparisonPeriods);
   const previousDevelopmentCycle = cycle("E6", "E8", comparisonPeriods);
   const previousTotalCycle = cycle("E1", "E8", comparisonPeriods);
-  const won = scoped.filter((item) => Boolean(item.entered["E6"]));
-  const lost = scoped.filter((item) => SALES_LOST.has(item.deal.stageId));
-  const lostDevelopment = scoped.filter((item) => DEV_LOST.has(item.deal.stageId));
-  const commissioned = scoped.filter((item) => Boolean(item.entered["E8"]));
-  const previousWon = previousScoped.filter((item) => Boolean(item.entered["E6"]));
-  const previousLost = previousScoped.filter((item) => SALES_LOST.has(item.deal.stageId));
-  const previousLostDevelopment = previousScoped.filter((item) => DEV_LOST.has(item.deal.stageId));
-  const previousCommissioned = previousScoped.filter((item) => Boolean(item.entered["E8"]));
+  const won = scoped.filter((item) => Boolean(item.entered["E6"]) && stageInPeriods(item, 'E6', currentPeriods, dateBasis));
+  const lost = scoped.filter((item) => SALES_LOST.has(item.deal.stageId) && stageInPeriods(item, 'Perdido', currentPeriods, dateBasis));
+  const lostDevelopment = scoped.filter((item) => DEV_LOST.has(item.deal.stageId) && stageInPeriods(item, 'Perdido desarrollo', currentPeriods, dateBasis));
+  const commissioned = scoped.filter((item) => Boolean(item.entered["E8"]) && stageInPeriods(item, 'E8', currentPeriods, dateBasis));
+  const previousWon = previousScoped.filter((item) => Boolean(item.entered["E6"]) && stageInPeriods(item, 'E6', comparisonPeriods, dateBasis));
+  const previousLost = previousScoped.filter((item) => SALES_LOST.has(item.deal.stageId) && stageInPeriods(item, 'Perdido', comparisonPeriods, dateBasis));
+  const previousLostDevelopment = previousScoped.filter((item) => DEV_LOST.has(item.deal.stageId) && stageInPeriods(item, 'Perdido desarrollo', comparisonPeriods, dateBasis));
+  const previousCommissioned = previousScoped.filter((item) => Boolean(item.entered["E8"]) && stageInPeriods(item, 'E8', comparisonPeriods, dateBasis));
   const opportunities = model.stageStats.find((stage) => stage.key === "E1")?.count ?? scoped.length;
   const winRate = won.length + lost.length ? won.length / (won.length + lost.length) : 0;
   const ticket = won.length ? won.reduce((sum, item) => sum + item.deal.amountValue, 0) / won.length : 0;
@@ -373,6 +367,7 @@ export function StageVelocity({
     to: Flow["to"],
   ): Flow => ({
     id,
+    dateBasis,
     title,
     description,
     summary: true,
@@ -441,7 +436,7 @@ export function StageVelocity({
       {open ? (
         <div className="stage-flow-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
           <section className="stage-flow-modal" role="dialog" aria-modal="true" aria-label="Pipeline animado por niveles">
-            <header><div><h2>Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = cuánto avanza · anomalías saltan E4</p></div><Button variant="ghost" size="icon" aria-label="Cerrar pipeline" onClick={() => setOpen(false)}><X /></Button></header>
+            <header><div><h2>Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = {dateBasis === 'entry' ? 'distribución de salidas' : 'avance de la cohorte'} · anomalías saltan E4</p></div><Button variant="ghost" size="icon" aria-label="Cerrar pipeline" onClick={() => setOpen(false)}><X /></Button></header>
             {canFilter ? (
               <div className="stage-flow-filters" ref={filtersRef}>
                 <SingleFilterMenu
@@ -493,6 +488,10 @@ export function StageVelocity({
                     setOpenFilter(null);
                   }}
                 />
+                <div className="stage-date-toggle" role="group" aria-label="Filtrar pipeline por fecha">
+                  <button type="button" aria-pressed={dateBasis === 'entry'} onClick={() => { setDateBasis('entry'); setActiveFlow(null); }}>Entrada a etapa</button>
+                  <button type="button" aria-pressed={dateBasis === 'close'} onClick={() => { setDateBasis('close'); setActiveFlow(null); }}>Cierre del deal</button>
+                </div>
                 <Button
                   className="stage-comparison-toggle"
                   type="button"
@@ -529,13 +528,15 @@ export function StageVelocity({
                     </Button>
                   </div>
                 ) : null}
-                <span className="stage-flow-filters-hint">{showComparison ? (effectiveCompareMode === "yoy" ? "vs. mismo trimestre del año pasado" : "vs. período anterior equivalente") : "Los cambios se aplican también al tablero"}</span>
+                <span className="stage-flow-filters-hint">{showComparison ? (effectiveCompareMode === "yoy" ? "vs. mismo trimestre del año pasado" : "vs. período anterior equivalente") : "El criterio de fecha se aplica a esta vista"}</span>
               </div>
             ) : null}
             <div className="stage-flow-body" data-drawer={activeFlow ? "open" : undefined}>
               <div className="stage-flow-main">
                 <div className="flow-legend"><span data-kind="advance">Avance</span><span data-kind="won">Ganado / desarrollo</span><span data-kind="lost">Perdido</span><span data-kind="anomaly">Anomalía · salta E4</span></div>
                 <p className="flow-explainer"><strong>El grosor de cada corriente es proporcional a la cantidad de deals.</strong> Haz clic en cualquier río para revisar sus deals en HubSpot.</p>
+                <p className="stage-date-explainer">{dateBasis === 'entry' ? 'Cada nodo usa su propia fecha de entrada; cada río usa la entrada a su destino. No exige que el deal se haya creado o cerrado en el período. Los conteos por etapa no forman una misma cohorte.' : 'Solo deals con fecha de cierre en el período elegido. Se muestra su recorrido registrado completo, aunque hayan entrado a las etapas en otros períodos.'} Fechas ausentes no se sustituyen por otra fecha.
+                {dateBasis === 'entry' && ownerAndTypeScoped.some(row => DEV_LOST.has(row.deal.stageId) && !row.outcomeEntered?.[row.deal.stageId]) ? ' Hay pérdidas en desarrollo sin fecha de entrada disponible en este reporte; quedan fuera de este modo.' : null}</p>
                 <div className="stage-svg-scroll">
                   <svg className="stage-flow-svg" viewBox="0 0 1415 410" role="img" aria-label="Flujo real de deals por etapas">
                     <rect className="won-zone" x="920" y="50" width="475" height="300" rx="18" />
@@ -617,7 +618,7 @@ function FlowDrawer({ flow, onClose }: { flow: Flow; onClose: () => void }) {
       <span>{copied ? `${flow.deals.length} deals copiados para pegar en Codex` : "Nombre e ID de todos los deals"}</span>
     </div>
     <div className="flow-deal-list">
-      {visible.map((journey) => <DealLink key={journey.deal.id} deal={journey.deal} days={flow.summary ? 0 : dealDays(journey, flow.from)} lost={flow.kind === "lost" || flow.kind === "lostDev"} />)}
+      {visible.map((journey) => <DealLink key={journey.deal.id} deal={journey.deal} days={flow.summary ? 0 : dealDays(journey, flow.from)} lost={flow.kind === "lost" || flow.kind === "lostDev"} filterDate={flow.dateBasis === 'close' ? journey.deal.closeDateValue : flowStageDate(journey, flow.to)} dateLabel={flow.dateBasis === 'close' ? 'Cierre' : 'Entrada a destino'} />)}
       {flow.deals.length > visible.length ? <p className="flow-more">+ {flow.deals.length - visible.length} deals más en este flujo</p> : null}
     </div>
   </aside>;
@@ -639,9 +640,9 @@ function KpiComparison({ current, previous, inverse = false }: { current: number
   return <small className="flow-kpi-comparison" data-direction={direction} data-tone={tone}>{comparisonLabel(current, previous)}</small>;
 }
 
-function DealLink({ deal, days, lost }: { deal: DealDTO; days: number; lost: boolean }) {
+function DealLink({ deal, days, lost, filterDate, dateLabel }: { deal: DealDTO; days: number; lost: boolean; filterDate: string; dateLabel: string }) {
   return <a className="flow-deal" href={deal.url} target="_blank" rel="noopener noreferrer">
-    <span><strong>{deal.name}</strong><small>#{deal.id} · MRR {lost ? "perdido" : "potencial"}</small><em>Abrir en HubSpot <ExternalLink /></em></span>
+    <span><strong>{deal.name}</strong><small>#{deal.id} · MRR {lost ? "perdido" : "potencial"}</small><small>{dateLabel}: {filterDate ? filterDate.slice(0,10).split('-').reverse().join('-') : 'sin fecha registrada'}</small><em>Abrir en HubSpot <ExternalLink /></em></span>
     <span><strong>{lost ? "−" : ""}{deal.amount}</strong><small>{days ? `${lost ? "perdido tras" : ""} ${Math.round(days)} d` : "sin tiempo registrado"}</small></span>
   </a>;
 }

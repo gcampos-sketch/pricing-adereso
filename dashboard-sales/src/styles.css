@@ -6024,3 +6024,30 @@ button.won-exec-stat:hover { color:var(--brand); }
 .service-customer-deals summary {cursor:pointer;}
 .service-directory-popup .service-directory-results {max-height:min(300px,36vh);}
 .service-planning-note {font-size:10px;line-height:1.5;color:var(--muted);padding:8px 10px;background:var(--glass-track);border-radius:7px;}
+
+.pipeline-history-access {display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 0 12px;}
+.pipeline-history-access > span {font-size:11px;color:var(--muted);}
+.pipeline-history-link {border:0;background:transparent;padding:4px 0;color:var(--brand);font:inherit;font-size:12px;text-decoration:underline;text-underline-offset:4px;cursor:pointer;}
+.pipeline-history-popup {width:min(760px,calc(100vw - 28px));max-height:min(85dvh,var(--radix-popover-content-available-height,85dvh));}
+.pipeline-history-tabs {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
+.pipeline-history-tabs button {display:flex;flex-direction:column;gap:6px;align-items:flex-start;border:1px solid var(--glass-stroke);border-radius:8px;background:var(--glass-track);color:var(--foreground);padding:10px;font:inherit;font-size:11px;cursor:pointer;}
+.pipeline-history-tabs button strong {font-size:20px;}
+.pipeline-history-tabs button[aria-pressed=true] {border-color:var(--brand);background:rgb(255 213 64 / .06);}
+.pipeline-history-scroll {max-height:175px;overflow:auto;margin:12px 0;scrollbar-width:thin;}
+.pipeline-history-months {width:100%;font-size:11px;border-collapse:collapse;}
+.pipeline-history-months caption {text-align:left;color:var(--muted);font-size:10px;padding-bottom:8px;}
+.pipeline-history-months th,.pipeline-history-months td {padding:6px;border-bottom:1px solid var(--glass-stroke);text-align:right;font-weight:400;white-space:nowrap;}
+.pipeline-history-months th:first-child {text-align:left;}
+.pipeline-history-months thead th {position:sticky;top:0;background:var(--surface);color:var(--muted);}
+.pipeline-history-months button {border:0;border-radius:4px;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:3px 6px;}
+.pipeline-history-months button:hover,.pipeline-history-months tr[data-selected=true] {background:var(--glass-track-hover);color:var(--brand);}
+.pipeline-history-list-heading {display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:12px;}
+.pipeline-history-list-heading button {border:0;background:transparent;color:var(--brand);font:inherit;font-size:11px;cursor:pointer;}
+.pipeline-history-popup > .service-directory-results {max-height:230px;}
+.pipeline-history-popup > footer {font-size:10px;color:var(--muted);line-height:1.5;margin-top:12px;}
+@media(max-width:520px){.pipeline-history-tabs {grid-template-columns:repeat(2,minmax(0,1fr));}}
+.stage-date-toggle {display:flex;align-items:center;padding:3px;gap:3px;border:1px solid var(--glass-stroke);border-radius:12px;background:var(--glass-track);}
+.stage-date-toggle button {padding:8px 12px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;}
+.stage-date-toggle button[aria-pressed=true] {background:var(--elevated);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--glass-stroke);}
+.stage-date-toggle button:focus-visible {outline:2px solid var(--brand);outline-offset:2px;}
+.stage-date-explainer {font-size:11px;color:var(--muted);line-height:1.5;margin:8px 0 16px;max-width:1000px;}

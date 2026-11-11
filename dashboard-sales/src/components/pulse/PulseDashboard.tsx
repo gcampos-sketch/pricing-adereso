@@ -14,6 +14,7 @@ import { wonStageBreakdown } from "@/lib/won-stage-breakdown";
 import { closeMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { pipelineCoverage } from "@/lib/pipeline-coverage";
 import { useLiveNow } from './AdoboIntelligence';
+import { PipelineHistory } from './PipelineHistory';
 type MetricChip = { label: string; value: string; tone?: Tone; onClick?: () => void; detail?: WonStageDetail };
 import { verifiedContactAggregate } from '@/lib/contact-aggregate';
 import { MiniBars, MiniLine } from "./MiniCharts";
@@ -356,7 +357,7 @@ export function FoldList({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(FOLD_ORDER_KEY) || "[]");
-      if (Array.isArray(saved)) setOrder(saved);
+      if (Array.isArray(saved)) setOrder(saved.map(id => id === 'Generación y activación' ? 'Generación y gestión del pipeline' : id));
     } catch {
       /* ignore */
     }
@@ -1508,7 +1509,8 @@ export function PulseDashboard({
       </section>
       </Fold>
 
-      <Fold title="Generación y activación" subtitle={`Creación, valorización, activación y pérdidas tras activarse · ${rangeLabel}`}>
+      <Fold title="Generación y gestión del pipeline" subtitle={`Creación, valorización, activación y pérdidas · ${rangeLabel}`}>
+      <div className="pipeline-history-access"><span>Tarjetas del período seleccionado · fechas según cada indicador</span><PipelineHistory journeys={(report.stageJourneys ?? []).filter(row => (ownerFilter === 'team' || row.deal.ownerId === ownerFilter) && matchesType(row.deal))} scopeLabel={`${isTeam ? 'Equipo' : ownerRow?.name ?? 'Comercial seleccionado'} · ${role === 'all' ? 'Todos los roles' : role} · ${dealType === 'all' ? 'Todos los tipos' : dealType}`}  /></div>
       <section className="grid-4" style={{ marginTop: 16 }}>
         <Metric
           label={`Deals creados · ${rangeLabel}`}
