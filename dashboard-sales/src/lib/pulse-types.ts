@@ -339,6 +339,8 @@ export type StageJourney = {
   createdAt: string;
   /** Fecha real de primera entrada por etapa visible. */
   entered: Record<string, string>;
+  /** Recorded entry dates for exact loss/outcome stage IDs; older snapshots may omit them. */
+  outcomeEntered?: Record<string, string>;
   /** Tiempo acumulado real informado por HubSpot, expresado en días. */
   days: Record<string, number>;
 };

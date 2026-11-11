@@ -790,7 +790,7 @@ function buildDelivery(
 export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter, phase: (value: ReportPhase) => void = () => {}): Promise<PulseReport> {
   phase('records');
   const [fetchedDeals, quotas, ownersRes, contractLabels, projectLabels] = await Promise.all([
-    getCommercialDeals([...new Set([...[...MANAGED_STAGES, ...JOURNEY_STAGES].map((stage) => stage.id), "171385869"])]),
+    getCommercialDeals([...new Set([...[...MANAGED_STAGES, ...JOURNEY_STAGES].map((stage) => stage.id), ...LOST_STAGES])]),
     fetchQuotasCached(),
     fetchOwners(),
     getPropertyOptionLabels("status_contrato"),
@@ -882,6 +882,10 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
       deal: dto(deal),
       createdAt: deal.properties["createdate"] ?? "",
       entered,
+      outcomeEntered: Object.fromEntries([...LOST_STAGES].flatMap(id => {
+        const date = deal.properties[`hs_v2_date_entered_${id}`];
+        return date ? [[id, date]] : [];
+      })),
       days,
     };
   });
