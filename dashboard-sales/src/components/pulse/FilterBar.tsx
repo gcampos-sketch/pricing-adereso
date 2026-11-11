@@ -10,6 +10,7 @@ import type { ActiveMrr } from "@/contexts/RefreshContext";
 import { ROLE_OPTIONS, type RoleFilter } from "@/lib/owner-roles";
 import { ActiveMrrDetail } from "./ActiveMrrDetail";
 import { lastQuarterSummary, shortDate } from "./activeMrrSeries";
+import { ServiceOverview } from './ServiceOverview';
 
 export const STAGE_OPTIONS = ["E1", "E2", "E3", "E3.1", "E4", "E5", "E5.1"];
 
@@ -448,7 +449,7 @@ export function CompactFilterBar({
  * Píldora compacta de MRR en servicio para la cabecera de sección.
  * Una sola línea: etiqueta · monto · variación QoQ · deals y monto en desarrollo.
  */
-export function ActiveMrrCard({ data, year, quarter }: { data: ActiveMrr; year: string; quarter: string }) {
+export function ActiveMrrCard({ data, year, quarter, snapshotKey }: { data: ActiveMrr; year: string; quarter: string; snapshotKey?: string }) {
   const format = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -459,10 +460,9 @@ export function ActiveMrrCard({ data, year, quarter }: { data: ActiveMrr; year: 
   const comparison = data.entries.length ? lastQuarterSummary(data.entries) : null;
   const changePct = comparison ? comparison.changePct : data.changePct;
   const tone = changePct === null ? "neutral" : changePct >= 0 ? "ok" : "bad";
-  const inDev = data.inDevelopment && data.inDevelopment.count > 0 ? data.inDevelopment : null;
   return (
     <>
-      <button
+      <ServiceOverview refreshKey={snapshotKey ?? `${data.value}:${data.count}:${data.inDevelopment?.value}`}><button
         type="button"
         className="filter-active-mrr mrr-pill"
         data-tone={tone}
@@ -477,17 +477,16 @@ export function ActiveMrrCard({ data, year, quarter }: { data: ActiveMrr; year: 
         <span className="filter-active-mrr-label">MRR en servicio</span>
         <strong>{format.format(data.value)}</strong>
         {changePct !== null ? (
-          <span className="filter-active-mrr-change" data-tone={tone}>
+          <span className="filter-active-mrr-change" data-tone={tone} title="Variación del MRR incorporado a servicio frente al trimestre anterior; no es una caída de la cartera activa.">
             {changePct >= 0 ? "+" : ""}
             {changePct.toFixed(1)}%
-            <em>{comparison ? comparison.label : "vs previo"}</em>
+            <em>{comparison ? 'altas vs Q ant.' : 'altas vs previo'}</em>
           </span>
         ) : null}
         <span className="filter-active-mrr-meta">
-          {data.count} deals
-          {inDev ? ` · +${format.format(inDev.value)} en desarrollo` : ""}
+          {data.count} negocios en servicio · foto global de hoy
         </span>
-      </button>
+      </button></ServiceOverview>
       {open ? <ActiveMrrDetail data={data} year={year} quarter={quarter} onClose={() => setOpen(false)} /> : null}
     </>
   );

@@ -13,11 +13,8 @@ import { WonStageChip, type WonStageDetail } from "./WonStageChip";
 import { wonStageBreakdown } from "@/lib/won-stage-breakdown";
 import { closeMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { pipelineCoverage } from "@/lib/pipeline-coverage";
+import { useLiveNow } from './AdoboIntelligence';
 type MetricChip = { label: string; value: string; tone?: Tone; onClick?: () => void; detail?: WonStageDetail };
-import { AdoboIntelligence, useLiveNow } from './AdoboIntelligence';
-import { adoboPeriodDeals } from '@/lib/adobo-period';
-import { intelligenceDeals } from '@/lib/adobo-intelligence';
-import type { RoleFilter as AdoboRole } from '@/lib/owner-roles';
 import { verifiedContactAggregate } from '@/lib/contact-aggregate';
 import { MiniBars, MiniLine } from "./MiniCharts";
 import { TimeToService } from "./TimeToService";
@@ -33,10 +30,7 @@ import { roleOfOwner } from "@/lib/owner-roles";
 import { creationComparisonWindow, hasOrderedActivation } from "@/lib/story-metrics";
 import { buildExecutiveStrip } from "@/lib/executive-strip";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from '@tanstack/react-query';
-import { getAdoboHistory } from '@/lib/pulse.functions';
 import { quotaStats, classifyQuotaDeal, pendingFromPreviousQuarters } from '@/lib/quota-eligibility';
-import type { PropertyHistoryV1 } from '@/lib/adobo-intelligence';
 
 const money = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -1252,7 +1246,7 @@ export function PulseDashboard({
       {/* ===================== RESUMEN EJECUTIVO ===================== */}
       <SectionTitle
         compact
-        action={headerMrr ? <ActiveMrrCard data={headerMrr} year={year} quarter={quarter} /> : undefined}
+        action={headerMrr ? <ActiveMrrCard data={headerMrr} year={year} quarter={quarter} snapshotKey={report.generatedAt} /> : undefined}
       >
         {`Resumen ejecutivo · ${ownerName} · ${executiveRange} / histórico`}
       </SectionTitle>
@@ -1450,37 +1444,6 @@ export function PulseDashboard({
       </section>
 
       <FoldList>
-      <Fold title="Estado actual" subtitle="Foto de hoy · no cambia al elegir otro trimestre · todos los tipos de deal">
-      <section className="grid-3">
-        <Metric
-          label={`Pipeline abierto hoy · ${openCount} deals`}
-          value={money(openAmount)}
-          note="E1–E5.1 · todos los tipos de deal"
-          onClick={() => setModalKey(openModalKey)}
-          tooltip="Foto actual del monto total de deals abiertos entre E1 y E5.1. Aplica Rol y Comercial; año, trimestre y Tipo deal no alteran este indicador."
-          {...(pipelineTrend && pipelineTrend.length ? { trend: pipelineTrend, trendLabels: monthly.months } : {})}
-        />
-        <Metric
-          label="Pipeline ponderado hoy"
-          value={money(weightedOpen)}
-          note="monto × probabilidad de etapa"
-          onClick={() => setModalKey(qOpenModalKey)}
-          tooltip="Foto actual del pipeline con cierre en el trimestre en curso, ponderado por la probabilidad de etapa."
-          {...(weightedTrend?.length ? { trend: weightedTrend, trendLabels: monthly.months } : {})}
-        />
-        <Metric
-          label="Cobertura actual del gap"
-          value={coverageText(scopedRisk.coverage)}
-          note={`${scopedRisk.riskReason} · mínimo sano ${COVERAGE_OK}x`}
-          tone={scopedRisk.risk}
-          onClick={() => setModalKey(qOpenModalKey)}
-          tooltip="Foto actual: pipeline ponderado del trimestre en curso dividido por lo que falta para la cuota."
-        />
-      </section>
-      </Fold>
-
-
-      <AdoboFold deals={(report.stageJourneys ?? []).map(j => j.deal)} periods={selectedPeriods} rangeLabel={rangeLabel} scope={{ owner: ownerFilter, role, stages: stageFilter, matchesType }} readAt={report.generatedAt}/>
       <Fold title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>
       {/* Fila 3 — Win rate / Ticket prom / Perdido */}
       <section className="grid-3" style={{ marginTop: 16 }}>
@@ -2305,32 +2268,4 @@ export function PulseDashboard({
       />
     </main>
   );
-}
-
-/** Adobo section with a live clock: expiry and review dates advance while the page stays open. */
-function AdoboFold({ deals, periods, rangeLabel, scope, readAt }: { deals: DealDTO[]; periods: string[]; rangeLabel: string; scope: { owner: string; role: AdoboRole; stages: string[]; matchesType: (d: DealDTO) => boolean }; readAt: string }) {
-  const now = useLiveNow(Date.parse(readAt));
-  const [open, setOpen] = useState(false);
-  const list = intelligenceDeals(adoboPeriodDeals(deals, periods), scope, now);
-  const ids = list.map(d => d.id).sort();
-  const history = useQuery({
-    queryKey: ['adobo-panel-history', readAt, ids.join(',')],
-    enabled: open && ids.length > 0,
-    staleTime: Infinity,
-    retry: 1,
-    queryFn: async () => {
-      const result: Record<string, PropertyHistoryV1 | null> = {};
-      // Sequential bounded requests avoid holding every raw history response at once.
-      for (let start = 0; start < ids.length; start += 50) {
-        Object.assign(result, await getAdoboHistory({ data: { ids: ids.slice(start, start + 50) } }));
-      }
-      return result;
-    },
-  });
-  const enriched = list.map(deal => ({ ...deal, adobo: { ...deal.adobo, propertyHistory: history.data?.[deal.id] ?? null } }));
-  return <Fold title="Adobo Intelligence · Score y seguimiento" subtitle={`${rangeLabel} · ${list.length} negocios · fecha de cierre`} onOpenChange={setOpen}>
-    {history.isFetching ? <p role="status" className="eyebrow">Leyendo historial de los negocios…</p> : null}
-    {history.error ? <div role="alert"><p>No pudimos leer el historial; las variaciones quedan sin verificar.</p><Button variant="ghost" onClick={() => void history.refetch()}>Reintentar historial</Button></div> : null}
-    <AdoboIntelligence key={`${periods.join(',')}|${scope.owner}|${scope.role}|${scope.stages.join(',')}`} deals={enriched} readAt={readAt} now={now} rangeLabel={rangeLabel}/>
-  </Fold>;
 }
