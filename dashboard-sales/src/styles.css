@@ -5980,3 +5980,47 @@ button.won-exec-stat:hover { color:var(--brand); }
 @media(prefers-reduced-motion:reduce){.won-mix-popover[data-state] {animation:none;}}
 .deal-modal-motion > .won-widget-summary {max-height:min(34vh,280px);}
 @media(max-width:700px){.won-widgets-grid {grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:min(270px,80vw);overflow-x:auto;padding-bottom:4px;scrollbar-width:thin;}.won-widget-summary {padding-inline:16px;}.won-widget-summary .won-mix-heading {flex-wrap:nowrap;}}
+
+/* Global customer / service snapshot: each metric owns its own anchored detail. */
+.service-overview {display:flex;align-items:stretch;flex-wrap:wrap;border:1px solid var(--glass-stroke);border-radius:16px;background:var(--glass-track);padding:10px 0;gap:0;max-width:100%;}
+.service-overview > .service-overview-metric,.service-overview > .filter-active-mrr {flex:1 1 155px;min-width:0;border:0;border-radius:0;box-shadow:none;background:transparent;padding:5px 20px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;text-align:left;position:relative;}
+.service-overview > :not(:first-child)::before {content:'';position:absolute;left:0;top:12%;bottom:12%;width:1px;background:linear-gradient(transparent,var(--glass-stroke),transparent);}
+.service-overview-metric {color:var(--foreground);font:inherit;cursor:pointer;}
+.service-overview-metric:hover,.service-overview > .filter-active-mrr:hover {background:var(--glass-track-hover);}
+.service-overview-metric:focus-visible {outline:2px solid var(--brand);outline-offset:-2px;border-radius:8px;}
+.service-overview-metric:disabled {cursor:wait;opacity:.6;}
+.service-overview-metric > span,.service-overview .filter-active-mrr-label {font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.service-overview-metric > strong,.service-overview .filter-active-mrr > strong {font-size:22px;line-height:1.2;font-weight:600;white-space:nowrap;}
+.service-overview-metric strong > small {font-size:10px;font-weight:400;color:var(--muted);}
+.service-overview-metric > small,.service-overview .filter-active-mrr-meta {font-size:10px;color:var(--muted);border:0;padding:0;white-space:normal;}
+.service-overview .filter-active-mrr-change {font-size:9px;padding:1px 6px;position:static;}
+.service-overview .filter-active-mrr-change em {font-size:8px;}
+.service-overview-error {width:100%;border:0;background:none;color:var(--muted);font-size:11px;padding:8px;cursor:pointer;}
+.service-directory-popup {width:min(520px,calc(100vw - 28px));padding:16px;}
+.service-directory-popup > header p {max-width:440px;line-height:1.5;}
+.service-directory-filters {display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 8px;}
+.service-directory-filters label {display:flex;align-items:center;gap:7px;flex:1 1 200px;min-width:0;border:1px solid var(--glass-stroke);border-radius:8px;padding:7px 9px;}
+.service-directory-filters input {width:100%;min-width:0;background:transparent;border:0;outline:none;color:var(--foreground);font:inherit;font-size:12px;}
+.service-directory-filters select {max-width:100%;background:var(--surface);color:var(--foreground);border:1px solid var(--glass-stroke);border-radius:8px;font:inherit;font-size:11px;padding:7px;}
+.service-owner-shortcuts {display:flex;gap:5px;flex-wrap:wrap;max-height:85px;overflow:auto;padding:2px;}
+.service-owner-shortcuts button {font:inherit;font-size:10px;color:var(--muted);background:transparent;border:1px solid var(--glass-stroke);border-radius:20px;padding:4px 8px;cursor:pointer;}
+.service-owner-shortcuts button[aria-pressed=true] {color:var(--brand);border-color:var(--brand);background:rgb(255 213 64 / .06);}
+.service-directory-results {max-height:min(420px,48vh);overflow-y:auto;margin-top:10px;scrollbar-width:thin;}
+.service-result-count {font-size:10px;color:var(--muted);margin:0 0 10px;}
+.service-directory-results h5 {display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin:14px 0 0;padding:8px 0;border-bottom:1px dashed var(--glass-stroke);font-size:11px;text-transform:capitalize;color:var(--foreground);font-weight:500;}
+.service-directory-results h5 small {font-size:10px;color:var(--muted);font-weight:400;white-space:nowrap;text-transform:none;}
+.service-directory-row {display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--glass-stroke);font-size:12px;}
+.service-directory-row > div:first-child {min-width:0;}
+.service-directory-row a {display:flex;align-items:baseline;gap:6px;color:var(--foreground);text-decoration:none;overflow-wrap:anywhere;}
+.service-directory-row a:hover {color:var(--brand);}
+.service-directory-row small {display:block;font-size:10px;color:var(--muted);margin-top:4px;}
+.service-directory-row .service-linked-deal {font-size:10px;color:var(--muted);margin-top:5px;}
+.service-directory-value {text-align:right;flex-shrink:0;}
+.service-directory-row .service-date-overdue {color:var(--warning);}
+.service-directory-popup > footer {margin-top:12px;font-size:10px;color:var(--muted);line-height:1.5;}
+.service-empty {font-size:12px;color:var(--muted);padding:20px 0;}
+@media(max-width:650px){.service-overview > .service-overview-metric,.service-overview > .filter-active-mrr {flex-basis:45%;padding:8px 14px;}.service-overview .filter-active-mrr-change {position:static;}.service-overview > :nth-child(3)::before {display:none;}}
+.service-customer-deals {font-size:10px;color:var(--muted);margin-top:6px;}
+.service-customer-deals summary {cursor:pointer;}
+.service-directory-popup .service-directory-results {max-height:min(300px,36vh);}
+.service-planning-note {font-size:10px;line-height:1.5;color:var(--muted);padding:8px 10px;background:var(--glass-track);border-radius:7px;}

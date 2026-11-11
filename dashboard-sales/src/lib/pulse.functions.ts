@@ -7,6 +7,14 @@ import type { CoachingReport } from "./coaching-types";
 import { packReport } from './report-wire';
 import type { PropertyHistoryV1 } from './adobo-intelligence';
 
+/** Global operational customer/service directory, protected by the same corporate MFA. */
+export const getServiceOverview = createServerFn({ method: 'GET' })
+  .middleware([requireMfa])
+  .handler(async () => {
+    const { readServiceOverview } = await import('./service-overview.server');
+    return readServiceOverview();
+  });
+
 
 /** `fresh: false` sirve la copia guardada (instantánea); `true` reconstruye. */
 const freshInput = (input?: { fresh?: boolean }) => ({ fresh: Boolean(input?.fresh) });

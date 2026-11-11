@@ -357,7 +357,7 @@ export function getPropertyOptionLabels(propertyName: string): Promise<Map<strin
 type CompanyProperty = { name: string; label: string };
 
 /** Nombre interno de la propiedad de empresa cuya etiqueta es "tipo de cliente". */
-function getCompanyTypeProperty(): Promise<string | null> {
+export function getCompanyTypeProperty(): Promise<string | null> {
   return getCached("company-type-prop", TTL_SLOW, async () => {
     const data = await gateway<{ results: CompanyProperty[] }>("/crm/v3/properties/companies");
     const norm = (value: string) =>
