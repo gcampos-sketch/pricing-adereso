@@ -3,7 +3,7 @@ on:
   push:
     paths: ['dashboard-sales/**', 'render.yaml', 'index.html', '*.css', '*.js', '*.webp', 'assets/**', 'academy/**', 'argumentaciones/**', 'operativa/**', 'playbook/**', 'dashboard/**', '.dockerignore', '.github/workflows/dashboard-sales.yml', '_config.yml', 'pages-redirect/**', 'scripts/verify-pages-redirects.mjs', 'scripts/check-meta-wallet.mjs']
   pull_request:
-    paths: ['dashboard-sales/**', 'render.yaml', 'index.html', '.github/workflows/dashboard-sales.yml', '_config.yml', 'pages-redirect/**', 'scripts/verify-pages-redirects.mjs', 'scripts/check-meta-wallet.mjs']
+    paths: ['dashboard-sales/**', 'render.yaml', 'index.html', '*.css', '.github/workflows/dashboard-sales.yml', '_config.yml', 'pages-redirect/**', 'scripts/verify-pages-redirects.mjs', 'scripts/check-meta-wallet.mjs']
   workflow_dispatch:
 permissions:
   contents: read
