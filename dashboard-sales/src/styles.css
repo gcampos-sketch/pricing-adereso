@@ -6166,3 +6166,19 @@ button.won-exec-stat:hover { color:var(--brand); }
 
 .service-pending-plus { color:var(--brand); margin-right:4px; font-weight:600; }
 .service-overview-metric > .service-projected-mrr b { color:var(--foreground); font-weight:550; }
+
+.section-copy { position:relative; display:inline-flex; align-items:center; }
+.copy-btn.section-copy-btn {
+  width: 34px; height: 34px; padding: 0;
+  border-color: transparent; background: transparent; border-radius: 8px;
+}
+.section-copy-btn .copy-btn-icon { width: 17px; height: 17px; }
+.section-copy-btn:focus-visible { outline: 2px solid var(--accent, #ffd540); outline-offset: 3px; }
+.section-copy-feedback:not(:empty) {
+  position: absolute; right: 0; top: calc(100% + 7px); z-index: 30;
+  width: max-content; max-width: min(290px, 80vw);
+  padding: 8px 11px; border-radius: 9px;
+  background: #25282e; border: 1px solid var(--stroke);
+  color: var(--text, #fff); font-size: 12px; line-height: 1.4;
+  box-shadow: 0 6px 20px #0004; pointer-events: none;
+}

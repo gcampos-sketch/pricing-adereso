@@ -18,10 +18,10 @@ function bg() {
  * Captura el bloque que arranca en `headEl` (título de sección) y termina antes
  * del siguiente título, y lo deja como PNG en el portapapeles.
  */
-export async function copyBlockImage(headEl: HTMLElement) {
+async function renderBlockPng(headEl: HTMLElement): Promise<Blob> {
   const html2canvas = (await import("html2canvas-pro")).default;
   const parent = headEl.parentElement;
-  if (!parent) return false;
+  if (!parent) throw Error("Sección no disponible");
 
   const nodes: HTMLElement[] = [headEl];
   let cursor = headEl.nextElementSibling as HTMLElement | null;
@@ -42,41 +42,36 @@ export async function copyBlockImage(headEl: HTMLElement) {
     left = Math.min(left, rect.left);
     right = Math.max(right, rect.right);
   }
-  if (!Number.isFinite(top) || bottom <= top) return false;
+  if (!Number.isFinite(top) || bottom <= top) throw Error("Sección vacía");
 
   const background = bg();
   const parentRect = parent.getBoundingClientRect();
-  const canvas = await html2canvas(parent, { backgroundColor: background, scale: 2, useCORS: true });
-  const k = canvas.width / parentRect.width;
-  const pad = 20 * k;
-
-  const sx = Math.max(0, (left - parentRect.left) * k - pad);
-  const sy = Math.max(0, (top - parentRect.top) * k - pad);
-  const sw = Math.min(canvas.width - sx, (right - left) * k + pad * 2);
-  const sh = Math.min(canvas.height - sy, (bottom - top) * k + pad * 2);
-
-  const out = document.createElement("canvas");
-  out.width = Math.max(1, Math.round(sw));
-  out.height = Math.max(1, Math.round(sh));
-  const ctx = out.getContext("2d");
-  if (!ctx) return false;
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, out.width, out.height);
-  ctx.drawImage(canvas, sx, sy, sw, sh, 0, 0, out.width, out.height);
+  const x = Math.max(0, left - parentRect.left - 20);
+  const y = Math.max(0, top - parentRect.top - 20);
+  // Render only this section, rather than allocating a canvas for the whole dashboard.
+  const out = await html2canvas(parent, {
+    backgroundColor: background, scale: 2, useCORS: true,
+    x, y,
+    width: Math.ceil(Math.min(parentRect.width - x, right - left + 40)),
+    height: Math.ceil(Math.min(parentRect.height - y, bottom - top + 40)),
+    ignoreElements: element => element.hasAttribute("data-capture-ignore"),
+  });
 
   const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, "image/png"));
-  if (!blob) return false;
+  if (!blob) throw Error("No se pudo generar el PNG");
+  return blob;
+}
+
+/** Start the clipboard write within the click gesture, including browsers that require it. */
+export async function copyBlockImage(headEl: HTMLElement): Promise<boolean> {
+  if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") return false;
   try {
-    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+    const png = renderBlockPng(headEl);
+    // Observe rendering failures even if permission is rejected before the browser awaits the blob.
+    void png.catch(() => {});
+    await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
     return true;
   } catch {
-    // Fallback: descarga el PNG si el navegador bloquea la escritura de imágenes.
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "captura.png";
-    link.click();
-    URL.revokeObjectURL(url);
-    return true;
+    return false;
   }
 }
