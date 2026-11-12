@@ -6072,3 +6072,97 @@ button.won-exec-stat:hover { color:var(--brand); }
 .service-period-toggle button { min-width:48px; padding:6px 12px; border:0; border-radius:7px; background:transparent; color:var(--muted); font:inherit; cursor:pointer; }
 .service-period-toggle button[aria-pressed="true"] { background:rgb(255 255 255 / .09); color:var(--foreground); }
 .service-period-toggle button:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+/* Global service metrics precede the owner-scoped executive summary. */
+.adereso-global-metrics {margin-bottom:24px;}
+.adereso-global-metrics .service-overview>.service-overview-metric,
+.adereso-global-metrics .service-overview>.filter-active-mrr {justify-content:flex-start;padding-top:12px;padding-bottom:12px;}
+.adereso-global-metrics .service-overview-metric>span,
+.adereso-global-metrics .service-overview .filter-active-mrr-label {line-height:1.4;min-height:14px;}
+
+/* Collapsed service-start clusters keep the planning popup scannable. */
+.service-start-cluster { margin-top:8px; border:1px solid var(--glass-stroke); border-radius:10px; overflow:hidden; }
+.service-start-cluster > summary { display:flex; align-items:center; gap:9px; padding:12px; cursor:pointer; list-style:none; color:var(--foreground); font-size:12px; font-weight:500; }
+.service-start-cluster > summary::-webkit-details-marker { display:none; }
+.service-start-cluster > summary::before { content:""; width:6px; height:6px; flex-shrink:0; border-right:1.5px solid var(--muted); border-bottom:1.5px solid var(--muted); transform:rotate(-45deg); transition:transform 150ms; }
+.service-start-cluster[open] > summary::before { transform:rotate(45deg); }
+.service-start-cluster > summary > span { flex:1; min-width:0; }
+.service-start-cluster > summary > small { color:var(--muted); font-size:10px; font-weight:400; text-align:right; }
+.service-start-cluster > summary:hover { background:rgb(255 255 255 / .035); }
+.service-start-cluster > summary:focus-visible { outline:2px solid var(--brand); outline-offset:-3px; border-radius:9px; }
+.service-start-cluster .service-directory-row { margin:0 12px; }
+.service-start-cluster[data-undated] { margin-top:16px; border-style:dashed; }
+@media(prefers-reduced-motion:reduce) { .service-start-cluster > summary::before { transition:none; } }
+
+/* Global metrics form a compact, left-aligned strip with a smaller customer cell. */
+.adereso-global-metrics { width:min(100%,760px); margin-right:auto; }
+.adereso-global-metrics .service-overview { display:grid; grid-template-columns:minmax(120px,.65fr) minmax(0,1.3fr) minmax(0,1.05fr); width:100%; }
+.adereso-global-metrics .service-overview > .service-overview-metric,
+.adereso-global-metrics .service-overview > .filter-active-mrr { padding-inline:18px; }
+.service-customer-pending { display:block; margin-top:3px; }
+.adereso-global-metrics .service-overview-error { grid-column:1/-1; }
+@media(max-width:650px) {
+  .adereso-global-metrics .service-overview { grid-template-columns:minmax(120px,.65fr) minmax(0,1.35fr); }
+  .adereso-global-metrics .service-overview > :nth-child(3) { grid-column:1/-1; border-top:1px solid var(--glass-stroke); margin-top:8px; padding-top:14px; }
+}
+@media(max-width:380px) {
+  .adereso-global-metrics .service-overview { grid-template-columns:minmax(0,1fr); }
+  .adereso-global-metrics .service-overview > :not(:first-child) { border-top:1px solid var(--glass-stroke); margin-top:8px; padding-top:14px; }
+  .adereso-global-metrics .service-overview > :not(:first-child)::before { display:none; }
+}
+
+/* Planning detail: compact header and summary widgets lead directly into the clusters. */
+.service-planning-popup { padding:14px; }
+.service-planning-popup > header { align-items:center; gap:8px; margin-bottom:10px; }
+.service-planning-popup > header > div:first-child { flex:1; min-width:0; }
+.service-planning-popup > header h4 { margin:0; }
+.service-planning-popup > header .service-period-toggle { flex-shrink:0; }
+.service-planning-popup > header .service-period-toggle button { min-width:36px; padding:4px 8px; font-size:11px; }
+.service-planning-widgets { display:grid; grid-template-columns:1.45fr .85fr 1fr 1fr; gap:6px; }
+.service-planning-widgets > div { min-width:0; padding:9px 10px; border:1px solid var(--glass-stroke); border-radius:9px; background:rgb(255 255 255 / .025); }
+.service-planning-widgets span { display:block; font-size:9px; line-height:1.4; color:var(--muted); }
+.service-planning-widgets strong { display:block; margin-top:4px; font-size:20px; line-height:1.2; font-weight:550; color:var(--foreground); white-space:nowrap; }
+.service-planning-widgets [data-warning] strong { color:var(--warning); }
+.service-planning-popup .service-directory-filters { flex-wrap:nowrap; margin:8px 0 4px; gap:6px; }
+.service-planning-popup .service-directory-filters label { flex:1 1 0; padding:6px 8px; }
+.service-planning-popup .service-directory-filters input { font-size:11px; }
+.service-planning-popup .service-directory-filters select { width:46%; min-width:0; padding:6px; font-size:10px; }
+.service-planning-popup .service-directory-results { margin-top:4px; max-height:min(380px,50vh); }
+.service-planning-popup .service-start-cluster { margin-top:6px; }
+.service-planning-popup .service-start-cluster > summary { padding:10px; }
+.service-planning-popup .service-start-cluster[data-undated] { margin-top:12px; }
+.service-planning-info { width:min(290px,calc(100vw - 30px)); padding:12px; font-size:11px; color:var(--muted); line-height:1.5; }
+.service-planning-info p + p { margin-top:8px; }
+@media(max-width:420px) {
+  .service-planning-popup > header { gap:5px; }
+  .service-planning-popup > header h4 { font-size:13px; }
+  .service-planning-popup > header .service-period-toggle button { min-width:28px; padding:4px 5px; }
+  .service-planning-widgets > div { padding:8px 6px; }
+  .service-planning-widgets strong { font-size:17px; }
+}
+
+/* Customer directory keeps its evidence available without a large text preamble. */
+.customer-status-widgets { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.customer-status-widgets button { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid var(--glass-stroke); border-radius:9px; background:rgb(255 255 255 / .025); text-align:left; font:inherit; cursor:pointer; }
+.customer-status-widgets button span { color:var(--muted); font-size:11px; }
+.customer-status-widgets button strong { color:var(--foreground); font-size:24px; line-height:1; font-weight:550; }
+.customer-status-widgets button:last-child strong { color:var(--warning); }
+.customer-status-widgets button[aria-pressed="true"] { border-color:color-mix(in srgb,var(--brand) 45%,transparent); background:color-mix(in srgb,var(--brand) 4%,transparent); }
+.customer-status-widgets button:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+.customer-directory-popup .service-directory-filters { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr); }
+.customer-directory-popup .service-directory-filters select { width:100%; }
+.customer-directory-popup .service-directory-results { max-height:min(400px,52vh); }
+.customer-directory-popup .service-directory-results > section:first-of-type h5 { margin-top:0; }
+.customer-directory-info { width:min(380px,calc(100vw - 30px)); max-height:min(460px,65vh); overflow-y:auto; }
+.customer-directory-info .service-planning-note { margin:10px 0; padding:8px; }
+.customer-directory-info .service-planning-note summary { cursor:pointer; }
+.customer-directory-info .service-planning-note p { margin-top:8px; }
+@media(max-width:420px) {
+  .customer-directory-popup .service-directory-filters { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .customer-directory-popup .service-directory-filters > label { grid-column:1/-1; }
+  .customer-status-widgets button { padding:9px; }
+  .customer-status-widgets button span { font-size:10px; }
+}
+
+.service-pending-plus { color:var(--brand); margin-right:4px; font-weight:600; }
+.service-overview-metric > .service-projected-mrr b { color:var(--foreground); font-weight:550; }

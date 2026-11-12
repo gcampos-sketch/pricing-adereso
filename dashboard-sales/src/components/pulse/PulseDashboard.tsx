@@ -1214,11 +1214,15 @@ export function PulseDashboard({
         </>
       ) : (
         <>
+      {headerMrr ? (
+        <section className="adereso-global-metrics" aria-label="Métricas generales Adereso">
+          <SectionTitle compact>Métricas generales Adereso</SectionTitle>
+          <ActiveMrrCard data={headerMrr} year={year} quarter={quarter} snapshotKey={report.generatedAt} />
+        </section>
+      ) : null}
+
       {/* ===================== RESUMEN EJECUTIVO ===================== */}
-      <SectionTitle
-        compact
-        action={headerMrr ? <ActiveMrrCard data={headerMrr} year={year} quarter={quarter} snapshotKey={report.generatedAt} /> : undefined}
-      >
+      <SectionTitle compact>
         {`Resumen ejecutivo · ${ownerName} · ${executiveRange} / histórico`}
       </SectionTitle>
 
