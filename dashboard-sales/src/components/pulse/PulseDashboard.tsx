@@ -1575,26 +1575,24 @@ export function PulseDashboard({
           tooltip="Número grande: deals activados que entraron a Deal perdido dentro del período seleccionado, sin importar cuándo se crearon, desde cualquier etapa. El % es sobre los activados del período. Chip «Desde E1»: de esos, los que se perdieron estando en E1, sin avanzar más."
         />
       </section>
-      </Fold>
-
-      <Fold title={`Avance y velocidad · ${rangeLabel}`} subtitle="Tiempo por etapa y Deal Velocity · medianas de quienes ya salieron de cada etapa">
       <StageVelocity
+        presentation="pipeline"
         journeys={report.stageJourneys ?? []}
         ownerId={ownerFilter}
         dealType={dealType}
         selectedPeriods={selectedPeriods}
-        years={report.periods.years}
-        quarters={quarters}
-        owners={ownerOptions}
-        year={year}
         quarter={quarter}
-        onYear={(item) => {
-          setYear(item);
-          if (quarter !== "all" && !["1", "2", "3", "4"].includes(quarter)) setQuarter("all");
-        }}
-        onQuarter={setQuarter}
-        onOwner={setOwnerFilter}
-        onDealType={setDealType}
+      />
+      </Fold>
+
+      <Fold title={`Avance y velocidad · ${rangeLabel}`} subtitle="Tiempo por etapa y Deal Velocity · medianas de quienes ya salieron de cada etapa">
+      <StageVelocity
+        presentation="metrics"
+        journeys={report.stageJourneys ?? []}
+        ownerId={ownerFilter}
+        dealType={dealType}
+        selectedPeriods={selectedPeriods}
+        quarter={quarter}
       />
       </Fold>
 

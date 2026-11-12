@@ -6051,3 +6051,15 @@ button.won-exec-stat:hover { color:var(--brand); }
 .stage-date-toggle button[aria-pressed=true] {background:var(--elevated);color:var(--foreground);box-shadow:inset 0 0 0 1px var(--glass-stroke);}
 .stage-date-toggle button:focus-visible {outline:2px solid var(--brand);outline-offset:2px;}
 .stage-date-explainer {font-size:11px;color:var(--muted);line-height:1.5;margin:8px 0 16px;max-width:1000px;}
+
+/* The full pipeline lives in the generation section, in normal document flow. */
+.stage-flow-panel {width:100%;height:auto;max-height:none;min-height:0;margin-top:22px;border-radius:var(--radius-xl);box-shadow:none;animation:none;}
+.stage-flow-panel>header {min-height:0;padding:18px 20px;}.stage-flow-panel h2 {font-size:20px;}.stage-flow-panel header p {font-size:12px;}
+.stage-flow-panel .stage-flow-body {position:relative;overflow:hidden;align-items:stretch;flex:none;}
+.stage-flow-panel .stage-flow-main {overflow:visible;padding:18px;}
+.stage-flow-panel .stage-svg-scroll {overflow-x:auto;overscroll-behavior-x:contain;}
+.stage-flow-panel .flow-drawer {height:auto;max-height:720px;display:flex;flex-direction:column;}
+.stage-flow-panel .flow-deal-list {height:auto;flex:1;min-height:0;overflow-y:auto;}
+.stage-flow-panel .stage-flow-body[data-drawer="open"] .flow-kpis {grid-template-columns:repeat(2,minmax(0,1fr));}
+@media(max-width:850px){.stage-flow-panel {height:auto;border-radius:var(--radius-xl);}.stage-flow-panel .flow-drawer {position:absolute;inset:0 0 0 auto;width:min(92vw,390px);max-width:100%;max-height:100%;}.stage-flow-panel>header,.stage-flow-panel .stage-flow-filters {padding:14px;}}
+.stage-flow-panel .stage-flow-svg {min-width:900px;}

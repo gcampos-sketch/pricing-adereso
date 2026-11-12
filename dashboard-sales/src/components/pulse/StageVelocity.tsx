@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Copy, ExternalLink, GitCompareArrows, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { OwnerFilterMenu, SingleFilterMenu } from "./FilterBar";
 import type { DealDTO, StageJourney } from "@/lib/pulse-types";
 import { flowStageDate, journeyInPeriods, stageInPeriods, type FlowDateBasis } from '@/lib/stage-date-scope';
 
@@ -114,56 +113,28 @@ function comparisonLabel(current: number, previous: number) {
 }
 
 export function StageVelocity({
+  presentation = "metrics",
   journeys,
   ownerId,
   dealType,
   selectedPeriods,
-  years = [],
-  quarters = [],
-  owners = [],
-  year = "",
   quarter = "all",
-  onYear,
-  onQuarter,
-  onOwner,
-  onDealType,
 }: {
+  presentation?: "metrics" | "pipeline";
   journeys: StageJourney[];
   ownerId: string;
   dealType: string;
   selectedPeriods: string[];
-  years?: string[];
-  quarters?: string[];
-  owners?: [string, string][];
-  year?: string;
   quarter?: string;
-  onYear?: (value: string) => void;
-  onQuarter?: (value: string) => void;
-  onOwner?: (value: string) => void;
-  onDealType?: (value: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [activeFlow, setActiveFlow] = useState<Flow | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [dateBasis, setDateBasis] = useState<FlowDateBasis>('entry');
   const [compareMode, setCompareMode] = useState<"prev" | "yoy">("prev");
   const isQuarterFiltered = Boolean(quarter && quarter !== "all");
   const effectiveCompareMode = isQuarterFiltered ? compareMode : "prev";
-  const [openFilter, setOpenFilter] = useState<"year" | "quarter" | "owner" | "type" | null>(null);
-  const filtersRef = useRef<HTMLDivElement>(null);
-  const canFilter = Boolean(onYear && onQuarter && onOwner && onDealType);
-
-  useEffect(() => {
-    if (!openFilter) return;
-    const close = (event: PointerEvent) => {
-      if (!filtersRef.current?.contains(event.target as Node)) setOpenFilter(null);
-    };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
-  }, [openFilter]);
-
-  const toggleFilter = (key: "year" | "quarter" | "owner" | "type") =>
-    setOpenFilter((current) => (current === key ? null : key));
+  const periodKey = selectedPeriods.join(",");
+  useEffect(() => { setActiveFlow(null); }, [journeys, ownerId, dealType, periodKey]);
 
   const TYPE_SEGMENT: Record<string, string> = {
     inbound: "Inbound",
@@ -383,22 +354,21 @@ export function StageVelocity({
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (presentation !== "pipeline" || !activeFlow) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (activeFlow) setActiveFlow(null);
-      else setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, activeFlow]);
+  }, [presentation, activeFlow]);
 
   return (
     <>
+      {presentation === "metrics" ? <>
       <section className="stage-time-section">
         <div className="stage-section-head">
           <div><h2>Tiempo por etapas</h2><p>Cuánto permanece el deal en cada etapa · mediana de quienes ya salieron</p></div>
-          <Button variant="link" onClick={() => setOpen(true)}>Ver pipeline animado →</Button>
         </div>
         <div className="stage-time-strip">
           {model.stageStats.map((stage) => (
@@ -433,61 +403,11 @@ export function StageVelocity({
         <p className="velocity-note"><strong>Cada día de venta genera ~{money(velocity)} de MRR nuevo.</strong> Sube al mejorar win rate, ticket u oportunidades, o al acortar el ciclo.</p>
       </section>
 
-      {open ? (
-        <div className="stage-flow-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
-          <section className="stage-flow-modal" role="dialog" aria-modal="true" aria-label="Pipeline animado por niveles">
-            <header><div><h2>Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = {dateBasis === 'entry' ? 'distribución de salidas' : 'avance de la cohorte'} · anomalías saltan E4</p></div><Button variant="ghost" size="icon" aria-label="Cerrar pipeline" onClick={() => setOpen(false)}><X /></Button></header>
-            {canFilter ? (
-              <div className="stage-flow-filters" ref={filtersRef}>
-                <SingleFilterMenu
-                  label="Año"
-                  value={year}
-                  open={openFilter === "year"}
-                  onToggle={() => toggleFilter("year")}
-                  options={years.map((item) => ({ value: item, label: item }))}
-                  onChange={(item) => {
-                    onYear?.(item);
-                    setOpenFilter(null);
-                  }}
-                />
-                <SingleFilterMenu
-                  label="Trimestre"
-                  value={quarter}
-                  open={openFilter === "quarter"}
-                  onToggle={() => toggleFilter("quarter")}
-                  options={[{ value: "all", label: "Año" }, ...quarters.map((item) => ({ value: item, label: `Q${item}` }))]}
-                  onChange={(item) => {
-                    onQuarter?.(item);
-                    setOpenFilter(null);
-                  }}
-                />
-                <OwnerFilterMenu
-                  value={ownerId}
-                  options={owners}
-                  open={openFilter === "owner"}
-                  onToggle={() => toggleFilter("owner")}
-                  onChange={(item) => {
-                    onOwner?.(item);
-                    setOpenFilter(null);
-                  }}
-                />
-                <SingleFilterMenu
-                  label="Tipo deal"
-                  value={dealType}
-                  open={openFilter === "type"}
-                  onToggle={() => toggleFilter("type")}
-                  options={[
-                    { value: "all", label: "Todo" },
-                    { value: "inbound", label: "Inbound" },
-                    { value: "outbound", label: "Outbound" },
-                    { value: "upsell", label: "Upsell" },
-                    { value: "crossSell", label: "Cross sell" },
-                  ]}
-                  onChange={(item) => {
-                    onDealType?.(item);
-                    setOpenFilter(null);
-                  }}
-                />
+      </> : null}
+      {presentation === "pipeline" ? (
+          <section className="stage-flow-modal stage-flow-panel" aria-label="Pipeline animado por niveles">
+            <header><div><h2>Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = {dateBasis === 'entry' ? 'distribución de salidas' : 'avance de la cohorte'} · anomalías saltan E4</p></div></header>
+              <div className="stage-flow-filters">
                 <div className="stage-date-toggle" role="group" aria-label="Filtrar pipeline por fecha">
                   <button type="button" aria-pressed={dateBasis === 'entry'} onClick={() => { setDateBasis('entry'); setActiveFlow(null); }}>Entrada a etapa</button>
                   <button type="button" aria-pressed={dateBasis === 'close'} onClick={() => { setDateBasis('close'); setActiveFlow(null); }}>Cierre del deal</button>
@@ -528,9 +448,8 @@ export function StageVelocity({
                     </Button>
                   </div>
                 ) : null}
-                <span className="stage-flow-filters-hint">{showComparison ? (effectiveCompareMode === "yoy" ? "vs. mismo trimestre del año pasado" : "vs. período anterior equivalente") : "El criterio de fecha se aplica a esta vista"}</span>
+                <span className="stage-flow-filters-hint">{showComparison ? (effectiveCompareMode === "yoy" ? "vs. mismo trimestre del año pasado" : "vs. período anterior equivalente") : "Usa los filtros principales del informe"}</span>
               </div>
-            ) : null}
             <div className="stage-flow-body" data-drawer={activeFlow ? "open" : undefined}>
               <div className="stage-flow-main">
                 <div className="flow-legend"><span data-kind="advance">Avance</span><span data-kind="won">Ganado / desarrollo</span><span data-kind="lost">Perdido</span><span data-kind="anomaly">Anomalía · salta E4</span></div>
@@ -591,7 +510,6 @@ export function StageVelocity({
               {activeFlow ? <FlowDrawer flow={activeFlow} onClose={() => setActiveFlow(null)} /> : null}
             </div>
           </section>
-        </div>
       ) : null}
     </>
   );
