@@ -598,6 +598,8 @@ export function PulseDashboard({
   const closeRaw =
     report.closeHygiene?.find((item) => item.id === ownerFilter) ?? report.closeHygiene?.find((item) => item.id === "team") ?? report.closeHygiene?.[0] ?? null;
   const closeData = closeRaw ? { ...closeRaw, deals: closeRaw.deals ?? [] } : null;
+  const monthWithoutMrr = closeData ? (report.drilldowns[closeData.monthModal]?.deals ?? []).filter(deal => deal.amountValue <= 0).length : 0;
+  const monthUnvalued = Boolean(closeData && closeData.monthCount > 0 && closeData.monthAmount === 0);
   // Persisted snapshots lack the evidence contract: never show their old caps/alerts.
   const tempData = verifiedContactAggregate(report, ownerFilter, role);
   const overdueByOwner = useMemo(() => {
@@ -1599,11 +1601,45 @@ export function PulseDashboard({
       </Fold>
       </>}
       {section === "forecast" && <>
-      <Fold defaultOpen title="Qué trabajo hoy" subtitle="Prioridades ordenadas por impacto · todas abren su lista de deals">
+      <section className="forecast-today" aria-labelledby="forecast-today-title">
+        <header><div><h3 id="forecast-today-title">Resolver hoy</h3><p>Situación actual · empieza por lo que requiere revisión.</p></div><span className="forecast-time-chip">Hoy</span></header>
+        <div className="forecast-action-list">
+          {["overdue", "warning", "off-track", "kickoff", "drafts", "signature"].flatMap(id => operationalTasks.filter(group => group.id === id)).map((group, index) => {
+            const titles: Record<string, string> = { overdue: "Corregir fechas vencidas", warning: "Resolver warnings", "off-track": "Contactar deals On Track No", kickoff: "Empujar kick off", drafts: "Enviar borradores de contrato", signature: "Conseguir firmas" };
+            const reason = group.reasons.length ? group.reasons.map(item => `${item.label}: ${item.deals.length}`).join(" · ") : group.description;
+            return <button type="button" className="forecast-action-row" data-kind={group.id} key={group.id} onClick={() => openList(titles[group.id] ?? group.title, reason + " · foto actual, sin filtro de período", group.deals, undefined, group.id === "overdue" ? { key: "closeDate", dir: "asc" } : undefined)}>
+              <span className="forecast-action-order">{index + 1}</span>
+              <span className="forecast-action-text"><strong>{titles[group.id] ?? group.title}</strong><small>{reason}</small></span>
+              <span className="forecast-action-count">{group.deals.length}<small>{group.deals.length === 1 ? "deal" : "deals"}</small></span>
+              <span className="forecast-action-amount">{money(group.deals.reduce((sum, deal) => sum + deal.amountValue, 0))}<small>MRR</small></span>
+              <ArrowUpRight size={16} aria-hidden="true" />
+            </button>;
+          })}
+          {!operationalTasks.length ? <p className="forecast-clear-state">Sin pendientes en estos grupos para el alcance seleccionado.</p> : null}
+        </div>
+        {taskData && (taskData.overdueTaskCount > 0 || taskData.todayTaskCount > 0 || taskData.noActivityCount > 0) ? <div className="forecast-task-shortcuts" aria-label="Agenda y tareas registradas">
+          <span>Tu agenda</span>
+          {taskData.overdueTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.overdueTaskModal)}>Tareas vencidas <b>{taskData.overdueTaskCount} deals</b></button> : null}
+          {taskData.todayTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.todayTaskModal)}>Tareas para hoy <b>{taskData.todayTaskCount} deals</b></button> : null}
+          {taskData.noActivityCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.noActivityModal)}>Sin próxima actividad <b>{taskData.noActivityCount} deals</b></button> : null}
+        </div> : null}
+        <p className="forecast-scope-note">Cada fila abre su lista. Un deal puede necesitar más de una acción; los grupos no se suman.</p>
+      </section>
+      <section className="forecast-next" aria-labelledby="forecast-next-title">
+        <header><div><h3 id="forecast-next-title">Próximos cierres</h3><p>Revisa lo que viene y elige qué oportunidad empujar.</p></div></header>
+        <div className="forecast-next-grid">
+          {closeData ? <>
+            <button type="button" onClick={() => setModalKey(closeData.monthModal)}><span>Cierre previsto · mes actual</span><strong>{monthUnvalued ? "Sin valorizar" : money(closeData.monthAmount)}</strong><small>{closeData.monthCount} deals · {closeData.monthLabel}{monthWithoutMrr ? ` · ${monthWithoutMrr} sin MRR valorizado` : ""}</small><ArrowUpRight size={15} aria-hidden="true" /></button>
+            <button type="button" onClick={() => setModalKey(closeData.monthModal)}><span>Ponderado · mes actual</span><strong>{monthUnvalued ? "Sin base valorizada" : money(closeData.monthWeighted)}</strong><small>{monthUnvalued ? "Hay deals con fecha de cierre, pero sin MRR para ponderar" : "MRR × probabilidad de etapa · estimación"}</small><ArrowUpRight size={15} aria-hidden="true" /></button>
+          </> : null}
+          {scope.cards.filter(card => card.label === "Alta probabilidad").map(card => <button type="button" key={card.label} onClick={() => setModalKey(card.modal)}><span>Oportunidades con 70%+ de cierre</span><strong>{card.value}</strong><small>{rangeLabel} · filtros del informe</small><ArrowUpRight size={15} aria-hidden="true" /></button>)}
+        </div>
+      </section>
+      <Fold title="Revisar mi pipeline" subtitle="Estancamiento, scoring, fit, seguimiento y cobertura · diagnóstico detallado">
       <QGroup label="Cierre y seguimiento inmediato" tone="bad" />
       <section className="grid-4">
         <Metric
-          label="Alertas para mirar hoy"
+          label="Alertas específicas del reporte"
           value={String(scopedAlerts.length)}
           note={scopedAlerts.length ? "clic para ver el detalle" : "sin alertas en este corte"}
           tone={scopedAlerts.length ? "warn" : "ok"}
@@ -1697,7 +1733,7 @@ export function PulseDashboard({
 
       <QGroup label="Oportunidades para empujar y rescatar" tone="warn" />
       <section className="grid-4">
-        {scope.cards.filter((card) => ["Alta probabilidad", "Q bajo % cierre"].includes(card.label)).map((card) => (
+        {scope.cards.filter((card) => ["Q bajo % cierre", "Deals Q abiertos"].includes(card.label)).map((card) => (
           <Metric key={card.label} label={card.label} value={card.value} note={card.note || undefined} tone={card.tone ?? "neutral"} onClick={() => setModalKey(card.modal)} {...(card.tooltip ? { tooltip: card.tooltip } : {})} />
         ))}
         {closeData ? <Metric label="Estancados E2 +40 días" value={String(closeData.stale2Count)} note={money(closeData.stale2Amount)} tone={hygieneTone(closeData.stale2Count, closeData.openCount)} onClick={() => setModalKey(closeData.stale2Modal)} /> : null}
@@ -1827,10 +1863,7 @@ export function PulseDashboard({
                 ) : null}
 
       </> : null}
-      </Fold>
-      </>}
-      {section === "forecast" && <>
-      <Fold title="Calidad del forecast · hoy" subtitle="Cierres del mes, credibilidad, contactabilidad e higiene de fechas">
+      <QHead title="Calidad del forecast" subtitle="Evidencia, fit y credibilidad de las fechas" badge="Diagnóstico" />
       {(() => {
         const qCard = (label: string) => scope.cards.find((card) => card.label === label);
         const renderQ = (label: string, override?: string) => {
@@ -1856,32 +1889,6 @@ export function PulseDashboard({
         );
         return (
           <>
-            {/* 01 · ¿Cómo viene mi mes? */}
-            <QHead
-              title="¿Cómo viene mi mes?"
-              subtitle="Lo que tengo comprometido y su valor esperado"
-              badge="Informativo"
-            />
-            <section className="grid-4">
-              {closeData ? (
-                <>
-                  <Metric
-                    label={`Cierran ${closeData.monthLabel}`}
-                    value={money(closeData.monthAmount)}
-                    note={`${closeData.monthCount} deals con fecha en el mes en curso`}
-                    onClick={() => setModalKey(closeData.monthModal)}
-                  />
-                  <Metric
-                    label="Ponderado del mes"
-                    value={money(closeData.monthWeighted)}
-                    note="monto x probabilidad de etapa"
-                    onClick={() => setModalKey(closeData.monthModal)}
-                  />
-                </>
-              ) : null}
-              {renderQ("Deals Q abiertos")}
-            </section>
-
             {/* 02 · ¿Puedo confiar en ese número? */}
             <QHead
               title="¿Puedo confiar en ese número?"
@@ -1998,10 +2005,7 @@ export function PulseDashboard({
           </>
         );
       })()}
-      </Fold>
-      </>}
-      {section === "forecast" && <>
-      <Fold title="Actividad y cobertura de datos" subtitle="Hoy · actividades por deal e higiene de gestión">
+      <QHead title="Actividad y cobertura de datos" subtitle="Hoy · actividades por deal e higiene de gestión" badge="Diagnóstico" />
       <section className="grid-3">
         <Metric
           label="Actividades acumuladas por deal"
