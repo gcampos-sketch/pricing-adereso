@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Check, ClipboardCopy, Copy, LoaderCircle, X } from "lucide-react";
+import { Check, Copy, LoaderCircle, X } from "lucide-react";
 import { copyBlockImage, copyText } from "@/lib/snapshot";
 
 type State = "idle" | "busy" | "ok" | "fail";
@@ -11,37 +11,43 @@ function label(state: State, base: string) {
   return base;
 }
 
-function CopyStateIcon({ state, capture = false }: { state: State; capture?: boolean }) {
+function CopyStateIcon({ state }: { state: State }) {
   if (state === "busy") return <LoaderCircle aria-hidden="true" className="copy-btn-icon is-spinning" />;
   if (state === "ok") return <Check aria-hidden="true" className="copy-btn-icon" />;
   if (state === "fail") return <X aria-hidden="true" className="copy-btn-icon" />;
-  const Icon = capture ? ClipboardCopy : Copy;
-  return <Icon aria-hidden="true" className="copy-btn-icon" />;
+  return <Copy aria-hidden="true" className="copy-btn-icon" />;
 }
 
 /** Botón que copia la sección completa como imagen al portapapeles. */
 export function CopySectionButton() {
   const ref = useRef<HTMLButtonElement>(null);
   const [state, setState] = useState<State>("idle");
+  const message = state === "ok" ? "Imagen copiada al portapapeles" : state === "fail" ? "No se pudo copiar. Revisa el permiso del portapapeles." : "";
   return (
-    <button
-      ref={ref}
-      type="button"
-      className="copy-btn"
-      data-state={state}
-      title="Copiar esta sección como imagen"
-      onClick={async () => {
-        const head = ref.current?.closest("[data-section-head]") as HTMLElement | null;
-        if (!head) return;
-        setState("busy");
-        const ok = await copyBlockImage(head).catch(() => false);
-        setState(ok ? "ok" : "fail");
-        setTimeout(() => setState("idle"), 1800);
-      }}
-    >
-      <CopyStateIcon state={state} capture />
-      <span>{label(state, "Captura")}</span>
-    </button>
+    <span className="section-copy" data-capture-ignore>
+      <button
+        ref={ref}
+        type="button"
+        className="copy-btn section-copy-btn"
+        data-state={state}
+        title="Copiar sección como PNG"
+        aria-label="Copiar sección como PNG"
+        aria-busy={state === "busy"}
+        disabled={state === "busy"}
+        onClick={async event => {
+          event.stopPropagation();
+          const head = ref.current?.closest("[data-section-head]") as HTMLElement | null;
+          if (!head) return;
+          setState("busy");
+          const ok = await copyBlockImage(head).catch(() => false);
+          setState(ok ? "ok" : "fail");
+          setTimeout(() => setState("idle"), ok ? 5000 : 7000);
+        }}
+      >
+        <CopyStateIcon state={state} />
+      </button>
+      <span className="section-copy-feedback" role="status" aria-live="polite">{message}</span>
+    </span>
   );
 }
 
