@@ -462,7 +462,7 @@ export function ActiveMrrCard({ data, year, quarter, snapshotKey }: { data: Acti
   const tone = changePct === null ? "neutral" : changePct >= 0 ? "ok" : "bad";
   return (
     <>
-      <ServiceOverview refreshKey={snapshotKey ?? `${data.value}:${data.count}:${data.inDevelopment?.value}`}><button
+      <ServiceOverview currentServiceMrr={data.value} refreshKey={snapshotKey ?? `${data.value}:${data.count}:${data.inDevelopment?.value}`}><button
         type="button"
         className="filter-active-mrr mrr-pill"
         data-tone={tone}

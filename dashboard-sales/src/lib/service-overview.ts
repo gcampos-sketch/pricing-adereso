@@ -12,12 +12,22 @@ export type ServiceCustomer = {
   name: string;
   owner: string;
   industries: string[];
-  deals: { id: string; name: string; industry: string }[];
+  holdingId?: string;
+  instanceIds?: string[];
+  owners?: string[];
+  companies?: { id: string; name: string; owner: string; lifecycle: string }[];
+  reviewReasons?: string[];
+  deals: { id: string; name: string; industry: string; instanceId?: string }[];
 };
 export type ServiceOverview = {
   fetchedAt: string;
   customers: ServiceCustomer[];
   development: ServiceDeal[];
+  pendingCustomers?: ServiceCustomer[];
+  customerAudit?: ReturnType<
+    typeof import("./customer-accounts").reconcileCustomerAccounts
+  >["audit"];
+  unresolvedCustomerDeals?: { id: string; name: string }[];
 };
 
 /** One cluster per company; unknown values never displace a recorded industry. */

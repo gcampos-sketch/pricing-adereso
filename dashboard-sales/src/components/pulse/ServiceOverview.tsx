@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ExternalLink, Search, X } from "lucide-react";
+import { ExternalLink, Info, Search, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getServiceOverview } from "@/lib/pulse.functions";
 import {
@@ -37,7 +37,15 @@ function DirectoryPopup({
   description,
   trigger,
   children,
+  compact = false,
+  headerTools,
+  information,
+  className = "",
 }: {
+  information?: ReactNode;
+  className?: string;
+  compact?: boolean;
+  headerTools?: ReactNode;
   title: string;
   description: string;
   trigger: ReactNode;
@@ -48,7 +56,7 @@ function DirectoryPopup({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent
-        className="service-directory-popup won-mix-popover"
+        className={`service-directory-popup won-mix-popover${compact ? " service-planning-popup" : ""} ${className}`}
         align="end"
         sideOffset={10}
         collisionPadding={12}
@@ -56,8 +64,31 @@ function DirectoryPopup({
         <header>
           <div>
             <h4>{title}</h4>
-            <p>{description}</p>
+            {!compact ? <p>{description}</p> : null}
           </div>
+          {headerTools}
+          {compact ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button type="button" aria-label={`Información de ${title}`}>
+                  <Info size={15} />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className={`service-planning-info${className === "customer-directory-popup" ? " customer-directory-info" : ""}`}
+                side="bottom"
+                align="end"
+              >
+                <p>{description}</p>
+                {information ?? (
+                  <p>
+                    Fechas previstas de HubSpot, no inicios confirmados. Los vencidos aún figuran
+                    pendientes; los negocios sin fecha se agrupan al final.
+                  </p>
+                )}
+              </PopoverContent>
+            </Popover>
+          ) : null}
           <button type="button" aria-label={`Cerrar ${title}`} onClick={() => setOpen(false)}>
             <X size={16} />
           </button>
@@ -71,15 +102,18 @@ function DirectoryPopup({
 export function ServiceOverview({
   children,
   refreshKey,
+  currentServiceMrr,
 }: {
   children: ReactNode;
   refreshKey: string;
+  currentServiceMrr: number;
 }) {
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState("");
   const [owner, setOwner] = useState("");
+  const [showPendingCustomers, setShowPendingCustomers] = useState(false);
   const [industry, setIndustry] = useState("");
   const [devQuery, setDevQuery] = useState("");
   const [devOwner, setDevOwner] = useState("");
@@ -113,21 +147,26 @@ export function ServiceOverview({
   const undated = data?.development.filter((row) => !row.date).length ?? 0;
   const overdue = data?.development.filter((row) => row.date && row.date < today).length ?? 0;
   const quarter = Math.ceil(Number(today.slice(5, 7)) / 3);
-  const customers = (data?.customers ?? []).filter(
+  const customerPopulation = showPendingCustomers
+    ? (data?.pendingCustomers ?? [])
+    : (data?.customers ?? []);
+  const customers = customerPopulation.filter(
     (row) =>
-      (!owner || row.owner === owner) &&
+      (!owner || (row.owners ?? [row.owner]).includes(owner)) &&
       (!industry ||
         row.industries.includes(industry) ||
         (industry === "Sin industria" && !row.industries.length)) &&
       normalized(
-        `${row.name} ${row.owner} ${row.industries.join(" ")} ${row.deals.map((deal) => deal.name).join(" ")}`,
+        `${row.name} ${row.owner} ${row.holdingId ?? ""} ${row.instanceIds?.join(" ") ?? ""} ${row.companies?.map((company) => company.name).join(" ") ?? ""} ${row.industries.join(" ")} ${row.deals.map((deal) => deal.name).join(" ")}`,
       ).includes(normalized(query)),
   );
   const clusters = [...new Set(customers.map((row) => customerIndustryCluster(row)))].sort();
-  const owners = [...new Set(data?.customers.map((row) => row.owner))].sort();
+  const owners = [
+    ...new Set(customerPopulation.flatMap((row) => row.owners ?? [row.owner])),
+  ].sort();
   const industries = [
     ...new Set(
-      data?.customers.flatMap((row) =>
+      customerPopulation.flatMap((row) =>
         row.industries.length ? row.industries : ["Sin industria"],
       ),
     ),
@@ -140,35 +179,8 @@ export function ServiceOverview({
     );
     return (
       <DirectoryPopup
-        title={
-          upcoming ? `Inicios previstos · Q${quarter} ${today.slice(0, 4)}` : "Por iniciar servicio"
-        }
-        description={
-          upcoming
-            ? "Desde hoy hasta el fin del trimestre actual, según inicio del servicio. Son fechas previstas, no ingresos confirmados."
-            : "Negocios E6 firmados y 6.2 en desarrollo, excluyendo empresas en churn. Este MRR aún no está en servicio."
-        }
-        trigger={
-          <button type="button" className="service-overview-metric" disabled={!data}>
-            <span>{upcoming ? `Inicio previsto · Q${quarter}` : "Por iniciar servicio"}</span>
-            <strong>
-              {data ? money(upcoming ? nextTotal : devTotal) : "—"}
-              <small> MRR</small>
-            </strong>
-            <small>
-              {data
-                ? upcoming
-                  ? `${next.length} con fecha futura · ${undated} sin fecha`
-                  : `${data.development.length} negocios · firmados + en desarrollo`
-                : error
-                  ? "Datos no disponibles"
-                  : "Cargando negocios…"}
-            </small>
-          </button>
-        }
-      >
-        <div className="service-period-toolbar">
-          <span>Agrupar inicio previsto</span>
+        compact
+        headerTools={
           <div
             className="service-period-toggle"
             role="group"
@@ -189,13 +201,70 @@ export function ServiceOverview({
               Q
             </button>
           </div>
+        }
+        title={
+          upcoming ? `Inicios previstos · Q${quarter} ${today.slice(0, 4)}` : "Por iniciar servicio"
+        }
+        description={
+          upcoming
+            ? "Desde hoy hasta el fin del trimestre actual, según inicio del servicio. Son fechas previstas, no ingresos confirmados."
+            : "Negocios E6 firmados y 6.2 en desarrollo, excluyendo empresas en churn. Este MRR aún no está en servicio."
+        }
+        trigger={
+          <button type="button" className="service-overview-metric" disabled={!data}>
+            <span>{upcoming ? `Inicio previsto · Q${quarter}` : "Por iniciar servicio"}</span>
+            <strong>
+              {data && !upcoming ? <span className="service-pending-plus">+</span> : null}
+              {data ? money(upcoming ? nextTotal : devTotal) : "—"}
+              <small> MRR</small>
+            </strong>
+            {data && !upcoming ? (
+              <small
+                className="service-projected-mrr"
+                title="MRR en servicio actual más el MRR pendiente, si todos estos negocios inician servicio."
+              >
+                En servicio proyectado: <b>{money(currentServiceMrr + devTotal)}</b>
+              </small>
+            ) : null}
+            <small>
+              {data
+                ? upcoming
+                  ? `${next.length} con fecha futura · ${undated} sin fecha`
+                  : `${data.development.length} negocios · firmados + en desarrollo`
+                : error
+                  ? "Datos no disponibles"
+                  : "Cargando negocios…"}
+            </small>
+          </button>
+        }
+      >
+        <div
+          className="service-planning-widgets"
+          aria-label="Resumen de negocios por iniciar servicio"
+        >
+          <div>
+            <span>MRR pendiente</span>
+            <strong>{money(rows.reduce((sum, row) => sum + row.mrr, 0))}</strong>
+          </div>
+          <div>
+            <span>Negocios</span>
+            <strong>{rows.length}</strong>
+          </div>
+          <div>
+            <span>Sin fecha</span>
+            <strong>{rows.filter((row) => !row.date).length}</strong>
+          </div>
+          <div data-warning="true">
+            <span>Vencidos</span>
+            <strong>{rows.filter((row) => row.date && row.date < today).length}</strong>
+          </div>
         </div>
         <div className="service-directory-filters">
           <label>
             <Search size={14} />
             <input
               aria-label="Buscar negocios por iniciar servicio"
-              placeholder="Buscar negocio, industria…"
+              placeholder="Buscar negocio…"
               value={devQuery}
               onChange={(event) => setDevQuery(event.target.value)}
             />
@@ -205,31 +274,26 @@ export function ServiceOverview({
             value={devOwner}
             onChange={(event) => setDevOwner(event.target.value)}
           >
-            <option value="">Todos los propietarios del negocio</option>
+            <option value="">Todos los responsables</option>
             {[...new Set(data?.development.map((row) => row.owner))].sort().map((name) => (
               <option key={name}>{name}</option>
             ))}
           </select>
         </div>
-        <p className="service-planning-note">
-          {undated} sin fecha de inicio · {overdue} con fecha prevista vencida.{" "}
-          {upcoming
-            ? "Las fechas pendientes o vencidas no se incluyen como inicios futuros."
-            : "Las fechas son las registradas en HubSpot, no una promesa confirmada de salida."}
-        </p>
         <div className="service-directory-results">
-          <p className="service-result-count">
-            {rows.length} negocios · {money(rows.reduce((sum, row) => sum + row.mrr, 0))} MRR
-          </p>
           {servicePeriodGroups(rows, serviceGroupUnit).map((group) => (
-            <section key={group.key}>
-              <h5>
-                {monthLabel(group.key)}
+            <details
+              className="service-start-cluster"
+              key={`${serviceGroupUnit}:${group.key}`}
+              data-undated={group.key === "undated" || undefined}
+            >
+              <summary>
+                <span>{group.key === "undated" ? "Sin fecha" : monthLabel(group.key)}</span>
                 <small>
-                  {group.deals.length} · {money(group.deals.reduce((sum, row) => sum + row.mrr, 0))}{" "}
-                  MRR
+                  {group.deals.length} {group.deals.length === 1 ? "negocio" : "negocios"} ·{" "}
+                  {money(group.deals.reduce((sum, row) => sum + row.mrr, 0))} MRR
                 </small>
-              </h5>
+              </summary>
               {group.deals.map((deal) => (
                 <div className="service-directory-row" key={deal.id}>
                   <div>
@@ -255,13 +319,10 @@ export function ServiceOverview({
                   </div>
                 </div>
               ))}
-            </section>
+            </details>
           ))}
           {!rows.length ? <p className="service-empty">No hay negocios que coincidan.</p> : null}
         </div>
-        <footer>
-          Agrupado por {serviceGroupUnit === "month" ? "mes" : "trimestre"} de inicio del servicio. Dentro de cada grupo, fechas en orden ascendente. Sin fecha, al final.
-        </footer>
       </DirectoryPopup>
     );
   };
@@ -271,22 +332,108 @@ export function ServiceOverview({
       aria-label="Clientes y entrada a servicio · foto global de hoy"
     >
       <DirectoryPopup
+        compact
+        className="customer-directory-popup"
+        information={
+          <>
+            {data?.customerAudit ? (
+              <details className="service-planning-note">
+                <summary>Cómo se revisó el conteo</summary>
+                <p>
+                  {data.customerAudit.lifecycleCompanies} empresas etiquetadas Cliente no equivalen
+                  a cuentas únicas. Se excluyen {data.customerAudit.churnOnlyAccounts} cuentas con
+                  churn y sin ningún ganado vigente. {data.customerAudit.activeWithoutCustomerLabel}{" "}
+                  cuentas incluidas no tienen etiqueta Cliente.
+                </p>
+                <p>
+                  {data.customerAudit.lifecycleWithoutWon} cuentas etiquetadas Cliente no tienen un
+                  ganado comercial vigente verificable. {data.customerAudit.withoutHolding}{" "}
+                  cuenta(s) incluida(s) sin holding se identifican por instancia.
+                </p>
+                <p>
+                  {data.customerAudit.conflictingInstances.length} IDs de instancia aparecen en
+                  holdings distintos y no se fusionan.{" "}
+                  {data.customerAudit.mismatchedDealInstances.length} negocios tienen discrepancias
+                  entre ID de instancia del negocio y la empresa; no se usan para fusionar cuentas.{" "}
+                  {data.customerAudit.unresolvedWon.length} ganado(s) sin empresa/instancia
+                  inequívoca quedan pendientes y no suman otra cuenta.
+                </p>
+                {data.unresolvedCustomerDeals?.map((deal) => (
+                  <p key={deal.id}>
+                    <a
+                      href={`https://app.hubspot.com/contacts/23480943/deal/${deal.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {deal.name} ↗
+                    </a>
+                  </p>
+                ))}
+                <p>
+                  Foto del {new Date(data.fetchedAt).toLocaleString("es-CL")}. Revisión de datos
+                  CRM; no certifica que una instancia esté operativa en producción.
+                </p>
+              </details>
+            ) : null}
+            <p>
+              Cada holding cuenta una vez, aunque tenga varias empresas, instancias o negocios. Si
+              no hay holding, solo se agrupa por ID de instancia exacto. Las cuentas con etiqueta
+              Churn sin otro ganado corroborado y las identidades sin IDs quedan por revisar. Foto
+              global de hoy, independiente de los filtros del tablero.
+            </p>
+          </>
+        }
         title="Clientes"
-        description="Empresas únicas con ciclo de vida Cliente en HubSpot. Industria Adereso tomada de sus negocios del pipeline comercial; el responsable es el propietario de la empresa."
+        description="Cuentas con negocio ganado vigente en Comercial Adereso (E6 a E8). Una cuenta por ID Holding; si falta, se cruza el ID de instancia Backoffice. El ciclo de vida no decide el conteo. Sin ganados vigentes, la cuenta no suma."
         trigger={
           <button type="button" className="service-overview-metric" disabled={!data}>
             <span>Clientes</span>
             <strong>{data ? data.customers.length : "—"}</strong>
-            <small>Ciclo de vida · Cliente</small>
+            <small title="Cuentas únicas por holding o instancia, con negocio ganado vigente">
+              Holding / instancia
+              {data?.pendingCustomers?.length ? (
+                <span className="service-customer-pending">
+                  {data.pendingCustomers.length} por revisar
+                </span>
+              ) : null}
+            </small>
           </button>
         }
       >
+        <div
+          className="customer-status-widgets"
+          role="group"
+          aria-label="Estado de validación de clientes"
+        >
+          <button
+            type="button"
+            aria-pressed={!showPendingCustomers}
+            onClick={() => {
+              setShowPendingCustomers(false);
+              setOwner("");
+            }}
+          >
+            <span>Con ganado vigente</span>
+            <strong>{data?.customers.length ?? 0}</strong>
+          </button>
+          <button
+            type="button"
+            aria-pressed={showPendingCustomers}
+            onClick={() => {
+              setShowPendingCustomers(true);
+              setOwner("");
+            }}
+          >
+            <span>Por revisar</span>
+            <strong>{data?.pendingCustomers?.length ?? 0}</strong>
+          </button>
+        </div>
         <div className="service-directory-filters">
           <label>
             <Search size={14} />
             <input
               aria-label="Buscar clientes"
-              placeholder="Buscar empresa, negocio o responsable…"
+              placeholder="Buscar cuenta…"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
@@ -301,40 +448,37 @@ export function ServiceOverview({
               <option key={name}>{name}</option>
             ))}
           </select>
-        </div>
-        <div
-          className="service-owner-shortcuts"
-          role="group"
-          aria-label="Propietario de la empresa · KAM o AE"
-        >
-          <button type="button" aria-pressed={!owner} onClick={() => setOwner("")}>
-            Todos
-          </button>
-          {owners.map((name) => (
-            <button
-              key={name}
-              type="button"
-              aria-pressed={owner === name}
-              onClick={() => setOwner(owner === name ? "" : name)}
-            >
-              {name}
-            </button>
-          ))}
+          <select
+            aria-label="Filtrar clientes por responsable"
+            value={owner}
+            onChange={(event) => setOwner(event.target.value)}
+          >
+            <option value="">Todos los responsables</option>
+            {owners.map((name) => (
+              <option key={name}>{name}</option>
+            ))}
+          </select>
         </div>
         <div className="service-directory-results">
-          <p className="service-result-count">
-            {customers.length} de {data?.customers.length ?? 0} clientes · agrupados por industria
-            más frecuente
-          </p>
+          {query || owner || industry ? (
+            <p className="service-result-count">
+              {customers.length} de {customerPopulation.length} cuentas
+            </p>
+          ) : null}
           {clusters.map((cluster) => (
-            <section key={cluster}>
-              <h5>
-                {cluster}
+            <details
+              className="service-start-cluster customer-industry-cluster"
+              key={`${showPendingCustomers}:${cluster}`}
+            >
+              <summary>
+                <span>{cluster}</span>
                 <small>
                   {customers.filter((row) => customerIndustryCluster(row) === cluster).length}{" "}
-                  empresas
+                  {customers.filter((row) => customerIndustryCluster(row) === cluster).length === 1
+                    ? "cuenta"
+                    : "cuentas"}
                 </small>
-              </h5>
+              </summary>
               {customers
                 .filter((row) => customerIndustryCluster(row) === cluster)
                 .map((customer) => (
@@ -348,7 +492,35 @@ export function ServiceOverview({
                         {customer.name}
                         <ExternalLink size={12} />
                       </a>
+                      <small>
+                        {customer.holdingId ? `Holding ${customer.holdingId}` : "Sin ID Holding"} ·{" "}
+                        {customer.instanceIds?.length
+                          ? `Instancias ${customer.instanceIds.join(", ")}`
+                          : "Sin ID de instancia"}
+                      </small>
                       <small>Propietario empresa · {customer.owner}</small>
+                      {customer.reviewReasons?.map((reason) => (
+                        <small key={reason} className="service-date-overdue">
+                          {reason}
+                        </small>
+                      ))}
+                      {customer.companies && customer.companies.length > 1 ? (
+                        <details className="service-customer-deals">
+                          <summary>{customer.companies.length} empresas del holding</summary>
+                          {customer.companies.map((company) => (
+                            <a
+                              key={company.id}
+                              className="service-linked-deal"
+                              href={`https://app.hubspot.com/contacts/23480943/company/${company.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {company.name} · {company.owner}
+                              <ExternalLink size={10} />
+                            </a>
+                          ))}
+                        </details>
+                      ) : null}
                       <small>
                         {customer.industries
                           .filter((name) => name !== "Sin industria")
@@ -371,6 +543,9 @@ export function ServiceOverview({
                               rel="noopener noreferrer"
                             >
                               {deal.name} · {deal.industry}
+                              {deal.instanceId
+                                ? ` · Instancia ${deal.instanceId}`
+                                : " · Sin ID instancia"}
                               <ExternalLink size={10} />
                             </a>
                           ))}
@@ -382,17 +557,12 @@ export function ServiceOverview({
                     </div>
                   </div>
                 ))}
-            </section>
+            </details>
           ))}
           {!customers.length ? (
             <p className="service-empty">No hay clientes que coincidan.</p>
           ) : null}
         </div>
-        <footer>
-          Una empresa cuenta una vez. Cada empresa se agrupa por la industria más frecuente en sus
-          negocios; puedes ver todas al expandirlos. Foto global de hoy; independiente de los
-          filtros del tablero.
-        </footer>
       </DirectoryPopup>
       {children}
       {developmentPopup(false)}
