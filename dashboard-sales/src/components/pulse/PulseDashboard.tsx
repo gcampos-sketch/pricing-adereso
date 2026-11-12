@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { useOverdueTasks } from "@/hooks/use-overdue-tasks";
+import { OverdueTasks } from "./OverdueTasks";
+import { TASK_OPEN_STAGES, overdueTaskExposure } from "@/lib/overdue-tasks";
 import { ArrowUpRight } from 'lucide-react';
 import { PULSE_FOCUS_PAGES, type PulseFocusView, type PulseSection } from '@/lib/report-navigation';
 import { Button } from "@/components/ui/button";
@@ -933,6 +936,9 @@ export function PulseDashboard({
       no: report.drilldowns[report.tracking?.find(t => t.id === "team")?.onTrackNoModal ?? ""]?.deals ?? [],
     }, Date.parse(report.generatedAt), { owner: ownerFilter, role, matchesType }, performanceNow), [report, ownerFilter, role, matchesType, executiveDay]);
   const operationalTasks = useMemo(() => dashboardActionGroups(report, { owner: ownerFilter, role, stages: stageFilter, matchesType }, performanceNow), [report, ownerFilter, role, stageFilter, matchesType, executiveDay]);
+  const overdueDealIds = useMemo(() => [...new Set((report.stageJourneys ?? []).map(row => row.deal).filter(deal => TASK_OPEN_STAGES[deal.stageId] && (ownerFilter === 'team' || deal.ownerId === ownerFilter) && (role === 'all' || roleOfOwner(deal.ownerId) === role) && matchesType(deal) && (!stageFilter.length || stageFilter.includes(deal.stage))).map(deal => deal.id))].sort(), [report.stageJourneys, ownerFilter, role, matchesType, stageFilter]);
+  const overdueTasks = useOverdueTasks(overdueDealIds, {owner:ownerFilter,role,type:dealType,stages:stageFilter}, report.generatedAt, executiveDay, section === 'general' || section === 'forecast', onRefresh);
+  const overdueExposure = overdueTasks.data ? overdueTaskExposure(overdueTasks.data) : null;
   const { openPipe, wonJourney } = executive;
   const executiveRange = shortPeriod(executive.period);
   const wonComparison = useMemo(() => {
@@ -1301,7 +1307,7 @@ export function PulseDashboard({
             ) : null}
           </small>
         </div>
-        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0}>
+        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0} data-tasks={Boolean(overdueExposure?.tasks || overdueTasks.error)}>
           {(() => {
             const yes = executive.onTrack.yes.length;
             const no = executive.onTrack.no.length;
@@ -1332,6 +1338,7 @@ export function PulseDashboard({
             <strong>{openPipe.overdue.length}<ArrowUpRight aria-hidden="true" /></strong>
             <small>{money(openPipe.overdue.reduce((sum, d) => sum + d.amountValue, 0))} MRR · revisar fechas</small>
           </button>}
+          <OverdueTasks controller={overdueTasks} />
         </div>
         </div>
         <div className="exec-won-column">
@@ -1617,11 +1624,11 @@ export function PulseDashboard({
           })}
           {!operationalTasks.length ? <p className="forecast-clear-state">Sin pendientes en estos grupos para el alcance seleccionado.</p> : null}
         </div>
-        {taskData && (taskData.overdueTaskCount > 0 || taskData.todayTaskCount > 0 || taskData.noActivityCount > 0) ? <div className="forecast-task-shortcuts" aria-label="Agenda y tareas registradas">
+        {((taskData && (taskData.todayTaskCount > 0 || taskData.noActivityCount > 0)) || overdueExposure?.tasks || overdueTasks.error) ? <div className="forecast-task-shortcuts" aria-label="Agenda y tareas registradas">
           <span>Tu agenda</span>
-          {taskData.overdueTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.overdueTaskModal)}>Tareas vencidas <b>{taskData.overdueTaskCount} deals</b></button> : null}
-          {taskData.todayTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.todayTaskModal)}>Tareas para hoy <b>{taskData.todayTaskCount} deals</b></button> : null}
-          {taskData.noActivityCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.noActivityModal)}>Sin próxima actividad <b>{taskData.noActivityCount} deals</b></button> : null}
+          <OverdueTasks controller={overdueTasks} compact />
+          {taskData && taskData.todayTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.todayTaskModal)}>Tareas para hoy <b>{taskData.todayTaskCount} deals</b></button> : null}
+          {taskData && taskData.noActivityCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.noActivityModal)}>Sin próxima actividad <b>{taskData.noActivityCount} deals</b></button> : null}
         </div> : null}
         <p className="forecast-scope-note">Cada fila abre su lista. Un deal puede necesitar más de una acción; los grupos no se suman.</p>
       </section>
@@ -1656,14 +1663,7 @@ export function PulseDashboard({
               onClick={() => setModalKey(taskData.noActivityModal)}
               tooltip="Deals abiertos sin una próxima actividad agendada."
             />
-            <Metric
-              label="Con tareas vencidas"
-              value={String(taskData.overdueTaskCount)}
-              note={`${taskData.overdueTaskTotal} tareas pendientes atrasadas`}
-              tone={hygieneTone(taskData.overdueTaskCount, taskData.openCount)}
-              onClick={() => setModalKey(taskData.overdueTaskModal)}
-              tooltip="Deals abiertos con al menos una tarea sin completar cuyo vencimiento ya pasó."
-            />
+            <OverdueTasks controller={overdueTasks} />
           </>
         ) : null}
         <Metric

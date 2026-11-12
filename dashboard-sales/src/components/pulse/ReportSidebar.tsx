@@ -181,7 +181,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
     {mobileOpen && <div className="report-sidebar-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
     <aside className="report-sidebar" data-collapsed={collapsed} data-mobile-open={mobileOpen} aria-label="Menú lateral">
       <header className="report-sidebar-brand">
-        <BarChart3 className="report-brand-icon" aria-hidden="true" />
+        <button type="button" className="report-brand-home" aria-label="Ir a Vista general" title="Ir a Vista general" aria-current={view === "comercial" ? "page" : undefined} onClick={() => select("comercial")}><BarChart3 className="report-brand-icon" aria-hidden="true" /></button>
         <span>Sales Dashboard</span>
         <Button className="report-mobile-close" variant="ghost" size="icon" aria-label="Cerrar menú" onClick={() => setMobileOpen(false)}><X /></Button>
       </header>

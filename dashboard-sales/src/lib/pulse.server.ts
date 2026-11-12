@@ -1,3 +1,4 @@
+import { segmentOf } from "./deal-segment";
 import type { ReportPhase } from './report-phases';
 import { roleOwnerIds, type RoleFilter } from "./owner-roles";
 import { quotaStats } from "./quota-eligibility";
@@ -398,13 +399,7 @@ export function wrRate(stats: { won: number; lost: number }) {
   return total ? stats.won / total : 0;
 }
 
-export function segmentOf(p: Props): string {
-  const type = p["dealtype"] ?? "";
-  if (type.startsWith("Upsell")) return "Upsell";
-  if (type.startsWith("Cross")) return "Cross sell";
-  if (type.startsWith("Renovación")) return "Renovación";
-  return p["negocio_inbound"] === "true" ? "Inbound" : "Outbound";
-}
+export { segmentOf } from "./deal-segment";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SIGNED_STAGE = "174677684";

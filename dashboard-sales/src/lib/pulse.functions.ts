@@ -275,3 +275,13 @@ export const enrollTouchpoint = createServerFn({ method: "POST" })
     const { enrollDealsInTouchpoint } = await import("./enroll.server");
     return enrollDealsInTouchpoint(data.ids);
   });
+
+/** Fresh native task detail, limited to active Commercial deals under the current scope. */
+export const getOverdueTaskReport = createServerFn({method:'POST'}).middleware([requireMfa])
+ .inputValidator((input:{dealIds:string[];owner:string;role:string;type:string;stages:string[]})=>input)
+ .handler(async({data})=>{const {validateTaskScope,readOverdueTasks}=await import('./overdue-tasks.server');return readOverdueTasks(validateTaskScope(data));});
+
+/** Only the user's checked task is completed; native readback precedes confirmation. */
+export const completeOverdueTaskFn = createServerFn({method:'POST'}).middleware([requireMfa])
+ .inputValidator((input:{taskId:string;dealIds:string[];owner:string;role:string;type:string;stages:string[]})=>input)
+ .handler(async({data})=>{const {validateTaskScope,completeOverdueTask}=await import('./overdue-tasks.server');return completeOverdueTask(String(data.taskId),validateTaskScope(data));});
