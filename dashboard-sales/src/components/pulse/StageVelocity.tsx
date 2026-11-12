@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, ExternalLink, GitCompareArrows, X } from "lucide-react";
 
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import type { DealDTO, StageJourney } from "@/lib/pulse-types";
 import { flowStageDate, journeyInPeriods, stageInPeriods, type FlowDateBasis } from '@/lib/stage-date-scope';
@@ -59,9 +60,6 @@ const median = (values: number[]) => {
 const money = (value: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
-const compactMoney = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }).format(value);
-
 const diffDays = (from?: string, to?: string) => {
   if (!from || !to) return 0;
   const value = (Date.parse(to) - Date.parse(from)) / 86_400_000;
@@ -113,20 +111,26 @@ function comparisonLabel(current: number, previous: number) {
 }
 
 export function StageVelocity({
-  presentation = "metrics",
   journeys,
   ownerId,
   dealType,
   selectedPeriods,
   quarter = "all",
 }: {
-  presentation?: "metrics" | "pipeline";
   journeys: StageJourney[];
   ownerId: string;
   dealType: string;
   selectedPeriods: string[];
   quarter?: string;
 }) {
+  const detailAnchor = useRef<HTMLElement | SVGElement | null>(null);
+  const [detail, setDetail] = useState<StageKey | "velocity" | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const openDetail = (target: HTMLElement | SVGElement, key: StageKey | "velocity") => {
+    detailAnchor.current = target;
+    setDetail(key);
+    setDetailOpen(true);
+  };
   const [activeFlow, setActiveFlow] = useState<Flow | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [dateBasis, setDateBasis] = useState<FlowDateBasis>('entry');
@@ -134,7 +138,7 @@ export function StageVelocity({
   const isQuarterFiltered = Boolean(quarter && quarter !== "all");
   const effectiveCompareMode = isQuarterFiltered ? compareMode : "prev";
   const periodKey = selectedPeriods.join(",");
-  useEffect(() => { setActiveFlow(null); }, [journeys, ownerId, dealType, periodKey]);
+  useEffect(() => { setActiveFlow(null); setDetailOpen(false); }, [journeys, ownerId, dealType, periodKey, dateBasis, effectiveCompareMode]);
 
   const TYPE_SEGMENT: Record<string, string> = {
     inbound: "Inbound",
@@ -298,6 +302,8 @@ export function StageVelocity({
         days: median(periodDurations.current.get(stage.key) ?? []),
         previousDays: median(periodDurations.previous.get(stage.key) ?? []),
         series,
+        sampleCount: periodDurations.current.get(stage.key)?.length ?? 0,
+        months: [...(monthlyDays.get(stage.key)?.entries() ?? [])].sort(([a], [b]) => a.localeCompare(b)).map(([month, values]) => ({ month, days: median(values), count: values.length })),
       };
     });
     return { flows, stageStats };
@@ -326,7 +332,15 @@ export function StageVelocity({
   const winRate = won.length + lost.length ? won.length / (won.length + lost.length) : 0;
   const ticket = won.length ? won.reduce((sum, item) => sum + item.deal.amountValue, 0) / won.length : 0;
   const velocityCycle = totalCycle || salesCycle;
-  const velocity = velocityCycle ? (opportunities * winRate * ticket) / velocityCycle : 0;
+  const velocity = velocityCycle ? (opportunities * winRate * ticket) / velocityCycle : null;
+  const previousWinRate = previousWon.length + previousLost.length ? previousWon.length / (previousWon.length + previousLost.length) : 0;
+  const previousTicket = previousWon.length ? previousWon.reduce((sum, item) => sum + item.deal.amountValue, 0) / previousWon.length : 0;
+  const previousVelocityCycle = previousTotalCycle || previousSalesCycle;
+  const previousVelocity = previousVelocityCycle ? ((previousCounts.stages.get("E1") ?? 0) * previousWinRate * previousTicket) / previousVelocityCycle : null;
+  // Compare only like-for-like cycle definitions; E1→E6 is not E1→E8.
+  const velocityDelta = velocity !== null && previousVelocity !== null && previousVelocity > 0 && Boolean(totalCycle) === Boolean(previousTotalCycle)
+    ? (velocity / previousVelocity - 1) * 100 : null;
+  const detailStage = model.stageStats.find(stage => stage.key === detail);
 
   const summaryFlow = (
     id: string,
@@ -354,57 +368,17 @@ export function StageVelocity({
   });
 
   useEffect(() => {
-    if (presentation !== "pipeline" || !activeFlow) return;
+    if (!activeFlow || detailOpen) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (activeFlow) setActiveFlow(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [presentation, activeFlow]);
+  }, [activeFlow, detailOpen]);
 
   return (
     <>
-      {presentation === "metrics" ? <>
-      <section className="stage-time-section">
-        <div className="stage-section-head">
-          <div><h2>Tiempo por etapas</h2><p>Cuánto permanece el deal en cada etapa · mediana de quienes ya salieron</p></div>
-        </div>
-        <div className="stage-time-strip">
-          {model.stageStats.map((stage) => (
-            <div className="stage-time-card" data-kind={(STAGE_INDEX.get(stage.key) ?? 0) >= 6 ? "won" : "open"} key={stage.key}>
-              <span>{stage.key} · {stage.role}</span>
-              <strong>{stage.days ? stage.days.toFixed(1) : "s/n"}<small>{stage.days ? "d" : ""}</small></strong>
-              <TrendChip delta={stage.days && stage.previousDays ? stage.days - stage.previousDays : null} />
-              {stage.series.length > 1 ? (
-                <svg viewBox="0 0 100 24" preserveAspectRatio="none" aria-label={`Tendencia de ${stage.key}`}>
-                  <polyline points={stage.series.map((value, index) => `${(index / (stage.series.length - 1)) * 100},${22 - (value / Math.max(...stage.series, 1)) * 18}`).join(" ")} />
-                </svg>
-              ) : <em>{stage.days ? `${stage.count} deals con dato` : "sin salidas en el corte"}</em>}
-            </div>
-          ))}
-        </div>
-        <div className="cycle-grid">
-          <div><i>◷</i><span>Ciclo E1 → E6 · nacer a ganado<strong>{salesCycle ? `${Math.round(salesCycle)} d` : "s/n"}<small> mediana</small></strong><TrendChip delta={salesCycle && previousSalesCycle ? salesCycle - previousSalesCycle : null} /></span></div>
-          <div><i>◷</i><span>Ciclo E6 → E8 · en desarrollo<strong>{developmentCycle ? `${Math.round(developmentCycle)} d` : "s/n"}<small> mediana</small></strong><TrendChip delta={developmentCycle && previousDevelopmentCycle ? developmentCycle - previousDevelopmentCycle : null} /></span></div>
-          <div><i>⚑</i><span>Total E1 → E8 · nacer a comisión<strong>{totalCycle ? `${Math.round(totalCycle)} d` : "s/n"}<small> mediana</small></strong><TrendChip delta={totalCycle && previousTotalCycle ? totalCycle - previousTotalCycle : null} /></span></div>
-        </div>
-      </section>
-
-      <section className="velocity-section">
-        <div className="stage-section-head"><div><h2>Deal Velocity</h2><p>Ingreso por día de venta · (oportunidades × win rate × ticket) ÷ ciclo</p></div></div>
-        <div className="velocity-equation">
-          <div><span>Oportunidades</span><strong>{opportunities}</strong><small>entraron a E1</small></div><b>×</b>
-          <div><span>Win rate</span><strong>{Math.round(winRate * 100)}%</strong><small>ganados / cerrados</small></div><b>×</b>
-          <div><span>Ticket prom.</span><strong>{compactMoney(ticket)}</strong><small>MRR por deal</small></div><b>÷</b>
-          <div><span>Ciclo</span><strong>{velocityCycle ? `${Math.round(velocityCycle)} d` : "s/n"}</strong><small>E1 → {totalCycle ? "E8" : "E6"}</small></div><b>=</b>
-          <div className="velocity-result"><span>Deal Velocity</span><strong>{money(velocity)}</strong><small>MRR por día</small></div>
-        </div>
-        <p className="velocity-note"><strong>Cada día de venta genera ~{money(velocity)} de MRR nuevo.</strong> Sube al mejorar win rate, ticket u oportunidades, o al acortar el ciclo.</p>
-      </section>
-
-      </> : null}
-      {presentation === "pipeline" ? (
           <section className="stage-flow-modal stage-flow-panel" aria-label="Pipeline animado por niveles">
             <header><div><h2>Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = {dateBasis === 'entry' ? 'distribución de salidas' : 'avance de la cohorte'} · anomalías saltan E4</p></div></header>
               <div className="stage-flow-filters">
@@ -488,7 +462,7 @@ export function StageVelocity({
                       const previousCount = previousCounts.stages.get(stage.key) ?? 0;
                       const comparison = countComparison(stage.count, previousCount);
                       return (
-                      <g className="stage-node" data-comparing={showComparison || undefined} data-kind={stage.key === "E6.1" ? "warning" : (STAGE_INDEX.get(stage.key) ?? 0) >= 6 ? "won" : "open"} key={stage.key}>
+                      <g className="stage-node" role="button" tabIndex={0} aria-label={`Ver tiempo de ${stage.key} · ${stage.name}`} onClick={event => openDetail(event.currentTarget, stage.key)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openDetail(event.currentTarget, stage.key); } }} data-comparing={showComparison || undefined} data-kind={stage.key === "E6.1" ? "warning" : (STAGE_INDEX.get(stage.key) ?? 0) >= 6 ? "won" : "open"} key={stage.key}>
                         <title>{`${stage.key} · ${stage.name}\n${stage.count} deals · ${money(stage.amount)} MRR\n${stage.days ? `${stage.days.toFixed(1)} d de mediana` : "sin mediana"}${stage.milestone ? `\n${stage.milestone}` : ""}`}</title>
                         {stage.key === "E4" ? <rect className="mandatory-ring" x={stage.x - 49} y={stage.y - (showComparison ? 34 : 30)} width="98" height={showComparison ? 68 : 60} rx="13" /> : null}
                         <rect x={stage.x - 44} y={stage.y - (showComparison ? 29 : 25)} width="88" height={showComparison ? 58 : 50} rx="11" />
@@ -496,9 +470,27 @@ export function StageVelocity({
                         <text className="node-count" x={stage.x} y={stage.y + (showComparison ? 10 : 16)} textAnchor="middle">{stage.count} deals</text>
                         {showComparison ? <text className="node-comparison" data-comparison={comparison.delta > 0 ? "better" : comparison.delta < 0 ? "worse" : "same"} x={stage.x} y={stage.y + 23} textAnchor="middle">{comparisonLabel(stage.count, previousCount)}</text> : null}
                         <text className="node-role" x={stage.x} y={stage.y + 44} textAnchor="middle">{stage.role}</text>
+                        <text className="node-duration" x={stage.x} y={stage.y + 61} textAnchor="middle">{stage.sampleCount ? `${stage.days.toFixed(1)} d · mediana` : "Sin salidas con dato"}</text>
                       </g>
                     )})}
                   </svg>
+                </div>
+                <p className="pipeline-time-caption">Tiempos en días · mediana de quienes ya salieron de cada etapa. Pincha una etapa para ver evolución y muestra.</p>
+                <div className="pipeline-velocity-widgets" aria-label="Ciclos y velocidad comercial">
+                  {[
+                    { label: "Venta", path: "E1 → E6", value: salesCycle, previous: previousSalesCycle },
+                    { label: "Desarrollo", path: "E6 → E8", value: developmentCycle, previous: previousDevelopmentCycle },
+                    { label: "Ciclo total", path: "E1 → E8", value: totalCycle, previous: previousTotalCycle },
+                  ].map(item => <div className="pipeline-cycle-widget" key={item.label} title={`Mediana · variación vs. ${effectiveCompareMode === "yoy" ? "mismo trimestre del año anterior" : "período anterior equivalente"}`}>
+                    <span>{item.label} <small>{item.path}</small></span>
+                    <strong>{item.value ? `${Math.round(item.value)} d` : "—"}</strong>
+                    <TrendChip delta={item.value && item.previous ? item.value - item.previous : null} />
+                  </div>)}
+                  <button type="button" className="pipeline-speed-widget" onClick={event => openDetail(event.currentTarget, "velocity")} aria-label="Ver cálculo de Deal Velocity">
+                    <span>Velocidad comercial <KpiArrow /></span>
+                    <strong>{velocity === null ? "—" : money(velocity)} <small>MRR/día estimados</small></strong>
+                    <em>{velocityDelta === null ? "Sin comparación equivalente" : `${velocityDelta > 0 ? "▲" : velocityDelta < 0 ? "▼" : "—"} ${Math.abs(velocityDelta).toFixed(1)}% vs. ${effectiveCompareMode === "yoy" ? "mismo Q año anterior" : "período anterior"}`}</em>
+                  </button>
                 </div>
                 <div className="flow-kpis">
                   <Button variant="ghost" title="Clic para ver los deals" aria-label="Ver los deals ganados (E6)" onClick={() => setActiveFlow(summaryFlow("summary-won", "Ganados (E6)", "Deals que alcanzaron la etapa de propuesta firmada", "won", won, "E6", "E6"))}><span>Ganados (E6)</span><strong>{won.length} · {Math.round(winRate * 100)}%</strong>{showComparison ? <KpiComparison current={won.length} previous={previousWon.length} /> : null}<KpiArrow /></Button>
@@ -510,7 +502,29 @@ export function StageVelocity({
               {activeFlow ? <FlowDrawer flow={activeFlow} onClose={() => setActiveFlow(null)} /> : null}
             </div>
           </section>
-      ) : null}
+          <Popover open={detailOpen} onOpenChange={setDetailOpen}>
+            <PopoverAnchor virtualRef={detailAnchor} />
+            <PopoverContent className="pipeline-detail-popover won-mix-popover" side="top" align="center" sideOffset={10} collisionPadding={12} onCloseAutoFocus={event => { event.preventDefault(); detailAnchor.current?.focus({ preventScroll: true }); }}>
+              <header><h4>{detail === "velocity" ? "Deal Velocity · estimación" : `${detailStage?.key} · ${detailStage?.name}`}</h4><button type="button" aria-label="Cerrar detalle del pipeline" onClick={() => setDetailOpen(false)}><X size={16} /></button></header>
+              {detail === "velocity" ? <>
+                <div className="pipeline-formula-result"><strong>{velocity === null ? "—" : money(velocity)}</strong><span>MRR/día estimados</span></div>
+                <div className="pipeline-formula-rows">
+                  <div><span>Oportunidades · entrada E1</span><strong>{opportunities}</strong></div>
+                  <div><span>× Win rate · ganados / cerrados</span><strong>{(winRate * 100).toFixed(1)}%</strong></div>
+                  <div><span>× Ticket promedio · MRR ganado</span><strong>{money(ticket)}</strong></div>
+                  <div><span>÷ Ciclo · E1 → {totalCycle ? "E8" : "E6"}</span><strong>{velocityCycle ? `${velocityCycle.toFixed(1)} d` : "Sin dato"}</strong></div>
+                </div>
+                <p>Estimación del período filtrado; no representa MRR realmente generado cada día. {totalCycle ? "El ciclo incluye venta y desarrollo hasta inicio de servicio." : "Sin ciclo total disponible: se utiliza el ciclo de venta hasta propuesta firmada."} Las entradas y cierres del período pueden corresponder a deals distintos.</p>
+              </> : detailStage ? <>
+                <div className="pipeline-timing-summary"><strong>{detailStage.sampleCount ? `${detailStage.days.toFixed(1)} d` : "—"}</strong><span>{detailStage.sampleCount} salidas con dato</span><TrendChip delta={detailStage.days && detailStage.previousDays ? detailStage.days - detailStage.previousDays : null} /></div>
+                <p>Mediana de permanencia de quienes salieron hacia otra etapa registrada; no es la antigüedad de los deals actuales. {dateBasis === "entry" ? "Salidas registradas en el período filtrado." : "Deals con cierre en el período filtrado."} Comparación: {effectiveCompareMode === "yoy" ? "mismo Q del año pasado" : "período anterior equivalente"}.</p>
+                <div className="pipeline-timing-months" aria-label="Evolución mensual del tiempo en etapa">
+                  {detailStage.months.length ? detailStage.months.map(month => <div key={month.month}><span>{new Date(`${month.month}-01T12:00:00Z`).toLocaleDateString("es-CL", { month: "short", year: "numeric", timeZone: "UTC" })}</span><i><b style={{ width: `${Math.max(2, month.days / Math.max(...detailStage.months.map(item => item.days), .001) * 100)}%` }} /></i><strong>{month.days.toFixed(1)} d</strong><small>{month.count} salidas</small></div>) : <p>Sin salidas con duración válida en este corte.</p>}
+                </div>
+                <small>Evolución por mes de entrada a la siguiente etapa registrada. Fechas ausentes no se sustituyen.</small>
+              </> : null}
+            </PopoverContent>
+          </Popover>
     </>
   );
 }

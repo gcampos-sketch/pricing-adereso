@@ -1,14 +1,16 @@
 import type { DealDTO, StageJourney } from './pulse-types';
 import { roleOfOwner, type RoleFilter } from './owner-roles';
+import { calendarDate } from './service-overview';
 import { creationComparisonWindow, hasOrderedActivation } from './story-metrics';
 
 const OPEN = new Set(['171385863', '171385864', '173996363', '1181334581', '171385866', '171385867', '1245768029']);
+const ACTIVE = new Set(['1144383754', ...OPEN]);
 const WON = new Set(['174677684', '1278792585', '1086544542', '213244763', '171385868', '173990327']);
 
 type ExecutiveScope = { owner: string; role: RoleFilter; matchesType: (deal: DealDTO) => boolean };
 
 /** Commercial-pipeline journeys only; dates and stage selection never scope this strip. */
-export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: DealDTO[]; no: DealDTO[] }, now: number, scope?: ExecutiveScope) {
+export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: DealDTO[]; no: DealDTO[] }, now: number, scope?: ExecutiveScope, asOf = now) {
   const matches = (deal: DealDTO) => !scope || (
     (scope.owner === 'team' || deal.ownerId === scope.owner) &&
     (scope.role === 'all' || roleOfOwner(deal.ownerId) === scope.role) && scope.matchesType(deal)
@@ -31,6 +33,12 @@ export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: De
     const at = Date.parse(j.createdAt);
     return at >= window.previousStart && at < window.previousEnd;
   }).length;
+  // HubSpot date fields retain their calendar date; today itself is not overdue.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Coyhaique', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(asOf));
+  const overdue = journeys.filter(j => {
+    const close = calendarDate(j.deal.closeDateValue);
+    return ACTIVE.has(j.deal.stageId) && close !== '' && close < today;
+  }).map(j => j.deal).sort((a, b) => calendarDate(a.closeDateValue).localeCompare(calendarDate(b.closeDateValue)) || a.name.localeCompare(b.name));
   const by = (...ids: string[]) => journeys.filter(j => ids.includes(j.deal.stageId)).map(j => j.deal);
   const stages = [
     { key: 'Sin activar', hint: 'siguen en etapa 0 o 1', deals: by('1144383754', '171385863') },
@@ -77,7 +85,7 @@ export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: De
       createdDelta: previousCount ? (created.length - previousCount) / previousCount * 100 : null,
       comparisonPartial: window.partial,
     },
-    openPipe: { stages, total: stages.reduce((sum, st) => sum + st.deals.length, 0), aged: journeys.filter(j => OPEN.has(j.deal.stageId) && Date.parse(j.createdAt) < now - 60 * 86_400_000).map(j => j.deal) },
+    openPipe: { stages, overdue, total: stages.reduce((sum, st) => sum + st.deals.length, 0), aged: journeys.filter(j => OPEN.has(j.deal.stageId) && Date.parse(j.createdAt) < now - 60 * 86_400_000).map(j => j.deal) },
     wonJourney: {
       total: list.length, historicTotal: list.length, stages: wonStages, service,
       pending: list.filter(d => d.stageId !== '173990327'),
