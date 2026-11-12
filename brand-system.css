@@ -201,6 +201,13 @@ body.has-chapter-index .document-brand {display:block;}
 .chapter-resource-panel .side-box {display:block!important;margin-bottom:14px;}
 .chapter-resource-panel .side-box:last-child {margin-bottom:0;}
 .chapter-resource-panel .chapter-reset {display:block;position:static;width:auto;height:auto;margin:0;padding:8px;border:1px solid var(--b-default);border-radius:8px;color:var(--t-body);font:400 12px var(--font-body);}
+.chapter-index>.chapter-resources {position:absolute;left:0;right:auto;bottom:100%;width:28px;margin-bottom:4px;}
+.chapter-index>.chapter-resources summary {display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border-radius:8px;transition:color .2s var(--ease),background .2s var(--ease);}
+.chapter-index>.chapter-resources summary::before {content:none;}
+.chapter-index>.chapter-resources summary::-webkit-details-marker {display:none;}
+.chapter-index>.chapter-resources summary:hover,.chapter-index>.chapter-resources[open] summary {color:var(--brand);background:rgba(255,213,64,.08);}
+.chapter-index>.chapter-resources summary:focus-visible {outline:2px solid var(--brand);outline-offset:3px;}
+.chapter-index>.chapter-resources .chapter-resource-panel {top:100%;bottom:auto;right:calc(100% + 12px);max-width:calc(100vw - 68px);}
 /* Partners balances a broad presentation with a readable, compact index. */
 @media(min-width:720px) {
   body.has-chapter-index .shell {

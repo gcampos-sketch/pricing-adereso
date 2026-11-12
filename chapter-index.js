@@ -20,7 +20,13 @@
   }
   const reset=document.getElementById('resetBtn');
   if(reset){reset.classList.add('chapter-reset');reset.innerHTML='Reiniciar cotización';panel.append(reset);}
-  if(panel.children.length)document.body.append(resources);
+  if(panel.children.length){
+    if(source.id==='secnav'){
+      summary.setAttribute('aria-label','Notas y opciones');summary.title='Notas y opciones';
+      summary.innerHTML='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h6m4 0h6M4 17h10m4 0h2"/><circle cx="12" cy="7" r="2"/><circle cx="16" cy="17" r="2"/></svg>';
+      nav.prepend(resources);
+    }else document.body.append(resources);
+  }
   function rebuild(){
     const screens=Array.from(document.querySelectorAll('.screen'));
     entries=Array.from(source.querySelectorAll('a,button')).map((el,i)=>{

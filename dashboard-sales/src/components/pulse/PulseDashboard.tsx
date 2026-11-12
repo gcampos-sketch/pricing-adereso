@@ -1307,39 +1307,6 @@ export function PulseDashboard({
             ) : null}
           </small>
         </div>
-        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0} data-tasks={Boolean(overdueExposure?.tasks || overdueTasks.error)}>
-          {(() => {
-            const yes = executive.onTrack.yes.length;
-            const no = executive.onTrack.no.length;
-            const total = yes + no;
-            const C = 2 * Math.PI * 14;
-            const yesLen = total ? (yes / total) * C : 0;
-            const pct = total ? Math.round(yes / total * 100) : 0;
-            return <div className="exec-ontrack exec-health-widget">
-              <div>
-                <span>On track</span>
-                <strong>
-                  <button type="button" className="ot-yes" onClick={() => openList(`On Track: Sí · ${ownerName}`, "Pipeline activo marcado Sí · foto de hoy, sin filtro de fecha", executive.onTrack.yes)}>Sí {yes}</button>
-                  {" · "}
-                  <button type="button" className="ot-no" onClick={() => openList(`On Track: No · ${ownerName}`, "Pipeline activo marcado No · foto de hoy, sin filtro de fecha", executive.onTrack.no)}>No {no}</button>
-                </strong>
-                <small title="MRR on track Sí / MRR on track No">{total ? `${pct}% · ${money(executive.onTrack.yes.reduce((sum, d) => sum + d.amountValue, 0))} / ${money(executive.onTrack.no.reduce((sum, d) => sum + d.amountValue, 0))}` : "sin deals marcados"}</small>
-              </div>
-              <svg viewBox="0 0 36 36" width="30" height="30" aria-hidden="true">
-                <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-no" strokeWidth="5" />
-                {yesLen > 0 && <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-yes" strokeWidth="5" strokeDasharray={`${yesLen} ${C}`} transform="rotate(-90 18 18)" />}
-              </svg>
-            </div>;
-          })()}
-          {openPipe.overdue.length > 0 && <button type="button" className="exec-health-widget exec-overdue"
-            title="Deals del pipeline activo con fecha de cierre anterior a hoy. Ver los más antiguos primero."
-            onClick={() => openList(`Cierres vencidos · ${ownerName}`, "Pipeline activo · fecha de cierre anterior a hoy · sin filtro de período · más antiguos primero", openPipe.overdue, undefined, { key: "closeDate", dir: "asc" })}>
-            <span>Cierres vencidos</span>
-            <strong>{openPipe.overdue.length}<ArrowUpRight aria-hidden="true" /></strong>
-            <small>{money(openPipe.overdue.reduce((sum, d) => sum + d.amountValue, 0))} MRR · revisar fechas</small>
-          </button>}
-          <OverdueTasks controller={overdueTasks} />
-        </div>
         </div>
         <div className="exec-won-column">
         <div className="exec-won">
@@ -1373,7 +1340,40 @@ export function PulseDashboard({
               : "sin ganados históricos con monto"}
           </small>
         </div>
-        <div className="exec-won">
+        </div>
+        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0} data-tasks={Boolean(overdueExposure?.tasks || overdueTasks.error)}>
+          {(() => {
+            const yes = executive.onTrack.yes.length;
+            const no = executive.onTrack.no.length;
+            const total = yes + no;
+            const C = 2 * Math.PI * 14;
+            const yesLen = total ? (yes / total) * C : 0;
+            const pct = total ? Math.round(yes / total * 100) : 0;
+            return <div className="exec-ontrack exec-health-widget">
+              <div>
+                <span>On track</span>
+                <strong>
+                  <button type="button" className="ot-yes" onClick={() => openList(`On Track: Sí · ${ownerName}`, "Pipeline activo marcado Sí · foto de hoy, sin filtro de fecha", executive.onTrack.yes)}>Sí {yes}</button>
+                  {" · "}
+                  <button type="button" className="ot-no" onClick={() => openList(`On Track: No · ${ownerName}`, "Pipeline activo marcado No · foto de hoy, sin filtro de fecha", executive.onTrack.no)}>No {no}</button>
+                </strong>
+                <small title="MRR on track Sí / MRR on track No">{total ? `${pct}% · ${money(executive.onTrack.yes.reduce((sum, d) => sum + d.amountValue, 0))} / ${money(executive.onTrack.no.reduce((sum, d) => sum + d.amountValue, 0))}` : "sin deals marcados"}</small>
+              </div>
+              <svg viewBox="0 0 36 36" width="30" height="30" aria-hidden="true">
+                <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-no" strokeWidth="5" />
+                {yesLen > 0 && <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-yes" strokeWidth="5" strokeDasharray={`${yesLen} ${C}`} transform="rotate(-90 18 18)" />}
+              </svg>
+            </div>;
+          })()}
+          {openPipe.overdue.length > 0 && <button type="button" className="exec-health-widget exec-overdue"
+            title="Deals del pipeline activo con fecha de cierre anterior a hoy. Ver los más antiguos primero."
+            onClick={() => openList(`Cierres vencidos · ${ownerName}`, "Pipeline activo · fecha de cierre anterior a hoy · sin filtro de período · más antiguos primero", openPipe.overdue, undefined, { key: "closeDate", dir: "asc" })}>
+            <span>Cierres vencidos</span>
+            <strong>{openPipe.overdue.length}<ArrowUpRight aria-hidden="true" /></strong>
+            <small>{money(openPipe.overdue.reduce((sum, d) => sum + d.amountValue, 0))} MRR · revisar fechas</small>
+          </button>}
+          <OverdueTasks controller={overdueTasks} />
+                <div className="exec-won exec-contract-widget exec-health-widget">
           <span>Contratos por firmar</span>
           <strong>
             <button type="button" className="ex-link ex-warn" onClick={() => openList(`Contratos por firmar · ${ownerName} · histórico`, "Ganados del pipeline comercial Adereso con monto > $0 y contrato no firmado · sin filtro de fecha", wonJourney.contracts)}>
