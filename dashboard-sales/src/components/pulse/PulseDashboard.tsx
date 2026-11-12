@@ -28,7 +28,8 @@ import { useRefreshMenu } from "@/contexts/RefreshContext";
 export { SingleFilterMenu, OwnerFilterMenu, StageFilterMenu } from "./FilterBar";
 import type { DealDTO, Drilldown, MonthlyPulse, PeriodStats, PulseReport, RiskSummary, Tone } from "@/lib/pulse-types";
 import { roleOfOwner } from "@/lib/owner-roles";
-import { creationComparisonWindow, hasOrderedActivation } from "@/lib/story-metrics";
+import { generationEntryDate, generationStageEntries, generationSourceRows } from "@/lib/pipeline-generation";
+import { creationComparisonWindow } from "@/lib/story-metrics";
 import { buildExecutiveStrip } from "@/lib/executive-strip";
 import { supabase } from "@/integrations/supabase/client";
 import { quotaStats, classifyQuotaDeal, pendingFromPreviousQuarters } from '@/lib/quota-eligibility';
@@ -551,7 +552,7 @@ export function PulseDashboard({
   const projectsOnly = section === "proyectos";
   const [modalKey, setModalKey] = useState<string | null>(null);
   const [gapInitialMonth, setGapInitialMonth] = useState<string | null>(null);
-  const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" }) | null>(null);
+  const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" }) | null>(null);
   const [showAlerts, setShowAlerts] = useState(false);
   const [dense, setDense] = useState(true);
   const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
@@ -639,18 +640,14 @@ export function PulseDashboard({
     const nowMs = Date.now();
     const E0 = "1144383754";
     const OPEN = new Set([E0, "171385863", "171385864", "173996363", "1181334581", "171385866", "171385867", "1245768029"]);
-    const quarterOf = (iso: string) => {
-      const d = new Date(iso);
-      return Number.isFinite(d.getTime()) ? `${d.getUTCFullYear()}-Q${Math.floor(d.getUTCMonth() / 3) + 1}` : "";
-    };
-    const periods = new Set(selectedPeriods);
     const scoped = (report.stageJourneys ?? []).filter(
-      (j) => (ownerFilter === "team" || j.deal.ownerId === ownerFilter) && matchesType(j.deal),
+      (j) => (ownerFilter === "team" || j.deal.ownerId === ownerFilter) && (role === "all" || roleOfOwner(j.deal.ownerId) === role) && matchesType(j.deal),
     );
-    const created = scoped.filter((j) => periods.has(quarterOf(j.createdAt)));
+    const stageEntries = generationStageEntries(scoped, selectedPeriods);
+    const created = stageEntries.generated;
     const comparisonWindow = creationComparisonWindow(Number(year), quarter, nowMs);
     const previousCreated = scoped.filter((j) => {
-      const date = Date.parse(j.createdAt);
+      const date = Date.parse(generationEntryDate(j));
       return date >= comparisonWindow.previousStart && date < comparisonWindow.previousEnd;
     });
     const periodEndMonth = quarter === "all" ? 11 : Number(quarter) * 3 - 1;
@@ -665,46 +662,20 @@ export function PulseDashboard({
       const start = month.getTime();
       const end = Date.UTC(month.getUTCFullYear(), month.getUTCMonth() + 1, 1);
       return scoped.filter((j) => {
-        const timestamp = Date.parse(j.createdAt);
+        const timestamp = Date.parse(generationEntryDate(j));
         return timestamp >= start && timestamp < end;
       }).length;
     });
     const createdTrendLabels = trendMonths.map((month) =>
       month.toLocaleDateString("es", { month: "short", year: "2-digit", timeZone: "UTC" }),
     );
-    // AE: activado = avanzó a E1 o cualquier etapa posterior. KAM: paso ordenado E0→E1.
     const LOST_ID = "171385869";
-    const isAe = (j: (typeof scoped)[number]) => roleOfOwner(j.deal.ownerId) === "AE";
-    const advanced = (j: (typeof scoped)[number]) =>
-      Object.keys(j.entered).some((k) => k !== "E0" && k !== "LOST") ||
-      (j.deal.stageId !== E0 && j.deal.stageId !== LOST_ID);
-    const fromE0 = created.filter((j) => isAe(j) || j.entered["E0"] || j.deal.stageId === E0);
-    const e0ToE1 = fromE0.filter((j) => (isAe(j) ? advanced(j) : hasOrderedActivation(j.entered)));
-    // Faltan por activar: creados del período que todavía no avanzan (AE) o no registran E0→E1 (KAM).
-    const notActivated = fromE0.filter((j) => !(isAe(j) ? advanced(j) : hasOrderedActivation(j.entered)));
-    // Por valorizar: los que hoy siguen en E2 (sin importar la fecha) y los creados en el
-    // período filtrado que todavía no entran a E4.
-    const E2 = "171385864";
-    const E4 = "171385866";
-    const pendingValNow = scoped.filter((j) => j.deal.stageId === E2);
-    const pendingValPeriod = created.filter(
-      (j) => !j.entered["E4"] && j.deal.stageId !== LOST_ID && !j.entered["LOST"],
-    );
-    // Valorizados: entraron a E4 dentro del período (sin importar cuándo se crearon) y monto > 0.
-    const valuedList = scoped.filter(
-      (j) => j.entered["E4"] && periods.has(quarterOf(j.entered["E4"])) && (j.deal.amountValue || 0) > 0,
-    );
-    // Perdidos después de activarse (cualquier etapa posterior) y, dentro de ellos, los que cayeron estando en E1.
-    // Por fecha de entrada a perdido dentro del período (sin importar cuándo se crearon).
-    const lostAfterActivation = scoped.filter(
-      (j) =>
-        j.deal.stageId === LOST_ID &&
-        periods.has(quarterOf(j.entered["LOST"] || j.deal.closeDateValue || "")) &&
-        (isAe(j) ? Object.keys(j.entered).some((k) => k !== "E0" && k !== "LOST") : hasOrderedActivation(j.entered)),
-    );
-    const lostFromE1 = lostAfterActivation.filter((j) =>
-      Object.keys(j.entered).every((k) => k === "E0" || k === "E1" || k === "LOST"),
-    );
+    const e0ToE1 = stageEntries.activated;
+    const pendingValNow = scoped.filter(j => j.deal.stageId === "171385864");
+    const pendingValPeriod = created.filter(j => !j.entered["E4"] && j.deal.stageId !== LOST_ID && !j.entered["LOST"]);
+    const valuedList = stageEntries.valued;
+    const lostAfterActivation = stageEntries.lost;
+    const lostFromE1 = stageEntries.lostFromE1;
     const e0Stuck = scoped.filter((j) => {
       if (j.deal.stageId !== E0) return false;
       const since = Date.parse(j.entered["E0"] || j.createdAt);
@@ -734,9 +705,7 @@ export function PulseDashboard({
       previousCreatedCount: previousCreated.length,
       comparisonPartial: comparisonWindow.partial,
       comparisonFuture: comparisonWindow.future,
-      fromE0: deals(fromE0),
       e0ToE1: deals(e0ToE1),
-      notActivatedIds: notActivated.map((j) => j.deal.id),
       lostAfterActivation: deals(lostAfterActivation),
       lostFromE1: deals(lostFromE1),
       e0Stuck: deals(e0Stuck),
@@ -745,7 +714,7 @@ export function PulseDashboard({
       openDeals: deals(openNow),
       avgActs,
     };
-  }, [report.stageJourneys, ownerFilter, matchesType, selectedPeriods, year, quarter, isAllYear]);
+  }, [report.stageJourneys, ownerFilter, role, matchesType, selectedPeriods, year, quarter, isAllYear]);
   const openList = (
     title: string,
     subtitle: string,
@@ -1147,12 +1116,13 @@ export function PulseDashboard({
   const createdDelta = !funnelTop.comparisonFuture && funnelTop.previousCreatedCount
     ? ((funnelTop.created.length - funnelTop.previousCreatedCount) / funnelTop.previousCreatedCount) * 100
     : null;
-  const activationPct = funnelTop.fromE0.length
-    ? Math.round((funnelTop.e0ToE1.length / funnelTop.fromE0.length) * 100)
-    : null;
-  const lateLossPct = funnelTop.e0ToE1.length
-    ? Math.round((funnelTop.lostAfterActivation.length / funnelTop.e0ToE1.length) * 100)
-    : null;
+  const openGenerationList = (title: string, subtitle: string, deals: DealDTO[]) => setPeriodPayload({ title, subtitle, deals, presentation: "stage-entry" });
+  const generationSourceRole = ownerFilter === "team" ? role : roleOfOwner(ownerFilter) ?? role;
+  const generationSourceChips = (deals: DealDTO[], title: string): MetricChip[] => generationSourceRows(deals, generationSourceRole).map(row => ({
+    label: row.label,
+    value: String(row.deals.length),
+    onClick: () => openGenerationList(`${title} · ${row.label} · ${rangeLabel}`, "Fuente de creación del deal · misma entrada a etapa y filtros de la tarjeta. SDR incluye prospección y formulario inbound de Adereso.", row.deals),
+  }));
   const mainRisk = [...scopedAlerts].sort((a, b) => b.amount - a.amount)[0];
   const openRisk = () => {
     if (!mainRisk) return;
@@ -1510,69 +1480,71 @@ export function PulseDashboard({
       </Fold>
 
       <Fold title="Generación y gestión del pipeline" subtitle={`Creación, valorización, activación y pérdidas · ${rangeLabel}`}>
-      <div className="pipeline-history-access"><span>Tarjetas del período seleccionado · fechas según cada indicador</span><PipelineHistory journeys={(report.stageJourneys ?? []).filter(row => (ownerFilter === 'team' || row.deal.ownerId === ownerFilter) && matchesType(row.deal))} scopeLabel={`${isTeam ? 'Equipo' : ownerRow?.name ?? 'Comercial seleccionado'} · ${role === 'all' ? 'Todos los roles' : role} · ${dealType === 'all' ? 'Todos los tipos' : dealType}`}  /></div>
-      <section className="grid-4" style={{ marginTop: 16 }}>
+      <div className="pipeline-history-access"><span>Por fecha de entrada a etapa · período y filtros principales</span><PipelineHistory journeys={(report.stageJourneys ?? []).filter(row => (ownerFilter === 'team' || row.deal.ownerId === ownerFilter) && matchesType(row.deal))} scopeLabel={`${isTeam ? 'Equipo' : ownerRow?.name ?? 'Comercial seleccionado'} · ${role === 'all' ? 'Todos los roles' : role} · ${dealType === 'all' ? 'Todos los tipos' : dealType}`}  /></div>
+      <section className="grid-4 generation-entry-cards" style={{ marginTop: 16 }}>
         <Metric
-          label={`Deals creados · ${rangeLabel}`}
+          label={`Deals ingresados · E0/E1 · ${rangeLabel}`}
           value={String(funnelTop.created.length)}
           trend={funnelTop.createdTrend}
           trendLabels={funnelTop.createdTrendLabels}
           note={`${money(funnelTop.createdAmount)} ingresados en el período`}
           chips={[
+            ...generationSourceChips(funnelTop.created, "Deals ingresados · E0/E1"),
             {
               label: funnelTop.comparisonPartial ? "vs. previo · parcial" : isAllYear ? "YoY" : "vs. previo",
               value: createdDelta == null ? "s/n" : `${createdDelta >= 0 ? "▲" : "▼"} ${Math.abs(createdDelta).toFixed(0)}%`,
               tone: createdDelta == null ? "neutral" : createdDelta >= 0 ? "ok" : "bad",
             },
           ]}
-          onClick={() => openList(`Deals creados · ${rangeLabel}`, "Deals con fecha de creación en el período", funnelTop.created)}
-          tooltip="Deals creados en el período filtrado. La línea muestra los últimos seis meses. La variación compara el período anterior con el mismo tiempo transcurrido cuando el período actual está abierto. El mes en curso es parcial."
+          onClick={() => openGenerationList(`Deals ingresados · E0/E1 · ${rangeLabel}`, "Primera entrada registrada a E0 o E1 dentro del período, sin usar creación ni cierre", funnelTop.created)}
+          tooltip="Cuenta cada deal una vez por su primera entrada registrada a E0 o E1. La creación y el cierre no sustituyen fechas faltantes. Tendencia y comparación usan la misma fecha de entrada; el período abierto compara el mismo tiempo transcurrido. Chips por fuente de creación del deal."
         />
         <Metric
           label="Deals valorizados"
           value={String(funnelTop.valued.length)}
           note={`${money(funnelTop.valuedAmount)} · entraron a E4 con monto > $0`}
-          onClick={() => openList(`Deals valorizados · ${rangeLabel}`, "Deals que entraron a E4 en el período con monto mayor a $0", funnelTop.valued)}
+          onClick={() => openGenerationList(`Deals valorizados · ${rangeLabel}`, "Deals que entraron a E4 en el período con monto mayor a $0", funnelTop.valued)}
           tooltip="Deals que entraron a E4 (valorización) dentro del período seleccionado y tienen monto mayor a $0, sin importar en qué trimestre se crearon."
           chips={[
+            ...generationSourceChips(funnelTop.valued, "Deals valorizados · E4"),
             {
               label: "En E2 hoy",
               value: String(funnelTop.pendingValNow.length),
               ...(funnelTop.pendingValNow.length ? { tone: "warn" as const } : {}),
-              onClick: () => openList(`Por valorizar · en E2 · ${rangeLabel}`, "Deals abiertos que siguen en etapa 2, sin importar cuándo se crearon", funnelTop.pendingValNow),
+              onClick: () => openGenerationList(`Por valorizar · en E2 · ${rangeLabel}`, "Deals abiertos que siguen en etapa 2, sin importar cuándo se crearon", funnelTop.pendingValNow),
             },
             {
               label: "Pendientes del período",
               value: String(funnelTop.pendingValPeriod.length),
               ...(funnelTop.pendingValPeriod.length ? { tone: "warn" as const } : {}),
-              onClick: () => openList(`Pendientes de valorizar · ${rangeLabel}`, "Deals creados en el período que todavía no entran a E4", funnelTop.pendingValPeriod),
+              onClick: () => openGenerationList(`Pendientes de valorizar · ${rangeLabel}`, "Deals ingresados a E0/E1 en el período que todavía no entran a E4", funnelTop.pendingValPeriod),
             },
           ]}
         />
         <Metric
-          label={role === "AE" ? "Activados · E1+" : "Activados · E0→E1"}
-          value={activationPct == null ? "s/d" : `${activationPct}%`}
-          valueSuffix={`(${funnelTop.e0ToE1.length}/${funnelTop.fromE0.length})`}
-          note={role === "AE" ? `${funnelTop.created.length} creados · avanzaron a E1 o más` : `paso por E0 registrado: ${funnelTop.fromE0.length}/${funnelTop.created.length} creados`}
-          onClick={() => openList(`Activados E0→E1 · ${rangeLabel}`, "Deals creados en el período que pasaron de reunión agendada a realizada", funnelTop.e0ToE1)}
-          tooltip="AE (Gonza, Holly, Gio, Andrés): activado = deal creado en el período que avanzó a E1 o a cualquier etapa posterior; denominador = todos sus creados. KAM: numerador = deals creados en el período que registran entrada a E1. Denominador: deals creados en el período con paso comprobable por E0. Solo incluye paso por E0 comprobable. Los creados directamente en otras etapas quedan fuera. Fechas de entrada disponibles: no equivalen al historial completo."
+          label={generationSourceRole === "KAM" ? "Activados · E0→E1" : "Activados · E1"}
+          value={String(funnelTop.e0ToE1.length)}
+          note="Entrada registrada a E1 en el período"
+          chips={generationSourceChips(funnelTop.e0ToE1, "Deals activados · E1")}
+          onClick={() => openGenerationList(`Activados · E1 · ${rangeLabel}`, "Entrada a E1 dentro del período; para KAM, con paso anterior registrado por E0", funnelTop.e0ToE1)}
+          tooltip="Deals con entrada registrada a E1 en el período, aunque hayan ingresado al pipeline antes. Para KAM exige E0 anterior o simultáneo. No se infiere activación por la etapa actual. Cada tarjeta mide eventos distintos: no se divide este total por las entradas del período. Chips por fuente de creación."
         />
         <Metric
           label="Perdidos tras activarse"
           value={String(funnelTop.lostAfterActivation.length)}
-          valueSuffix={lateLossPct == null ? "" : `(${lateLossPct}%)`}
           note="entraron a perdido en el período"
           tone={funnelTop.lostAfterActivation.length ? "warn" : "ok"}
           chips={[
+            ...generationSourceChips(funnelTop.lostAfterActivation, "Perdidos tras activarse"),
             {
               label: "Desde E1",
               value: String(funnelTop.lostFromE1.length),
               tone: funnelTop.lostFromE1.length ? "warn" : "neutral",
-              onClick: () => openList(`Perdidos desde E1 · ${rangeLabel}`, "Deals que entraron a perdido en el período estando en E1", funnelTop.lostFromE1),
+              onClick: () => openGenerationList(`Perdidos desde E1 · ${rangeLabel}`, "Deals que entraron a perdido en el período estando en E1", funnelTop.lostFromE1),
             },
           ]}
-          onClick={() => openList(`Perdidos tras activarse · ${rangeLabel}`, "Deals activados que entraron a perdido dentro del período", funnelTop.lostAfterActivation)}
-          tooltip="Número grande: deals activados que entraron a Deal perdido dentro del período seleccionado, sin importar cuándo se crearon, desde cualquier etapa. El % es sobre los activados del período. Chip «Desde E1»: de esos, los que se perdieron estando en E1, sin avanzar más."
+          onClick={() => openGenerationList(`Perdidos tras activarse · ${rangeLabel}`, "Deals activados que entraron a perdido dentro del período", funnelTop.lostAfterActivation)}
+          tooltip="Deals con entrada registrada a perdido en el período y entrada previa o simultánea a E1; KAM requiere E0→E1. Sin sustituir fechas por cierre ni exigir que sigan perdidos hoy. «Desde E1» no registra etapas posteriores antes de perderse. Chips por fuente de creación; sin porcentaje entre cohortes distintas."
         />
       </section>
       <StageVelocity
@@ -2226,6 +2198,7 @@ export function PulseDashboard({
 
       <DealModal
         payload={payload}
+        hideCloseSummary={periodPayload?.presentation === "stage-entry"}
         onClose={closeModal}
         initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}
         executiveSummary={periodPayload?.presentation === "won" ? ({ selectedOwner, onOwnerSelect }) => <WonExecutiveSummary

@@ -4,7 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getServiceOverview } from "@/lib/pulse.functions";
 import {
   customerIndustryCluster,
-  serviceMonths,
+  servicePeriodGroups,
   upcomingThisQuarter,
   type ServiceOverview as Overview,
 } from "@/lib/service-overview";
@@ -24,11 +24,13 @@ const dateLabel = (value: string) => (value ? value.split("-").reverse().join("-
 const monthLabel = (key: string) =>
   key === "undated"
     ? "Sin fecha de inicio de servicio"
-    : new Date(`${key}-01T12:00:00Z`).toLocaleDateString("es-CL", {
-        month: "long",
-        year: "numeric",
-        timeZone: "UTC",
-      });
+    : key.includes("-Q")
+      ? `Q${key.slice(-1)} · ${key.slice(0, 4)}`
+      : new Date(`${key}-01T12:00:00Z`).toLocaleDateString("es-CL", {
+          month: "long",
+          year: "numeric",
+          timeZone: "UTC",
+        });
 
 function DirectoryPopup({
   title,
@@ -81,6 +83,7 @@ export function ServiceOverview({
   const [industry, setIndustry] = useState("");
   const [devQuery, setDevQuery] = useState("");
   const [devOwner, setDevOwner] = useState("");
+  const [serviceGroupUnit, setServiceGroupUnit] = useState<"month" | "quarter">("month");
   useEffect(() => {
     let active = true;
     setError(false);
@@ -164,6 +167,29 @@ export function ServiceOverview({
           </button>
         }
       >
+        <div className="service-period-toolbar">
+          <span>Agrupar inicio previsto</span>
+          <div
+            className="service-period-toggle"
+            role="group"
+            aria-label="Agrupar negocios por inicio previsto"
+          >
+            <button
+              type="button"
+              aria-pressed={serviceGroupUnit === "month"}
+              onClick={() => setServiceGroupUnit("month")}
+            >
+              Mes
+            </button>
+            <button
+              type="button"
+              aria-pressed={serviceGroupUnit === "quarter"}
+              onClick={() => setServiceGroupUnit("quarter")}
+            >
+              Q
+            </button>
+          </div>
+        </div>
         <div className="service-directory-filters">
           <label>
             <Search size={14} />
@@ -195,7 +221,7 @@ export function ServiceOverview({
           <p className="service-result-count">
             {rows.length} negocios · {money(rows.reduce((sum, row) => sum + row.mrr, 0))} MRR
           </p>
-          {serviceMonths(rows).map((group) => (
+          {servicePeriodGroups(rows, serviceGroupUnit).map((group) => (
             <section key={group.key}>
               <h5>
                 {monthLabel(group.key)}
@@ -234,7 +260,7 @@ export function ServiceOverview({
           {!rows.length ? <p className="service-empty">No hay negocios que coincidan.</p> : null}
         </div>
         <footer>
-          Orden por inicio del servicio, del más próximo al más lejano. Sin fecha, al final.
+          Agrupado por {serviceGroupUnit === "month" ? "mes" : "trimestre"} de inicio del servicio. Dentro de cada grupo, fechas en orden ascendente. Sin fecha, al final.
         </footer>
       </DirectoryPopup>
     );
@@ -370,7 +396,6 @@ export function ServiceOverview({
       </DirectoryPopup>
       {children}
       {developmentPopup(false)}
-      {developmentPopup(true)}
       {error ? (
         <button
           type="button"
