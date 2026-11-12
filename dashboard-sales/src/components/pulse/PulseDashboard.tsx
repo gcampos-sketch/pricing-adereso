@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { ArrowUpRight } from 'lucide-react';
+import { PULSE_FOCUS_PAGES, type PulseFocusView, type PulseSection } from '@/lib/report-navigation';
 import { Button } from "@/components/ui/button";
 import { AdoboRiskHygiene } from "./AdoboRiskHygiene";
 import { CommissionRate } from "./CommissionRate";
 import { quarterPace } from "@/lib/quarter-performance";
 import { NotificationCenter } from './NotificationCenter';
-import { dashboardTasks } from '@/lib/dashboard-tasks';
+import { dashboardActionGroups } from '@/lib/dashboard-action-groups';
 import { CopySectionButton } from "./CopyControls";
 import { DealModal } from "./DealModal";
 import { WonExecutiveSummary } from "./WonExecutiveSummary";
@@ -353,11 +355,11 @@ const FoldDnd = createContext<{
 } | null>(null);
 
 /** Contenedor que permite reordenar los acordeones con drag & drop; el orden se guarda por navegador. */
-export function FoldList({ children }: { children: React.ReactNode }) {
+export function FoldList({ children, storageKey = FOLD_ORDER_KEY }: { children: React.ReactNode; storageKey?: string }) {
   const [order, setOrder] = useState<string[]>([]);
   useEffect(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(FOLD_ORDER_KEY) || "[]");
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
       if (Array.isArray(saved)) setOrder(saved.map(id => id === 'Generación y activación' ? 'Generación y gestión del pipeline' : id));
     } catch {
       /* ignore */
@@ -371,7 +373,7 @@ export function FoldList({ children }: { children: React.ReactNode }) {
     const next = ids.filter((id) => id !== from);
     next.splice(next.indexOf(to) + (ids.indexOf(from) < ids.indexOf(to) ? 1 : 0), 0, from);
     setOrder(next);
-    localStorage.setItem(FOLD_ORDER_KEY, JSON.stringify(next));
+    localStorage.setItem(storageKey, JSON.stringify(next));
   };
   return (
     <FoldDnd.Provider value={{ order, move }}>
@@ -385,13 +387,15 @@ export function Fold({
   subtitle,
   children,
   onOpenChange,
+  defaultOpen = false,
 }: {
   title: string;
   subtitle?: string;
   children: React.ReactNode;
   onOpenChange?: (open: boolean) => void;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const [over, setOver] = useState(false);
   const dnd = useContext(FoldDnd);
   const id = title.split(" · ")[0]!;
@@ -534,6 +538,7 @@ export function PulseDashboard({
   isRefreshing,
   tabs,
   onSimulate,
+  onNavigate,
   section = "general",
   role = "all",
   onRole,
@@ -543,13 +548,20 @@ export function PulseDashboard({
   isRefreshing: boolean;
   tabs?: React.ReactNode;
   onSimulate?: (ownerId: string) => void;
-  /** "proyectos" y "embudo" muestran solo su tab anidado. */
-  section?: "general" | "proyectos" | "embudo";
+  /** Overview and focused destinations share the same master filter state. */
+  section?: PulseSection;
+  onNavigate?: (view: PulseFocusView) => void;
   /** rol comercial: todos (predeterminado), AE o KAM */
   role?: "all" | "AE" | "KAM";
   onRole?: (value: "all" | "AE" | "KAM") => void;
 }) {
   const projectsOnly = section === "proyectos";
+  useEffect(() => {
+    setModalKey(null);
+    setPeriodPayload(null);
+    setGapInitialMonth(null);
+    document.querySelector<HTMLElement>('.pulse-focus-heading h2')?.focus({ preventScroll: true });
+  }, [section]);
   const [modalKey, setModalKey] = useState<string | null>(null);
   const [gapInitialMonth, setGapInitialMonth] = useState<string | null>(null);
   const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" }) | null>(null);
@@ -910,14 +922,15 @@ export function PulseDashboard({
   const periodLostPositive = (isTeam ? periodData?.team.lostDeals : periodData?.owners[ownerFilter]?.lostDeals ?? [])
     ?.filter((d) => (d.amountValue || 0) > 0).length ?? 0;
   const periodWr = { won: periodWonPositive, lost: periodLostPositive };
+  const executiveDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Coyhaique", year: "numeric", month: "2-digit", day: "2-digit" }).format(performanceNow);
   // Commercial Adereso pipeline is enforced upstream; only commercial filters scope the strip.
   const executive = useMemo(() => buildExecutiveStrip(
     report.stageJourneys ?? [],
     report.executiveStrip?.onTrack ?? {
       yes: report.drilldowns[report.tracking?.find(t => t.id === "team")?.onTrackYesModal ?? ""]?.deals ?? [],
       no: report.drilldowns[report.tracking?.find(t => t.id === "team")?.onTrackNoModal ?? ""]?.deals ?? [],
-    }, Date.parse(report.generatedAt), { owner: ownerFilter, role, matchesType }), [report, ownerFilter, role, matchesType]);
-  const operationalTasks = useMemo(() => dashboardTasks(report, { owner: ownerFilter, role, stages: stageFilter, matchesType }), [report, ownerFilter, role, stageFilter, matchesType]);
+    }, Date.parse(report.generatedAt), { owner: ownerFilter, role, matchesType }, performanceNow), [report, ownerFilter, role, matchesType, executiveDay]);
+  const operationalTasks = useMemo(() => dashboardActionGroups(report, { owner: ownerFilter, role, stages: stageFilter, matchesType }, performanceNow), [report, ownerFilter, role, stageFilter, matchesType, executiveDay]);
   const { openPipe, wonJourney } = executive;
   const executiveRange = shortPeriod(executive.period);
   const wonComparison = useMemo(() => {
@@ -1159,7 +1172,10 @@ export function PulseDashboard({
         isRefreshing={isRefreshing}
         onRefresh={onRefresh}
         label="Filtros del pipeline comercial"
-        actions={<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}} tasks={operationalTasks} generatedAt={report.generatedAt}/>}
+        actions={<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}} groups={operationalTasks} onReview={(group) => {
+          const reason = group.reasons.length ? group.reasons.map(r => `${r.label}: ${r.deals.length}`).join(" · ") : group.description;
+          openList(group.title, reason + " · foto actual, sin filtro de período", group.deals, undefined, group.id === "overdue" ? { key: "closeDate", dir: "asc" } : undefined);
+        }} generatedAt={report.generatedAt}/>}
       />
 
       {projectsOnly ? (
@@ -1215,19 +1231,21 @@ export function PulseDashboard({
       ) : (
         <>
       {headerMrr ? (
-        <section className="adereso-global-metrics" aria-label="Métricas generales Adereso">
+        <section className="adereso-global-metrics" hidden={section !== "general"} aria-label="Métricas generales Adereso">
           <SectionTitle compact>Métricas generales Adereso</SectionTitle>
           <ActiveMrrCard data={headerMrr} year={year} quarter={quarter} snapshotKey={report.generatedAt} />
         </section>
       ) : null}
 
+      {section === "general" ? <>
       {/* ===================== RESUMEN EJECUTIVO ===================== */}
       <SectionTitle compact>
         {`Resumen ejecutivo · ${ownerName} · ${executiveRange} / histórico`}
       </SectionTitle>
 
       <section className="executive-story" aria-label="Lectura ejecutiva">
-        <div
+        <div className="exec-pipeline-column">
+        <div className="exec-generation"
           role="button"
           tabIndex={0}
           data-clickable
@@ -1255,6 +1273,7 @@ export function PulseDashboard({
           <span>Generación · {executiveRange} · {ownerName}</span>
           <strong>{executive.generation.created.length} creados · {executive.generation.activationPct == null ? "activación s/d" : `${executive.generation.activationPct}% activados`}</strong>
           <small title={executive.generation.createdDelta == null ? undefined : `Comparado con el período anterior${executive.generation.comparisonPartial ? " con el mismo tiempo transcurrido" : ""}`}>{executive.generation.createdDelta == null ? "sin período comparable" : `${executive.generation.createdDelta >= 0 ? "▲" : "▼"} ${Math.abs(executive.generation.createdDelta).toFixed(0)}% vs. período anterior${executive.generation.comparisonPartial ? " · parcial" : ""}`}</small>
+          <span className="exec-sub-label">Pipeline activo · hoy</span>
           {openPipe.total ? (
             <div className="won-bar pipe-bar" role="group" aria-label="Pipeline abierto por etapa">
               {openPipe.stages.filter((st) => st.deals.length).map((st, i) => (
@@ -1280,6 +1299,40 @@ export function PulseDashboard({
             ) : null}
           </small>
         </div>
+        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0}>
+          {(() => {
+            const yes = executive.onTrack.yes.length;
+            const no = executive.onTrack.no.length;
+            const total = yes + no;
+            const C = 2 * Math.PI * 14;
+            const yesLen = total ? (yes / total) * C : 0;
+            const pct = total ? Math.round(yes / total * 100) : 0;
+            return <div className="exec-ontrack exec-health-widget">
+              <div>
+                <span>On track</span>
+                <strong>
+                  <button type="button" className="ot-yes" onClick={() => openList(`On Track: Sí · ${ownerName}`, "Pipeline activo marcado Sí · foto de hoy, sin filtro de fecha", executive.onTrack.yes)}>Sí {yes}</button>
+                  {" · "}
+                  <button type="button" className="ot-no" onClick={() => openList(`On Track: No · ${ownerName}`, "Pipeline activo marcado No · foto de hoy, sin filtro de fecha", executive.onTrack.no)}>No {no}</button>
+                </strong>
+                <small title="MRR on track Sí / MRR on track No">{total ? `${pct}% · ${money(executive.onTrack.yes.reduce((sum, d) => sum + d.amountValue, 0))} / ${money(executive.onTrack.no.reduce((sum, d) => sum + d.amountValue, 0))}` : "sin deals marcados"}</small>
+              </div>
+              <svg viewBox="0 0 36 36" width="30" height="30" aria-hidden="true">
+                <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-no" strokeWidth="5" />
+                {yesLen > 0 && <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-yes" strokeWidth="5" strokeDasharray={`${yesLen} ${C}`} transform="rotate(-90 18 18)" />}
+              </svg>
+            </div>;
+          })()}
+          {openPipe.overdue.length > 0 && <button type="button" className="exec-health-widget exec-overdue"
+            title="Deals del pipeline activo con fecha de cierre anterior a hoy. Ver los más antiguos primero."
+            onClick={() => openList(`Cierres vencidos · ${ownerName}`, "Pipeline activo · fecha de cierre anterior a hoy · sin filtro de período · más antiguos primero", openPipe.overdue, undefined, { key: "closeDate", dir: "asc" })}>
+            <span>Cierres vencidos</span>
+            <strong>{openPipe.overdue.length}<ArrowUpRight aria-hidden="true" /></strong>
+            <small>{money(openPipe.overdue.reduce((sum, d) => sum + d.amountValue, 0))} MRR · revisar fechas</small>
+          </button>}
+        </div>
+        </div>
+        <div className="exec-won-column">
         <div className="exec-won">
           <span>Ganados → servicio</span>
           <strong>
@@ -1311,36 +1364,6 @@ export function PulseDashboard({
               : "sin ganados históricos con monto"}
           </small>
         </div>
-        {(() => {
-          const yes = executive.onTrack.yes.length;
-          const no = executive.onTrack.no.length;
-          const total = yes + no;
-          const C = 2 * Math.PI * 14;
-          const yesLen = total ? (yes / total) * C : 0;
-          const pct = total ? Math.round((yes / total) * 100) : 0;
-          return (
-            <div className="exec-ontrack">
-              <div>
-                <span>Deals on track</span>
-                <strong>
-                  <button type="button" className="ot-yes" onClick={() => openList(`On Track: Sí · ${ownerName}`, "Deals abiertos marcados Sí · sin filtro de fecha", executive.onTrack.yes)}>Sí {yes}</button>
-                  {" · "}
-                  <button type="button" className="ot-no" onClick={() => openList(`On Track: No · ${ownerName}`, "Deals abiertos marcados No · sin filtro de fecha", executive.onTrack.no)}>No {no}</button>
-                </strong>
-                <small>{total ? `${pct}% on track · ${money(executive.onTrack.yes.reduce((sum, d) => sum + d.amountValue, 0))} vs ${money(executive.onTrack.no.reduce((sum, d) => sum + d.amountValue, 0))}` : "sin deals marcados"}</small>
-              </div>
-              <svg viewBox="0 0 36 36" width="44" height="44" aria-label={`${pct}% on track`}>
-                <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-no" strokeWidth="5"
-                  role="button" onClick={() => openList(`On Track: No · ${ownerName}`, "Deals abiertos marcados No · sin filtro de fecha", executive.onTrack.no)}><title>No: {no}</title></circle>
-                {yesLen > 0 ? (
-                  <circle cx="18" cy="18" r="14" fill="none" className="ot-ring-yes" strokeWidth="5"
-                    strokeDasharray={`${yesLen} ${C}`} transform="rotate(-90 18 18)"
-                    role="button" onClick={() => openList(`On Track: Sí · ${ownerName}`, "Deals abiertos marcados Sí · sin filtro de fecha", executive.onTrack.yes)}><title>Sí: {yes}</title></circle>
-                ) : null}
-              </svg>
-            </div>
-          );
-        })()}
         <div className="exec-won">
           <span>Contratos por firmar</span>
           <strong>
@@ -1359,6 +1382,7 @@ export function PulseDashboard({
               ))}
             {!wonJourney.contracts.length ? "todos los contratos firmados" : null}
           </small>
+        </div>
         </div>
       </section>
 
@@ -1418,8 +1442,21 @@ export function PulseDashboard({
         />
       </section>
 
-      <FoldList>
-      <Fold title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>
+      <nav className="overview-deep-links" aria-label="Profundizar en el informe">
+        <span>Explorar en detalle</span>
+        {PULSE_FOCUS_PAGES.map(page => <button key={page.id} type="button" onClick={() => { onNavigate?.(page.id); window.scrollTo({ top: 0, behavior: 'instant' }); }}>
+          <strong>{page.title}</strong><small>{page.description}</small><ArrowUpRight aria-hidden="true" />
+        </button>)}
+      </nav>
+      </> : <header className="pulse-focus-heading" data-section-head>
+        <div><h2 className="pulse-h2" tabIndex={-1}>{PULSE_FOCUS_PAGES.find(page => page.id === section)?.title}</h2>
+          <p>{PULSE_FOCUS_PAGES.find(page => page.id === section)?.description} <span>{ownerName} · {rangeLabel}</span></p>
+        </div><CopySectionButton />
+      </header>}
+
+      {section !== "general" && <div className="pulse-focused-content"><FoldList key={section} storageKey={`pulse-fold-order-${section}-v2`}>
+      {section === "conversion" && <>
+      <Fold defaultOpen title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>
       {/* Fila 3 — Win rate / Ticket prom / Perdido */}
       <section className="grid-3" style={{ marginTop: 16 }}>
         <Metric
@@ -1482,8 +1519,9 @@ export function PulseDashboard({
         />
       </section>
       </Fold>
-
-      <Fold title="Generación y gestión del pipeline" subtitle={`Creación, valorización, activación y pérdidas · ${rangeLabel}`}>
+      </>}
+      {section === "pipeline" && <>
+      <Fold defaultOpen title="Generación y gestión del pipeline" subtitle={`Creación, valorización, activación y pérdidas · ${rangeLabel}`}>
       <div className="pipeline-history-access"><span>Por fecha de entrada a etapa · período y filtros principales</span><PipelineHistory journeys={(report.stageJourneys ?? []).filter(row => (ownerFilter === 'team' || row.deal.ownerId === ownerFilter) && matchesType(row.deal))} scopeLabel={`${isTeam ? 'Equipo' : ownerRow?.name ?? 'Comercial seleccionado'} · ${role === 'all' ? 'Todos los roles' : role} · ${dealType === 'all' ? 'Todos los tipos' : dealType}`}  /></div>
       <section className="grid-4 generation-entry-cards" style={{ marginTop: 16 }}>
         <Metric
@@ -1552,7 +1590,6 @@ export function PulseDashboard({
         />
       </section>
       <StageVelocity
-        presentation="pipeline"
         journeys={report.stageJourneys ?? []}
         ownerId={ownerFilter}
         dealType={dealType}
@@ -1560,189 +1597,9 @@ export function PulseDashboard({
         quarter={quarter}
       />
       </Fold>
-
-      <Fold title={`Avance y velocidad · ${rangeLabel}`} subtitle="Tiempo por etapa y Deal Velocity · medianas de quienes ya salieron de cada etapa">
-      <StageVelocity
-        presentation="metrics"
-        journeys={report.stageJourneys ?? []}
-        ownerId={ownerFilter}
-        dealType={dealType}
-        selectedPeriods={selectedPeriods}
-        quarter={quarter}
-      />
-      </Fold>
-
-      <Fold title="Calidad del forecast · hoy" subtitle="Cierres del mes, credibilidad, contactabilidad e higiene de fechas">
-      {(() => {
-        const qCard = (label: string) => scope.cards.find((card) => card.label === label);
-        const renderQ = (label: string, override?: string) => {
-          const card = qCard(label);
-          if (!card) return null;
-          return (
-            <Metric
-              key={label}
-              label={override ?? card.label}
-              value={card.value}
-              note={card.note || undefined}
-              tone={card.tone ?? "neutral"}
-              onClick={() => setModalKey(card.modal)}
-              {...(card.tooltip ? { tooltip: card.tooltip } : {})}
-              {...(card.trend ? { trend: card.trend, trendLabels: monthly.months } : {})}
-            />
-          );
-        };
-        const adoboScope =
-          report.adobo?.scopes.find((item) => item.id === scopeId) ?? report.adobo?.scopes?.[0] ?? null;
-        const tempBuckets = (tempData?.buckets ?? []).filter((bucket) =>
-          ["normal", "prehot", "hot"].includes(bucket.key),
-        );
-        return (
-          <>
-            {/* 01 · ¿Cómo viene mi mes? */}
-            <QHead
-              title="¿Cómo viene mi mes?"
-              subtitle="Lo que tengo comprometido y su valor esperado"
-              badge="Informativo"
-            />
-            <section className="grid-4">
-              {closeData ? (
-                <>
-                  <Metric
-                    label={`Cierran ${closeData.monthLabel}`}
-                    value={money(closeData.monthAmount)}
-                    note={`${closeData.monthCount} deals con fecha en el mes en curso`}
-                    onClick={() => setModalKey(closeData.monthModal)}
-                  />
-                  <Metric
-                    label="Ponderado del mes"
-                    value={money(closeData.monthWeighted)}
-                    note="monto x probabilidad de etapa"
-                    onClick={() => setModalKey(closeData.monthModal)}
-                  />
-                </>
-              ) : null}
-              {renderQ("Deals Q abiertos")}
-            </section>
-
-            {/* 02 · ¿Puedo confiar en ese número? */}
-            <QHead
-              title="¿Puedo confiar en ese número?"
-              subtitle="Termómetro, deal fit y credibilidad de las fechas"
-              badge="Informativo · credibilidad"
-            />
-            <QGroup label="Termómetro general" />
-            <section className="grid-4">
-              {renderQ("% cierre prom.")}
-              {renderQ("Deal score prom.")}
-              {renderQ("Adobo scoring prom.")}
-            </section>
-            {adoboScope ? (
-              <>
-                <QGroup label="Deal fit · qué tan bien calzan" />
-                <section className="grid-4">
-                  {adoboScope.fit.map((bucket) => (
-                    <Metric
-                      key={bucket.key}
-                      label={`Fit ${bucket.label}`}
-                      value={String(bucket.count)}
-                      note={`${money(bucket.amount)} · Adobo prom. ${
-                        bucket.avgScore < 0 ? "s/n" : Math.round(bucket.avgScore)
-                      }${bucket.key === "indeterminado" ? " · sin clasificar" : ""}`}
-                      tone={
-                        bucket.key === "alto"
-                          ? "ok"
-                          : bucket.key === "medio"
-                            ? "warn"
-                            : bucket.key === "bajo"
-                              ? "bad"
-                              : "neutral"
-                      }
-                      tooltip="Distribución del pipeline abierto según adobo_icp_fit. Clic para ver los deals."
-                      onClick={() => setModalKey(bucket.modal)}
-                    />
-                  ))}
-                </section>
-                <QGroup label="Forecast real · ¿la fecha se sostiene?" />
-                <section className="grid-4">
-                  {adoboScope.forecast.map((card) => (
-                    <Metric
-                      key={card.key}
-                      label={card.label}
-                      value={money(card.amount)}
-                      note={`${card.count} deals · ${card.note}`}
-                      tone={card.tone}
-                      tooltip={card.tooltip}
-                      onClick={() => setModalKey(card.modal)}
-                    />
-                  ))}
-                </section>
-              </>
-            ) : null}
-
-            {/* 03 · ¿Cómo va la comunicación con mis leads? */}
-            {!tempData ? (
-              <>
-                <QHead title="Comunicación · evidencia disponible" subtitle="Ratio legado separado de la tasa por episodios" badge="Sin inferencias de ghosting"/>
-                <section className="grid-3">
-                  {renderQ("Ratio legado prom.")}
-                  <Metric label="Tasa por episodios" value="pendiente" note="pendiente de integración · ventana, metodología y cobertura sin dato" tone="neutral"/>
-                  <Metric label="Señal de contacto" value="no verificable" note="Sin frescura, cobertura y pausa validadas · sin alerta ni tope" tone="neutral"/>
-                </section>
-              </>
-            ) : null}
-            {tempData ? (
-              <>
-                <QHead
-                  title="¿Cómo va la comunicación con mis leads?"
-                  subtitle="Salud del contacto, de riesgo de ghosting a hot"
-                  badge="Informativo · comunicación"
-                />
-                <section className="grid-4">
-                  {renderQ("Ratio legado prom.")}
-                  <Metric
-                    label="Riesgo ghosting"
-                    value={String(tempData.coldCount)}
-                    note={`${money(tempData.coldAmount)} · ${Math.round(tempData.coldPct)}% del pipeline · sin respuesta hace rato`}
-                    tone={hygieneTone(tempData.coldCount, tempData.openCount)}
-                    tooltip="Deals con 3 o más intentos de contacto y 0 respuestas del prospecto. Su Adobo score se muestra con tope 45 porque no hay evidencia de conversación."
-                    onClick={() => setModalKey(tempData.coldModal)}
-                  />
-                  {tempBuckets.map((bucket) => (
-                    <Metric
-                      key={bucket.key}
-                      label={bucket.label}
-                      value={String(bucket.count)}
-                      note={`${money(bucket.amount)}${bucket.avgScore >= 0 ? ` · Adobo prom. ${Math.round(bucket.avgScore)}` : ""}`}
-                      tone={bucket.tone}
-                      tooltip={bucket.tooltip}
-                      onClick={() => setModalKey(bucket.modal)}
-                    />
-                  ))}
-                </section>
-              </>
-            ) : null}
-
-            {closeData ? (
-              <>
-                <div className="q-foot">
-                  <span
-                    className="status"
-                    data-tone={closeData.healthPct >= 85 ? "ok" : closeData.healthPct >= 60 ? "warn" : "bad"}
-                  >
-                    Higiene de fechas {Math.round(closeData.healthPct)}%
-                  </span>
-                  <span>
-                    porcentaje con fecha válida y no vencida · base: {closeData.openCount} deals abiertos
-                  </span>
-                </div>
-              </>
-            ) : null}
-          </>
-        );
-      })()}
-      </Fold>
-
-      <Fold title="Qué trabajo hoy" subtitle="Prioridades ordenadas por impacto · todas abren su lista de deals">
+      </>}
+      {section === "forecast" && <>
+      <Fold defaultOpen title="Qué trabajo hoy" subtitle="Prioridades ordenadas por impacto · todas abren su lista de deals">
       <QGroup label="Cierre y seguimiento inmediato" tone="bad" />
       <section className="grid-4">
         <Metric
@@ -1971,6 +1828,179 @@ export function PulseDashboard({
 
       </> : null}
       </Fold>
+      </>}
+      {section === "forecast" && <>
+      <Fold title="Calidad del forecast · hoy" subtitle="Cierres del mes, credibilidad, contactabilidad e higiene de fechas">
+      {(() => {
+        const qCard = (label: string) => scope.cards.find((card) => card.label === label);
+        const renderQ = (label: string, override?: string) => {
+          const card = qCard(label);
+          if (!card) return null;
+          return (
+            <Metric
+              key={label}
+              label={override ?? card.label}
+              value={card.value}
+              note={card.note || undefined}
+              tone={card.tone ?? "neutral"}
+              onClick={() => setModalKey(card.modal)}
+              {...(card.tooltip ? { tooltip: card.tooltip } : {})}
+              {...(card.trend ? { trend: card.trend, trendLabels: monthly.months } : {})}
+            />
+          );
+        };
+        const adoboScope =
+          report.adobo?.scopes.find((item) => item.id === scopeId) ?? report.adobo?.scopes?.[0] ?? null;
+        const tempBuckets = (tempData?.buckets ?? []).filter((bucket) =>
+          ["normal", "prehot", "hot"].includes(bucket.key),
+        );
+        return (
+          <>
+            {/* 01 · ¿Cómo viene mi mes? */}
+            <QHead
+              title="¿Cómo viene mi mes?"
+              subtitle="Lo que tengo comprometido y su valor esperado"
+              badge="Informativo"
+            />
+            <section className="grid-4">
+              {closeData ? (
+                <>
+                  <Metric
+                    label={`Cierran ${closeData.monthLabel}`}
+                    value={money(closeData.monthAmount)}
+                    note={`${closeData.monthCount} deals con fecha en el mes en curso`}
+                    onClick={() => setModalKey(closeData.monthModal)}
+                  />
+                  <Metric
+                    label="Ponderado del mes"
+                    value={money(closeData.monthWeighted)}
+                    note="monto x probabilidad de etapa"
+                    onClick={() => setModalKey(closeData.monthModal)}
+                  />
+                </>
+              ) : null}
+              {renderQ("Deals Q abiertos")}
+            </section>
+
+            {/* 02 · ¿Puedo confiar en ese número? */}
+            <QHead
+              title="¿Puedo confiar en ese número?"
+              subtitle="Termómetro, deal fit y credibilidad de las fechas"
+              badge="Informativo · credibilidad"
+            />
+            <QGroup label="Termómetro general" />
+            <section className="grid-4">
+              {renderQ("% cierre prom.")}
+              {renderQ("Deal score prom.")}
+              {renderQ("Adobo scoring prom.")}
+            </section>
+            {adoboScope ? (
+              <>
+                <QGroup label="Deal fit · qué tan bien calzan" />
+                <section className="grid-4">
+                  {adoboScope.fit.map((bucket) => (
+                    <Metric
+                      key={bucket.key}
+                      label={`Fit ${bucket.label}`}
+                      value={String(bucket.count)}
+                      note={`${money(bucket.amount)} · Adobo prom. ${
+                        bucket.avgScore < 0 ? "s/n" : Math.round(bucket.avgScore)
+                      }${bucket.key === "indeterminado" ? " · sin clasificar" : ""}`}
+                      tone={
+                        bucket.key === "alto"
+                          ? "ok"
+                          : bucket.key === "medio"
+                            ? "warn"
+                            : bucket.key === "bajo"
+                              ? "bad"
+                              : "neutral"
+                      }
+                      tooltip="Distribución del pipeline abierto según adobo_icp_fit. Clic para ver los deals."
+                      onClick={() => setModalKey(bucket.modal)}
+                    />
+                  ))}
+                </section>
+                <QGroup label="Forecast real · ¿la fecha se sostiene?" />
+                <section className="grid-4">
+                  {adoboScope.forecast.map((card) => (
+                    <Metric
+                      key={card.key}
+                      label={card.label}
+                      value={money(card.amount)}
+                      note={`${card.count} deals · ${card.note}`}
+                      tone={card.tone}
+                      tooltip={card.tooltip}
+                      onClick={() => setModalKey(card.modal)}
+                    />
+                  ))}
+                </section>
+              </>
+            ) : null}
+
+            {/* 03 · ¿Cómo va la comunicación con mis leads? */}
+            {!tempData ? (
+              <>
+                <QHead title="Comunicación · evidencia disponible" subtitle="Ratio legado separado de la tasa por episodios" badge="Sin inferencias de ghosting"/>
+                <section className="grid-3">
+                  {renderQ("Ratio legado prom.")}
+                  <Metric label="Tasa por episodios" value="pendiente" note="pendiente de integración · ventana, metodología y cobertura sin dato" tone="neutral"/>
+                  <Metric label="Señal de contacto" value="no verificable" note="Sin frescura, cobertura y pausa validadas · sin alerta ni tope" tone="neutral"/>
+                </section>
+              </>
+            ) : null}
+            {tempData ? (
+              <>
+                <QHead
+                  title="¿Cómo va la comunicación con mis leads?"
+                  subtitle="Salud del contacto, de riesgo de ghosting a hot"
+                  badge="Informativo · comunicación"
+                />
+                <section className="grid-4">
+                  {renderQ("Ratio legado prom.")}
+                  <Metric
+                    label="Riesgo ghosting"
+                    value={String(tempData.coldCount)}
+                    note={`${money(tempData.coldAmount)} · ${Math.round(tempData.coldPct)}% del pipeline · sin respuesta hace rato`}
+                    tone={hygieneTone(tempData.coldCount, tempData.openCount)}
+                    tooltip="Deals con 3 o más intentos de contacto y 0 respuestas del prospecto. Su Adobo score se muestra con tope 45 porque no hay evidencia de conversación."
+                    onClick={() => setModalKey(tempData.coldModal)}
+                  />
+                  {tempBuckets.map((bucket) => (
+                    <Metric
+                      key={bucket.key}
+                      label={bucket.label}
+                      value={String(bucket.count)}
+                      note={`${money(bucket.amount)}${bucket.avgScore >= 0 ? ` · Adobo prom. ${Math.round(bucket.avgScore)}` : ""}`}
+                      tone={bucket.tone}
+                      tooltip={bucket.tooltip}
+                      onClick={() => setModalKey(bucket.modal)}
+                    />
+                  ))}
+                </section>
+              </>
+            ) : null}
+
+            {closeData ? (
+              <>
+                <div className="q-foot">
+                  <span
+                    className="status"
+                    data-tone={closeData.healthPct >= 85 ? "ok" : closeData.healthPct >= 60 ? "warn" : "bad"}
+                  >
+                    Higiene de fechas {Math.round(closeData.healthPct)}%
+                  </span>
+                  <span>
+                    porcentaje con fecha válida y no vencida · base: {closeData.openCount} deals abiertos
+                  </span>
+                </div>
+              </>
+            ) : null}
+          </>
+        );
+      })()}
+      </Fold>
+      </>}
+      {section === "forecast" && <>
       <Fold title="Actividad y cobertura de datos" subtitle="Hoy · actividades por deal e higiene de gestión">
       <section className="grid-3">
         <Metric
@@ -1993,6 +2023,8 @@ export function PulseDashboard({
       </Fold>
 
       {/* ===================== TABLA UNIFICADA POR COMERCIAL ===================== */}
+      </>}
+      {section === "conversion" && <>
       <Fold title="Detalle por comercial" subtitle="Hoy / Q en curso · todos los tipos de deal">
       <div className="tabs" style={{ margin: "0 0 16px", justifyContent: "flex-end" }}>
         <button className="tab" type="button" data-active={dense} onClick={() => setDense(true)}>
@@ -2191,7 +2223,8 @@ export function PulseDashboard({
         </table>
       </div>
       </Fold>
-      </FoldList>
+      </>}
+      </FoldList></div>}
 
 
 

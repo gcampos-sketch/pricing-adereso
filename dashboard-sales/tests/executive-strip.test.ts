@@ -106,3 +106,35 @@ test('owner role and type intersect rather than leaking another selection', () =
   expect(r.wonJourney.total).toBe(0);
   expect(r.onTrack.yes).toEqual([]);
 });
+
+test('overdue closes include only unique active deals before the local business day, oldest first', () => {
+  // UTC is already Nov 13, but Chile's business calendar is still Nov 12.
+  const at = Date.parse('2026-11-13T01:00:00Z');
+  const rows = [
+    journey('today', '171385864', '2020-01-01', { closeDateValue: '2026-11-12', name: 'Today' }),
+    journey('yesterday', '171385867', '2020-01-01', { closeDateValue: '2026-11-11', name: 'Yesterday' }),
+    journey('old', '1144383754', '2020-01-01', { closeDateValue: '2026-10-01', name: 'Old' }),
+    journey('won', '173990327', '2020-01-01', { closeDateValue: '2026-10-01' }),
+    journey('lost', '171385869', '2020-01-01', { closeDateValue: '2026-10-01' }),
+    journey('missing', '171385864', '2020-01-01', { closeDateValue: '' }),
+    journey('invalid', '171385864', '2020-01-01', { closeDateValue: 'not-a-date' }),
+    journey('future', '171385864', '2020-01-01', { closeDateValue: '2026-11-13' }),
+  ];
+  expect(ids(buildExecutiveStrip([...rows, rows[1]!], { yes: [], no: [] }, at).openPipe.overdue)).toEqual(['old', 'yesterday']);
+});
+test('overdue widget population respects commercial/type scope and is empty when there are no matching expired closes', () => {
+  const rows = [
+    journey('selected', '171385864', '2020-01-01', { ownerId: '373167468', closeDateValue: '2026-10-01', name: 'Selected' }),
+    journey('kam', '171385864', '2020-01-01', { ownerId: '91603512', closeDateValue: '2026-10-01', name: 'Other owner' }),
+    journey('upsell', '171385864', '2020-01-01', { ownerId: '373167468', closeDateValue: '2026-10-01', segment: 'Upsell', name: 'Other type' }),
+  ];
+  expect(ids(buildExecutiveStrip(rows, { yes: [], no: [] }, now, { owner: '373167468', role: 'AE', matchesType: d => d.segment === 'Inbound' }).openPipe.overdue)).toEqual(['selected']);
+  expect(buildExecutiveStrip(rows, { yes: [], no: [] }, now, { owner: 'unknown', role: 'all', matchesType: () => true }).openPipe.overdue).toEqual([]);
+});
+test('overdue calendar advances even when the last CRM snapshot predates midnight', () => {
+  const snapshot = Date.parse('2026-11-13T01:00:00Z');
+  const nextDay = Date.parse('2026-11-13T04:00:00Z');
+  const row = journey('midnight', '171385864', '2020-01-01', { closeDateValue: '2026-11-12', name: 'Midnight' });
+  expect(buildExecutiveStrip([row], { yes: [], no: [] }, snapshot).openPipe.overdue).toEqual([]);
+  expect(ids(buildExecutiveStrip([row], { yes: [], no: [] }, snapshot, undefined, nextDay).openPipe.overdue)).toEqual(['midnight']);
+});

@@ -12,7 +12,12 @@ export type { ReportView } from '@/lib/report-navigation';
 const groups = [
   { id: "comercial", label: "Pipeline Comercial", icon: BriefcaseBusiness, children: [
     { id: "comercial", label: "Vista general" },
-    { id: "proyectos", label: "Proyectos" },
+    { id: "forecast", label: "Forecast y prioridades" },
+    { id: "pipeline", label: "Pipeline y reuniones" },
+    { id: "proyectos", label: "Proyectos ganados" },
+  ] },
+  { id: "conversion", label: "Resultados", icon: BarChart3, children: [
+    { id: "conversion", label: "Resultados y conversión" },
     { id: "crecimiento", label: "Expansión vs Venta Nueva" },
     { id: "perdidos", label: "Deals Perdidos" },
     { id: "calidad", label: "Calidad Comercial" },
@@ -20,7 +25,7 @@ const groups = [
   ] },
   { id: "partners", label: "Negocios de Partners", icon: Handshake },
   { id: "equipo", label: "Rendimiento del Equipo", icon: Users },
-  { id: "simulador", label: "Simulador de Estrategia", icon: Workflow, children: [
+  { id: "simulador", label: "Simuladores", icon: Workflow, children: [
     { id: "embudo", label: "Pipeline Comercial" },
     { id: "simulador", label: "Cumplimiento cuota" },
   ] },

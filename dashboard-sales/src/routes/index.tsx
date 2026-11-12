@@ -34,7 +34,7 @@ import {
 import type { PulseReport } from "@/lib/pulse-types";
 import { unpackReport } from '@/lib/report-wire';
 import { supabase } from "@/integrations/supabase/client";
-import { readReportView, saveReportView } from '@/lib/report-navigation';
+import { readReportView, saveReportView, isPulseReportView, pulseSectionForView } from '@/lib/report-navigation';
 
 /**
  * Cada reporte tiene dos consultas: la copia guardada (respuesta inmediata) y
@@ -197,7 +197,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
 
   const insightsEnabled = view === "crecimiento" || view === "simulador" || view === "perdidos";
   const pulseDefs = useMemo(() => pulseQFor(roleFilter), [roleFilter]);
-  const pulse = useReport(pulseDefs, view === 'comercial' || view === 'proyectos' || view === 'embudo');
+  const pulse = useReport(pulseDefs, isPulseReportView(view));
   const partner = useReport(partnerQ, view === "partners");
   const team = useReport(teamQ, view === "equipo");
   const insights = useReport(insightsQ, insightsEnabled);
@@ -291,7 +291,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
       ? diagnostic
       : view === "calidad"
       ? coaching
-      : view === "comercial" || view === "proyectos" || view === "embudo"
+      : isPulseReportView(view)
       ? pulse
       : view === "partners"
         ? partner
@@ -345,9 +345,10 @@ function Index({ embedded = false }: { embedded?: boolean }) {
     partners: 'Consultando datos de Partners', equipo: 'Consultando resultados del equipo', crecimiento: 'Consultando crecimiento',
     simulador: 'Preparando datos del simulador', perdidos: 'Consultando negocios perdidos', calidad: 'Consultando calidad comercial',
     diagnostico: 'Consultando las ediciones del diagnóstico comercial',
+    pipeline: 'Preparando pipeline y reuniones', forecast: 'Preparando forecast y prioridades', conversion: 'Preparando resultados y conversión',
   };
   const reportPhase = useReportPhase(`pulse-report-${roleFilter.toLowerCase()}`);
-  const pulseView = view === 'comercial' || view === 'proyectos' || view === 'embudo';
+  const pulseView = isPulseReportView(view);
   const loadingMessage = pulseView && !active.data && reportPhase ? reportPhase : loadingMessages[view];
   useSharedReportLoading(!active.data && !active.error, !!active.data, loadingMessage);
 
@@ -458,7 +459,8 @@ function Index({ embedded = false }: { embedded?: boolean }) {
       onRefresh={pulse.refetch}
       isRefreshing={pulse.isRefreshing}
       tabs={tabs}
-      section={view === "proyectos" ? "proyectos" : view === "embudo" ? "embudo" : "general"}
+      section={pulseSectionForView(view)}
+      onNavigate={setView}
       role={roleFilter}
       onRole={setRoleFilter}
       onSimulate={(ownerId) => {

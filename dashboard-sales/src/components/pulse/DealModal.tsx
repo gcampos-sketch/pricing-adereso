@@ -4,7 +4,7 @@ import type { DealDTO, Drilldown } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
 import { dealSelectionTotal, type SelectionQuota } from "@/lib/deal-selection-total";
-import { CopyTextButton } from "./CopyControls";
+import { CopyDealLinksButton, CopyTextButton } from "./CopyControls";
 import { DealSelectionSummary } from "./DealSelectionSummary";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, getAdoboHistory, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
@@ -1768,12 +1768,7 @@ export function DealModal({
     }
   };
   const OwnerBreakdownContainer = executiveSummary ? "details" : "div";
-  const allText = () =>
-    [
-      `${visiblePayload.title} · ${visiblePayload.subtitle}`,
-      visibleColumns.map((column) => column.label).join("\t") + "\tLink",
-      ...deals.map((deal) => dealLine(deal)),
-    ].join("\n");
+
 
   return (
     <div
@@ -1934,10 +1929,8 @@ export function DealModal({
               </>
             ) : null}
 
-            <CopyTextButton getText={allText} title="Copiar toda la tabla con sus links">
-              Copiar todo
-            </CopyTextButton>
             </div></div>
+            <CopyDealLinksButton getDeals={() => deals} />
             <button ref={closeRef} className="modal-close" type="button" onClick={requestClose} aria-label="Cerrar">
               ×
             </button>
