@@ -6,53 +6,59 @@
       "date": "2026-11-06",
       "product": "Experience + Desk",
       "title": "Encuestas que entienden a tu cliente",
-      "summary": "La encuesta entiende «Ya quedó solucionado» como un «Sí».",
-      "benefit": "Tu cliente responde con sus palabras y puede seguir con la encuesta.",
+      "summary": "La encuesta reconoce frases como «Ya quedó solucionado» como un «Sí».",
+      "benefit": "Tu cliente puede responder naturalmente y continuar sin repetir la opción.",
       "details": [
         "Si la respuesta no es clara, la encuesta vuelve a preguntar.",
         "Se mantienen las opciones configuradas. Una frase no se convierte en una nota numérica."
       ],
       "availability": "Ya disponible en el flujo de encuesta post-atención actualizado. Se aplica automáticamente.",
       "guide": "https://help.adereso.ai/administrador/8eb5QjUUPugzFCKxNAwGQB/satisfacci%C3%B3n-epa-/ePUu955xxJDrEgr6avLK2m",
-      "visual": "survey"
+      "visual": "survey",
+      "before": "Si el cliente respondía con sus palabras, debía repetir una opción para que la encuesta avanzara.",
+      "shareText": "✨ ¡Las encuestas de Adereso entienden a tus clientes!\n\nSi alguien responde «Ya quedó solucionado, gracias», la encuesta puede reconocerlo como un «Sí» y continuar.\n\n✅ Una conversación más natural, sin pedirle al cliente que repita una opción.\n\n📍 Ya disponible en el flujo de encuesta post-atención actualizado; se aplica automáticamente.\n\nℹ️ Si la respuesta es ambigua, vuelve a preguntar. Mantiene las opciones configuradas y no convierte frases en notas numéricas."
     },
     {
       "id": "studio-proyectos-2026-11-06",
       "date": "2026-11-06",
       "product": "Studio",
       "title": "Tus agentes, juntos en un proyecto",
-      "summary": "Ahora puedes reunir los agentes de un mismo objetivo y ver sus conexiones en un solo lugar.",
-      "benefit": "Revisas cómo se conectan tus agentes, sus pruebas y su actividad sin perderte entre pantallas.",
+      "summary": "Proyectos reúne tus agentes, conexiones, pruebas y actividad en un solo lugar.",
+      "benefit": "Entiendes cómo trabaja el equipo de agentes y revisas su actividad con más claridad.",
       "details": [
         "Tus bots actuales quedan en el Proyecto predeterminado. Siguen funcionando igual y sus versiones publicadas siguen activas.",
         "Desde el proyecto puedes revisar agentes, pruebas, métricas y monitoreo."
       ],
       "availability": "En Studio → Proyectos → Proyecto predeterminado → Agentes.",
       "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
-      "visual": "agents"
+      "visual": "agents",
+      "before": "Sin una vista común por objetivo, era más difícil seguir cómo se conectaban tus agentes.",
+      "shareText": "🧩 ¡Tus agentes de IA, juntos en Proyectos de Adereso Studio!\n\nReúne a los agentes de un mismo objetivo y explora sus conexiones, pruebas y actividad desde un solo lugar.\n\n✅ Más claridad para entender cómo trabaja tu equipo de agentes y revisar su desempeño.\n\n📍 En Studio → Proyectos → Proyecto predeterminado → Agentes.\n\nℹ️ Tus bots actuales siguen funcionando igual y sus versiones publicadas siguen activas. Este cambio organiza el trabajo; no cambia su comportamiento."
     },
     {
       "id": "studio-tester-2026-11-06",
       "date": "2026-11-06",
       "product": "Studio",
       "title": "Prueba con audios y archivos",
-      "summary": "Renovamos el chat de pruebas: puedes usar audios y archivos mientras ajustas tu agente.",
-      "benefit": "Pruebas más situaciones de tus clientes antes de poner los cambios en uso.",
+      "summary": "El tester se abre al costado y permite probar con audios y archivos mientras configuras.",
+      "benefit": "Revisas más situaciones de tus clientes sin interrumpir los ajustes del agente.",
       "details": [
         "El chat de pruebas se abre al costado: puedes seguir configurando el agente.",
         "Puedes revisar el chat junto a Contexto o Debug, citar mensajes y buscar en la conversación."
       ],
       "availability": "En Studio → Probar, o con Cmd/Ctrl + P. Disponible en ambos modos de prueba.",
       "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
-      "visual": "tester"
+      "visual": "tester",
+      "before": "Probar una conversación y revisar la configuración eran pasos menos integrados.",
+      "shareText": "🎙️ ¡Más formas de probar tus agentes en Adereso Studio!\n\nEl chat de pruebas ahora se abre al costado: puedes probar con audios y archivos mientras sigues configurando tu agente.\n\n✅ Revisa más situaciones de tus clientes sin interrumpir los ajustes, antes de poner los cambios en uso.\n\n📍 Abre Probar desde tu agente o usa Cmd/Ctrl + P. Disponible en ambos modos de prueba."
     },
     {
       "id": "engage-respuestas-boton-2026-10-27",
       "date": "2026-10-27",
       "product": "Engage",
       "title": "Ve qué botones eligen tus clientes",
-      "summary": "Ahora ves las respuestas a cada botón de una campaña de WhatsApp en un mismo panel.",
-      "benefit": "Comparas qué opciones interesan a tus clientes sin abrir cada conversación.",
+      "summary": "Un panel reúne las selecciones, los usuarios y el porcentaje por botón.",
+      "benefit": "Identificas qué opciones interesan a tus clientes sin revisar cada conversación.",
       "details": [
         "Aplica a campañas nuevas de Adereso BSP con botones de respuesta rápida. No recupera campañas históricas.",
         "Una persona puede elegir varias veces: selecciones y usuarios son cifras distintas. El porcentaje se calcula sobre selecciones válidas.",
@@ -60,22 +66,26 @@
       ],
       "availability": "En Analítica → Engage → Campañas. Para campañas nuevas de Adereso BSP con respuestas rápidas.",
       "guide": "https://help.adereso.ai/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFuc3QJXWBTqY5e/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFw31hv5oYRktX9",
-      "visual": "campaign"
+      "visual": "campaign",
+      "before": "Comparar qué botones elegían tus clientes requería revisar las conversaciones por separado.",
+      "shareText": "📊 ¡Descubre qué botones eligen tus clientes en Adereso Engage!\n\nEl panel Respuestas por botón reúne las selecciones, los usuarios y el porcentaje de cada opción de tus campañas de WhatsApp.\n\n✅ Compara qué opciones interesan a tus clientes sin abrir cada conversación.\n\n📍 Analítica → Engage → Campañas.\n\nℹ️ Para campañas nuevas de Adereso BSP con botones de respuesta rápida; no reconstruye envíos históricos. Una persona puede seleccionar varias veces: el porcentaje se calcula sobre selecciones válidas. No incluye enlaces, llamadas, Flows, carruseles ni otros proveedores. «No disponible» indica datos incompletos, no cero respuestas."
     },
     {
       "id": "desk-email-proactivo-2026-10-26",
       "date": "2026-10-26",
       "product": "Desk",
       "title": "Escribe primero desde Desk",
-      "summary": "Puedes iniciar un correo desde Desk y continuar la atención en un ticket.",
-      "benefit": "Haces seguimiento al cliente sin esperar a que te escriba primero.",
+      "summary": "Puedes redactar un correo desde Desk e iniciar un ticket al aceptarse el envío.",
+      "benefit": "Tomas la iniciativa en el seguimiento y continúas la atención desde el mismo lugar.",
       "details": [
         "Puedes agregar destinatarios, CC, CCO y adjuntos, y revisar el correo antes de enviarlo.",
         "El ticket se crea cuando Desk acepta el envío. Eso no confirma que el correo llegó: la entrega se informa por separado."
       ],
       "availability": "Requiere envío proactivo habilitado y una cuenta de correo accesible para tu usuario.",
       "guide": "https://help.adereso.ai/gesti%C3%B3n-del-agente-ejecutivo/wyPWvKJunzeTwyUof2BLCc/enviar-mensajes-proactivos-nuevo-ticket/78f9N27ekHR2ca4KPu5Y2h",
-      "visual": "email"
+      "visual": "email",
+      "before": "Para atender por correo desde Desk, dependías de que el cliente escribiera primero.",
+      "shareText": "📧 ¡Toma la iniciativa por correo desde Adereso Desk!\n\nRedacta un correo, agrega copias y adjuntos, y revisa el mensaje antes de enviarlo. Cuando Desk acepta el envío, crea un ticket para continuar la atención.\n\n✅ Haz seguimiento a tus clientes sin esperar a que te escriban primero, desde el mismo lugar donde los atiendes.\n\n📍 Desde Nuevo ticket o Clientes → Contactar. Requiere envío proactivo habilitado y una cuenta de correo accesible para tu usuario.\n\nℹ️ El envío aceptado confirma la solicitud y la creación del ticket; la entrega al destinatario se informa por separado."
     }
   ]
 }
