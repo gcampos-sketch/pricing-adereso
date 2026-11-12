@@ -91,3 +91,21 @@ test("quarter clusters preserve every deal, chronological order, year boundaries
   expect(groups.flatMap((group) => group.deals).reduce((sum, row) => sum + row.mrr, 0)).toBe(500);
   expect(servicePeriodGroups(rows, "month")).toEqual(serviceMonths(rows));
 });
+
+test("service client projection counts reconciled holdings once and expansions add no client", async () => {
+  const { serviceClientProjection } = await import("../src/lib/service-overview");
+  const account = (id: string, stages: [string, string][]) => ({
+    id, name: id, owner: "AE", industries: [], holdingId: id,
+    deals: stages.map(([id, stage]) => ({ id, stage, name: id, industry: "Retail" })),
+  });
+  expect(serviceClientProjection({
+    fetchedAt: "2026-11-12",
+    customers: [
+      account("holding1", [["live1", "173990327"], ["expansion", "1086544542"]]),
+      account("holding2", [["new1", "174677684"], ["new2", "1086544542"]]),
+      account("holding3", [["warning", "1278792585"]]),
+    ],
+    pendingCustomers: [account("unverified", [["review", "174677684"]])],
+    development: ["expansion", "new1", "new2", "review", "unassociated"].map((id) => deal(id, "")),
+  })).toEqual({ current: 1, newClients: 1, projected: 2, unresolvedDeals: 2 });
+});

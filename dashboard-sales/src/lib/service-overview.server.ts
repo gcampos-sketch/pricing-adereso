@@ -18,7 +18,7 @@ const batches = <T>(rows: T[], size = 100) =>
   );
 /** Complete, global company/customer directory. No browser IDs or inferred lifecycle values. */
 export async function readServiceOverview(): Promise<ServiceOverview> {
-  return getCached("service-overview-accounts-v3", 90_000, async () => {
+  return getCached("service-overview-accounts-v4", 90_000, async () => {
     const [owners, industries, development] = await Promise.all([
       getOwners(),
       getPropertyOptionLabels("industria_deal"),
@@ -77,6 +77,7 @@ export async function readServiceOverview(): Promise<ServiceOverview> {
           name: deal.properties["dealname"] || "Sin nombre",
           industry: industryName(deal.properties["industria_deal"]),
           instanceId: deal.properties["id_de_backoffice__negocio_"] || "",
+          stage: deal.properties["dealstage"] || "",
         }));
       const reasons = [];
       if (ordered.some((row) => row.properties["tipo_de_cliente"] === "Churn"))

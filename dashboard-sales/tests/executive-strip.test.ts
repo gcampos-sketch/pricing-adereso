@@ -52,15 +52,15 @@ test('won E8 service lists open with the most recent close date first', () => {
   expect(result.service.map(d => d.id)).toEqual(['11', '10', '12', '13']);
   expect(result.segments[0]?.deals.map(d => d.id)).toEqual(['11', '10', '12', '13']);
 });
-test('E8 bar shows only the ten most recent entries into stage 8, newest first', () => {
+test('E8 endpoint contains every scoped service deal, including zero amounts, without sampling or duplicates', () => {
   const entries = Array.from({ length: 12 }, (_, i) =>
-    journey(`e8-${i}`, '173990327', '2020-01-01', { closeDateValue: '2026-01-01' }, { E8: `2026-09-${String(i + 1).padStart(2, '0')}` }));
-  const undated = journey('e8-x', '173990327', '2020-01-01', { closeDateValue: '2026-01-01' }, { E0: '2020-01-01' });
-  const result = buildExecutiveStrip([...entries, undated], { yes: [], no: [] }, now).wonJourney;
+    journey(`e8-${i}`, '173990327', '2020-01-01', { closeDateValue: '2026-01-01' }));
+  const zero = journey('e8-zero', '173990327', '2020-01-01', { amountValue: 0 });
+  const result = buildExecutiveStrip([...entries, zero, entries[0]!], { yes: [], no: [] }, now).wonJourney;
   expect(result.service.length).toBe(13);
-  expect(result.stages.find(st => st.key === 'e8')?.deals.map(d => d.id)).toEqual([
-    'e8-11', 'e8-10', 'e8-9', 'e8-8', 'e8-7', 'e8-6', 'e8-5', 'e8-4', 'e8-3', 'e8-2',
-  ]);
+  expect(result.stages.find(st => st.key === 'e8')?.deals).toEqual(result.service);
+  expect(result.stages.find(st => st.key === 'e8')?.label).toBe('En servicio');
+  expect(result.service.some(deal => deal.id === 'e8-zero')).toBe(true);
 });
 const commercialJourneys = [
   journey('gio-win', '173990327', '2020-01-01', { ownerId: '373167468' }),

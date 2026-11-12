@@ -1312,7 +1312,7 @@ export function PulseDashboard({
         <div className="exec-won">
           <span>Ganados → servicio</span>
           <strong>
-            <button type="button" className="ex-link" onClick={() => openList(`Ganados en servicio · E8 · histórico`, "Ganados históricos con monto > $0 que ya iniciaron servicio", wonJourney.service, undefined, { key: "closeDate", dir: "desc" })}>
+            <button type="button" className="ex-link" onClick={() => openList(`Ganados en servicio · E8 · histórico`, "Todos los negocios con servicio iniciado (E8), incluidos los de monto cero · filtros del informe · sin filtro de fecha", wonJourney.service, undefined, { key: "closeDate", dir: "desc" })}>
               {wonJourney.service.length} en servicio
             </button>
             {" · "}
@@ -1321,11 +1321,11 @@ export function PulseDashboard({
             </button>
           </strong>
           {wonJourney.total ? (
-            <div className="won-bar" role="group" aria-label="Ganados por etapa actual">
+            <div className="won-bar exec-service-bar" role="group" aria-label="Ganados por etapa actual">
               {wonJourney.stages.filter((st) => st.deals.length).map((st) => (
-                <button key={st.key} type="button" data-tone={st.tone} style={{ flexGrow: st.deals.length }}
+                <button key={st.key} type="button" data-tone={st.tone} data-service={st.key === "e8"} style={{ flexGrow: st.key === "e8" ? 0 : st.deals.length }}
                   title={`${st.label}: ${st.deals.length} · ${st.hint}`}
-                  onClick={() => openList(`Ganados · ${st.label} · histórico`, `Ganados históricos con monto > $0 · ${st.hint}`, st.deals, undefined, st.key === "e8" ? { key: "closeDate", dir: "desc" } : undefined)}>
+                  onClick={() => openList(`Ganados · ${st.label} · histórico`, st.key === "e8" ? "Todos los negocios con servicio iniciado (E8), incluidos los de monto cero · filtros del informe · sin filtro de fecha" : `Ganados históricos con monto > $0 · ${st.hint}`, st.deals, undefined, st.key === "e8" ? { key: "closeDate", dir: "desc" } : undefined)}>
                   {st.key === "e61" && <WarnMark label="Warning E6.1" />}
                   {st.deals.length}
                 </button>
@@ -1335,7 +1335,7 @@ export function PulseDashboard({
           <small className="ex-chips">
             {wonJourney.total
               ? wonJourney.stages.filter((st) => st.deals.length).map((st) => (
-                  <i key={st.key} data-tone={st.tone}>{st.label.split(" ")[0]} {st.hint}</i>
+                  <i key={st.key} data-tone={st.tone}>{st.key === "e8" ? "En servicio" : `${st.label.split(" ")[0]} ${st.hint}`}</i>
                 ))
               : "sin ganados históricos con monto"}
           </small>

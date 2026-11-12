@@ -50,7 +50,7 @@ export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: De
   const list = [...new Map(journeys.filter(j => WON.has(j.deal.stageId) && j.deal.amountValue > 0).map(j => [j.deal.id, j.deal])).values()];
   const wonBy = (...ids: string[]) => list.filter(d => ids.includes(d.stageId));
   // E8 «listo»: lo más reciente primero según fecha de cierre; sin fecha queda al final.
-  const service = wonBy('173990327').sort((a, b) => {
+  const service = by('173990327').sort((a, b) => {
     const left = a.closeDateValue || '';
     const right = b.closeDateValue || '';
     if (left === right) return 0;
@@ -58,22 +58,11 @@ export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: De
     if (!right) return -1;
     return left < right ? 1 : -1;
   });
-  // La barra E8 no muestra el histórico completo: son los últimos en entrar, hasta 10, por fecha real de entrada a E8.
-  const journeyById = new Map(journeys.map(j => [j.deal.id, j]));
-  const enteredE8 = (d: DealDTO) => Date.parse(journeyById.get(d.id)?.entered['E8'] ?? '');
-  const lastIn = wonBy('173990327').sort((a, b) => {
-    const left = enteredE8(a);
-    const right = enteredE8(b);
-    if (Number.isFinite(left) && Number.isFinite(right)) return right - left;
-    if (Number.isFinite(left)) return -1;
-    if (Number.isFinite(right)) return 1;
-    return 0;
-  }).slice(0, 10);
   const wonStages = [
     { key: 'e6', label: 'E6 sin kick off', hint: 'empujar a 6.2', tone: 'warn', deals: wonBy('174677684') },
     { key: 'e61', label: 'E6.1 warning', hint: 'cuidado', tone: 'bad', deals: wonBy('1278792585') },
     { key: 'e62', label: 'E6.2 desarrollo', hint: 'kick off hecho', tone: 'brand', deals: wonBy('1086544542', '213244763', '171385868') },
-    { key: 'e8', label: 'E8 últimos en entrar', hint: 'los 10 más recientes en entrar', tone: 'ok', deals: lastIn },
+    { key: 'e8', label: 'En servicio', hint: 'todos los negocios con servicio iniciado · ancho fijo', tone: 'ok', deals: service },
   ];
   const contracts = list.filter(d => !/firmad/i.test(d.contractStatus ?? '') || /no firmad|sin firm/i.test(d.contractStatus ?? ''));
   return {
@@ -87,7 +76,7 @@ export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: De
     },
     openPipe: { stages, overdue, total: stages.reduce((sum, st) => sum + st.deals.length, 0), aged: journeys.filter(j => OPEN.has(j.deal.stageId) && Date.parse(j.createdAt) < now - 60 * 86_400_000).map(j => j.deal) },
     wonJourney: {
-      total: list.length, historicTotal: list.length, stages: wonStages, service,
+      total: wonStages.reduce((sum, stage) => sum + stage.deals.length, 0), historicTotal: list.length, stages: wonStages, service,
       pending: list.filter(d => d.stageId !== '173990327'),
       segments: ['Inbound', 'Outbound', 'Upsell', 'Cross sell'].map(seg => ({ seg, deals: service.filter(d => d.segment === seg) })).filter(x => x.deals.length),
       contracts,

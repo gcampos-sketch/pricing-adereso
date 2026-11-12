@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getServiceOverview } from "@/lib/pulse.functions";
 import {
   customerIndustryCluster,
+  serviceClientProjection,
   servicePeriodGroups,
   upcomingThisQuarter,
   type ServiceOverview as Overview,
@@ -141,6 +142,7 @@ export function ServiceOverview({
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
+  const clientProjection = data ? serviceClientProjection(data) : null;
   const next = upcomingThisQuarter(data?.development ?? [], today);
   const devTotal = data?.development.reduce((sum, row) => sum + row.mrr, 0) ?? 0;
   const nextTotal = next.reduce((sum, row) => sum + row.mrr, 0);
@@ -210,30 +212,42 @@ export function ServiceOverview({
             ? "Desde hoy hasta el fin del trimestre actual, según inicio del servicio. Son fechas previstas, no ingresos confirmados."
             : "Negocios E6 firmados y 6.2 en desarrollo, excluyendo empresas en churn. Este MRR aún no está en servicio."
         }
+        information={
+          <>
+            <p>MRR proyectado = MRR en servicio + MRR de estos negocios, si todos inician servicio.</p>
+            <p>Clientes nuevos por iniciar: cuentas reconciliadas con un negocio en esta lista y sin otro negocio E8 vigente. Una expansión de un cliente en servicio no agrega otra cuenta.</p>
+            <p>Clientes proyectados en servicio = {clientProjection?.current ?? "—"} actuales + {clientProjection?.newClients ?? "—"} por incorporar. El total de clientes con ganado también incluye otras etapas pendientes; no es la base de esta suma.</p>
+            {clientProjection?.unresolvedDeals ? <p>{clientProjection.unresolvedDeals} negocios sin cuenta reconciliada no suman clientes hasta verificar su identidad; su MRR se conserva.</p> : null}
+            <p>Fechas previstas de HubSpot, no inicios confirmados. Los vencidos siguen pendientes; sin fecha se agrupan al final.</p>
+          </>
+        }
         trigger={
-          <button type="button" className="service-overview-metric" disabled={!data}>
-            <span>{upcoming ? `Inicio previsto · Q${quarter}` : "Por iniciar servicio"}</span>
-            <strong>
-              {data && !upcoming ? <span className="service-pending-plus">+</span> : null}
-              {data ? money(upcoming ? nextTotal : devTotal) : "—"}
-              <small> MRR</small>
-            </strong>
-            {data && !upcoming ? (
-              <small
-                className="service-projected-mrr"
-                title="MRR en servicio actual más el MRR pendiente, si todos estos negocios inician servicio."
-              >
-                En servicio proyectado: <b>{money(currentServiceMrr + devTotal)}</b>
-              </small>
-            ) : null}
-            <small>
-              {data
-                ? upcoming
-                  ? `${next.length} con fecha futura · ${undated} sin fecha`
-                  : `${data.development.length} negocios · firmados + en desarrollo`
-                : error
-                  ? "Datos no disponibles"
-                  : "Cargando negocios…"}
+          <button type="button" className="service-overview-metric service-growth-widget" disabled={!data}>
+            <span className="service-growth-heading">
+              <span>Por iniciar servicio</span>
+              <small>{data ? `${data.development.length} negocios` : "—"}</small>
+            </span>
+            <span className="service-growth-grid">
+              <span className="service-growth-column">
+                <span className="service-growth-label">MRR por incorporar</span>
+                <strong><span className="service-pending-plus">+</span>{data ? money(devTotal) : "—"}</strong>
+                <span className="service-growth-projection">
+                  <span>MRR proyectado</span>
+                  <b>{data ? money(currentServiceMrr + devTotal) : "—"}</b>
+                </span>
+              </span>
+              <span className="service-growth-column">
+                <span className="service-growth-label">Clientes nuevos por iniciar</span>
+                <strong><span className="service-pending-plus">+</span>{clientProjection?.newClients ?? "—"}</strong>
+                <span className="service-growth-projection" title="Cuentas con un negocio E8 más las cuentas por iniciar sin otro negocio E8. Cada holding o instancia se cuenta una vez; las expansiones no suman clientes.">
+                  <span>Clientes proyectados en servicio</span>
+                  <b>{clientProjection?.projected ?? "—"}</b>
+                </span>
+              </span>
+            </span>
+            <small className="service-growth-footnote">
+              {data ? `${data.development.filter((deal) => deal.stage === "6.2 · En desarrollo").length} en desarrollo · ${data.development.filter((deal) => deal.stage === "E6 · Firmado").length} firmados` : error ? "Datos no disponibles" : "Cargando negocios…"}
+              {clientProjection?.unresolvedDeals ? ` · ${clientProjection.unresolvedDeals} negocios con cuenta por verificar` : ""}
             </small>
           </button>
         }
@@ -387,10 +401,10 @@ export function ServiceOverview({
         description="Cuentas con negocio ganado vigente en Comercial Adereso (E6 a E8). Una cuenta por ID Holding; si falta, se cruza el ID de instancia Backoffice. El ciclo de vida no decide el conteo. Sin ganados vigentes, la cuenta no suma."
         trigger={
           <button type="button" className="service-overview-metric" disabled={!data}>
-            <span>Clientes</span>
+            <span>Clientes con ganado</span>
             <strong>{data ? data.customers.length : "—"}</strong>
             <small title="Cuentas únicas por holding o instancia, con negocio ganado vigente">
-              Holding / instancia
+              {clientProjection ? `${clientProjection.current} en servicio · holding / instancia` : "Holding / instancia"}
               {data?.pendingCustomers?.length ? (
                 <span className="service-customer-pending">
                   {data.pendingCustomers.length} por revisar
