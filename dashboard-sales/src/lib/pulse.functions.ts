@@ -6,7 +6,6 @@ import type { InsightsReport } from "./insights-types";
 import type { CoachingReport } from "./coaching-types";
 import { packReport } from './report-wire';
 import type { PropertyHistoryV1 } from './adobo-intelligence';
-
 /** Global operational customer/service directory, protected by the same corporate MFA. */
 export const getServiceOverview = createServerFn({ method: 'GET' })
   .middleware([requireMfa])
@@ -17,11 +16,12 @@ export const getServiceOverview = createServerFn({ method: 'GET' })
 
 
 /** `fresh: false` sirve la copia guardada (instantánea); `true` reconstruye. */
-const freshInput = (input?: { fresh?: boolean }) => ({ fresh: Boolean(input?.fresh) });
+const freshInput = (input?: { fresh?: boolean; force?: boolean }) => ({ fresh: Boolean(input?.fresh), force: Boolean(input?.force) });
 
 /** `fresh` sirve la copia guardada; `role` recorta el reporte a AE o KAM. */
-const pulseInput = (input?: { fresh?: boolean; role?: string | undefined }) => ({
+const pulseInput = (input?: { fresh?: boolean; force?: boolean; role?: string | undefined }) => ({
   fresh: Boolean(input?.fresh),
+  force: Boolean(input?.force),
   role: input?.role === "AE" || input?.role === "KAM" ? (input.role as "AE" | "KAM") : undefined,
 });
 
@@ -30,7 +30,7 @@ export const getPulseReport = createServerFn({ method: "GET" })
   .inputValidator(pulseInput)
   .handler(async ({ data }): Promise<string> => {
     const { readPulseReport } = await import('./pulse-loader.server');
-    const report = await readPulseReport(data.fresh, data.role);
+    const report = await readPulseReport(data.fresh, data.role, undefined, data.force);
     // A compact JSON string also avoids the server-function serializer expanding every DTO field.
     return JSON.stringify(packReport(report));
   });
@@ -68,7 +68,7 @@ export const getPartnerReport = createServerFn({ method: "GET" })
       import("./partner.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("partner", data.fresh, buildPartnerReport);
+    return withSnapshot("partner", data.fresh, buildPartnerReport, undefined, data.force);
   });
 
 export const getTeamReport = createServerFn({ method: "GET" })
@@ -79,7 +79,7 @@ export const getTeamReport = createServerFn({ method: "GET" })
       import("./team.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("team", data.fresh, buildTeamReport);
+    return withSnapshot("team", data.fresh, buildTeamReport, undefined, data.force);
   });
 
 export const getInsightsReport = createServerFn({ method: "GET" })
@@ -90,7 +90,7 @@ export const getInsightsReport = createServerFn({ method: "GET" })
       import("./insights.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("insights", data.fresh, buildInsightsReport);
+    return withSnapshot("insights", data.fresh, buildInsightsReport, undefined, data.force);
   });
 
 export const getCoachingReport = createServerFn({ method: "GET" })
@@ -101,7 +101,7 @@ export const getCoachingReport = createServerFn({ method: "GET" })
       import("./coaching.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("coaching", data.fresh, () => buildCoachingReport(data.fresh));
+    return withSnapshot("coaching", data.fresh, () => buildCoachingReport(data.fresh), undefined, data.force);
   });
 
 /** Marca un accionable de calidad comercial como abordado o pendiente. */

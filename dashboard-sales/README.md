@@ -46,3 +46,28 @@ El build genera `.output/`. El inicio carga `.env` y `.env.local` si existen; en
 El código forma parte de `gcampos-sketch/pricing-adereso`, dentro de `dashboard-sales/`. Esa carpeta es la fuente de trabajo; la descarga original queda como respaldo. No contiene un repositorio Git anidado. No usar `real-time-hub` para nuevos cambios.
 
 `npm ci` usa `package-lock.json`; `bun.lock` se conserva como referencia de la descarga y no es el lockfile del flujo npm. El workflow del hub valida cambios y el contenedor permite alojar la aplicación con un servidor Node independiente de Lovable.
+
+# Transferencia y actualización de informes
+
+Los informes de ejecución usan `report-v2/<reporte>` y el almacenamiento comprimido
+`report-storage/v1`. La compresión conserva íntegro el DTO deduplicado; las copias
+anteriores y las ediciones inmutables de diagnóstico permanecen intactas. La lectura
+consulta la copia antigua solo si falta o no puede decodificarse la nueva.
+
+La migración `20261112125302_report_refresh_coordination.sql` coordina los refrescos
+con reservas durables de Postgres, accesibles únicamente al servidor. Nunca compartir
+promesas ni I/O entre solicitudes. Las pestañas reutilizan una comprobación realizada
+en los últimos 60 segundos; actualizar manualmente reduce esa ventana a 5 segundos.
+Una reserva vencida no puede sobrescribir el resultado de otra actualización.
+
+Se compara todo el contenido excepto el `generatedAt` raíz. Si no cambió, se actualizan
+solo los metadatos de comprobación, sin transmitir ni reescribir el informe. Los errores
+no adelantan la fecha de comprobación y conservan la copia anterior. La frecuencia
+automática del navegador sigue en 60 segundos y se mantiene el botón de actualización.
+
+`report_refresh_state` registra compilaciones, escrituras, comprobaciones sin cambios
+y bytes del informe antes/después. Son bytes del cuerpo de persistencia, no una factura
+de Render ni todo el tráfico del servicio. Los registros `[report-transfer]` no incluyen
+datos comerciales. `scripts/measure-report-transfer.ts` mide las copias existentes en
+modo lectura y verifica su reconstrucción exacta; su resultado privado queda en
+`.migration-backups/report-transfer-baseline.json`.
