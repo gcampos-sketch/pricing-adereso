@@ -3,61 +3,100 @@
  * último resultado conocido y refrescar en segundo plano.
  */
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { packReport, unpackReport } from './report-wire';
-import { SERVICE_MRR_CALCULATION } from './service-mrr';
+import { encodeStoredReport, decodeStoredReport } from "./report-storage";
+import { acquireReportRefresh, type RefreshClaim } from "./report-refresh";
+const runtimeKey = (key: string) => `report-v2/${key}`;
+async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabaseAdmin.rpc(name as never, args as never);
+  if (error)
+    throw Error(`No se pudo coordinar la actualización del reporte (${error.code ?? "database"}).`);
+  return data as T;
+}
+import { SERVICE_MRR_CALCULATION } from "./service-mrr";
 
 export type SnapshotMeta = { generatedAt: string; buildMs: number };
 
-export async function readSnapshot<T>(key: string): Promise<{ report: T; meta: SnapshotMeta } | null> {
-  try {
-    const { data, error } = await supabaseAdmin
+export async function readSnapshot<T>(
+  key: string,
+): Promise<{ report: T; meta: SnapshotMeta } | null> {
+  // A separate namespace keeps legacy versions and immutable diagnostic editions intact.
+  for (const candidate of [runtimeKey(key), key]) {
+    const { data: row, error } = await supabaseAdmin
       .from("report_cache")
-      .select("payload, build_ms, generated_at")
-      .eq("key", key)
+      .select("key,payload,build_ms,generated_at")
+      .eq("key", candidate)
       .maybeSingle();
-    if (error || !data?.payload) return null;
-    return {
-      report: unpackReport<T>(data.payload as T),
-      meta: { generatedAt: data.generated_at, buildMs: data.build_ms },
-    };
-  } catch (error) {
-    console.warn(`No se pudo leer la copia guardada (${key})`, error);
-    return null;
+    if (error) throw Error(`No se pudo leer la última copia del reporte (${error.code}).`);
+    if (!row?.payload) continue;
+    try {
+      const report = await decodeStoredReport<T>(row.payload);
+      const verified =
+        report && typeof report === "object" && "generatedAt" in report
+          ? { ...report, generatedAt: row.generated_at }
+          : report;
+      return {
+        report: verified as T,
+        meta: { generatedAt: row.generated_at, buildMs: row.build_ms },
+      };
+    } catch {
+      console.warn("No se pudo decodificar una copia del reporte", { key: candidate });
+    }
   }
+  return null;
 }
 
-async function saveSnapshot(key: string, payload: unknown, buildMs: number) {
-  try {
-    await supabaseAdmin.from("report_cache").upsert(
-      {
-        key,
-        payload: packReport(payload) as never,
-        build_ms: Math.round(buildMs),
-        generated_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "key" },
-    );
-  } catch (error) {
-    console.warn(`No se pudo guardar la copia (${key})`, error);
-  }
-}
-
-/**
- * `fresh=false` devuelve la copia guardada si existe (respuesta inmediata);
- * `fresh=true` reconstruye desde HubSpot y actualiza la copia.
- */
-export async function withSnapshot<T>(key: string, fresh: boolean, build: () => Promise<T>, accepts: (report: T) => boolean = () => true): Promise<T> {
+/** Automatic callers share one verified refresh per minute. Manual refresh remains available. */
+export async function withSnapshot<T>(
+  key: string,
+  fresh: boolean,
+  build: () => Promise<T>,
+  accepts: (report: T) => boolean = () => true,
+  force = false,
+): Promise<T> {
   if (!fresh) {
     const stored = await readSnapshot<T>(key);
     if (stored && accepts(stored.report)) return stored.report;
   }
-  // Sin singleflight entre peticiones: compartir una promesa en curso cuelga a
-  // quien espera si la petición original se cancela.
-  const started = Date.now();
-  const report = await build();
-  await saveSnapshot(key, report, Date.now() - started);
-  return report;
+  const cacheKey = runtimeKey(key);
+  const claim = await acquireReportRefresh(
+    () => rpc<RefreshClaim>("report_claim_refresh", { p_key: cacheKey, p_force: force }),
+    () => new Promise((resolve) => setTimeout(resolve, 1000)),
+  );
+  if (!claim.token) {
+    const stored = await readSnapshot<T>(key);
+    if (stored && accepts(stored.report)) return stored.report;
+    throw Error("La copia del reporte requiere una nueva actualización. Vuelve a intentar.");
+  }
+  const token = claim.token;
+  try {
+    const started = Date.now();
+    const report = await build();
+    if (!accepts(report))
+      throw Error("El reporte generado no cumple la versión de cálculo requerida.");
+    const encoded = await encodeStoredReport(report);
+    const unchanged = encoded.hash === claim.hash;
+    const sentBytes = unchanged ? 0 : encoded.storedBytes;
+    const committed = await rpc<boolean>("report_finish_refresh", {
+      p_key: cacheKey,
+      p_token: token,
+      p_hash: encoded.hash,
+      p_payload: unchanged ? null : encoded.storage,
+      p_build_ms: Date.now() - started,
+      p_raw_bytes: encoded.rawBytes,
+      p_sent_bytes: sentBytes,
+    });
+    if (!committed)
+      throw Error("Otra actualización reemplazó esta lectura; se conserva la última copia válida.");
+    console.info(
+      "[report-transfer]",
+      JSON.stringify({ key, rawBytes: encoded.rawBytes, sentBytes, unchanged }),
+    );
+    return report;
+  } finally {
+    await rpc("report_release_refresh", { p_key: cacheKey, p_token: token }).catch(() => {
+      console.warn("La reserva del reporte se liberará por vencimiento", { key });
+    });
+  }
 }
 
 /** Lee solo el historial de MRR activo de la copia guardada (evita cargar el reporte completo). */
@@ -65,11 +104,14 @@ export async function readActiveMrrHistory(key: string): Promise<unknown[] | und
   try {
     const { data, error } = await supabaseAdmin
       .from("report_cache")
-      .select("history:payload->activeMrr->history, compact_history:payload->payload->activeMrr->history, calculation:payload->activeMrr->calculation, compact_calculation:payload->payload->activeMrr->calculation")
-      .eq("key", key)
-      .maybeSingle();
+      .select(
+        "key,history:payload->activeMrr->history, compact_history:payload->payload->activeMrr->history, calculation:payload->activeMrr->calculation, compact_calculation:payload->payload->activeMrr->calculation",
+      )
+      .in("key", [runtimeKey(key), key]);
     if (error || !data) return undefined;
-    const row = data as { history?: unknown; compact_history?: unknown; calculation?: unknown; compact_calculation?: unknown };
+    const row =
+      data.find((row) => row.key === runtimeKey(key)) ?? data.find((row) => row.key === key);
+    if (!row) return undefined;
     if ((row.compact_calculation ?? row.calculation) !== SERVICE_MRR_CALCULATION) return undefined;
     const history = row.compact_history ?? row.history;
     return Array.isArray(history) ? history : undefined;
@@ -84,10 +126,14 @@ export async function readMeta(keys: string[]): Promise<Record<string, SnapshotM
     const { data, error } = await supabaseAdmin
       .from("report_cache")
       .select("key, build_ms, generated_at")
-      .in("key", keys);
+      .in("key", [...keys, ...keys.map(runtimeKey)]);
     if (error || !data) return {};
     const out: Record<string, SnapshotMeta> = {};
-    for (const row of data) out[row.key] = { generatedAt: row.generated_at, buildMs: row.build_ms };
+    for (const key of keys) {
+      const row =
+        data.find((row) => row.key === runtimeKey(key)) ?? data.find((row) => row.key === key);
+      if (row) out[key] = { generatedAt: row.generated_at, buildMs: row.build_ms };
+    }
     return out;
   } catch {
     return {};

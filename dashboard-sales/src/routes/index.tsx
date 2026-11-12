@@ -40,8 +40,10 @@ import { readReportView, saveReportView } from '@/lib/report-navigation';
  * Cada reporte tiene dos consultas: la copia guardada (respuesta inmediata) y
  * la versión en vivo que se reconstruye desde HubSpot en segundo plano.
  */
-function reportQueries<T>(key: string, fn: (args: { data: { fresh: boolean }; signal?: AbortSignal }) => Promise<T>) {
+function reportQueries<T>(key: string, fn: (args: { data: { fresh: boolean; force?: boolean }; signal?: AbortSignal }) => Promise<T>) {
+  const refreshControl = { force: false };
   return {
+    refreshControl,
     snapshot: queryOptions({
       queryKey: [key, "snapshot"],
       queryFn: ({ signal }) => fn({ data: { fresh: false }, signal }),
@@ -51,7 +53,11 @@ function reportQueries<T>(key: string, fn: (args: { data: { fresh: boolean }; si
     }),
     live: queryOptions({
       queryKey: [key, "live"],
-      queryFn: ({ signal }) => fn({ data: { fresh: true }, signal }),
+      queryFn: ({ signal }) => {
+        const force = refreshControl.force;
+        refreshControl.force = false;
+        return fn({ data: { fresh: true, force }, signal });
+      },
       refetchInterval: 60_000,
       refetchOnWindowFocus: true,
       placeholderData: keepPreviousData,
@@ -68,7 +74,7 @@ const pulseQFor = (role: "all" | "AE" | "KAM") =>
   reportQueries<PulseReport>(`pulse-report-${role.toLowerCase()}`, async (args) => {
     const scopedRole = role === 'all' ? undefined : role;
     const packed = args.data.fresh
-      ? JSON.parse(await getPulseReport({ data: { fresh: true, role: scopedRole } }))
+      ? JSON.parse(await getPulseReport({ data: { fresh: true, force: Boolean(args.data.force), role: scopedRole } }))
       : await fetchPulseStream(`pulse-report-${role.toLowerCase()}`, scopedRole, args.signal);
     return unpackReport<PulseReport>(packed);
   });
@@ -103,9 +109,9 @@ function useReport<T extends Report>(
   const liveRefetch = live.refetch;
   const snapshotRefetch = snapshot.refetch;
   const refetch = useCallback(() => {
-    if (snapshot.isSuccess) void liveRefetch();
+    if (snapshot.isSuccess) { defs.refreshControl.force = true; void liveRefetch(); }
     else void snapshotRefetch();
-  }, [liveRefetch, snapshotRefetch, snapshot.isSuccess]);
+  }, [liveRefetch, snapshotRefetch, snapshot.isSuccess, defs.refreshControl]);
   const error = live.error ?? snapshot.error;
   // A dead session token (expired/revoked) must not leave the user stuck: renew
   // it once and retry; if renewal fails, sign out so the login screen appears.
