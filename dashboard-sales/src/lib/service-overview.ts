@@ -17,7 +17,7 @@ export type ServiceCustomer = {
   owners?: string[];
   companies?: { id: string; name: string; owner: string; lifecycle: string }[];
   reviewReasons?: string[];
-  deals: { id: string; name: string; industry: string; instanceId?: string }[];
+  deals: { id: string; name: string; industry: string; instanceId?: string; stage?: string }[];
 };
 export type ServiceOverview = {
   fetchedAt: string;
@@ -75,4 +75,22 @@ export function servicePeriodGroups(
 
 export function serviceMonths(deals: ServiceDeal[]) {
   return servicePeriodGroups(deals, "month");
+}
+
+/** Accounts are already reconciled by holding/instance; a pending expansion adds no client. */
+export function serviceClientProjection(data: ServiceOverview) {
+  const pendingIds = new Set(data.development.map((deal) => deal.id));
+  const current = data.customers.filter((account) =>
+    account.deals.some((deal) => deal.stage === "173990327"));
+  const pending = data.customers.filter((account) =>
+    account.deals.some((deal) => pendingIds.has(deal.id)));
+  const currentIds = new Set(current.map((account) => account.id));
+  const newClients = pending.filter((account) => !currentIds.has(account.id));
+  const verifiedDealIds = new Set(pending.flatMap((account) => account.deals.map((deal) => deal.id)));
+  return {
+    current: current.length,
+    newClients: newClients.length,
+    projected: current.length + newClients.length,
+    unresolvedDeals: data.development.filter((deal) => !verifiedDealIds.has(deal.id)).length,
+  };
 }

@@ -6419,3 +6419,25 @@ button.won-exec-stat:hover { color:var(--brand); }
 .executive-story .exec-overdue,.executive-story .exec-overdue-task { background:color-mix(in srgb,var(--warning) 4%,var(--card)); }
 @media(max-width:800px){.executive-story > .exec-pipeline-health {grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:440px){.executive-story > .exec-pipeline-health {grid-template-columns:1fr;}.executive-story .exec-health-widget {min-height:98px;}}
+
+/* Service growth: two aligned columns, MRR and unique accounts. */
+.adereso-global-metrics {width:min(100%,1040px);}
+.adereso-global-metrics .service-overview {grid-template-columns:minmax(135px,.7fr) minmax(210px,1.1fr) minmax(390px,2.2fr);}
+.adereso-global-metrics .service-overview > .service-growth-widget {gap:12px;padding-block:12px;}
+.service-growth-heading {display:flex;width:100%;align-items:center;justify-content:space-between;gap:10px;}
+.service-growth-heading > span {font-size:10px;letter-spacing:.07em;}
+.service-growth-heading > small {font-size:9px;text-transform:none;letter-spacing:0;border:1px solid var(--border);border-radius:5px;padding:2px 6px;color:var(--body);font-weight:400;white-space:nowrap;}
+.service-growth-grid {display:grid;grid-template-columns:1fr 1fr;gap:18px;width:100%;}
+.service-growth-column {display:flex;flex-direction:column;gap:5px;min-width:0;text-transform:none;letter-spacing:0;}
+.service-growth-column + .service-growth-column {border-left:1px solid var(--border);padding-left:18px;}
+.service-growth-label {font-size:10px;color:var(--muted);font-weight:400;line-height:1.5;}
+.service-growth-column > strong {display:flex;gap:4px;align-items:baseline;font-size:24px;line-height:1.2;color:var(--foreground);font-weight:600;white-space:nowrap;}
+.service-growth-projection {display:flex;flex-direction:column;gap:2px;margin-top:5px;font-size:10px;line-height:1.5;font-weight:400;color:var(--muted);}
+.service-growth-projection b {font-size:15px;color:var(--foreground);font-weight:550;}
+.service-overview-metric > .service-growth-footnote {font-size:9px;line-height:1.5;color:var(--muted);}
+@media(max-width:1000px){.adereso-global-metrics .service-overview {grid-template-columns:minmax(135px,.7fr) minmax(0,1.3fr);}.adereso-global-metrics .service-overview > .service-growth-widget {grid-column:1/-1;border-top:1px solid var(--border);margin-top:8px;padding-top:14px;}.adereso-global-metrics .service-growth-widget::before {display:none;}}
+@media(max-width:460px){.service-growth-grid {gap:12px;}.service-growth-column + .service-growth-column {padding-left:12px;}.service-growth-column > strong {font-size:21px;}.service-growth-label {min-height:30px;}}
+@media(max-width:380px){.adereso-global-metrics .service-overview {grid-template-columns:minmax(0,1fr);}}
+
+/* All service deals use a fixed-size endpoint, not a sampled proportional segment. */
+.exec-service-bar > button[data-service="true"] {flex:0 0 76px;margin-left:5px;}
