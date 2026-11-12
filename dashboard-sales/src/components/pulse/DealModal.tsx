@@ -1155,7 +1155,10 @@ export function DealModal({
   ownerBreakdown,
   ownerQuotas,
   executiveSummary,
+  hideCloseSummary = false,
 }: {
+  /** Entry-date event lists must not show an unrelated close-date monthly summary. */
+  hideCloseSummary?: boolean;
   executiveSummary?: ReactNode | ((context: { selectedOwner: string | null; onOwnerSelect: (owner: string | null) => void }) => ReactNode);
   payload: Drilldown | null;
   onClose: () => void;
@@ -1940,7 +1943,7 @@ export function DealModal({
             </button>
           </div>
         </div>
-        {(typeof executiveSummary === 'function' ? executiveSummary({ selectedOwner: summaryOwner, onOwnerSelect: setSummaryOwner }) : executiveSummary) ?? <section className="deal-month-summary" aria-label="Montos por mes según filtros">
+        {(typeof executiveSummary === 'function' ? executiveSummary({ selectedOwner: summaryOwner, onOwnerSelect: setSummaryOwner }) : executiveSummary) ?? (!hideCloseSummary ? <section className="deal-month-summary" aria-label="Montos por mes según filtros">
           <div className="deal-month-summary-row">
             {[...monthlySummary.previous, ...monthlySummary.months].map(month=><button type="button" className="deal-month-bucket" data-current={month.current} data-overdue={month.overdue>0} key={month.key}
               aria-pressed={summaryDateFilter === month.key}
@@ -1966,7 +1969,7 @@ export function DealModal({
             {monthlySummary.undated.count ? <span>Sin fecha válida: {monthMoney(monthlySummary.undated.amount)} · {monthlySummary.undated.count} deals</span> : null}
           </p> : null}
           <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
-        </section>}
+        </section> : null)}
         <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={() => setSelected([])} />
         {selectedIds.length > 0 ? (
           <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>

@@ -45,13 +45,24 @@ export function upcomingThisQuarter(deals: ServiceDeal[], today: string): Servic
       Math.floor((Number(deal.date.slice(5, 7)) - 1) / 3) === quarter,
   );
 }
-export function serviceMonths(deals: ServiceDeal[]): { key: string; deals: ServiceDeal[] }[] {
+export function servicePeriodGroups(
+  deals: ServiceDeal[],
+  unit: "month" | "quarter",
+): { key: string; deals: ServiceDeal[] }[] {
   const groups = new Map<string, ServiceDeal[]>();
   for (const deal of [...deals].sort(
     (a, b) => (a.date || "9999").localeCompare(b.date || "9999") || a.name.localeCompare(b.name),
   )) {
-    const key = deal.date.slice(0, 7) || "undated";
+    const key = !deal.date
+      ? "undated"
+      : unit === "quarter"
+        ? `${deal.date.slice(0, 4)}-Q${Math.ceil(Number(deal.date.slice(5, 7)) / 3)}`
+        : deal.date.slice(0, 7);
     groups.set(key, [...(groups.get(key) ?? []), deal]);
   }
   return [...groups].map(([key, deals]) => ({ key, deals }));
+}
+
+export function serviceMonths(deals: ServiceDeal[]) {
+  return servicePeriodGroups(deals, "month");
 }

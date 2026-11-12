@@ -71,3 +71,23 @@ test("customer clusters use one recorded industry by frequency, ignoring unknown
   expect(customer.deals).toHaveLength(4);
   expect(customerIndustryCluster({ ...customer, deals: [] })).toBe("Sin industria");
 });
+
+test("quarter clusters preserve every deal, chronological order, year boundaries and undated plans", async () => {
+  const { servicePeriodGroups } = await import("../src/lib/service-overview");
+  const rows = [
+    deal("missing", ""),
+    deal("next-year", "2027-01-05"),
+    deal("dec", "2026-12-20"),
+    deal("oct", "2026-10-01"),
+    deal("sep", "2026-09-30"),
+  ];
+  const groups = servicePeriodGroups(rows, "quarter");
+  expect(groups.map((group) => [group.key, group.deals.map((row) => row.id)])).toEqual([
+    ["2026-Q3", ["sep"]],
+    ["2026-Q4", ["oct", "dec"]],
+    ["2027-Q1", ["next-year"]],
+    ["undated", ["missing"]],
+  ]);
+  expect(groups.flatMap((group) => group.deals).reduce((sum, row) => sum + row.mrr, 0)).toBe(500);
+  expect(servicePeriodGroups(rows, "month")).toEqual(serviceMonths(rows));
+});

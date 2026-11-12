@@ -6063,3 +6063,12 @@ button.won-exec-stat:hover { color:var(--brand); }
 .stage-flow-panel .stage-flow-body[data-drawer="open"] .flow-kpis {grid-template-columns:repeat(2,minmax(0,1fr));}
 @media(max-width:850px){.stage-flow-panel {height:auto;border-radius:var(--radius-xl);}.stage-flow-panel .flow-drawer {position:absolute;inset:0 0 0 auto;width:min(92vw,390px);max-width:100%;max-height:100%;}.stage-flow-panel>header,.stage-flow-panel .stage-flow-filters {padding:14px;}}
 .stage-flow-panel .stage-flow-svg {min-width:900px;}
+
+.generation-entry-cards > .metric { display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start; min-width:0; }
+.generation-entry-cards > .metric > .metric-label { min-height:51px; line-height:17px; padding-right:15px; }
+
+.service-period-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; font-size:12px; color:var(--muted); }
+.service-period-toggle { display:inline-flex; gap:3px; padding:3px; border:1px solid var(--border-default); border-radius:10px; background:rgb(0 0 0 / .12); }
+.service-period-toggle button { min-width:48px; padding:6px 12px; border:0; border-radius:7px; background:transparent; color:var(--muted); font:inherit; cursor:pointer; }
+.service-period-toggle button[aria-pressed="true"] { background:rgb(255 255 255 / .09); color:var(--foreground); }
+.service-period-toggle button:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
