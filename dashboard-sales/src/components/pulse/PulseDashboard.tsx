@@ -1,5 +1,7 @@
+import {QuotaScenarios} from './QuotaScenarios';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { wonByStage6Entry, withWonDeals, stage6AttributionDates } from "@/lib/won-result-period";
 import { dealExposure } from "@/lib/deal-exposure";
 import { useOverdueTasks } from "@/hooks/use-overdue-tasks";
 import { OverdueTasks } from "./OverdueTasks";
@@ -535,6 +537,7 @@ export function PulseDashboard({
   const [modalKey, setModalKey] = useState<string | null>(null);
   const [gapInitialMonth, setGapInitialMonth] = useState<string | null>(null);
   const [gapScenario, setGapScenario] = useState(false);
+  const [resultDateBasis, setResultDateBasis] = useState<"close" | "stage6">("close");
   const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" }) | null>(null);
   const [dense, setDense] = useState(true);
   const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
@@ -695,7 +698,7 @@ export function PulseDashboard({
   ) => setPeriodPayload({ title, subtitle, deals, notActivatedIds, initialSort } as Drilldown);
 
   // Agrega los buckets de periodo (team + owners) para los periodos seleccionados.
-  const periodData = useMemo(() => {
+  const closePeriodData = useMemo(() => {
     const buckets = selectedPeriods
       .map((p) => report.periods.data[p])
       .filter((b): b is { team: PeriodStats; owners: Record<string, PeriodStats> } => Boolean(b));
@@ -746,6 +749,16 @@ export function PulseDashboard({
     }
     return { team: teamAcc, owners: Object.fromEntries([...ownerIds].map((id) => [id, aggOwner(id)])) };
   }, [report.periods.data, selectedPeriods, dealType, matchesType]);
+
+  const useStage6Results = section === "general" && resultDateBasis === "stage6";
+  const resultsDateLabel = useStage6Results ? "Entrada a ganado · E6" : "Fecha de cierre";
+  const stage6EntryDates = useMemo(() => stage6AttributionDates(report.stageJourneys ?? []), [report.stageJourneys]);
+  const periodData = useMemo(() => {
+    if (!useStage6Results) return closePeriodData;
+    const won = wonByStage6Entry((report.stageJourneys ?? []).filter(row => matchesType(row.deal) && (role === "all" || roleOfOwner(row.deal.ownerId) === role)), selectedPeriods);
+    const owners = new Set([...Object.keys(closePeriodData?.owners ?? {}),...won.map(deal=>deal.ownerId)]);
+    return {team:withWonDeals(closePeriodData?.team,won),owners:Object.fromEntries([...owners].map(owner=>[owner,withWonDeals(closePeriodData?.owners[owner],won.filter(deal=>deal.ownerId===owner))]))};
+  }, [useStage6Results,closePeriodData,report.stageJourneys,matchesType,role,selectedPeriods]);
 
   // Abre un popup con los deals ganados/perdidos de los periodos seleccionados.
   const openPeriods = (ownerId: string | null, outcome: "won" | "lost") => {
@@ -824,7 +837,7 @@ export function PulseDashboard({
   const openQuotaWon = () =>
     setPeriodPayload({
       title: `${quotaScopeName} · Ganados que suman a la cuota ${rangeLabel}`,
-      subtitle: `${quotaPeriod.won} elegibles · fuera de cuota: ${quotaPeriod.excluded.length} (renovación, contracción o billetera)`,
+      subtitle: `${resultsDateLabel} · ${quotaPeriod.won} elegibles · fuera de cuota: ${quotaPeriod.excluded.length} (renovación, contracción o billetera)`,
       deals: quotaPeriod.eligible,
       presentation: "won",
     });
@@ -875,9 +888,9 @@ export function PulseDashboard({
   const historicalWr = historicalUnique.length ? historicalUnique.filter(row=>row.won).length/historicalUnique.length*100 : null;
   const periodQuotaPct = periodQuota ? (periodWonAmount / periodQuota) * 100 : 0;
   // Win rate y ticket solo consideran deals con monto > $0 para que los $0 no distorsionen.
-  const periodWonPositive = (isTeam ? periodData?.team.wonDeals : periodData?.owners[ownerFilter]?.wonDeals ?? [])
+  const periodWonPositive = (isTeam ? closePeriodData?.team.wonDeals : closePeriodData?.owners[ownerFilter]?.wonDeals ?? [])
     ?.filter((d) => (d.amountValue || 0) > 0).length ?? 0;
-  const periodLostPositive = (isTeam ? periodData?.team.lostDeals : periodData?.owners[ownerFilter]?.lostDeals ?? [])
+  const periodLostPositive = (isTeam ? closePeriodData?.team.lostDeals : closePeriodData?.owners[ownerFilter]?.lostDeals ?? [])
     ?.filter((d) => (d.amountValue || 0) > 0).length ?? 0;
   const periodWr = { won: periodWonPositive, lost: periodLostPositive };
   const executiveDay = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Coyhaique", year: "numeric", month: "2-digit", day: "2-digit" }).format(performanceNow);
@@ -896,6 +909,7 @@ export function PulseDashboard({
   const executiveRange = shortPeriod(executive.period);
   const wonComparison = useMemo(() => {
     const amountFor = (periodsToSum: string[]) => {
+      if (useStage6Results) return quotaStats(wonByStage6Entry((report.stageJourneys ?? []).filter(row => (isTeam || row.deal.ownerId === ownerFilter) && (role === "all" || roleOfOwner(row.deal.ownerId) === role) && matchesType(row.deal)), periodsToSum)).wonAmount;
       const buckets = periodsToSum.map((period) => report.periods.data[period]).filter(Boolean);
       return buckets.reduce((sum, bucket) => {
         if (!bucket) return sum;
@@ -915,7 +929,7 @@ export function PulseDashboard({
     const previousPeriod = currentQ === 1 ? `${Number(year) - 1}-Q4` : `${year}-Q${currentQ - 1}`;
     const previous = amountFor([previousPeriod]);
     return { label: "QoQ", value: previous ? ((periodWonAmount - previous) / previous) * 100 : null };
-  }, [isAllYear, isTeam, matchesType, ownerFilter, periodWonAmount, quarter, report.periods.data, year]);
+  }, [isAllYear, isTeam, matchesType, ownerFilter, periodWonAmount, quarter, report.periods.data, year, useStage6Results, report.stageJourneys, role]);
 
   // ---------- Chips del cuadrito de ganado ----------
   // Debajo de la barra de cuota: comparación y monto real.
@@ -1004,9 +1018,6 @@ export function PulseDashboard({
   const wonAttainmentTone: Tone = periodQuota <= 0 ? "neutral" : totalAttainmentPct <= 40 ? "bad" : totalAttainmentPct <= 80 ? "warn" : "ok";
   const periodWonWithOtf = periodWonAmount + periodOtfWon / 12;
   const periodGap = Math.max(0, periodQuota - periodWonWithOtf);
-  const payloadOwners=[...new Set(payload?.deals.map(deal=>deal.ownerId).filter(Boolean)??[])];
-  const selectionOwner=payloadOwners.length===1 ? payloadOwners[0]! : ownerFilter;
-  const selectionWon=quotaStats((selectionOwner==='team' ? periodData?.team.wonDeals : periodData?.owners[selectionOwner]?.wonDeals)??[]);
   const gapPreviewDeals = (report.drilldowns[qOpenModalKey]?.deals ?? []).filter(d => !stageFilter.length || stageFilter.includes(d.stage));
   const gapMonthSummary = summarizeDealMonths(gapPreviewDeals, performanceNow);
   const gapMonths = Array.from({ length: 3 }, (_, index) => {
@@ -1032,14 +1043,17 @@ export function PulseDashboard({
     setPeriodPayload(null);
     setModalKey(qOpenModalKey);
   };
-  const selectionQuota={
+  const selectionQuotaForOwner=(selectionOwner:string)=>{
+  const selectionWon=quotaStats((selectionOwner==='team' ? periodData?.team.wonDeals : periodData?.owners[selectionOwner]?.wonDeals)??[]);
+  return {
     quota:selectionOwner==='team' ? periodQuota : selectedPeriods.reduce((sum,period)=>sum+(report.periods.quotas[period]?.[selectionOwner]??0),0),
     won:selectionWon.wonAmount+selectionWon.wonOtf/12,
     label:`${selectionOwner==='team'?'Equipo':report.periods.owners[selectionOwner]??ownerName} · ${rangeLabel}`,
     periods:selectedPeriods,
     wonIds:selectionWon.eligible.map(deal=>deal.id),
     openIds:openPipe.stages.flatMap(stage=>stage.deals.map(deal=>deal.id)),
-  };
+  };};
+  const selectionQuota=selectionQuotaForOwner(ownerFilter);
   // Snapshots antiguos en caché pueden no traer la sección mensual.
   const monthly: MonthlyPulse = report.monthly ?? {
     months: [],
@@ -1375,7 +1389,13 @@ export function PulseDashboard({
 
       <div className="story-divider">
         <div><strong>Resultados del período</strong></div>
-        <p>{rangeLabel} · creación, conversión y cumplimiento</p>
+        <div className="results-date-controls">
+          <span>{rangeLabel}</span>
+          <div className="service-period-toggle" role="group" aria-label="Fecha para resultados del período">
+            <button type="button" aria-pressed={resultDateBasis === "close"} onClick={() => {closeModal();setResultDateBasis("close");}}>Fecha de cierre</button>
+            <button type="button" aria-pressed={resultDateBasis === "stage6"} title="Solo entradas registradas a E6 dentro del año y trimestre seleccionados; sin usar la fecha de cierre como reemplazo." onClick={() => {closeModal();setResultDateBasis("stage6");}}>Entrada a ganado · E6</button>
+          </div>
+        </div>
       </div>
 
       {/* Fila 1 — Cuota / Ganado (héroe) / Falta */}
@@ -1403,7 +1423,7 @@ export function PulseDashboard({
           progressLabel={periodQuota > 0 ? `${Math.round(totalAttainmentPct)}%` : "SIN CUOTA"}
           progressBonus={otfBonusPct}
           onClick={openQuotaWon}
-          tooltip="Solo ganados elegibles: excluye renovaciones, contracciones y billeteras puras (se ven en «Fuera de la cuota»). Cumplimiento = MRR ganado del periodo + el OTF (pago único) ganado dividido en 12 meses. La barra clara es el MRR y el tramo rayado es el bonus OTF/12; la marca vertical es el 100% de la cuota."
+          tooltip={`${resultsDateLabel}. Solo ganados elegibles: excluye renovaciones, contracciones y billeteras puras (se ven en «Fuera de la cuota»). Cumplimiento = MRR ganado del periodo + el OTF (pago único) ganado dividido en 12 meses. La barra clara es el MRR y el tramo rayado es el bonus OTF/12; la marca vertical es el 100% de la cuota.`}
           chipLayout="won"
           chips={["E6 POR MOVER", "E6.1 WARNING", "6.2 EN DESARROLLO", "PEND. Q ANT."].flatMap(label => wonChips.filter(chip => chip.label === label))}
           chipAddon={<CommissionRate chipLabel="FACTOR COM." attainment={selectedPeriods.length === 1 && periodQuota > 0 ? totalAttainmentPct : null} scope={ownerFilter} />}
@@ -1431,7 +1451,7 @@ export function PulseDashboard({
 
       <nav className="overview-deep-links" aria-label="Profundizar en el informe">
         <span>Explorar en detalle</span>
-        {PULSE_FOCUS_PAGES.map(page => <button key={page.id} type="button" onClick={() => { onNavigate?.(page.id); window.scrollTo({ top: 0, behavior: 'instant' }); }}>
+        {PULSE_FOCUS_PAGES.filter(page=>page.id!=="scenarios").map(page => <button key={page.id} type="button" onClick={() => { onNavigate?.(page.id); window.scrollTo({ top: 0, behavior: 'instant' }); }}>
           <strong>{page.title}</strong><small>{page.description}</small><ArrowUpRight aria-hidden="true" />
         </button>)}
       </nav>
@@ -1442,6 +1462,7 @@ export function PulseDashboard({
       </header>}
 
       {section !== "general" && <div className="pulse-focused-content"><FoldList key={section} storageKey={`pulse-fold-order-${section}-v2`}>
+      {section === "scenarios" && <QuotaScenarios report={report} owner={ownerFilter} role={role} />}
       {section === "conversion" && <>
       <Fold defaultOpen title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>
       {/* Fila 3 — Win rate / Ticket prom / Perdido */}
@@ -1840,12 +1861,14 @@ export function PulseDashboard({
         initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}
         executiveSummary={periodPayload?.presentation === "won" ? ({ selectedOwner, onOwnerSelect }) => <WonExecutiveSummary
           rangeLabel={rangeLabel}
+          attributionDates={useStage6Results ? stage6EntryDates : undefined}
+          dateBasisLabel={resultsDateLabel}
           periodWr={periodWr}
           showOwners={isTeam}
           ownerQuotas={ownerQuotaByName ?? {}}
           selectedOwner={selectedOwner}
           onOwnerSelect={onOwnerSelect}
-          ownerPeriodWr={Object.fromEntries(Object.entries(periodData?.owners ?? {}).map(([id, stats]) => [report.periods.owners[id] ?? 'Sin comercial', { won: stats.wonDeals.filter(deal => deal.amountValue > 0).length, lost: stats.lostDeals.filter(deal => deal.amountValue > 0).length }]))}
+          ownerPeriodWr={Object.fromEntries(Object.entries(closePeriodData?.owners ?? {}).map(([id, stats]) => [report.periods.owners[id] ?? 'Sin comercial', { won: stats.wonDeals.filter(deal => deal.amountValue > 0).length, lost: stats.lostDeals.filter(deal => deal.amountValue > 0).length }]))}
           deals={quotaPeriod.eligible} periods={selectedPeriods}
 
         /> : undefined}
@@ -1874,6 +1897,8 @@ export function PulseDashboard({
             ? { labels: monthly.months, values: pipelineTrend }
             : null
         }
+        scenarioScope={gapScenario && modalKey===qOpenModalKey && !periodPayload ? {owner:ownerFilter,role,type:dealType,periods:selectedPeriods,basis:useStage6Results?'stage6':'close'} : undefined}
+        selectionQuotaForOwner={selectionQuotaForOwner}
         selectionQuota={gapScenario && modalKey === qOpenModalKey && !periodPayload ? selectionQuota : null}
       />
     </main>

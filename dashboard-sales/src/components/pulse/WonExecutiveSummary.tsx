@@ -41,13 +41,14 @@ function Distribution({ title, note, rows, measure, period }: { title: string; n
 }
 
 /** Only the eligible won population for the selected period and dashboard filters. */
-export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, showOwners = false, ownerQuotas = {}, selectedOwner = null, onOwnerSelect, ownerPeriodWr = {} }: {
+export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, showOwners = false, ownerQuotas = {}, selectedOwner = null, onOwnerSelect, ownerPeriodWr = {}, attributionDates, dateBasisLabel = "Fecha de cierre" }: {
+  attributionDates?: Record<string,string> | undefined; dateBasisLabel?: string;
   rangeLabel: string; deals: DealDTO[]; periods: string[]; periodWr: { won: number; lost: number }; showOwners?: boolean; ownerQuotas?: Record<string, number>;
   selectedOwner?: string | null; onOwnerSelect?: (owner: string | null) => void; ownerPeriodWr?: Record<string, { won: number; lost: number }>;
 }) {
   const [measure, setMeasure] = useState<Measure>('mrr');
-  const teamMix = wonDistribution(deals, periods);
-  const mix = selectedOwner ? wonDistribution(teamMix.deals.filter(deal => (deal.owner || 'Sin comercial') === selectedOwner), periods) : teamMix;
+  const teamMix = wonDistribution(deals, periods, attributionDates);
+  const mix = selectedOwner ? wonDistribution(teamMix.deals.filter(deal => (deal.owner || 'Sin comercial') === selectedOwner), periods, attributionDates) : teamMix;
   const owners = showOwners ? wonOwnerBreakdown(teamMix.deals, ownerQuotas) : [];
   const activeWr = selectedOwner ? ownerPeriodWr[selectedOwner] ?? { won: 0, lost: 0 } : periodWr;
   const maxOwnerMrr = Math.max(0, ...owners.map(owner => owner.mrr));
@@ -55,7 +56,7 @@ export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, show
   const wr = closed > 0 ? activeWr.won / closed * 100 : null;
   const methodology = `Base: ${money(mix.totalMrr)} MRR · ${mix.count} negocios · ${rangeLabel}. Aplica los filtros del tablero y el comercial seleccionado aquí; la búsqueda y los demás filtros del listado no alteran este resumen. Outbound: Prospección SDR Adereso. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Las demás fuentes se muestran aparte.`;
   return <section className="won-executive won-mix-summary won-widget-summary" aria-label="Composición de los ganados del período">
-    <header className="won-mix-heading"><span title={methodology}>RESUMEN · {rangeLabel}{selectedOwner ? ` · ${selectedOwner}` : ''}</span>
+    <header className="won-mix-heading"><span title={methodology}>RESUMEN · {rangeLabel} · {dateBasisLabel}{selectedOwner ? ` · ${selectedOwner}` : ''}</span>
       <div className="won-mix-measure" role="group" aria-label="Medida de la distribución">
         <button type="button" aria-pressed={measure === 'mrr'} onClick={() => setMeasure('mrr')}>Por MRR</button>
         <button type="button" aria-pressed={measure === 'count'} onClick={() => setMeasure('count')}>Por negocios</button>
@@ -77,7 +78,7 @@ export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, show
       <Distribution title="Qué vendimos" note="Tipo de negocio registrado en HubSpot. Categorías en cero ocultas." rows={mix.types} measure={measure} period={rangeLabel} />
       <Distribution title="De dónde vino" note="Outbound: Prospección SDR Adereso. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Otras fuentes se muestran aparte." rows={mix.sources} measure={measure} period={rangeLabel} />
       <article className="won-wr-widget" title="WR = ganados ÷ (ganados + perdidos), con monto mayor a $0. Aplica el período, comercial, rol y tipo del tablero, además del comercial seleccionado aquí. Incluye todos los cierres de ese alcance, no solo los ganados elegibles para cuota. La búsqueda y los demás filtros de la tabla no cambian este indicador.">
-        <h3>WR del período filtrado</h3>
+        <h3>WR del período · por cierre</h3>
         <p>{rangeLabel} · {selectedOwner ?? 'filtros actuales del tablero'}</p>
         <div className="won-wr-split">
           <div className="won-wr-donut" role="img" aria-label={wr === null ? 'Sin cierres en el período filtrado' : `${activeWr.won} de ${closed} cierres ganados: WR ${percentage(wr)}`}>

@@ -1,0 +1,30 @@
+import {ScenarioDrawer} from './ScenarioDrawer';
+import {useEffect,useState} from 'react';
+import type {PulseReport} from '@/lib/pulse-types';
+import {listQuotaScenarios} from '@/lib/quota-scenarios.functions';
+import {compareQuotaScenario,scenarioMonthLabel,type QuotaScenario} from '@/lib/quota-scenarios';
+import {roleOfOwner,type RoleFilter} from '@/lib/owner-roles';
+const money=(v:number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(v);
+export function QuotaScenarios({report,owner,role}:{report:PulseReport;owner:string;role:RoleFilter}) {
+ const [opened,setOpened]=useState<string|null>(null);
+ const [rows,setRows]=useState<QuotaScenario[]>([]),[state,setState]=useState('loading'),[period,setPeriod]=useState('all');
+ const load=()=>{setState('loading');void listQuotaScenarios().then(v=>{setRows(v);setState('ready');}).catch(()=>setState('error'));};
+ useEffect(load,[]);
+ const scoped=rows.filter(s=>(owner==='team'||s.scope.owner===owner)&&(role==='all'||s.scope.role===role||(s.scope.owner!=='team'&&roleOfOwner(s.scope.owner)===role)));
+ const visible=scoped.filter(s=>period==='all'||s.scope.periods.includes(period));
+ return <section className="quota-scenarios" aria-label="Escenarios guardados">
+  <div className="scenario-history-toolbar"><span>Historial personal · fecha de guardado automática</span><select aria-label="Período de los escenarios" value={period} onChange={e=>setPeriod(e.target.value)}><option value="all">Todos los períodos</option>{[...new Set(scoped.flatMap(s=>s.scope.periods))].sort().reverse().map(p=><option key={p}>{p}</option>)}</select><button className="pill" onClick={load}>Actualizar historial</button></div>
+  <p className="scenario-explainer">Comparación con el último informe · {new Date(report.generatedAt).toLocaleString('es-CL')}. MRR + OTF/12; mismo comercial, período y criterio de fecha del guardado.</p>
+  {state==='loading'?<p role="status">Cargando escenarios…</p>:state==='error'?<p role="alert">No se pudo cargar el historial. Vuelve a actualizar.</p>:!visible.length?<div className="scenario-empty"><strong>Aún no hay escenarios en este alcance</strong><p>En Vista general → Falta para la cuota, marca negocios y pulsa Guardar escenario.</p></div>:<div className="scenario-history-grid">{visible.map(saved=>{
+   const compared=compareQuotaScenario(saved,report),targetPct=saved.quota>0?saved.target/saved.quota*100:null;
+   const completeScope=compared.available && (role==='all'||saved.scope.role===role||(saved.scope.owner!=='team'&&roleOfOwner(saved.scope.owner)===role));
+   return <ScenarioDrawer key={saved.id} open={opened===saved.id} onOpenChange={value=>setOpened(value?saved.id:null)} title={`${saved.ownerName} · ${saved.scope.periods.join(' · ')}`} description={`Guardado ${new Date(saved.createdAt).toLocaleString('es-CL')} · ${saved.scope.basis==='stage6'?'Entrada a ganado · E6':'Fecha de cierre'}`} trigger={<button type="button" className="scenario-history-tile"><span>{saved.ownerName} · {saved.scope.periods.join(' · ')}</span><small>{new Date(saved.createdAt).toLocaleString('es-CL')}</small><strong>{money(saved.target)}</strong>{saved.simulationMonth?<small>Cierre simulado · {scenarioMonthLabel(saved.simulationMonth)}</small>:null}<span className="scenario-tile-bottom">{compared.finished?'Finalizado':'En curso'} <span>{completeScope?`${compared.delta>=0?'+':'−'}${money(Math.abs(compared.delta))}`:'Sin cobertura'} ↗</span></span></button>}>
+    <article className="scenario-history-card">
+    {saved.simulationMonth?<p className="scenario-saved-month">Cierre simulado · <strong>{scenarioMonthLabel(saved.simulationMonth)}</strong><small>{compared.closedInPlannedMonth} / {saved.deals.length} negocios con cierre registrado en ese mes</small></p>:null}
+    <header><div><strong>{saved.ownerName} · {saved.scope.periods.join(' · ')}</strong><small>{new Date(saved.createdAt).toLocaleString('es-CL')} · {saved.scope.basis==='stage6'?'Entrada a ganado · E6':'Fecha de cierre'}{saved.scope.type!=='all'?` · ${saved.scope.type}`:''}</small></div><span className="scenario-status">{compared.finished?'Período finalizado':'En curso'}</span></header>
+    <div className="scenario-history-metrics"><div><span>Proyectado</span><strong>{money(saved.target)}</strong><small>{targetPct===null?'Sin cuota':`${targetPct.toFixed(1)}% de cuota`}</small></div><div><span>Resultado {compared.finished?'actual':'a hoy'}</span><strong>{completeScope?money(compared.actual):'—'}</strong><small>{!completeScope?'Sin cobertura del período':compared.attainment===null?'Sin cuota':`${compared.attainment.toFixed(1)}% de cuota`}</small></div><div data-tone={compared.delta>=0?'ok':'warn'}><span>Desviación vs. proyección</span><strong>{completeScope?`${compared.delta>=0?'+':'−'}${money(Math.abs(compared.delta))}`:'—'}</strong><small>{!completeScope?'Sin cobertura':saved.target>0?`${(compared.delta/saved.target*100).toFixed(1)}%`:'Sin base porcentual'} · {!completeScope?'Requiere informe del mismo alcance':compared.finished?(compared.delta>=0?'Meta alcanzada':'Bajo lo proyectado'):'Comparación provisional'}</small></div><div><span>Elegidos ganados</span><strong>{completeScope?compared.won:'—'} / {saved.deals.length}</strong><small>Dentro del criterio guardado</small></div></div>
+    <details><summary>Ver negocios del escenario · {saved.deals.length}</summary><div className="scenario-saved-baseline">Base guardada {money(saved.baseline)} + selección {money(saved.contribution)} · cuota {money(saved.quota)} · informe de {new Date(saved.reportAt).toLocaleString('es-CL')}</div>{compared.rows.map(d=><div className="scenario-history-deal" key={d.id}><a href={d.url} target="_blank" rel="noreferrer">{d.name} ↗</a><span>{d.status}{d.simulatedCloseMonth?<small className="scenario-date-comparison">Simulado: {scenarioMonthLabel(d.simulatedCloseMonth)}{d.actualCloseMonth?` · Real: ${scenarioMonthLabel(d.actualCloseMonth)}`:''}</small>:null}</span><strong>{money(d.amountValue+(d.otfValue||0)/12)}</strong></div>)}</details>
+   </article></ScenarioDrawer>;
+  })}</div>}
+ </section>;
+}

@@ -1,3 +1,5 @@
+import type {ScenarioScope} from '@/lib/quota-scenarios';
+import {ScenarioProjection} from './ScenarioProjection';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown } from "@/lib/pulse-types";
@@ -1150,7 +1152,9 @@ export function DealModal({
   initialStages,
   initialSummaryDate,
   pipelineTrend,
-  selectionQuota,
+  selectionQuota: baseSelectionQuota,
+  selectionQuotaForOwner,
+  scenarioScope,
   fix,
   ownerBreakdown,
   ownerQuotas,
@@ -1173,10 +1177,14 @@ export function DealModal({
   ownerQuotas?: Record<string, number> | null;
   /** Base del período para sumar la selección sin una segunda modalidad. */
   selectionQuota?: SelectionQuota | null;
+  selectionQuotaForOwner?: (owner:string)=>SelectionQuota;
+  scenarioScope?: ScenarioScope | undefined;
   /** si viene, muestra el botón Fix con el problema que describe la tarjeta */
   fix?: { problem: string; mode?: "task" | "fup" } | null;
 }) {
   const isWonView = Boolean(executiveSummary);
+  const [scenarioOwner,setScenarioOwner]=useState(scenarioScope?.owner ?? "team");
+  const selectionQuota=scenarioScope && selectionQuotaForOwner ? selectionQuotaForOwner(scenarioOwner) : baseSelectionQuota;
   const [summaryOwner, setSummaryOwner] = useState<string | null>(null);
   const [fixState, setFixState] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [fixMsg, setFixMsg] = useState("");
@@ -1272,6 +1280,7 @@ export function DealModal({
     if (!payloadKey) return;
     setQuery("");
     setSummaryOwner(null);
+    setScenarioOwner(scenarioScope?.owner ?? "team");
     setSummaryDateFilter(initialSummaryDate ?? null);
     setSearchOpen(false);
     setOpenMenu(null);
@@ -1295,7 +1304,7 @@ export function DealModal({
   useEffect(() => {
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup], [data-won-distribution-popup]"))) return;
+      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup], [data-won-distribution-popup], [data-scenario-drawer]"))) return;
       if (searchOpen) setSearchOpen(false);
       else if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
@@ -1353,6 +1362,7 @@ export function DealModal({
     if (stageFilter.length) {
       filtered = filtered.filter((deal) => stageFilter.includes(deal.stage));
     }
+    if (scenarioScope && scenarioOwner !== "team") filtered=filtered.filter(deal=>deal.ownerId===scenarioOwner);
     if (isWonView && summaryOwner) filtered = filtered.filter(deal => (deal.owner || 'Sin comercial') === summaryOwner);
     if (actFilter !== "all" && actIds.size) {
       filtered = filtered.filter((deal) => (actFilter === "off" ? actIds.has(deal.id) : !actIds.has(deal.id)));
@@ -1375,7 +1385,7 @@ export function DealModal({
     }
     const now = Date.now();
     return [...filtered].sort((a, b) => compareDealSort(a, b, sort, contacts, now));
-  }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet, isWonView, summaryOwner]);
+  }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet, isWonView, summaryOwner, scenarioScope, scenarioOwner]);
 
   // This temporary drilldown never mutates the existing filters or their ordering.
   const summaryNow = Date.now();
@@ -1792,6 +1802,10 @@ export function DealModal({
             </p>
             </div></div>
             <div className="deal-filter-toolbar" aria-label="Filtros del listado">
+              {scenarioScope ? <GlassSelect id="scenario-owner" label="Comercial" display={scenarioOwner==='team'?'Equipo':baseDeals.find(d=>d.ownerId===scenarioOwner)?.owner ?? 'Comercial'}
+                options={[...(scenarioScope.owner==='team'?[{value:'team',label:'Equipo'}]:[]),...[...new Map(baseDeals.filter(d=>scenarioScope.owner==='team'||d.ownerId===scenarioScope.owner).map(d=>[d.ownerId,{value:d.ownerId,label:d.owner}])).values()].sort((a,b)=>a.label.localeCompare(b.label))]}
+                activeValues={[scenarioOwner]} onSelect={owner=>{setScenarioOwner(owner);setSelected([]);setOpenMenu(null);}}
+                open={openMenu==='scenario-owner'} onToggle={()=>setOpenMenu(openMenu==='scenario-owner'?null:'scenario-owner')} /> : null}
               {isWonView && ownerBreakdown ? <GlassSelect id="won-owner" label="Comercial" display={summaryOwner ?? 'Todos'}
                 options={[{ value: '__all', label: 'Todos' }, ...[...new Set(baseDeals.map(deal => deal.owner || 'Sin comercial'))].sort().map(owner => ({ value: owner, label: owner }))]}
                 activeValues={[summaryOwner ?? '__all']} onSelect={owner => { setSummaryOwner(owner === '__all' ? null : owner); setOpenMenu(null); }}
@@ -1963,7 +1977,7 @@ export function DealModal({
           </p> : null}
           <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
         </section> : null)}
-        <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={() => setSelected([])} />
+        {scenarioScope && selectionQuota ? <ScenarioProjection summary={selectionTotal} quota={selectionQuota} scope={{...scenarioScope,owner:scenarioOwner}} deals={deals.filter(deal=>selectedIds.includes(deal.id))} onClear={()=>setSelected([])} /> : <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={()=>setSelected([])} />}
         {selectedIds.length > 0 ? (
           <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>
           <div className="bulk-bar" role="group" aria-label="Herramientas para los deals seleccionados">

@@ -345,7 +345,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
     partners: 'Consultando datos de Partners', equipo: 'Consultando resultados del equipo', crecimiento: 'Consultando crecimiento',
     simulador: 'Preparando datos del simulador', perdidos: 'Consultando negocios perdidos', calidad: 'Consultando calidad comercial',
     diagnostico: 'Consultando las ediciones del diagnóstico comercial',
-    pipeline: 'Preparando pipeline y reuniones', forecast: 'Preparando forecast y prioridades', conversion: 'Preparando resultados y conversión',
+    scenarios: 'Preparando escenarios guardados', pipeline: 'Preparando pipeline y reuniones', forecast: 'Preparando forecast y prioridades', conversion: 'Preparando resultados y conversión',
   };
   const reportPhase = useReportPhase(`pulse-report-${roleFilter.toLowerCase()}`);
   const pulseView = isPulseReportView(view);

@@ -18,6 +18,7 @@ const groups = [
   ] },
   { id: "conversion", label: "Resultados", icon: BarChart3, children: [
     { id: "conversion", label: "Resultados y conversión" },
+    { id: "scenarios", label: "Escenarios" },
     { id: "crecimiento", label: "Expansión vs Venta Nueva" },
     { id: "perdidos", label: "Deals Perdidos" },
     { id: "calidad", label: "Calidad Comercial" },
