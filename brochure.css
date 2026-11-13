@@ -454,3 +454,10 @@
 @media(max-width:760px){.br-desk-intake-demo .br-intake-query{margin-bottom:70px}.br-intake-route{height:96px}.br-intake-route>span{font-size:8px;max-width:110px;top:42px}}
 .br-pdf-export .br-desk-intake-demo .br-intake-query{margin-bottom:24px}.br-pdf-export .br-intake-route{height:45px}.br-pdf-export .br-intake-route>span{display:none}
 .br-desk-intake-demo .br-intake-channels{column-gap:0}
+
+/* Align the two proof headings and keep the customer marks supporting the story. */
+.br-proof-intro{align-items:start;padding-top:34px}
+.br-proof-intro>div:first-child>.br-kicker,.br-proof-brands>span{display:block;margin:0;font-size:9px;line-height:1.5}
+.br-proof-brands>div{width:100%;max-width:400px;grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:850px){.br-proof-intro{padding-top:20px}}
+@media(max-width:540px){.br-proof-intro{padding-top:0}.br-proof-brands>div{max-width:360px}}
