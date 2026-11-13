@@ -22,7 +22,8 @@ const PopoverAnchor = PopoverPrimitive.Anchor;
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
->(({ className, align = "center", sideOffset = 4, style, ...props }, ref) => {
+  & { originMotion?: boolean }
+>(({ className, align = "center", sideOffset = 4, style, originMotion = true, ...props }, ref) => {
   const origin = React.useContext(OriginContext);
   const content = React.useRef<HTMLDivElement | null>(null);
   const source = React.useRef<HTMLElement | null>(null);
@@ -50,7 +51,7 @@ const PopoverContent = React.forwardRef<
       ref={node=>{
         stopTracking.current?.();
         content.current=node;
-        if(node) {
+        if(node && originMotion) {
           positionOrigin(node);
           const reposition = () => positionOrigin(node);
           const observer = new ResizeObserver(reposition);
@@ -64,7 +65,7 @@ const PopoverContent = React.forwardRef<
       }}
       align={align}
       sideOffset={sideOffset}
-      className={cn("z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none dashboard-origin-popover", className)}
+      className={cn("z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none", originMotion && "dashboard-origin-popover", className)}
       style={style}
       {...props}
       data-trigger-detail={overTrigger ? "true" : undefined}
