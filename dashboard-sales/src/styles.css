@@ -6552,3 +6552,20 @@ button.won-exec-stat:hover { color:var(--brand); }
 .scenario-no-selection{margin:2px 0 12px}.scenario-no-selection .scenario-inline-actions{border:0;padding:0;margin:0}.scenario-no-selection .scenario-view-saved{padding:5px 2px;border:0;border-radius:0;font-size:11px;color:#92949e}.deal-selection-total .scenario-inline-actions{margin-top:12px;padding-top:10px}.scenario-simulations-link{display:flex;align-items:center;gap:5px;margin-top:22px;padding:12px 0 0;border:0;border-top:1px solid #ffffff14;background:none;color:#bfae5d;font-size:11px;width:100%}.scenario-drawer .quota-scenarios-inline .scenario-history-grid{grid-template-columns:1fr}.scenario-drawer-history-item>.scenario-history-tile{width:100%}.scenario-drawer-history-item>.scenario-history-card{margin:16px 0 22px}.scenario-drawer .quota-scenarios-inline .scenario-empty{font-size:12px;line-height:1.6}
 
 .scenario-confirm-popover{z-index:2200;width:280px;padding:17px;border:1px solid #ffffff24;border-radius:15px;background:#202227;color:#ddd;box-shadow:0 12px 35px #0005}.scenario-confirm-popover h4{font-size:14px;font-weight:500;margin:0 0 17px}.scenario-confirm-popover label{display:block;font-size:11px;color:#a5a7b0;margin-bottom:7px}.scenario-confirm-popover select{display:block;width:100%;padding:9px 10px;font-size:12px;color:#ddd;background:#191b20;border:1px solid #ffffff24;border-radius:9px}.scenario-confirm-popover small{display:block;font-size:10px;color:#92949e;margin-top:8px}.scenario-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}.scenario-confirm-actions button{font-size:11px;background:transparent;color:#a5a7b0;border:1px solid #ffffff1a;border-radius:8px;padding:7px 11px}.scenario-confirm-actions button:last-child{color:#dfc447;border-color:#dfc44766;background:#dfc44708}.scenario-confirm-actions button:disabled{opacity:.5}.scenario-confirm-popover p[role=alert]{font-size:11px;color:#f8bd42;line-height:1.5;margin-top:12px}
+
+/* Scenario creation: compact trigger and direct month choices. */
+.deal-selection-total .scenario-inline-actions .scenario-save button.pill,.scenario-save button.scenario-create-trigger{border-radius:8px;padding:8px 11px}
+.scenario-month-popover{width:300px;max-width:calc(100vw - 24px);padding:16px;border-radius:12px}
+.scenario-month-popover h4{margin:0 0 5px;font-size:14px}
+.scenario-month-popover .scenario-month-hint{margin:0;color:#a5a7b0;font-size:11px;line-height:1.5}
+.scenario-month-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:14px;max-height:210px;overflow-y:auto}
+.scenario-month-grid button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 4px;border:1px solid #ffffff20;border-radius:8px;background:transparent;color:#bfc0c8;font-size:11px;text-transform:capitalize;cursor:pointer}
+.scenario-month-grid button small{margin:0;color:#8f919c;font-size:10px}
+.scenario-month-grid button:hover{background:#ffffff06;border-color:#ffffff40}
+.scenario-month-grid button[aria-pressed=true]{border-color:#d4b94599;background:#d4b94512;color:#efcf50}
+.scenario-month-grid button[aria-pressed=true] small{color:#c4ae62}
+.scenario-month-grid button:focus-visible,.scenario-month-popover button:focus-visible{outline:2px solid #dfc447;outline-offset:3px}
+.scenario-month-grid button:disabled{opacity:.5;cursor:default}
+.scenario-month-popover .scenario-confirm-actions{margin-top:14px;gap:8px}
+.scenario-month-popover .scenario-confirm-actions button{padding:8px 10px}
+.scenario-month-popover .scenario-confirm-actions button:first-child{border-color:transparent}
