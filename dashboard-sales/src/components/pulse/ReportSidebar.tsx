@@ -18,7 +18,6 @@ const groups = [
   ] },
   { id: "conversion", label: "Resultados", icon: BarChart3, children: [
     { id: "conversion", label: "Resultados y conversión" },
-    { id: "scenarios", label: "Escenarios" },
     { id: "crecimiento", label: "Expansión vs Venta Nueva" },
     { id: "perdidos", label: "Deals Perdidos" },
     { id: "calidad", label: "Calidad Comercial" },
@@ -29,6 +28,7 @@ const groups = [
   { id: "simulador", label: "Simuladores", icon: Workflow, children: [
     { id: "embudo", label: "Pipeline Comercial" },
     { id: "simulador", label: "Cumplimiento cuota" },
+    { id: "scenarios", label: "Simulaciones de escenarios" },
   ] },
 ] satisfies { id: ReportView; label: string; icon: typeof Users; children?: { id: ReportView; label: string }[] }[];
 

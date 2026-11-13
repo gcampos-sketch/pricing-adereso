@@ -26,6 +26,6 @@ export const PULSE_FOCUS_PAGES = [
   { id: 'pipeline', title: 'Pipeline y reuniones', description: 'Generación, reuniones y avance de oportunidades.' },
   { id: 'forecast', title: 'Forecast y prioridades', description: 'Qué trabajar hoy, próximos cierres y calidad de la gestión.' },
   { id: 'conversion', title: 'Resultados y conversión', description: 'Win rate, ticket promedio y comparación por comercial.' },
-  { id: 'scenarios', title: 'Escenarios', description: 'Proyecciones guardadas y desviación frente al resultado real.' },
+  { id: 'scenarios', title: 'Simulaciones de escenarios', description: 'Proyecciones guardadas y desviación frente al resultado real.' },
 ] as const;
 export type PulseFocusView = typeof PULSE_FOCUS_PAGES[number]['id'];
