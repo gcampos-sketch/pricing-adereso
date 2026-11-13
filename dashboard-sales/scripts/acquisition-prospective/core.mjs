@@ -22,7 +22,13 @@ export function normalize(event,config) {
   }
   if(['deal.associationChange','contact.associationChange'].includes(event.subscriptionType)) {
     const reverse=event.subscriptionType==='contact.associationChange';
-    if(event.associationType!==(reverse?'CONTACT_TO_DEAL':'DEAL_TO_CONTACT')||!id(event.fromObjectId)||!id(event.toObjectId)||typeof event.associationRemoved!=='boolean')throw Error('unsupported_association');
+    if(!id(event.fromObjectId)||!id(event.toObjectId)||typeof event.associationRemoved!=='boolean')throw Error('invalid_association');
+    const expected=reverse?'CONTACT_TO_DEAL':'DEAL_TO_CONTACT';
+    if(event.associationType!==expected){
+      const knownOther=reverse?/^CONTACT_TO_(CONTACT|COMPANY|TICKET|LINE_ITEM|PRODUCT)$/:/^DEAL_TO_(DEAL|COMPANY|TICKET|LINE_ITEM|PRODUCT)$/;
+      if(typeof event.associationType==='string'&&knownOther.test(event.associationType))return null;
+      throw Error('unsupported_association');
+    }
     return {...base,dealId:String(reverse?event.toObjectId:event.fromObjectId),contactId:String(reverse?event.fromObjectId:event.toObjectId),removed:event.associationRemoved};
   }
   // Merge/deletion/restore and other subscriptions require explicit handling, not inferred support.
@@ -46,10 +52,10 @@ export function createReceiver({secret,portalId,appId,captureStart,persistBatch,
       if(!validSignature(raw,request.headers.get('x-hubspot-signature'),secret))return new Response(null,{status:401});
       let events;try{events=JSON.parse(raw.toString('utf8'));}catch{return new Response(null,{status:400});}
       if(!Array.isArray(events)||!events.length||events.length>100)return new Response(null,{status:400});
-      let records;try{records=events.map(e=>normalize(e,{portalId:String(portalId),appId:String(appId),captureStart,now:now()})).map(e=>({eventKey:eventKey(e),event:e}));}catch{return new Response(null,{status:422});}
+      let records;try{records=events.map(e=>normalize(e,{portalId:String(portalId),appId:String(appId),captureStart,now:now()})).filter(e=>e!==null).map(e=>({eventKey:eventKey(e),event:e}));}catch{return new Response(null,{status:422});}
       // Contract: one durable atomic transaction, deduplicate eventKey, reject conflicting content.
       // Never acknowledge before commit or start discarded background promises.
-      try{await persistBatch(records);}catch{return new Response(null,{status:503});}
+      try{if(records.length)await persistBatch(records);}catch{return new Response(null,{status:503});}
       return new Response(null,{status:204});
     } catch {return new Response(null,{status:400});} finally{reader?.releaseLock();}
   };

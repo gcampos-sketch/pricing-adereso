@@ -2,7 +2,7 @@
 -- Database owner required for fixture attestation; never run against production.
 BEGIN;
 DO $$
-DECLARE e jsonb; r jsonb; k text; before_count bigint;
+DECLARE e jsonb; r jsonb; k text; before_count bigint; kind text;
 BEGIN
   e := jsonb_build_object('eventKey',repeat('a',64),'event',jsonb_build_object(
     'portalId','1','appId','2','eventId','123','subscriptionId','456',
@@ -28,6 +28,15 @@ BEGIN
     attestation_id,portal_id,deal_id,contact_id,as_of,pipeline_id,coverage_start,coverage_end,
     coverage_complete,identity_at_creation_proven,acquisition_value,result_kind,source_reference,rule_version,evidence_event_keys)
   VALUES ('00000000-0000-0000-0000-000000000001',1,'100','789',to_timestamp(1700000001),'3',to_timestamp(1700000000),to_timestamp(1700000002),true,true,'Inbound','observed','synthetic-fixture','v1',ARRAY[k]);
+  FOREACH kind IN ARRAY ARRAY['observed','renewal'] LOOP
+    BEGIN
+      INSERT INTO acquisition_private.snapshot_attestations(
+        attestation_id,portal_id,deal_id,contact_id,as_of,pipeline_id,coverage_start,coverage_end,
+        coverage_complete,identity_at_creation_proven,acquisition_value,result_kind,source_reference,rule_version,evidence_event_keys)
+      VALUES ('00000000-0000-0000-0000-000000000002',1,'101','789',to_timestamp(1700000001),'3',to_timestamp(1700000000),to_timestamp(1700000002),true,true,NULL,kind,'synthetic-null-fixture','v1',ARRAY[k]);
+      RAISE EXCEPTION 'Expected NULL classification rejection';
+    EXCEPTION WHEN check_violation THEN NULL; END;
+  END LOOP;
   r := public.acquisition_freeze_attested_snapshot('00000000-0000-0000-0000-000000000001');
   IF r->>'status' <> 'frozen' THEN RAISE EXCEPTION 'Freeze failed'; END IF;
   r := public.acquisition_freeze_attested_snapshot('00000000-0000-0000-0000-000000000001');

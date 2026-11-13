@@ -45,9 +45,9 @@ CREATE TABLE acquisition_private.snapshot_attestations (
   evidence_event_keys text[] NOT NULL CHECK (cardinality(evidence_event_keys) BETWEEN 1 AND 100),
   recorded_at timestamptz NOT NULL DEFAULT clock_timestamp(),
   CHECK (coverage_start <= as_of AND as_of <= coverage_end),
-  CHECK ((result_kind IN ('unknown','cleared') AND acquisition_value IS NULL)
+  CHECK (((result_kind IN ('unknown','cleared') AND acquisition_value IS NULL)
       OR (result_kind = 'observed' AND acquisition_value IN ('Inbound','Outbound'))
-      OR (result_kind = 'renewal' AND acquisition_value = 'No aplica'))
+      OR (result_kind = 'renewal' AND acquisition_value = 'No aplica')) IS TRUE)
 );
 ALTER TABLE acquisition_private.snapshot_attestations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY server_attestation_reads ON acquisition_private.snapshot_attestations FOR SELECT TO service_role USING (true);
