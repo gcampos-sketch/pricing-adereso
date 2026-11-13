@@ -42,12 +42,13 @@ export function wonAcquisitionSource(deal: Pick<DealDTO, 'source'>) {
 
 export type WonDistributionRow = { key: string; label: string; color: string; mrr: number; count: number; mrrShare: number | null; countShare: number; deals: DealDTO[] };
 
-/** Same eligible won universe as the card, constrained again to the selected close periods. */
-export function wonDistribution(deals: DealDTO[], periods: string[]) {
+/** Same eligible won universe as the card, using close dates or the supplied exact attribution dates. */
+export function wonDistribution(deals: DealDTO[], periods: string[], attributionDates?: Record<string,string>) {
   const selected = new Set(periods);
   const scoped = quotaStats(deals).eligible.filter(deal => {
-    const date = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(deal.closeDateValue ?? '');
-    if (!date || !Number.isFinite(Date.parse(deal.closeDateValue))) return false;
+    const rawDate = attributionDates ? attributionDates[deal.id] ?? '' : deal.closeDateValue ?? '';
+    const date = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(rawDate);
+    if (!date || !Number.isFinite(Date.parse(rawDate))) return false;
     const month = Number(date[2]);
     return month >= 1 && month <= 12 && selected.has(`${date[1]}-Q${Math.ceil(month / 3)}`);
   });

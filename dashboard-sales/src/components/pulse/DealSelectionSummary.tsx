@@ -1,11 +1,13 @@
+import type {ReactNode} from 'react';
 import type { dealSelectionTotal, SelectionQuota } from '@/lib/deal-selection-total';
 
 const money = (amount: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
 
-export function DealSelectionSummary({ summary, quota, onClear }: {
+export function DealSelectionSummary({ summary, quota, onClear, actions }: {
   summary: ReturnType<typeof dealSelectionTotal>;
   quota?: SelectionQuota | null;
   onClear: () => void;
+  actions?:ReactNode;
 }) {
   if (!summary.count) return null;
   const scenario = quota && summary.total !== null && summary.contribution !== null;
@@ -38,5 +40,6 @@ export function DealSelectionSummary({ summary, quota, onClear }: {
         {summary.excluded > 0 ? <span title="Ya ganados, fuera del período seleccionado, fuera del pipeline abierto o no elegibles para cuota.">{summary.excluded} {summary.excluded === 1 ? 'deal marcado no suma' : 'deals marcados no suman'} a este escenario.</span> : null}
       </div> : null}
     </> : <div className="selection-term"><span>MRR de los marcados</span><strong>{money(summary.amount)}</strong></div>}
+    {actions}
   </section>;
 }

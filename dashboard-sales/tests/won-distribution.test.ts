@@ -83,3 +83,9 @@ test('owner widget preserves MRR, deal count and each period quota over the scop
   expect(rows.reduce((sum, row) => sum + row.mrr, 0)).toBe(mix.totalMrr);
   expect(rows.reduce((sum, row) => sum + row.count, 0)).toBe(mix.count);
 });
+
+test('E6 summary uses supplied attribution dates without reapplying close dates or a missing-date fallback',()=>{
+ const rows=[deal('e6',{closeDateValue:'2026-09-01'}),deal('close',{closeDateValue:'2026-10-01'}),deal('missing')];
+ expect(wonDistribution(rows,['2026-Q4'],{e6:'2026-10-01',close:'2026-09-30'}).deals.map(deal=>deal.id)).toEqual(['e6']);
+ expect(wonDistribution(rows,['2026-Q4']).deals.map(deal=>deal.id)).toEqual(['close','missing']);
+});
