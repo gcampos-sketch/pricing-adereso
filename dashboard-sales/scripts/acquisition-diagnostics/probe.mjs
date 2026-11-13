@@ -53,7 +53,7 @@ export async function inspectAcquisition(get, config) {
       const q = new URLSearchParams({limit:'100'}); if(after) q.set('after',after);
       const a = await safeGet(`/crm/v4/objects/deals/${dealId}/associations/contacts?${q}`);
       if(a.error) { associationStatus = a.error; break; }
-      if(!Array.isArray(a.data?.results) || !a.data.results.every(x => id(String(x.toObjectId)))) { associationStatus='invalid'; break; }
+      if(!Array.isArray(a.data?.results) || !a.data.results.every(x => x && id(String(x.toObjectId)))) { associationStatus='invalid'; break; }
       for(const row of a.data.results) associationIds.add(String(row.toObjectId));
       after=a.data.paging?.next?.after;
       if(after === undefined) {complete=true;associationStatus='complete_current_only';break;}

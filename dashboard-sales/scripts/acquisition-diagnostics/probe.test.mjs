@@ -28,3 +28,5 @@ test('oversized Events response stays partial without next cursor',async()=>{con
 
 test('malformed history entry fails closed',async()=>{const r=await inspectAcquisition(async p=>p.includes('/contacts/')?{id:'2',propertiesWithHistory:{tipo_de_adquisicion:[null]}}:get(p),cfg());assert.equal(r.contacts[0].status,'history_invalid')});
 test('unmatched event rows count toward scan limit',async()=>{let calls=0;const r=await inspectAcquisition(async p=>p.startsWith('/events/')?(calls++,{results:Array(50).fill(null),paging:{next:{after:'cursor'}}}):get(p),eventConfig());assert.equal(calls,1);assert.equal(r.events.complete,false);assert.equal(r.events.status,'bounded_partial')});
+
+test('null association entry is invalid rather than aborting probe',async()=>{const r=await inspectAcquisition(async p=>p.includes('/associations/')?{results:[null]}:get(p),cfg());assert.equal(r.deals[0].associations.status,'invalid');assert.equal(r.deals[0].associations.complete,false);assert.equal(r.activationAllowed,false)});
