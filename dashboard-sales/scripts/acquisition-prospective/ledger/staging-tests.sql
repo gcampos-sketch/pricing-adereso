@@ -1,4 +1,5 @@
--- NOT RUN. Run only after ledger-proposal.sql in an isolated disposable database.
+-- Passed in isolated PostgreSQL 17 CI; see VALIDATION.md. Not applied to production.
+-- Run only after ledger-proposal.sql in an isolated disposable database.
 -- Database owner required for fixture attestation; never run against production.
 BEGIN;
 DO $$

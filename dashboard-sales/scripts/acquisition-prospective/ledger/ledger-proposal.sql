@@ -1,6 +1,7 @@
 -- SYNTHETIC SCOPE: portal 1, app 2, pipelines 3/4 must be reviewed/replaced in
 -- private deployment configuration before any staging integration.
--- PROPOSAL ONLY. Do not apply to production. PostgreSQL integration tests pending.
+-- PROPOSAL ONLY. Do not apply to production. Isolated PostgreSQL tests passed;
+-- hosted integration and activation remain pending. See VALIDATION.md.
 -- This is intentionally not a versioned migration. Generate one with Supabase CLI
 -- only after isolated PostgreSQL validation and explicit activation approval.
 BEGIN;

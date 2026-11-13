@@ -40,7 +40,7 @@ No HubSpot writer, worker, outbox or scheduler is supplied. Exactly-once databas
 
 1. Review SQL against current PostgreSQL/Supabase version and create an isolated disposable database with representative Supabase roles.
 2. Run proposal then `staging-tests.sql`; transaction ends ROLLBACK. Tests should run as database owner only in isolated staging. Verify all intended role denials.
-3. Add two-session concurrency test: identical simultaneous ingest (one row), same identity/different value (one succeeds, conflict fails); concurrent freeze with two attestations (one immutable winner).
+3. Rerun concurrency-tests.py in disposable staging: identical simultaneous ingest (one row), same identity/different value (one succeeds, conflict fails), and concurrent freeze with two attestations (one immutable winner). These cases passed in isolated CI; hosted integration remains separate.
 4. Verify malformed/oversized batches, mixed valid+invalid atomic rollback, missing evidence, false coverage, missing identity, null/empty acquisition, and update/delete rejection under service_role and browser roles.
 5. Run Supabase security advisors; verify private schema unexposed and RPC permissions with anonymous/authenticated requests. Never “fix” denied browser access with broader grants.
 6. Verify provider retry/order/duplicate payloads, signing secret and signature version, monitoring, retention, incident response and operational reconciliation before activation.

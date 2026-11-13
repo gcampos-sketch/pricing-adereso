@@ -6,7 +6,7 @@ This is an isolated, review-only implementation artifact. No application route i
 
 - `core.mjs`: Node-only receiver factory, minimal event normalization, semantic idempotency keys and temporal candidate resolver.
 - `core.test.mjs`: synthetic Node tests. Run `node --test scripts/acquisition-prospective/core.test.mjs` from dashboard-sales.
-- Ledger SQL is a proposal, not an applied migration or proof of database permissions/concurrency. Apply only after separate staging review and tests.
+- Ledger SQL remains an unapplied proposal. Synthetic role/RLS and real-contention concurrency tests passed in isolated PostgreSQL 17 CI; see ledger/VALIDATION.md. This does not validate hosted Supabase/PostgREST permissions or authorize deployment.
 
 The receiver requires a private-app signing secret, not the API access token. It verifies the legacy v1 SHA256(secret + exact raw body) documented by HubSpot, with constant-time comparison. It accepts no v2/v3 downgrade. A real app delivery must establish signature version before activation; if the app sends another version, implement and test that exact algorithm instead of weakening verification. No secret is committed, displayed or loaded by this module.
 
@@ -36,7 +36,7 @@ Observed real workflows may set dealtype minutes after creation. The product dec
 
 ## Deployment gates
 
-1. Review code and proposed database privileges; run Postgres tests in isolated staging, including concurrent duplicate batches and conflicting freeze attempts.
+1. Review code and database privileges for the actual deployment. Isolated PostgreSQL role and concurrency tests passed (ledger/VALIDATION.md); verify hosted Supabase/PostgREST configuration separately and rerun after changes.
 2. Confirm signature version and association payload using an actual authorized app delivery to a staging receiver. Do not trigger or modify live customer records just to test.
 3. Establish baseline/coverage, delayed-delivery reconciliation and invalidating-event handling; validate complete chronology and exact pipeline/type enums.
 4. Configure a protected server adapter, request deadlines, monitored failure/retry queue and retention. No arbitrary proxy endpoint.
