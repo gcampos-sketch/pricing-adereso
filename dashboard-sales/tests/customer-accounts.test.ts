@@ -146,3 +146,15 @@ test("a company without identity cannot bridge two known holdings in either inpu
     expect(result.audit.conflictingInstances.sort()).toEqual(["10", "11"]);
   }
 });
+
+test("churn accounts are unique holdings and never overlap a holding with a current won deal", () => {
+  const result = reconcileCustomerAccounts(evidence(
+    [company("a", { id_holding:"10", id_empresa:"1" }), company("b", { id_holding:"10", id_empresa:"2" }), company("c", { id_holding:"20", id_empresa:"3" }), company("d", { id_holding:"20", id_empresa:"4" })],
+    [deal("churn1", "178228041", "1"), deal("churn2", "178228041", "2"), deal("churn3", "178228041", "3"), deal("live", "173990327", "4")],
+    {churn1:["a"],churn2:["b"],churn3:["c"],live:["d"]},
+  ));
+  expect(result.churnOnly.length).toBe(1);
+  expect(result.churnOnly[0]?.holdingId).toBe("10");
+  expect(result.churnOnly[0]?.deals.length).toBe(2);
+  expect(result.active.length).toBe(1);
+});

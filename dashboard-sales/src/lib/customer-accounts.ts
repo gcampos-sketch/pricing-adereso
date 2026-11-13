@@ -172,6 +172,7 @@ export function reconcileCustomerAccounts(evidence: CustomerEvidence) {
   return {
     active,
     pending,
+    churnOnly,
     audit: {
       lifecycleCompanies: evidence.companies.filter(
         (row) => row.properties["lifecyclestage"] === "customer",

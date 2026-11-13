@@ -10,7 +10,7 @@ import {
 } from "./hubspot.server";
 import { calendarDate, type ServiceOverview, type ServiceCustomer } from "./service-overview";
 import { readCustomerEvidence } from "./customer-directory.server";
-import { reconcileCustomerAccounts, CUSTOMER_WON_STAGES } from "./customer-accounts";
+import { reconcileCustomerAccounts, CUSTOMER_WON_STAGES, CUSTOMER_CHURN_STAGE } from "./customer-accounts";
 
 const batches = <T>(rows: T[], size = 100) =>
   Array.from({ length: Math.ceil(rows.length / size) }, (_, i) =>
@@ -18,7 +18,7 @@ const batches = <T>(rows: T[], size = 100) =>
   );
 /** Complete, global company/customer directory. No browser IDs or inferred lifecycle values. */
 export async function readServiceOverview(): Promise<ServiceOverview> {
-  return getCached("service-overview-accounts-v4", 90_000, async () => {
+  return getCached("service-overview-accounts-v5", 90_000, async () => {
     const [owners, industries, development] = await Promise.all([
       getOwners(),
       getPropertyOptionLabels("industria_deal"),
@@ -71,7 +71,7 @@ export async function readServiceOverview(): Promise<ServiceOverview> {
       const ordered = [...group.companies].sort((a, b) => a.id.localeCompare(b.id));
       const representative = ordered.find((row) => row.properties["nombre_holding"]) ?? ordered[0]!;
       const deals = group.deals
-        .filter((deal) => CUSTOMER_WON_STAGES.has(deal.properties["dealstage"] ?? ""))
+        .filter((deal) => CUSTOMER_WON_STAGES.has(deal.properties["dealstage"] ?? "") || (reconciled.churnOnly.includes(group) && deal.properties["dealstage"] === CUSTOMER_CHURN_STAGE))
         .map((deal) => ({
           id: deal.id,
           name: deal.properties["dealname"] || "Sin nombre",
@@ -152,6 +152,10 @@ export async function readServiceOverview(): Promise<ServiceOverview> {
     return {
       fetchedAt: evidence.fetchedAt,
       customers: reconciled.active.map(customer).sort((a, b) => a.name.localeCompare(b.name)),
+      churnCustomers: reconciled.churnOnly
+        .filter((group) => group.holdingId || group.instanceIds.length)
+        .map(customer)
+        .sort((a, b) => a.name.localeCompare(b.name)),
       pendingCustomers: reconciled.pending
         .map(customer)
         .sort((a, b) => a.name.localeCompare(b.name)),

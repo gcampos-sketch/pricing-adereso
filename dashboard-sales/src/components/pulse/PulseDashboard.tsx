@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
+import { dealExposure } from "@/lib/deal-exposure";
 import { useOverdueTasks } from "@/hooks/use-overdue-tasks";
 import { OverdueTasks } from "./OverdueTasks";
 import { TASK_OPEN_STAGES, overdueTaskExposure } from "@/lib/overdue-tasks";
 import { ArrowUpRight } from 'lucide-react';
 import { PULSE_FOCUS_PAGES, type PulseFocusView, type PulseSection } from '@/lib/report-navigation';
 import { Button } from "@/components/ui/button";
-import { AdoboRiskHygiene } from "./AdoboRiskHygiene";
 import { CommissionRate } from "./CommissionRate";
 import { quarterPace } from "@/lib/quarter-performance";
 import { NotificationCenter } from './NotificationCenter';
@@ -21,7 +21,6 @@ import { pipelineCoverage } from "@/lib/pipeline-coverage";
 import { useLiveNow } from './AdoboIntelligence';
 import { PipelineHistory } from './PipelineHistory';
 type MetricChip = { label: string; value: string; tone?: Tone; onClick?: () => void; detail?: WonStageDetail };
-import { verifiedContactAggregate } from '@/lib/contact-aggregate';
 import { MiniBars, MiniLine } from "./MiniCharts";
 import { TimeToService } from "./TimeToService";
 import { PlanBotWon } from "./PlanBotWon";
@@ -87,6 +86,7 @@ export function Metric({
   progress,
   progressBonus,
   progressLabel,
+  valuation,
   tooltip,
   trend,
   trendLabels,
@@ -105,6 +105,7 @@ export function Metric({
   /** chip inline junto al valor (ej. vista alterna $$$) */
   valueChip?: { label: string; value: string; tone?: Tone; onClick?: () => void };
   note?: string | undefined;
+  valuation?: string;
   tone?: Tone;
   onClick?: () => void;
   progress?: number;
@@ -225,6 +226,7 @@ export function Metric({
           </svg>
         </span>
       ) : null}
+      {valuation ? <div className="metric-exposure">{valuation}</div> : null}
       {note ? <div className="metric-note">{note}</div> : null}
       {typeof progress === "number" && Number.isFinite(progress) ? (
         (() => {
@@ -313,15 +315,6 @@ const COVERAGE_OK = 3;
 const COVERAGE_WARN = 1.5;
 
 const attainmentTone = (pct: number): Tone => (pct >= 100 ? "ok" : pct >= 60 ? "warn" : "bad");
-
-/** Higiene: cualquier deal sucio es atención; sobre 10% del pipeline es riesgo. */
-const hygieneTone = (count: number, total: number): Tone => {
-  if (!count) return "ok";
-  const share = total ? (count / total) * 100 : 100;
-  return share > 10 ? "bad" : "warn";
-};
-
-const shareTone = (share: number): Tone => (share <= 10 ? "ok" : share <= 25 ? "warn" : "bad");
 
 const emptyRisk = {
   quota: 0,
@@ -480,33 +473,6 @@ function SectionTitle({
   );
 }
 
-/** Encabezado numerado de un bloque dentro de "Calidad del pipeline". */
-function QHead({
-  n,
-  title,
-  subtitle,
-  badge,
-  actionable = false,
-}: {
-  n?: string;
-  title: string;
-  subtitle: string;
-  badge: string;
-  actionable?: boolean;
-}) {
-  return (
-    <div className="q-head">
-      <div className="q-head-text">
-        <h3>{title}</h3>
-        <p>{subtitle}</p>
-      </div>
-      <span className="q-head-badge" data-kind={actionable ? "action" : "info"}>
-        {badge}
-      </span>
-    </div>
-  );
-}
-
 /** Subtítulo de un grupo de tarjetas. */
 function QGroup({ label, tone = "neutral" }: { label: string; tone?: Tone }) {
   return (
@@ -563,12 +529,13 @@ export function PulseDashboard({
     setModalKey(null);
     setPeriodPayload(null);
     setGapInitialMonth(null);
+    setGapScenario(false);
     document.querySelector<HTMLElement>('.pulse-focus-heading h2')?.focus({ preventScroll: true });
   }, [section]);
   const [modalKey, setModalKey] = useState<string | null>(null);
   const [gapInitialMonth, setGapInitialMonth] = useState<string | null>(null);
+  const [gapScenario, setGapScenario] = useState(false);
   const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" }) | null>(null);
-  const [showAlerts, setShowAlerts] = useState(false);
   const [dense, setDense] = useState(true);
   const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
   const [quarter, setQuarter] = useState<string>(report.currentPeriod.split("-Q")[1]!);
@@ -589,6 +556,7 @@ export function PulseDashboard({
 
   const payload = periodPayload ?? (modalKey ? report.drilldowns[modalKey] ?? null : null);
   const closeModal = () => {
+    setGapScenario(false);
     setGapInitialMonth(null);
     setModalKey(null);
     setPeriodPayload(null);
@@ -603,21 +571,6 @@ export function PulseDashboard({
   const closeData = closeRaw ? { ...closeRaw, deals: closeRaw.deals ?? [] } : null;
   const monthWithoutMrr = closeData ? (report.drilldowns[closeData.monthModal]?.deals ?? []).filter(deal => deal.amountValue <= 0).length : 0;
   const monthUnvalued = Boolean(closeData && closeData.monthCount > 0 && closeData.monthAmount === 0);
-  // Persisted snapshots lack the evidence contract: never show their old caps/alerts.
-  const tempData = verifiedContactAggregate(report, ownerFilter, role);
-  const overdueByOwner = useMemo(() => {
-    if (!closeData) return [] as { owner: string; count: number; amount: number }[];
-    const deals = report.drilldowns[closeData.overdueModal]?.deals ?? [];
-    const map = new Map<string, { owner: string; count: number; amount: number }>();
-    for (const deal of deals) {
-      const key = deal.owner || "Sin propietario";
-      const current = map.get(key) ?? { owner: key, count: 0, amount: 0 };
-      current.count += 1;
-      current.amount += deal.amountValue || 0;
-      map.set(key, current);
-    }
-    return [...map.values()].sort((a, b) => b.count - a.count || b.amount - a.amount);
-  }, [report.drilldowns, closeData?.overdueModal]);
 
   const isAllYear = quarter === "all";
   const selectedPeriod = isAllYear ? `${year}-QALL` : `${year}-Q${quarter}`;
@@ -1074,6 +1027,7 @@ export function PulseDashboard({
     ? "La cobertura requiere seleccionar el mismo trimestre que el pipeline mostrado."
     : `Cobertura ponderada = suma de MRR × probabilidad de cada negocio del trimestre ÷ falta para la cuota (MRR ganado + OTF/12 ya descontados). Pipeline ponderado: ${gapCoverage.weighted === null ? "sin datos completos de probabilidad" : money(gapCoverage.weighted)}. Faltante: ${money(periodGap)}.`;
   const openGapDeals = (summaryDate: string | null = null) => {
+    setGapScenario(true);
     setGapInitialMonth(summaryDate);
     setPeriodPayload(null);
     setModalKey(qOpenModalKey);
@@ -1128,6 +1082,28 @@ export function PulseDashboard({
         : report.alerts.filter((a) => a.owner === report.periods.owners[ownerFilter]),
     [report.alerts, report.periods.owners, isTeam, ownerFilter],
   );
+
+  const exposureLabel = (deals: readonly { id: string; amountValue: number }[] | undefined) => {
+    if (!deals) return "MRR no disponible";
+    const { mrr, unvalued } = dealExposure(deals);
+    return `${money(mrr)} MRR involucrado${unvalued ? ` · ${unvalued} sin MRR` : ""}`;
+  };
+  const modalExposure = (key: string | undefined) => exposureLabel(key ? report.drilldowns[key]?.deals : undefined);
+
+  const highProbabilityCard = scope.cards.find(card => card.label === "Alta probabilidad");
+  const forecastSignals = [
+    {id:"high-probability",title:"Oportunidades con 70%+ de cierre",note:`${rangeLabel} · revisar qué oportunidad empujar.`,deals:report.drilldowns[highProbabilityCard?.modal ?? ""]?.deals},
+    {id:"e0",title:"Reuniones sin concretar · E0 +10 días",note:"Revalidar la reunión agendada y definir el próximo paso.",deals:funnelTop.e0Stuck},
+    {id:"activity",title:"Sin actividad de venta +10 días",note:"Retomar gestión o confirmar si la oportunidad sigue vigente.",deals:funnelTop.noSales},
+    {id:"e5",title:"Negociaciones estancadas · E5 +60 días",note:"Acordar una decisión o un siguiente paso concreto.",deals:report.drilldowns[closeData?.stale5Modal ?? ""]?.deals},
+    {id:"e2",title:"Deals estancados · E2 +40 días",note:"Confirmar si corresponde avanzar la oportunidad.",deals:report.drilldowns[closeData?.stale2Modal ?? ""]?.deals},
+    {id:"no-date",title:"Sin fecha de cierre",note:"Registrar una fecha respaldada por el cliente.",deals:report.drilldowns[closeData?.noDateModal ?? ""]?.deals},
+    {id:"poc",title:"PoC vencida · E5.1",note:"Revisar el resultado del piloto y su fecha de término.",deals:report.drilldowns[closeData?.pocOverdueModal ?? ""]?.deals},
+    {id:"pinzas",title:"Seguimiento con pinzas",note:"Revisar las cuentas marcadas para seguimiento especial.",deals:report.drilldowns[track?.allModal ?? ""]?.deals},
+  ].flatMap(row => {
+    const deals = [...new Map((row.deals ?? []).map(deal => [deal.id, deal])).values()];
+    return deals.length ? [{...row,deals}] : [];
+  });
 
   // Lista de comerciales recortada al rol elegido (AE o KAM) para el selector.
   const ownerOptions = (
@@ -1285,7 +1261,7 @@ export function PulseDashboard({
           {openPipe.total ? (
             <div className="won-bar pipe-bar" role="group" aria-label="Pipeline abierto por etapa">
               {openPipe.stages.filter((st) => st.deals.length).map((st, i) => (
-                <button key={st.key} type="button" data-shade={i} style={{ flexGrow: st.deals.length }}
+                <button key={st.key} type="button" data-shade={[0, 3, 1, 4, 2][i] ?? i} style={{ flexGrow: st.deals.length }}
                   title={`${st.key}: ${st.deals.length} deals hoy${st.hint ? ` · ${st.hint}` : ""}`}
                   onClick={(e) => { e.stopPropagation(); openList(`Pipeline abierto · ${st.key}`, st.hint ? `Deals que hoy ${st.hint} · sin filtro de fecha` : "Deals que hoy están en esta etapa · sin filtro de fecha", st.deals); }}>
                   {(st.key === "Sin activar" || st.key === "E4") && <WarnMark />}
@@ -1296,7 +1272,7 @@ export function PulseDashboard({
           ) : null}
           <small className="ex-chips">
             {openPipe.stages.filter((st) => st.deals.length).map((st, i) => (
-              <i key={st.key} data-shade={i} title={st.hint || undefined}>{st.key}</i>
+              <i key={st.key} data-shade={[0, 3, 1, 4, 2][i] ?? i} title={st.hint || undefined}>{st.key}</i>
             ))}
             {openPipe.aged.length ? (
               <button type="button" className="ex-chip" data-tone="warn"
@@ -1320,6 +1296,8 @@ export function PulseDashboard({
               {wonJourney.pending.length} por iniciar
             </button>
           </strong>
+          <small>Foto actual · sin filtro de fecha</small>
+          <span className="exec-sub-label">Por iniciar → en servicio</span>
           {wonJourney.total ? (
             <div className="won-bar exec-service-bar" role="group" aria-label="Ganados por etapa actual">
               {wonJourney.stages.filter((st) => st.deals.length).map((st) => (
@@ -1335,7 +1313,7 @@ export function PulseDashboard({
           <small className="ex-chips">
             {wonJourney.total
               ? wonJourney.stages.filter((st) => st.deals.length).map((st) => (
-                  <i key={st.key} data-tone={st.tone}>{st.key === "e8" ? "En servicio" : `${st.label.split(" ")[0]} ${st.hint}`}</i>
+                  <i key={st.key} data-tone={st.tone} title={st.hint}>{st.key === "e8" ? "En servicio" : st.key === "e6" ? "E6 · Sin kick off" : st.key === "e61" ? "E6.1 · Warning" : "E6.2 · Desarrollo"}</i>
                 ))
               : "sin ganados históricos con monto"}
           </small>
@@ -1611,8 +1589,8 @@ export function PulseDashboard({
       <section className="forecast-today" aria-labelledby="forecast-today-title">
         <header><div><h3 id="forecast-today-title">Resolver hoy</h3><p>Situación actual · empieza por lo que requiere revisión.</p></div><span className="forecast-time-chip">Hoy</span></header>
         <div className="forecast-action-list">
-          {["overdue", "warning", "off-track", "kickoff", "drafts", "signature"].flatMap(id => operationalTasks.filter(group => group.id === id)).map((group, index) => {
-            const titles: Record<string, string> = { overdue: "Corregir fechas vencidas", warning: "Resolver warnings", "off-track": "Contactar deals On Track No", kickoff: "Empujar kick off", drafts: "Enviar borradores de contrato", signature: "Conseguir firmas" };
+          {["overdue", "warning", "lost-candidate", "off-track", "kickoff", "drafts", "signature"].flatMap(id => operationalTasks.filter(group => group.id === id)).map((group, index) => {
+            const titles: Record<string, string> = { overdue: "Corregir fechas vencidas", warning: "Resolver warnings", "lost-candidate": "Revisar candidatos a perdido", "off-track": "Contactar deals On Track No", kickoff: "Empujar kick off", drafts: "Enviar borradores de contrato", signature: "Conseguir firmas" };
             const reason = group.reasons.length ? group.reasons.map(item => `${item.label}: ${item.deals.length}`).join(" · ") : group.description;
             return <button type="button" className="forecast-action-row" data-kind={group.id} key={group.id} onClick={() => openList(titles[group.id] ?? group.title, reason + " · foto actual, sin filtro de período", group.deals, undefined, group.id === "overdue" ? { key: "closeDate", dir: "asc" } : undefined)}>
               <span className="forecast-action-order">{index + 1}</span>
@@ -1627,404 +1605,22 @@ export function PulseDashboard({
         {((taskData && (taskData.todayTaskCount > 0 || taskData.noActivityCount > 0)) || overdueExposure?.tasks || overdueTasks.error) ? <div className="forecast-task-shortcuts" aria-label="Agenda y tareas registradas">
           <span>Tu agenda</span>
           <OverdueTasks controller={overdueTasks} compact />
-          {taskData && taskData.todayTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.todayTaskModal)}>Tareas para hoy <b>{taskData.todayTaskCount} deals</b></button> : null}
-          {taskData && taskData.noActivityCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.noActivityModal)}>Sin próxima actividad <b>{taskData.noActivityCount} deals</b></button> : null}
+          {taskData && taskData.todayTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.todayTaskModal)}>Tareas para hoy <b>{taskData.todayTaskCount} deals</b><small>{modalExposure(taskData.todayTaskModal)}</small></button> : null}
+          {taskData && taskData.noActivityCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.noActivityModal)}>Sin próxima actividad <b>{taskData.noActivityCount} deals</b><small>{modalExposure(taskData.noActivityModal)}</small></button> : null}
         </div> : null}
-        <p className="forecast-scope-note">Cada fila abre su lista. Un deal puede necesitar más de una acción; los grupos no se suman.</p>
+        <p className="forecast-scope-note">Un deal puede necesitar más de una acción; los grupos no se suman.</p>
       </section>
-      <section className="forecast-next" aria-labelledby="forecast-next-title">
-        <header><div><h3 id="forecast-next-title">Próximos cierres</h3><p>Revisa lo que viene y elige qué oportunidad empujar.</p></div></header>
-        <div className="forecast-next-grid">
-          {closeData ? <>
-            <button type="button" onClick={() => setModalKey(closeData.monthModal)}><span>Cierre previsto · mes actual</span><strong>{monthUnvalued ? "Sin valorizar" : money(closeData.monthAmount)}</strong><small>{closeData.monthCount} deals · {closeData.monthLabel}{monthWithoutMrr ? ` · ${monthWithoutMrr} sin MRR valorizado` : ""}</small><ArrowUpRight size={15} aria-hidden="true" /></button>
-            <button type="button" onClick={() => setModalKey(closeData.monthModal)}><span>Ponderado · mes actual</span><strong>{monthUnvalued ? "Sin base valorizada" : money(closeData.monthWeighted)}</strong><small>{monthUnvalued ? "Hay deals con fecha de cierre, pero sin MRR para ponderar" : "MRR × probabilidad de etapa · estimación"}</small><ArrowUpRight size={15} aria-hidden="true" /></button>
-          </> : null}
-          {scope.cards.filter(card => card.label === "Alta probabilidad").map(card => <button type="button" key={card.label} onClick={() => setModalKey(card.modal)}><span>Oportunidades con 70%+ de cierre</span><strong>{card.value}</strong><small>{rangeLabel} · filtros del informe</small><ArrowUpRight size={15} aria-hidden="true" /></button>)}
+      {forecastSignals.length ? <section className="forecast-signals" aria-labelledby="forecast-signals-title">
+        <header><div><h3 id="forecast-signals-title">Señales para revisar</h3><p>Gestión reciente, estancamiento y fechas por completar.</p></div></header>
+        <div className="forecast-signal-list">
+          {forecastSignals.map(signal => <button type="button" key={signal.id} onClick={() => openList(signal.title, signal.note + (signal.id === "high-probability" ? " · período y filtros del informe" : " · foto actual, sin filtro de período"), signal.deals)}>
+            <span><strong>{signal.title}</strong><small>{signal.note}</small></span>
+            <span className="forecast-signal-count">{signal.deals.length}<small>{signal.deals.length === 1 ? "deal" : "deals"}</small></span>
+            <span className="forecast-signal-value">{exposureLabel(signal.deals)}</span>
+            <ArrowUpRight size={15} aria-hidden="true" />
+          </button>)}
         </div>
-      </section>
-      <Fold title="Revisar mi pipeline" subtitle="Estancamiento, scoring, fit, seguimiento y cobertura · diagnóstico detallado">
-      <QGroup label="Cierre y seguimiento inmediato" tone="bad" />
-      <section className="grid-4">
-        <Metric
-          label="Alertas específicas del reporte"
-          value={String(scopedAlerts.length)}
-          note={scopedAlerts.length ? "clic para ver el detalle" : "sin alertas en este corte"}
-          tone={scopedAlerts.length ? "warn" : "ok"}
-          onClick={() => setShowAlerts((value) => !value)}
-          tooltip="Deals que requieren acción hoy según Rol y Comercial, de todos los tipos de deal. Se despliegan aquí mismo para revisarlos con el comercial."
-        />
-        {taskData ? (
-          <>
-            <Metric
-              label="Sin próxima actividad"
-              value={String(taskData.noActivityCount)}
-              note={`de ${taskData.openCount} deals abiertos E1–E5.1`}
-              tone={hygieneTone(taskData.noActivityCount, taskData.openCount)}
-              onClick={() => setModalKey(taskData.noActivityModal)}
-              tooltip="Deals abiertos sin una próxima actividad agendada."
-            />
-            <OverdueTasks controller={overdueTasks} />
-          </>
-        ) : null}
-        <Metric
-          label="E0 estancada +10 días"
-          value={String(funnelTop.e0Stuck.length)}
-          note="foto de hoy · reunión agendada sin concretar"
-          tone={funnelTop.e0Stuck.length ? "warn" : "ok"}
-          onClick={() => openList("E0 estancada +10 días", "Deals en reunión agendada hace más de 10 días", funnelTop.e0Stuck)}
-          tooltip="Deals que siguen en E0 hace más de 10 días. Año y trimestre no alteran esta señal."
-        />
-      </section>
-      <QGroup label="Estancamiento y riesgo de caída" tone="warn" />
-      <section className="grid-4">
-        <Metric
-          label="Sin actividad de venta +10 días"
-          value={String(funnelTop.noSales.length)}
-          note={`de ${funnelTop.openCount} deals abiertos E0–E5.1 hoy`}
-          tone={hygieneTone(funnelTop.noSales.length, funnelTop.openCount)}
-          onClick={() => openList("Sin actividad de venta +10 días", "Última actividad hace más de 10 días o nunca", funnelTop.noSales)}
-          tooltip="Foto de hoy. Considera la última actividad registrada; no depende del trimestre seleccionado."
-        />
-        {closeData ? (
-          <>
-            <Metric
-              label="Estancados E5 +60 días"
-              value={String(closeData.stale5Count)}
-              note={money(closeData.stale5Amount)}
-              tone={hygieneTone(closeData.stale5Count, closeData.openCount)}
-              onClick={() => setModalKey(closeData.stale5Modal)}
-            />
-          <Metric
-              label="Candidato a perdido · prioridad"
-              value={String(closeData.lostPriorityCount ?? 0)}
-              note={money(closeData.lostPriorityAmount ?? 0)}
-              tone={closeData.lostPriorityCount ? "warn" : "ok"}
-              onClick={() => setModalKey(closeData.lostPriorityModal)}
-            />
-            <Metric
-              label="Candidato a perdido · competencia"
-              value={String(closeData.lostCompetitionCount ?? 0)}
-              note={money(closeData.lostCompetitionAmount ?? 0)}
-              tone={closeData.lostCompetitionCount ? "bad" : "ok"}
-              onClick={() => setModalKey(closeData.lostCompetitionModal)}
-            />
-          </>
-        ) : null}
-      </section>
-
-      {showAlerts ? (
-        <section className="alerts">
-          {scopedAlerts.length ? (
-            scopedAlerts.map((alert) => (
-              <a className="alert" key={alert.id} href={alert.url} target="_blank" rel="noreferrer">
-                <span>{alert.owner}</span>
-                <strong>{alert.name}</strong>
-                <em>
-                  {alert.reason} · {money(alert.amount)}
-                </em>
-              </a>
-            ))
-          ) : (
-            <div className="empty-state">Sin alertas para este corte de filtros.</div>
-          )}
-        </section>
-      ) : null}
-
-
-      <QGroup label="Oportunidades para empujar y rescatar" tone="warn" />
-      <section className="grid-4">
-        {scope.cards.filter((card) => ["Q bajo % cierre", "Deals Q abiertos"].includes(card.label)).map((card) => (
-          <Metric key={card.label} label={card.label} value={card.value} note={card.note || undefined} tone={card.tone ?? "neutral"} onClick={() => setModalKey(card.modal)} {...(card.tooltip ? { tooltip: card.tooltip } : {})} />
-        ))}
-        {closeData ? <Metric label="Estancados E2 +40 días" value={String(closeData.stale2Count)} note={money(closeData.stale2Amount)} tone={hygieneTone(closeData.stale2Count, closeData.openCount)} onClick={() => setModalKey(closeData.stale2Modal)} /> : null}
-        {warningScope ? <Metric label="Deals warning · E6.1" value={String(warningScope.count)} note={warningScope.reasons.map((reason) => `${reason.label} (${reason.count})`).join(" · ")} tone={warningScope.count ? "bad" : "ok"} onClick={() => setModalKey(warningScope.modal)} /> : null}
-        {taskData ? <Metric label="Tareas para hoy" value={String(taskData.todayTaskCount)} note={`${taskData.todayTaskTotal} tareas vencen hoy`} tone={taskData.todayTaskCount ? "warn" : "ok"} onClick={() => setModalKey(taskData.todayTaskModal)} /> : null}
-      </section>
-      <AdoboRiskHygiene scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}}/>
-      <QGroup label="Seguimiento especial" tone="warn" />
-      {track ? (
-        <>
-          <div className="tracking-subsection-heading">
-            <h3>On Track</h3>
-            <p>Estado declarado en HubSpot para los deals abiertos</p>
-          </div>
-          <section className="grid-2 tracking-status-grid">
-            <Metric
-              label="On Track · Sí"
-              value={String(track.onTrackYesCount ?? 0)}
-              note={`${money(track.onTrackYesAmount ?? 0)} · marcados como Sí`}
-              tone="ok"
-              onClick={() => setModalKey(track.onTrackYesModal)}
-              tooltip="Deals abiertos con la propiedad On Track marcada como Sí en HubSpot."
-            />
-            <Metric
-              label="On Track · No"
-              value={String(track.onTrackNoCount ?? 0)}
-              note={`${money(track.onTrackNoAmount ?? 0)} · requieren seguimiento`}
-              tone={(track.onTrackNoCount ?? 0) > 0 ? "bad" : "ok"}
-              onClick={() => setModalKey(track.onTrackNoModal)}
-              tooltip="Deals abiertos con la propiedad On Track marcada como No en HubSpot."
-            />
-          </section>
-
-          <div className="tracking-subsection-heading tracking-subsection-heading-spaced">
-            <h3>Seguimiento con pinzas</h3>
-            <p>Deals marcados por Adobo para seguimiento especial</p>
-          </div>
-          <section className="grid-4">
-            <Metric
-              label="Deals en pinzas"
-              value={String(track.atRiskCount)}
-              note={`marcados por Adobo en HubSpot · de ${track.openCount} abiertos`}
-              onClick={() => setModalKey(track.allModal)}
-            />
-            <Metric
-              label="Monto en pinzas"
-              value={money(track.atRiskAmount)}
-              note={`${money(track.openAmount)} pipeline abierto`}
-              onClick={() => setModalKey(track.allModal)}
-            />
-            <Metric
-              label="% del pipeline"
-              value={`${Math.round(track.share)}%`}
-              note="peso de los deals en seguimiento"
-              tone={shareTone(track.share)}
-              onClick={() => setModalKey(track.allModal)}
-            />
-            <Metric
-              label="Adobo prom. / % cierre"
-              value={`${track.avgAdobo ? Math.round(track.avgAdobo) : "s/n"} · ${Math.round(
-                track.avgProbability * 100,
-              )}%`}
-              note="score vivo vs. probabilidad de etapa"
-              tone={
-                track.avgAdobo ? (track.avgAdobo >= 65 ? "ok" : track.avgAdobo >= 45 ? "warn" : "bad") : "neutral"
-              }
-              onClick={() => setModalKey(track.allModal)}
-            />
-          </section>
-
-
-        </>
-      ) : null}
-
-
-      {closeData ? <>
-                {/* 04 · ¿Qué tengo mal registrado? */}
-                <QHead
-                  title="Higiene de datos"
-                  subtitle="Fechas vencidas o faltantes que le restan credibilidad al forecast"
-                  badge="Accionable · higiene"
-                  actionable
-                />
-                <section className="grid-4">
-                  <Metric
-                    label="Cierre vencido"
-                    value={String(closeData.overdueCount)}
-                    note={`${money(closeData.overdueAmount)} con fecha pasada`}
-                    tone={hygieneTone(closeData.overdueCount, closeData.openCount)}
-                    onClick={() => setModalKey(closeData.overdueModal)}
-                  />
-                  <Metric
-                    label="Sin fecha de cierre"
-                    value={String(closeData.noDateCount)}
-                    note={`${money(closeData.noDateAmount)} sin closedate`}
-                    tone={hygieneTone(closeData.noDateCount, closeData.openCount)}
-                    onClick={() => setModalKey(closeData.noDateModal)}
-                  />
-                  <Metric
-                    label="PoC vencida (E5.1)"
-                    value={String(closeData.pocOverdueCount)}
-                    note={`${money(closeData.pocOverdueAmount)} con fecha fin de PoC pasada`}
-                    tone={hygieneTone(closeData.pocOverdueCount, closeData.openCount)}
-                    onClick={() => setModalKey(closeData.pocOverdueModal)}
-                  />
-                </section>
-
-                {ownerFilter === "team" && overdueByOwner.length ? (
-                  <div className="owner-chips">
-                    <span className="owner-chips-label">Cierres vencidos por comercial</span>
-                    <div className="owner-chips-row">
-                      {overdueByOwner.map((entry) => (
-                        <button
-                          key={entry.owner}
-                          type="button"
-                          className="owner-chip"
-                          onClick={() => setModalKey(closeData.overdueModal)}
-                          title={`${entry.owner}: ${entry.count} vencidos · ${money(entry.amount)}`}
-                        >
-                          {firstName(entry.owner)}
-                          <span className="owner-chip-count">{entry.count}</span>
-                          <span className="owner-chip-amount">{money(entry.amount)}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-      </> : null}
-      <QHead title="Calidad del forecast" subtitle="Evidencia, fit y credibilidad de las fechas" badge="Diagnóstico" />
-      {(() => {
-        const qCard = (label: string) => scope.cards.find((card) => card.label === label);
-        const renderQ = (label: string, override?: string) => {
-          const card = qCard(label);
-          if (!card) return null;
-          return (
-            <Metric
-              key={label}
-              label={override ?? card.label}
-              value={card.value}
-              note={card.note || undefined}
-              tone={card.tone ?? "neutral"}
-              onClick={() => setModalKey(card.modal)}
-              {...(card.tooltip ? { tooltip: card.tooltip } : {})}
-              {...(card.trend ? { trend: card.trend, trendLabels: monthly.months } : {})}
-            />
-          );
-        };
-        const adoboScope =
-          report.adobo?.scopes.find((item) => item.id === scopeId) ?? report.adobo?.scopes?.[0] ?? null;
-        const tempBuckets = (tempData?.buckets ?? []).filter((bucket) =>
-          ["normal", "prehot", "hot"].includes(bucket.key),
-        );
-        return (
-          <>
-            {/* 02 · ¿Puedo confiar en ese número? */}
-            <QHead
-              title="¿Puedo confiar en ese número?"
-              subtitle="Termómetro, deal fit y credibilidad de las fechas"
-              badge="Informativo · credibilidad"
-            />
-            <QGroup label="Termómetro general" />
-            <section className="grid-4">
-              {renderQ("% cierre prom.")}
-              {renderQ("Deal score prom.")}
-              {renderQ("Adobo scoring prom.")}
-            </section>
-            {adoboScope ? (
-              <>
-                <QGroup label="Deal fit · qué tan bien calzan" />
-                <section className="grid-4">
-                  {adoboScope.fit.map((bucket) => (
-                    <Metric
-                      key={bucket.key}
-                      label={`Fit ${bucket.label}`}
-                      value={String(bucket.count)}
-                      note={`${money(bucket.amount)} · Adobo prom. ${
-                        bucket.avgScore < 0 ? "s/n" : Math.round(bucket.avgScore)
-                      }${bucket.key === "indeterminado" ? " · sin clasificar" : ""}`}
-                      tone={
-                        bucket.key === "alto"
-                          ? "ok"
-                          : bucket.key === "medio"
-                            ? "warn"
-                            : bucket.key === "bajo"
-                              ? "bad"
-                              : "neutral"
-                      }
-                      tooltip="Distribución del pipeline abierto según adobo_icp_fit. Clic para ver los deals."
-                      onClick={() => setModalKey(bucket.modal)}
-                    />
-                  ))}
-                </section>
-                <QGroup label="Forecast real · ¿la fecha se sostiene?" />
-                <section className="grid-4">
-                  {adoboScope.forecast.map((card) => (
-                    <Metric
-                      key={card.key}
-                      label={card.label}
-                      value={money(card.amount)}
-                      note={`${card.count} deals · ${card.note}`}
-                      tone={card.tone}
-                      tooltip={card.tooltip}
-                      onClick={() => setModalKey(card.modal)}
-                    />
-                  ))}
-                </section>
-              </>
-            ) : null}
-
-            {/* 03 · ¿Cómo va la comunicación con mis leads? */}
-            {!tempData ? (
-              <>
-                <QHead title="Comunicación · evidencia disponible" subtitle="Ratio legado separado de la tasa por episodios" badge="Sin inferencias de ghosting"/>
-                <section className="grid-3">
-                  {renderQ("Ratio legado prom.")}
-                  <Metric label="Tasa por episodios" value="pendiente" note="pendiente de integración · ventana, metodología y cobertura sin dato" tone="neutral"/>
-                  <Metric label="Señal de contacto" value="no verificable" note="Sin frescura, cobertura y pausa validadas · sin alerta ni tope" tone="neutral"/>
-                </section>
-              </>
-            ) : null}
-            {tempData ? (
-              <>
-                <QHead
-                  title="¿Cómo va la comunicación con mis leads?"
-                  subtitle="Salud del contacto, de riesgo de ghosting a hot"
-                  badge="Informativo · comunicación"
-                />
-                <section className="grid-4">
-                  {renderQ("Ratio legado prom.")}
-                  <Metric
-                    label="Riesgo ghosting"
-                    value={String(tempData.coldCount)}
-                    note={`${money(tempData.coldAmount)} · ${Math.round(tempData.coldPct)}% del pipeline · sin respuesta hace rato`}
-                    tone={hygieneTone(tempData.coldCount, tempData.openCount)}
-                    tooltip="Deals con 3 o más intentos de contacto y 0 respuestas del prospecto. Su Adobo score se muestra con tope 45 porque no hay evidencia de conversación."
-                    onClick={() => setModalKey(tempData.coldModal)}
-                  />
-                  {tempBuckets.map((bucket) => (
-                    <Metric
-                      key={bucket.key}
-                      label={bucket.label}
-                      value={String(bucket.count)}
-                      note={`${money(bucket.amount)}${bucket.avgScore >= 0 ? ` · Adobo prom. ${Math.round(bucket.avgScore)}` : ""}`}
-                      tone={bucket.tone}
-                      tooltip={bucket.tooltip}
-                      onClick={() => setModalKey(bucket.modal)}
-                    />
-                  ))}
-                </section>
-              </>
-            ) : null}
-
-            {closeData ? (
-              <>
-                <div className="q-foot">
-                  <span
-                    className="status"
-                    data-tone={closeData.healthPct >= 85 ? "ok" : closeData.healthPct >= 60 ? "warn" : "bad"}
-                  >
-                    Higiene de fechas {Math.round(closeData.healthPct)}%
-                  </span>
-                  <span>
-                    porcentaje con fecha válida y no vencida · base: {closeData.openCount} deals abiertos
-                  </span>
-                </div>
-              </>
-            ) : null}
-          </>
-        );
-      })()}
-      <QHead title="Actividad y cobertura de datos" subtitle="Hoy · actividades por deal e higiene de gestión" badge="Diagnóstico" />
-      <section className="grid-3">
-        <Metric
-          label="Actividades acumuladas por deal"
-          value={funnelTop.avgActs == null ? "s/d" : funnelTop.avgActs.toFixed(1)}
-          note={`${funnelTop.openCount} deals abiertos E0–E5.1 · ${funnelTop.avgActs == null ? 0 : funnelTop.openDeals.filter((deal) => typeof deal.activities === "number").length} con dato`}
-          onClick={() => openList("Actividades acumuladas por deal", "Deals abiertos · ordena por la columna Activ.", funnelTop.openDeals)}
-          tooltip="Promedio histórico acumulado de actividades registradas por deal abierto. No representa actividades realizadas dentro del trimestre seleccionado."
-        />
-        {taskData ? (
-          <Metric
-            label="Higiene de gestión"
-            value={`${Math.round(taskData.healthPct)}%`}
-            note="con próxima actividad y sin tareas atrasadas"
-            tone={taskData.healthPct >= 85 ? "ok" : taskData.healthPct >= 60 ? "warn" : "bad"}
-            onClick={() => setModalKey(taskData.pendingModal)}
-          />
-        ) : null}
-      </section>
-      </Fold>
+      </section> : null}
 
       {/* ===================== TABLA UNIFICADA POR COMERCIAL ===================== */}
       </>}
@@ -2278,7 +1874,7 @@ export function PulseDashboard({
             ? { labels: monthly.months, values: pipelineTrend }
             : null
         }
-        selectionQuota={selectionQuota}
+        selectionQuota={gapScenario && modalKey === qOpenModalKey && !periodPayload ? selectionQuota : null}
       />
     </main>
   );

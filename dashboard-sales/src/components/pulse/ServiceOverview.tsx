@@ -114,7 +114,7 @@ export function ServiceOverview({
   const [retry, setRetry] = useState(0);
   const [query, setQuery] = useState("");
   const [owner, setOwner] = useState("");
-  const [showPendingCustomers, setShowPendingCustomers] = useState(false);
+  const [customerStatus, setCustomerStatus] = useState<"service" | "won" | "churn" | "review">("service");
   const [industry, setIndustry] = useState("");
   const [devQuery, setDevQuery] = useState("");
   const [devOwner, setDevOwner] = useState("");
@@ -149,8 +149,10 @@ export function ServiceOverview({
   const undated = data?.development.filter((row) => !row.date).length ?? 0;
   const overdue = data?.development.filter((row) => row.date && row.date < today).length ?? 0;
   const quarter = Math.ceil(Number(today.slice(5, 7)) / 3);
-  const customerPopulation = showPendingCustomers
-    ? (data?.pendingCustomers ?? [])
+  const serviceCustomers = (data?.customers ?? []).filter(account => account.deals.some(deal => deal.stage === "173990327"));
+  const customerPopulation = customerStatus === "service" ? serviceCustomers
+    : customerStatus === "churn" ? (data?.churnCustomers ?? [])
+    : customerStatus === "review" ? (data?.pendingCustomers ?? [])
     : (data?.customers ?? []);
   const customers = customerPopulation.filter(
     (row) =>
@@ -223,32 +225,28 @@ export function ServiceOverview({
         }
         trigger={
           <button type="button" className="service-overview-metric service-growth-widget" disabled={!data}>
-            <span className="service-growth-heading">
-              <span>Por iniciar servicio</span>
-              <small>{data ? `${data.development.length} negocios` : "—"}</small>
-            </span>
             <span className="service-growth-grid">
               <span className="service-growth-column">
-                <span className="service-growth-label">MRR por incorporar</span>
+                <span className="service-growth-label">MRR por iniciar</span>
                 <strong><span className="service-pending-plus">+</span>{data ? money(devTotal) : "—"}</strong>
-                <span className="service-growth-projection">
-                  <span>MRR proyectado</span>
-                  <b>{data ? money(currentServiceMrr + devTotal) : "—"}</b>
+                <span className="service-growth-projection" title="Nuevo total de MRR en servicio si todos los negocios pendientes inician servicio.">
+                  <span>Nuevo total MRR</span><b>{data ? money(currentServiceMrr + devTotal) : "—"}</b>
                 </span>
+                <small className="service-growth-footnote">
+                  {data ? `${data.development.length} negocios · ${data.development.filter((deal) => deal.stage === "6.2 · En desarrollo").length} en desarrollo · ${data.development.filter((deal) => deal.stage === "E6 · Firmado").length} firmados` : error ? "Datos no disponibles" : "Cargando negocios…"}
+                </small>
               </span>
               <span className="service-growth-column">
-                <span className="service-growth-label">Clientes nuevos por iniciar</span>
+                <span className="service-growth-label">Clientes por incorporar</span>
                 <strong><span className="service-pending-plus">+</span>{clientProjection?.newClients ?? "—"}</strong>
-                <span className="service-growth-projection" title="Cuentas con un negocio E8 más las cuentas por iniciar sin otro negocio E8. Cada holding o instancia se cuenta una vez; las expansiones no suman clientes.">
-                  <span>Clientes proyectados en servicio</span>
-                  <b>{clientProjection?.projected ?? "—"}</b>
+                <span className="service-growth-projection" title="Nuevo total de clientes en servicio si todas las cuentas pendientes se incorporan. Cada holding o instancia cuenta una vez; las expansiones no suman clientes.">
+                  <span>Nuevo total clientes</span><b>{clientProjection?.projected ?? "—"}</b>
                 </span>
+                <small className="service-growth-footnote">
+                  {clientProjection?.unresolvedDeals ? `${clientProjection.unresolvedDeals} negocios con cuenta por verificar` : "Si todos inician servicio · cuentas únicas"}
+                </small>
               </span>
             </span>
-            <small className="service-growth-footnote">
-              {data ? `${data.development.filter((deal) => deal.stage === "6.2 · En desarrollo").length} en desarrollo · ${data.development.filter((deal) => deal.stage === "E6 · Firmado").length} firmados` : error ? "Datos no disponibles" : "Cargando negocios…"}
-              {clientProjection?.unresolvedDeals ? ` · ${clientProjection.unresolvedDeals} negocios con cuenta por verificar` : ""}
-            </small>
           </button>
         }
       >
@@ -398,13 +396,13 @@ export function ServiceOverview({
           </>
         }
         title="Clientes"
-        description="Cuentas con negocio ganado vigente en Comercial Adereso (E6 a E8). Una cuenta por ID Holding; si falta, se cruza el ID de instancia Backoffice. El ciclo de vida no decide el conteo. Sin ganados vigentes, la cuenta no suma."
+        description="En servicio: cuentas únicas con un negocio E8 vigente, reconciliadas por holding o instancia. Churn: cuentas con negocios en etapa Churn y sin ningún ganado vigente E6–E8 en el mismo holding. Las etiquetas de ciclo de vida no deciden el conteo. Los casos sin identidad verificable quedan fuera del total churn."
         trigger={
           <button type="button" className="service-overview-metric" disabled={!data}>
-            <span>Clientes con ganado</span>
-            <strong>{data ? data.customers.length : "—"}</strong>
-            <small title="Cuentas únicas por holding o instancia, con negocio ganado vigente">
-              {clientProjection ? `${clientProjection.current} en servicio · holding / instancia` : "Holding / instancia"}
+            <span>Clientes en servicio</span>
+            <strong>{data ? serviceCustomers.length : "—"}</strong>
+            <small title="Cuentas únicas por holding o instancia, con un negocio en E8 vigente">
+              Holding / instancia
               {data?.pendingCustomers?.length ? (
                 <span className="service-customer-pending">
                   {data.pendingCustomers.length} por revisar
@@ -419,28 +417,17 @@ export function ServiceOverview({
           role="group"
           aria-label="Estado de validación de clientes"
         >
-          <button
-            type="button"
-            aria-pressed={!showPendingCustomers}
-            onClick={() => {
-              setShowPendingCustomers(false);
-              setOwner("");
-            }}
-          >
-            <span>Con ganado vigente</span>
-            <strong>{data?.customers.length ?? 0}</strong>
-          </button>
-          <button
-            type="button"
-            aria-pressed={showPendingCustomers}
-            onClick={() => {
-              setShowPendingCustomers(true);
-              setOwner("");
-            }}
-          >
-            <span>Por revisar</span>
-            <strong>{data?.pendingCustomers?.length ?? 0}</strong>
-          </button>
+          {([
+            ["service", "En servicio", serviceCustomers.length],
+            ["churn", "Clientes churn", data?.churnCustomers?.length ?? 0],
+            ["won", "Con ganado vigente", data?.customers.length ?? 0],
+            ["review", "Por revisar", data?.pendingCustomers?.length ?? 0],
+          ] as const).map(([status, label, count]) => (
+            <button key={status} type="button" aria-pressed={customerStatus === status}
+              onClick={() => { setCustomerStatus(status); setOwner(""); setIndustry(""); setQuery(""); }}>
+              <span>{label}</span><strong>{count}</strong>
+            </button>
+          ))}
         </div>
         <div className="service-directory-filters">
           <label>
@@ -482,7 +469,7 @@ export function ServiceOverview({
           {clusters.map((cluster) => (
             <details
               className="service-start-cluster customer-industry-cluster"
-              key={`${showPendingCustomers}:${cluster}`}
+              key={`${customerStatus}:${cluster}`}
             >
               <summary>
                 <span>{cluster}</span>

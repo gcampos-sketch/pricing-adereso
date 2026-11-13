@@ -40,3 +40,11 @@ test('explicit dealtype takes precedence over a legacy renewal segment', () => {
   const rows = [{ id: 'upsell', dealType: 'Upsell', segment: 'Renovación', amountValue: 100, productToHire: 'SMS' }] as DealDTO[];
   expect(quotaStats(rows).wonAmount).toBe(100);
 });
+
+test('unverified account deals never enter service total, count or entry population', () => {
+  const deals = [raw('verified', 'newbusiness', 100), raw('pending-review', 'Upsell', 300), raw('unresolved', null, 500), raw('renewal', 'Renovación', 200)];
+  const selected = serviceMrrDeals(deals, 'service', new Set(['verified', 'renewal']));
+  expect(selected.map(deal => deal.id)).toEqual(['verified']);
+  expect(selected.reduce((sum, deal) => sum + Number(deal.properties.amount), 0)).toBe(100);
+  expect(serviceMrrDeals(deals, 'service', new Set())).toHaveLength(0);
+});

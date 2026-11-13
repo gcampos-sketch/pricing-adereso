@@ -6,6 +6,7 @@ export const ACTION_DEFINITIONS = [
   { id: 'overdue', title: 'Actualizar cierres vencidos', description: 'Revalidar la fecha de cierre de los negocios activos.' },
   { id: 'kickoff', title: 'Llevar E6 a kick off', description: 'Negocios firmados que siguen en E6, pendientes de avanzar a kick off.' },
   { id: 'warning', title: 'Resolver warnings de E6.1', description: 'Revisar el motivo y acordar cómo desbloquear cada negocio.' },
+  { id: 'lost-candidate', title: 'Revisar candidatos a perdido', description: 'Validar señales de pérdida por prioridad o competencia y definir el siguiente paso.' },
   { id: 'off-track', title: 'Contactar negocios On track: No', description: 'Revisar el bloqueo y retomar el contacto con estas oportunidades activas.' },
   { id: 'drafts', title: 'Enviar borradores de contrato', description: 'Borradores registrados que aún no se enviaron al cliente.' },
   { id: 'signature', title: 'Gestionar firmas pendientes', description: 'Contratos enviados al cliente que todavía no figuran firmados.' },
@@ -20,7 +21,7 @@ const WON = new Set(['174677684','1278792585','1086544542','213244763','17138586
 const unique = (deals: DealDTO[]) => [...new Map(deals.map(deal => [deal.id, deal])).values()];
 const normalize = (value: string | null | undefined) => (value ?? '').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase().trim();
 
-/** Six action groups, never individual bell notifications or inferred risks. No CRM writes. */
+/** Grouped actions, never individual bell notifications or inferred risks. No CRM writes. */
 export function dashboardActionGroups(report: PulseReport, scope: ActionScope, now = Date.parse(report.generatedAt)): ActionGroup[] {
   const matches = (d: DealDTO) => (scope.owner === 'team' || d.ownerId === scope.owner) &&
     (scope.role === 'all' || roleOfOwner(d.ownerId) === scope.role) && scope.matchesType(d) &&
@@ -38,6 +39,12 @@ export function dashboardActionGroups(report: PulseReport, scope: ActionScope, n
     const labels = warningScope?.reasons.filter(r => report.drilldowns[r.modal]?.deals.some(d => d.id === deal.id)).map(r => r.label) ?? [];
     for (const label of labels.length ? labels : ['Sin motivo registrado']) warningReasons.set(label, [...(warningReasons.get(label) ?? []), deal]);
   }
+  const close = report.closeHygiene?.find(row => row.id === 'team');
+  const candidateReasons = ([['Prioridad', close?.lostPriorityModal], ['Competencia', close?.lostCompetitionModal]] as const)
+    .map(([label, key]) => ({label, deals: unique((report.drilldowns[key ?? '']?.deals ?? [])
+      .flatMap(deal => currentById.has(deal.id) ? [currentById.get(deal.id)!] : [])
+      .filter(deal => matches(deal) && OPEN.has(deal.stageId)))}))
+    .filter(reason => reason.deals.length > 0);
   // Contract work is limited to current won deals with an explicit draft/sent status.
   // Blank, not-started, signed and not-applicable statuses do not imply a pending signature.
   const contractDeals = all.filter(d => WON.has(d.stageId));
@@ -48,9 +55,10 @@ export function dashboardActionGroups(report: PulseReport, scope: ActionScope, n
     overdue: strip.openPipe.overdue.filter(matches),
     kickoff: all.filter(d => d.stageId === '174677684'),
     warning: warnings,
+    'lost-candidate': unique(candidateReasons.flatMap(reason => reason.deals)),
     'off-track': unique(strip.onTrack.no.map(d => currentById.get(d.id) ?? d)).filter(d => matches(d) && OPEN.has(d.stageId)),
     drafts: contractDeals.filter(d => /borrador/.test(normalize(d.contractStatus)) && !sent(normalize(d.contractStatus)) && !signed(normalize(d.contractStatus)) && !cancelled(normalize(d.contractStatus))),
     signature: contractDeals.filter(d => (sent(normalize(d.contractStatus)) || /pendiente de firma|firma pendiente|por firmar/.test(normalize(d.contractStatus))) && !signed(normalize(d.contractStatus)) && !cancelled(normalize(d.contractStatus))),
   };
-  return ACTION_DEFINITIONS.map(def => ({...def, deals: populations[def.id], reasons: def.id === 'warning' ? [...warningReasons].map(([label, deals]) => ({label, deals: unique(deals)})) : []})).filter(group => group.deals.length > 0);
+  return ACTION_DEFINITIONS.map(def => ({...def, deals: populations[def.id], reasons: def.id === 'lost-candidate' ? candidateReasons : def.id === 'warning' ? [...warningReasons].map(([label, deals]) => ({label, deals: unique(deals)})) : []})).filter(group => group.deals.length > 0);
 }

@@ -24,6 +24,7 @@ export type ServiceOverview = {
   customers: ServiceCustomer[];
   development: ServiceDeal[];
   pendingCustomers?: ServiceCustomer[];
+  churnCustomers?: ServiceCustomer[];
   customerAudit?: ReturnType<
     typeof import("./customer-accounts").reconcileCustomerAccounts
   >["audit"];
