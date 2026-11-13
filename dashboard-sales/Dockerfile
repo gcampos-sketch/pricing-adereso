@@ -10,7 +10,7 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUP
 COPY starfield.js starfield.d.ts logoadereso.webp /app/
 RUN npm run build
 WORKDIR /app
-COPY index.html starfield.js roi-standalone.js roi-share.js wallet-standalone.js wallet-share.js brand-system.css chapter-index.js academy-sync.js commercial-guides.js dashboard-settings.js logoadereso.webp e6e8672e.webp ./private-hub/
+COPY index.html starfield.js roi-standalone.js roi-share.js wallet-standalone.js wallet-share.js brand-system.css chapter-index.js academy-sync.js academy-missions.js academy-curriculum.js academy-missions.css commercial-guides.js dashboard-settings.js logoadereso.webp e6e8672e.webp ./private-hub/
 COPY assets/adereso-symbol.svg ./private-hub/assets/adereso-symbol.svg
 COPY assets/brochure-logos/ ./private-hub/assets/brochure-logos/
 COPY assets/brochure-credentials/ ./private-hub/assets/brochure-credentials/

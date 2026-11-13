@@ -15,6 +15,7 @@ import { handleHubEntryRequest } from './hub-entry.server';
 import { handleRoiSharingRequest } from './roi-sharing.server';
 import { handleCommercialGuidesRequest } from './commercial-guides.server';
 import { handleAcademyRequest } from './academy-sync.server';
+import { handleAcademyProgressRequest } from './academy-progress.server';
 import { handleNotionOAuthRequest } from './academy-notion-oauth.server';
 
 // Private files are deliberately outside Nitro's public directory/CDN.
@@ -28,5 +29,5 @@ const publicPartners = createPartnerPublicGateway(read);
 const privateHub = createHubGateway({ verify: verifyHubIdentity,
   publicOrigin: process.env['RENDER_EXTERNAL_URL'], read });
 export async function handleHubRequest(request: Request) {
-  return await handleBrochureSharingRequest(request) ?? await publicBrochure(request) ?? await handleWalletSharingRequest(request) ?? await publicWallet(request) ?? await handleRoiSharingRequest(request) ?? await handleHubEntryRequest(request) ?? await handleHubWelcomeRequest(request) ?? await handleCommercialGuidesRequest(request) ?? await handleNotionOAuthRequest(request) ?? await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
+  return await handleAcademyProgressRequest(request) ?? await handleBrochureSharingRequest(request) ?? await publicBrochure(request) ?? await handleWalletSharingRequest(request) ?? await publicWallet(request) ?? await handleRoiSharingRequest(request) ?? await handleHubEntryRequest(request) ?? await handleHubWelcomeRequest(request) ?? await handleCommercialGuidesRequest(request) ?? await handleNotionOAuthRequest(request) ?? await handleAcademyRequest(request) ?? await handlePartnerMailRequest(request) ?? await publicRoi(request) ?? await publicPartners(request) ?? privateHub(request);
 }
