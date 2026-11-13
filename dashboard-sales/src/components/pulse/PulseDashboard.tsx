@@ -1898,6 +1898,8 @@ export function PulseDashboard({
             : null
         }
         scenarioScope={gapScenario && modalKey===qOpenModalKey && !periodPayload ? {owner:ownerFilter,role,type:dealType,periods:selectedPeriods,basis:useStage6Results?'stage6':'close'} : undefined}
+        scenarioReport={report}
+        onViewScenarios={()=>{closeModal();onNavigate?.("scenarios");}}
         selectionQuotaForOwner={selectionQuotaForOwner}
         selectionQuota={gapScenario && modalKey === qOpenModalKey && !periodPayload ? selectionQuota : null}
       />

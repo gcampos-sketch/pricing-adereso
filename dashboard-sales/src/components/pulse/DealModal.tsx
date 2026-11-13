@@ -2,7 +2,7 @@ import type {ScenarioScope} from '@/lib/quota-scenarios';
 import {ScenarioProjection} from './ScenarioProjection';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
-import type { DealDTO, Drilldown } from "@/lib/pulse-types";
+import type { DealDTO, Drilldown, PulseReport } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
 import { dealSelectionTotal, type SelectionQuota } from "@/lib/deal-selection-total";
@@ -1155,6 +1155,8 @@ export function DealModal({
   selectionQuota: baseSelectionQuota,
   selectionQuotaForOwner,
   scenarioScope,
+  scenarioReport,
+  onViewScenarios,
   fix,
   ownerBreakdown,
   ownerQuotas,
@@ -1179,6 +1181,8 @@ export function DealModal({
   selectionQuota?: SelectionQuota | null;
   selectionQuotaForOwner?: (owner:string)=>SelectionQuota;
   scenarioScope?: ScenarioScope | undefined;
+  scenarioReport?: PulseReport;
+  onViewScenarios?:()=>void;
   /** si viene, muestra el botón Fix con el problema que describe la tarjeta */
   fix?: { problem: string; mode?: "task" | "fup" } | null;
 }) {
@@ -1226,7 +1230,8 @@ export function DealModal({
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useLayoutEffect(() => {
-    if (!payload) return;
+    if (closeTimerRef.current) {clearTimeout(closeTimerRef.current);closeTimerRef.current=null;}
+    if (!payload) {setVisiblePayload(null);return;}
     const active = document.activeElement;
     originRef.current = active instanceof HTMLElement ? active.getBoundingClientRect() : null;
     setVisiblePayload(payload);
@@ -1304,7 +1309,7 @@ export function DealModal({
   useEffect(() => {
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup], [data-won-distribution-popup], [data-scenario-drawer]"))) return;
+      if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup], [data-won-distribution-popup], [data-scenario-drawer], [data-scenario-confirm]"))) return;
       if (searchOpen) setSearchOpen(false);
       else if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
@@ -1977,7 +1982,7 @@ export function DealModal({
           </p> : null}
           <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
         </section> : null)}
-        {scenarioScope && selectionQuota ? <ScenarioProjection summary={selectionTotal} quota={selectionQuota} scope={{...scenarioScope,owner:scenarioOwner}} deals={deals.filter(deal=>selectedIds.includes(deal.id))} onClear={()=>setSelected([])} /> : <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={()=>setSelected([])} />}
+        {scenarioScope && selectionQuota && scenarioReport ? <ScenarioProjection report={scenarioReport} onViewScenarios={()=>onViewScenarios?.()} summary={selectionTotal} quota={selectionQuota} scope={{...scenarioScope,owner:scenarioOwner}} deals={deals.filter(deal=>selectedIds.includes(deal.id))} onClear={()=>setSelected([])} /> : <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={()=>setSelected([])} />}
         {selectedIds.length > 0 ? (
           <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>
           <div className="bulk-bar" role="group" aria-label="Herramientas para los deals seleccionados">
