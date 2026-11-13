@@ -51,3 +51,23 @@ test('simulated month stays separate from the native CRM close date and belongs 
  expect(compared.rows[0]?.actualCloseMonth).toBe('2026-12');
  expect(compareQuotaScenario({...saved,simulationMonth:undefined,deals:saved.deals.map(({simulatedCloseMonth,...d})=>d)} as any,live).closedInPlannedMonth).toBe(0);
 });
+
+test('quarter timing persists without inventing a month and compares actual close quarters',()=>{
+ const q={...input,simulationMonth:undefined,simulationQuarter:'2026-Q4'};
+ const saved=buildQuotaScenario(report(),q,'2026-11-13T12:00:00Z');
+ expect(saved.simulationQuarter).toBe('2026-Q4');expect(saved.simulationMonth).toBeUndefined();
+ expect(saved.deals[0]?.simulatedCloseQuarter).toBe('2026-Q4');expect(saved.deals[0]?.simulatedCloseMonth).toBeUndefined();
+ expect(saved.deals[0]?.closeDateValue).toBe('2026-11-20');
+ expect([saved.baseline,saved.target,saved.quota]).toEqual([210,320,1000]);
+ for(const date of ['2026-10-01','2026-11-15','2026-12-31']){
+  const live=report([won,deal('2','82596016',100,'174677684',date)]);
+  expect(compareQuotaScenario(saved,live).closedInPlannedPeriod).toBe(1);
+ }
+ const outside=report([won,deal('2','82596016',100,'174677684','2027-01-01')]);
+ expect(compareQuotaScenario(saved,outside).closedInPlannedPeriod).toBe(0);
+ expect(compareQuotaScenario(saved,report()).rows[0]?.closedInPlannedPeriod).toBeNull();
+ expect(()=>buildQuotaScenario(report(),{...q,simulationQuarter:'2027-Q1'},'x')).toThrow('filtro principal');
+ expect(()=>buildQuotaScenario(report(),{...q,simulationQuarter:'2026-Q5'},'x')).toThrow();
+ expect(()=>buildQuotaScenario(report(),{...q,simulationMonth:'2026-11'},'x')).toThrow('no ambos');
+ expect(()=>buildQuotaScenario(report(),{...q,simulationQuarter:undefined},'x')).toThrow();
+});
