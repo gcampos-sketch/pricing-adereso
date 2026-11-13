@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<base href="/hub-content/">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adereso Sales Academy</title>
@@ -383,8 +384,11 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
   .main { padding: 20px; }
 }
 </style>
-<link rel="stylesheet" href="../brand-system.css?v=share-compact-2">
-<script src="../chapter-index.js?v=2" defer></script>
+<link rel="stylesheet" href="brand-system.css?v=share-compact-2">
+<script src="chapter-index.js?v=2" defer></script>
+<script src="/hub-content/academy-sync.js" defer></script>
+<link rel="stylesheet" href="/hub-content/academy-missions.css">
+<script type="module" src="/hub-content/academy-missions.js"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -392,7 +396,7 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
   <div class="header">
     <div class="header-top">
       <div>
-        <div class="header-logo"><img class="adereso-wordmark" src="../logoadereso.webp" width="566" height="113" alt="Adereso"></div>
+        <div class="header-logo"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
         <h1>Sales Academy</h1>
       </div>
       <div class="header-stats">
@@ -409,6 +413,8 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
 
   <!-- Tab: Home -->
   <div class="main tab-content" id="tab-home">
+    <details class="academy-legacy"><summary>Consultar todas las lecciones y evaluaciones</summary>
+    <p class="academy-muted">Material base de consulta. Contrasta capacidades, condiciones y valores con la biblioteca vigente antes de usarlos con un cliente.</p>
     <div class="welcome-card animate-in">
       <div class="welcome-greeting">Bienvenido, Comercial 👋</div>
       <div class="welcome-sub" id="welcome-progress">Nivel Onboarding · 0 XP</div>
@@ -439,6 +445,11 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
         </div>
       </div>
     </div>
+    </details>    <div class="academy-source-intro">
+      <div><strong>Tu biblioteca al día</strong><p id="academy-home-sync" role="status">Comprobando fuentes…</p></div>
+      <button type="button" id="academy-open-sources">Ver novedades y fuentes ↗</button>
+    </div>
+
   </div>
 
   <!-- Tab: Training -->
@@ -533,7 +544,24 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
   <!-- Tab: Product Academies -->
   <div class="main tab-content" id="tab-products" style="display:none">
     <div class="section-title">🎓 Academias por Producto</div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Domina cada producto por separado. Cada academia tiene su ficha completa + evaluación específica. Aprueba (2/3) para dominarlo.</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">Explora cada producto y practica con sus escenarios. Aprobar la evaluación valida esta introducción; la preparación comercial requiere práctica acompañada.</div>
+    <details id="academy-sources" class="academy-source-library">
+      <summary>Biblioteca actualizada · Wiki + Help Center</summary>
+      <p id="academy-sync-status" role="status">Comprobando fuentes…</p>
+      <p class="academy-source-guidance">La wiki aporta contexto comercial y novedades; el Help Center, funcionamiento y requisitos. Cada documento conserva su fuente, fecha y aclaraciones de disponibilidad. Las evaluaciones del entrenamiento base se conservan y no se regeneran automáticamente.</p>
+      <div class="academy-source-controls">
+        <label for="academy-source-search">Buscar en las fuentes</label>
+        <input id="academy-source-search" type="search" placeholder="Ej. Shopify, WhatsApp, Studio…" autocomplete="off">
+        <div role="group" aria-label="Filtrar fuentes">
+          <button type="button" data-academy-source="all" aria-pressed="true">Todas</button>
+          <button type="button" data-academy-source="notion" aria-pressed="false">Wiki comercial</button>
+          <button type="button" data-academy-source="help" aria-pressed="false">Help Center</button>
+        </div>
+      </div>
+      <div class="academy-source-links"><a href="https://app.notion.com/p/3219c2747df581a2baebde4de645d487" target="_blank" rel="noopener noreferrer">Abrir wiki ↗</a><a href="https://help.adereso.ai/" target="_blank" rel="noopener noreferrer">Abrir Help Center ↗</a></div>
+      <p id="academy-source-meta" aria-live="polite"></p>
+      <div id="academy-source-list"></div>
+    </details>
     <div id="product-academy-list"></div>
 
     <div class="section-title" style="margin-top:28px">🧩 Cómo se combinan los productos</div>
@@ -623,10 +651,10 @@ h1,h2,h3,h4,h5,.section-title,.welcome-greeting,.lesson-view h2,.wiz-card h2 {
 
   <!-- Nav -->
   <div class="nav">
-    <div class="nav-item active" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Onboarding</div>
-    <div class="nav-item" onclick="switchTab('games')"><span class="nav-icon">💪</span>Entrenamiento</div>
-    <div class="nav-item" onclick="switchTab('products')"><span class="nav-icon">🎓</span>Productos</div>
-    <div class="nav-item" onclick="switchTab('progress')"><span class="nav-icon">📊</span>Progreso</div>
+    <button type="button" class="nav-item active" onclick="switchTab('home')"><span class="nav-icon" aria-hidden="true">🏠</span>Onboarding</button>
+    <button type="button" class="nav-item" onclick="switchTab('games')"><span class="nav-icon" aria-hidden="true">💪</span>Entrenamiento</button>
+    <button type="button" class="nav-item" onclick="switchTab('products')"><span class="nav-icon" aria-hidden="true">🎓</span>Productos</button>
+    <button type="button" class="nav-item" onclick="switchTab('progress')"><span class="nav-icon" aria-hidden="true">📊</span>Progreso</button>
   </div>
 </div>
 
@@ -761,7 +789,7 @@ const LESSONS = [
 <li><strong>Outbound:</strong> Cobro por mensaje enviado. Si el cliente responde → se descuenta de la bolsa inbound</li>
 <li><strong>¿Qué incluye?</strong> Centralización, métricas, licencias ilimitadas, encuestas GRATIS, plantillas WhatsApp GRATIS</li>
 <li><strong>Precio:</strong> $558/mes — bolsa de 2.000 conversaciones. Contrato anual con 40% ya aplicado</li>
-<li><strong>Setup:</strong> $990 pago único. Plan 1 (sin API) o Plan 2 (con Shopify+CRM, recomendado)</li>
+<li><strong>Setup:</strong> $990 pago único. Plan 1 (Shopify nativo + MCP, sin APIs a medida) o Plan 2 (4 endpoints API REST, recomendado)</li>
 </ol>
 <div class="tip">💡 Setup: ofrécelo siempre como <strong>pago 100% adelantado</strong>. Menciona 50/50 solo si el cliente lo negocia.</div>
 
@@ -1037,7 +1065,7 @@ const LESSONS = [
 <li>⏳ <strong>En progreso con carga independiente</strong> (21 oct): un Administrador puede separar los tickets En progreso de los topes normales, para que los casos en seguimiento no consuman cupos. El umbral es solo un aviso.</li>
 <li>🔀 <strong>Fusionar tickets:</strong> Administrador y Ejecutivo eligen qué ticket conservar. La fusión es irreversible.</li>
 <li>🎙️ <strong>Grabaciones de llamadas:</strong> se escuchan desde el ticket o la analítica según permisos; solo el Administrador descarga.</li>
-<li>💬 <strong>Comentarios internos</strong> (hilos, menciones, adjuntos): demostrados el 22 oct. Confirmar habilitación antes de prometerlos.</li>
+<li>💬 <strong>Comentarios internos</strong> (hilos, menciones, adjuntos): disponibles según la wiki del 13 de noviembre. No se envían al cliente; mencionar no modifica los permisos.</li>
 </ul>
 
 <h3>📞 WhatsApp Calling — requisitos del cliente</h3>
@@ -1076,23 +1104,24 @@ const LESSONS = [
 <li><strong>Crear bots con IA</strong> que responden de forma personalizada a cada cliente</li>
 <li><strong>Definir activadores</strong> para que el bot se active por canal, horario o contenido</li>
 <li><strong>Conectar herramientas</strong>: APIs, catálogos de productos y bases de conocimiento</li>
-<li><strong>Monitorear conversaciones</strong> en tiempo real para supervisar la atención</li>
+<li><strong>Consultar conversaciones</strong> y su monitoreo, verificando la actualización disponible en la cuenta</li>
 <li><strong>Transferir a tu equipo</strong> cuando el bot detecta que necesita un humano</li>
 </ul>
 
-<h3>Dos tipos de bot</h3>
-<table><tr><th>Aspecto</th><th>🧠 Bot Agente</th><th>🔀 Bot Flow</th></tr>
-<tr><td>Autonomía</td><td>Alta — decide según contexto</td><td>Ninguna — pasos fijos</td></tr>
-<tr><td>Uso de IA</td><td>Sí (GPT, Claude, Gemini)</td><td>Parcial</td></tr>
-<tr><td>Control</td><td>Guiado por componentes</td><td>Total — cada respuesta definida</td></tr>
-<tr><td>Ideal para</td><td>Atención, ventas, FAQ variadas</td><td>Encuestas, formularios, compras</td></tr></table>
-<div class="tip">💡 ¿No sabes cuál elegir? Empieza con <strong>Bot Agente</strong> — es más flexible y lo ajustas a medida que conoces las consultas de los clientes.</div>
+<h3>Tipos de agente: catálogo actual</h3>
+<p>La wiki distingue cuatro entradas. Verifica las opciones del editor y los permisos de la cuenta.</p>
+<table><tr><th>Tipo</th><th>Cuándo explorarlo</th></tr>
+<tr><td>Especialista</td><td>Un caso preparado de atención, e-commerce, reservas, Voice o leads. Validar capacidades y conectores.</td></tr>
+<tr><td>Personalizado</td><td>Instrucciones, fuentes y herramientas para un proceso propio.</td></tr>
+<tr><td>Flujo estructurado / Bot Flow</td><td>Un recorrido con pasos, condiciones y ramas definidos.</td></tr>
+<tr><td>Agente de Meta</td><td>WhatsApp compatible, con conexión y alcance por comprobar.</td></tr></table>
+<div class="tip">La creación puede iniciarse en Proyecto → Agentes → Crear agente / Crear con GenIA. Las opciones dependen de permisos y habilitación. <a href="https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj/elige-el-tipo-y-crea-tu-agente/949N1jefqRWtA6GH4P27jF" target="_blank" rel="noopener noreferrer">Consultar guía vigente</a>.</div>
 
 <h3>👣 Crear tu primer bot (paso a paso)</h3>
 <ol>
 <li><strong>Accede a Studio</strong> desde Adereso Desk → menú <strong>Módulos</strong></li>
 <li><strong>Inicia la creación:</strong> botón <strong>"+ Añadir Bot"</strong> (o "Crear Un Bot" si aún no tienes bots)</li>
-<li><strong>Elige el tipo:</strong> Bot Agente (IA flexible) o Bot Flow (proceso estructurado)</li>
+<li><strong>Elige el tipo:</strong> según el caso de uso y las opciones disponibles en la cuenta. Consulta la wiki vigente antes de preparar la demo.</li>
 <li><strong>Nómbralo</strong> de forma descriptiva (ej: "Bot Ventas", "Bot Soporte") y clic en <strong>"Crear Nuevo Bot"</strong></li>
 </ol>
 <div class="highlight">⏱️ En menos de 1 minuto tienes tu primer bot creado. Luego lo configuras.</div>
@@ -1179,7 +1208,7 @@ const LESSONS = [
 
 <h3>Monitoreo y diagnóstico</h3>
 <ul>
-<li><strong>🔎 Conversaciones:</strong> Monitoreo en tiempo real de todas las conversaciones que atiende el bot</li>
+<li><strong>🔎 Conversaciones:</strong> consulta y monitoreo de conversaciones; verifica la actualización disponible, sin prometer visibilidad instantánea</li>
 <li><strong>⚙️ Diagnóstico:</strong> Verifica la salud del bot antes de publicar — detecta problemas de configuración</li>
 <li><strong>📊 Analytics:</strong> Conversaciones atendidas, tasa de resolución, puntos de abandono, Behavior Diagram (flujos reales)</li>
 <li><strong>Tasa de handoff:</strong> % de casos derivados a humano — indica calidad del entrenamiento</li>
@@ -1879,7 +1908,7 @@ bant: [
 ],
 pricing: [
   {q:"¿Cuánto cuesta Desk para la bolsa mínima de 2.000 conv?", opts:["$159/mes","$199/mes","$558/mes","$299/mes"], correct:1, explain:"Desk parte en $199/mes para la bolsa mínima de 2.000 conversaciones. El precio sube proporcionalmente con mayor volumen."},
-  {q:"¿Cuánto cuesta el setup de Studio?", opts:["$500","$750","$990","$1.500"], correct:2, explain:"$990 pago único. Plan 1 (sin API) o Plan 2 (con Shopify+CRM)."},
+  {q:"¿Cuánto cuesta el setup de Studio?", opts:["$500","$750","$990","$1.500"], correct:2, explain:"$990 pago único. Plan 1 (Shopify nativo + MCP, sin APIs a medida) o Plan 2 (4 endpoints API REST, recomendado)."},
   {q:"¿Cuánto es la mantención mensual del bot (Studio)?", opts:["$100/mes","$130/mes","$160/mes","$200/mes"], correct:2, explain:"La mantención bot de Studio cuesta $160/mes según el cotizador."},
   {q:"¿Adereso cobra por número de usuarios?", opts:["Sí, por licencia","No, agentes ilimitados","Solo en Enterprise","Desde el Plan 3"], correct:1, explain:"Agentes ilimitados. El precio sube por volumen de conversaciones, no por usuarios."},
   {q:"¿Cuál es la bolsa mínima de conversaciones?", opts:["1.000/mes","2.000/mes","5.000/mes","10.000/mes"], correct:1, explain:"Mínimo 2.000 conversaciones/mes tanto para Desk como para Studio."},
@@ -1950,7 +1979,7 @@ products: [
 };
 
 // ============ STATE ============
-let state = JSON.parse(localStorage.getItem('adereso_academy') || '{}');
+let state = {}; // Account-scoped state is loaded by academy-missions.js.
 if (!state.completedLessons) state.completedLessons = [];
 if (!state.xp) state.xp = 0;
 if (!state.streak) state.streak = 0;
@@ -1961,7 +1990,7 @@ if (!state.lastDate) state.lastDate = '';
 if (!state.level) state.level = 'bronce';
 if (!state.examsPassed) state.examsPassed = [];
 if (!state.productsMastered) state.productsMastered = [];
-function save() { localStorage.setItem('adereso_academy', JSON.stringify(state)); }
+function save() { /* Replaced by the authenticated Academy progress adapter after loading. */ }
 
 let currentLesson = null;
 let quizState = {};
@@ -2161,7 +2190,7 @@ function renderExamSection() {
     examSection.style.display = 'block';
     examCard.className = 'lesson-card';
     document.getElementById('exam-title').textContent = levelData.examName;
-    document.getElementById('exam-desc').textContent = `Completa ${remaining} lección${remaining>1?'es':''} más para desbloquear el examen.`;
+    document.getElementById('exam-desc').textContent = `Completa ${remaining} ${remaining>1?'lecciones':'lección'} más para desbloquear el examen.`;
     document.getElementById('exam-status').textContent = '🔒 Bloqueado';
     document.getElementById('exam-status').style.color = 'var(--text2)';
     examCard.onclick = null;
@@ -2689,8 +2718,17 @@ const PRODUCT_CONTENT = {
   studio: {
     chapters: [
       {title:'¿Qué es Studio?', html:`<p><strong>Studio crea bots con IA sin código.</strong> Bots que responden, ejecutan acciones reales y derivan a un humano cuando hace falta — todo desde una interfaz visual.</p><div class="tip">💬 Pitch: "¿Tu equipo pierde horas respondiendo lo mismo? ¿Se pierden ventas fuera de horario? Studio configura un bot que entiende al cliente, ejecuta acciones y sabe cuándo pasar a un humano."</div>`},
-      {title:'Agente vs Flow', html:`<table><tr><th>Aspecto</th><th>🧠 Agente</th><th>🔀 Flow</th></tr><tr><td>Autonomía</td><td>Alta, decide por contexto</td><td>Pasos fijos</td></tr><tr><td>IA</td><td>Sí (GPT/Claude/Gemini)</td><td>Parcial</td></tr><tr><td>Ideal</td><td>Atención, ventas, FAQ</td><td>Encuestas, formularios</td></tr></table><div class="tip">💡 ¿Dudas? Empieza con Bot Agente: más flexible y se ajusta después.</div>`},
-      {title:'Crear tu primer bot', html:`<ol><li>Entra a Studio desde Desk → menú <strong>Módulos</strong></li><li>Clic en <strong>"+ Añadir Bot"</strong></li><li>Elige tipo (Agente o Flow)</li><li>Nómbralo y clic en <strong>"Crear Nuevo Bot"</strong></li></ol><div class="highlight">⏱️ En menos de 1 minuto tienes el bot creado. Luego lo configuras.</div>`},
+      {title:'Cuatro entradas para crear un agente', html:`<h3>Tipos de agente: catálogo actual</h3>
+<p>La wiki distingue cuatro entradas. Verifica las opciones del editor y los permisos de la cuenta.</p>
+<table><tr><th>Tipo</th><th>Cuándo explorarlo</th></tr>
+<tr><td>Especialista</td><td>Un caso preparado de atención, e-commerce, reservas, Voice o leads. Validar capacidades y conectores.</td></tr>
+<tr><td>Personalizado</td><td>Instrucciones, fuentes y herramientas para un proceso propio.</td></tr>
+<tr><td>Flujo estructurado / Bot Flow</td><td>Un recorrido con pasos, condiciones y ramas definidos.</td></tr>
+<tr><td>Agente de Meta</td><td>WhatsApp compatible, con conexión y alcance por comprobar.</td></tr></table>
+<div class="tip">La creación puede iniciarse en Proyecto → Agentes → Crear agente / Crear con GenIA. Las opciones dependen de permisos y habilitación. <a href="https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj/elige-el-tipo-y-crea-tu-agente/949N1jefqRWtA6GH4P27jF" target="_blank" rel="noopener noreferrer">Consultar guía vigente</a>.</div>
+
+`},
+      {title:'Crear tu primer agente', html:`<p>En Studio, abre el proyecto y ve a <strong>Agentes → Crear agente / Crear con GenIA</strong>. Elige el tipo según el caso, configura sus recursos y comprueba permisos y habilitación antes de preparar la demo.</p><div class="tip">La biblioteca conserva la guía vigente. Una opción mostrada en otra cuenta no prueba disponibilidad para este cliente.</div>`},
       {title:'Componente vs Herramienta', html:`<p>Los dos bloques con que se arma un bot. Es la distinción técnica clave:</p><table><tr><th></th><th>🧩 Componente</th><th>🔧 Herramienta</th></tr><tr><td>Define</td><td>Cómo <strong>piensa/habla</strong> el bot</td><td>Qué <strong>hace/ejecuta</strong> el bot</td></tr><tr><td>Naturaleza</td><td>Instrucción de comportamiento</td><td>Acción concreta</td></tr><tr><td>Ejemplos</td><td>Personalidad, reglas, objetivo</td><td>Cerrar ticket, derivar, llamar API</td></tr></table><div class="tip">💡 Regla mental: <strong>componente = instrucción</strong> (texto que guía), <strong>herramienta = acción</strong> (algo que ocurre en la conversación o en un sistema).</div>`},
       {title:'Tipos de componentes', html:`<p>Un componente es una <strong>instrucción estructurada</strong> de cómo comportarse. Se combinan varios para armar el comportamiento total. Tipos disponibles:</p><ul><li><strong>🎯 Objetivo</strong> — la misión del bot <em>(único por bot)</em></li><li><strong>🎭 Personalidad</strong> — tono y actitud <em>(único)</em></li><li><strong>💬 Estilo de comunicación</strong> — largo, formato, emojis <em>(único)</em></li><li><strong>📜 Reglas</strong> — políticas que debe cumplir</li><li><strong>🚫 Restricciones</strong> — lo que NO debe hacer/decir</li><li><strong>🪜 Pasos</strong> — procedimientos secuenciales</li><li><strong>⚡ Condicionales</strong> — comportamiento según condiciones</li><li><strong>📚 Conocimiento</strong> / <strong>🏢 Conocimiento de negocio</strong> / <strong>🔤 Terminología</strong></li><li><strong>🛡️ Protección</strong> — filtros anti-manipulación</li><li><strong>🔀 Transferencia</strong> — cuándo derivar</li><li><strong>🛍️ Tienda Shopify · 🔌 Servidor MCP · 💳 Stripe MCP</strong></li></ul><div class="warning">⚠️ Objetivo, Personalidad y Estilo de comunicación son <strong>únicos</strong>: solo uno de cada por bot (se editan, no se duplican).</div>`},
       {title:'Cómo se configura un componente', html:`<p>Studio → abre el bot → menú <strong>Comportamiento</strong> → <strong>Nuevo componente</strong> → eliges el tipo, le pones <strong>nombre</strong> e <strong>instrucciones</strong> → Guardar.</p><p>Qué se pone dentro: instrucciones en <strong>lenguaje natural, en segunda persona</strong> ("debes enviar un mensaje…", no "el agente debe…"). Deben ser específicas y concretas.</p><ul><li>Se pueden <strong>activar/desactivar</strong> sin borrarlos (para probar variantes)</li><li>Hay un <strong>contador de tokens</strong>: mientras más ocupan las instrucciones, menos espacio queda para la conversación → el bot puede "olvidar" el inicio de chats largos</li></ul><div class="tip">💡 No se trata de escribir poco, sino de escribir <em>bien</em>: claro y sin repeticiones.</div>`},
@@ -2963,7 +3001,7 @@ function renderProductAcademies() {
   const total = PRODUCT_ACADEMIES.length;
   const done = PRODUCT_ACADEMIES.filter(p => isProductMastered(p.key)).length;
   let html = `<div class="welcome-card" style="margin-bottom:16px">
-    <div class="progress-row"><span>${done}/${total} productos dominados</span><span>${Math.round(done/total*100)}%</span></div>
+    <div class="progress-row"><span>${done}/${total} introducciones aprobadas</span><span>${Math.round(done/total*100)}%</span></div>
     <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(done/total*100)}%"></div></div>
   </div>`;
   PRODUCT_ACADEMIES.forEach(p => {
@@ -3148,8 +3186,14 @@ function openProductAcademy(key) {
 function buildWizard(key) {
   const content = PRODUCT_CONTENT[key] || {chapters:[], scenarios:[]};
   const steps = [];
-  content.chapters.forEach((c, i) => steps.push({phase:'chapter', data:c, num:i+1, of:content.chapters.length}));
-  content.scenarios.forEach((s, i) => steps.push({phase:'scenario', data:s, num:i+1, of:content.scenarios.length}));
+  let scenarioIndex = 0;
+  content.chapters.forEach((c, i) => {
+    steps.push({phase:'chapter', data:c, num:i+1, of:content.chapters.length});
+    if ((i + 1) % 2 === 0 && scenarioIndex < content.scenarios.length) {
+      steps.push({phase:'scenario', data:content.scenarios[scenarioIndex], num:scenarioIndex+1, of:content.scenarios.length}); scenarioIndex++;
+    }
+  });
+  content.scenarios.slice(scenarioIndex).forEach((s, i) => steps.push({phase:'scenario', data:s, num:scenarioIndex+i+1, of:content.scenarios.length}));
   if (content.builder && content.builder.length) {
     content.builder.forEach((b, i) => steps.push({phase:'builder', data:b, num:i+1, of:content.builder.length}));
   }
@@ -3351,8 +3395,8 @@ function renderWizResult() {
     save(); updateHeader();
     content.innerHTML = `<div class="wiz-card animate-in" style="text-align:center">
       <div style="font-size:44px;margin-bottom:8px">🏆</div>
-      <div class="challenge-result pass" style="margin:0">¡${currentProduct.name} dominado! ${wiz.quizScore}/${totalQuiz} correctas${firstTime ? ' · +60 XP' : ''}</div>
-      <p style="font-size:13px;color:var(--text2);margin-top:14px">Ya sabes explicar el producto y responder a las objeciones más comunes del cliente.</p>
+      <div class="challenge-result pass" style="margin:0">Introducción a ${currentProduct.name} aprobada ${wiz.quizScore}/${totalQuiz} correctas${firstTime ? ' · +60 XP' : ''}</div>
+      <p style="font-size:13px;color:var(--text2);margin-top:14px">Completaste esta práctica. Ponla a prueba con tu referente antes de usarla en una reunión.</p>
     </div>`;
     nav.innerHTML = `<div class="wiz-nav"><button class="wiz-next" onclick="switchTab('products')">← Volver a Productos</button></div>`;
   } else {
@@ -3440,6 +3484,7 @@ function renderLessonChallenge() {
 }
 
 function answerChallenge(idx) {
+  if (document.querySelector('#challenge-opts .quiz-option.disabled')) return;
   const q = challengeState.questions[challengeState.current];
   const opts = document.querySelectorAll('#challenge-opts .quiz-option');
   opts.forEach((o, i) => {
