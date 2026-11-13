@@ -6569,3 +6569,9 @@ button.won-exec-stat:hover { color:var(--brand); }
 .scenario-month-popover .scenario-confirm-actions{margin-top:14px;gap:8px}
 .scenario-month-popover .scenario-confirm-actions button{padding:8px 10px}
 .scenario-month-popover .scenario-confirm-actions button:first-child{border-color:transparent}
+
+.scenario-timing-toggle{display:flex;gap:3px;padding:3px;border:1px solid #ffffff16;border-radius:9px;background:#ffffff04;margin:12px 0}
+.scenario-timing-toggle button{flex:1;padding:7px 9px;border:0;border-radius:6px;background:none;color:#9699a5;font-size:11px;cursor:pointer}
+.scenario-timing-toggle button[aria-pressed=true]{background:#ffffff0d;color:#e5d585;box-shadow:0 1px 3px #0003}
+.scenario-timing-toggle button:disabled{opacity:.5;cursor:default}
+.scenario-quarter-grid{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}
