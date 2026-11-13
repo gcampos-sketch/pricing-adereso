@@ -35,3 +35,15 @@ test('current ownership and closed state override older off-track evidence witho
  const groups=dashboardActionGroups(r,{...scope,owner:'82596016'},at);
  expect(groups).toEqual([]);
 });
+
+test('lost candidates form one deduplicated group with priority/competition drilldowns and current scope',()=>{
+ const candidate=deal('candidate','171385867',{amountValue:2174});
+ const closed=deal('closed','171385869');
+ const r={...base([candidate,closed]),closeHygiene:[{id:'team',lostPriorityModal:'priority',lostCompetitionModal:'competition'}],drilldowns:{priority:{deals:[candidate,candidate,closed]},competition:{deals:[candidate]}}} as unknown as PulseReport;
+ const group=dashboardActionGroups(r,scope,at).find(group=>group.id==='lost-candidate');
+ expect(group?.deals).toEqual([candidate]);
+ expect(group?.reasons.map(reason=>reason.label)).toEqual(['Prioridad','Competencia']);
+ expect(dashboardActionGroups(r,{...scope,owner:'other'},at).some(group=>group.id==='lost-candidate')).toBe(false);
+ const resolved={...r,drilldowns:{priority:{deals:[]},competition:{deals:[]}}} as unknown as PulseReport;
+ expect(dashboardActionGroups(resolved,scope,at).some(group=>group.id==='lost-candidate')).toBe(false);
+});

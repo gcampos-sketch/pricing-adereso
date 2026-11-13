@@ -1,3 +1,5 @@
+import { readCustomerEvidence } from "./customer-directory.server";
+import { reconcileCustomerAccounts } from "./customer-accounts";
 import { segmentOf } from "./deal-segment";
 import type { ReportPhase } from './report-phases';
 import { roleOwnerIds, type RoleFilter } from "./owner-roles";
@@ -901,7 +903,12 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
 
   // MRR activo global: foto independiente de filtros. Conservamos snapshots diarios
   // dentro del reporte persistido para que futuras salidas por churn queden visibles.
-  const inServiceDeals = serviceMrrDeals(fetchedDeals, SERVICE_STAGE);
+  // The amount and customer count share the same verified holding/instance universe.
+  // Pending review and unresolved associations cannot establish in-service MRR.
+  const customerEvidence = await cached("customer-evidence-v1", 600_000, readCustomerEvidence);
+  const customerAccounts = reconcileCustomerAccounts(customerEvidence);
+  const verifiedAccountDeals = new Set(customerAccounts.active.flatMap(account => account.deals.map(deal => deal.id)));
+  const inServiceDeals = serviceMrrDeals(fetchedDeals, SERVICE_STAGE, verifiedAccountDeals);
   // Deals firmados (etapa 6) o en desarrollo (etapa 7): MRR que esperamos incorporar.
   const inDevDeals = fetchedDeals.filter((deal) => {
     const stage = deal.properties["dealstage"] ?? "";

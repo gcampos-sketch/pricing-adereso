@@ -6441,3 +6441,81 @@ button.won-exec-stat:hover { color:var(--brand); }
 
 /* All service deals use a fixed-size endpoint, not a sampled proportional segment. */
 .exec-service-bar > button[data-service="true"] {flex:0 0 76px;margin-left:5px;}
+
+/* Detail popups overlay their source card, shifting only to clear viewport edges. */
+[data-radix-popper-content-wrapper]:has(> [data-trigger-detail="true"]) {
+  position:fixed!important;left:var(--popup-left,12px)!important;top:var(--popup-top,12px)!important;
+  transform:none!important;z-index:1400!important;
+  max-width:calc(100vw - 24px);
+}
+.dashboard-origin-popover {transform-origin:center;--popup-from-x:0px;--popup-from-y:0px;--popup-from-scale-x:.2;--popup-from-scale-y:.12;}
+.dashboard-origin-popover[data-trigger-detail="true"] {max-height:calc(100dvh - 48px);max-width:calc(100vw - 24px);overflow-y:auto;}
+.dashboard-origin-popover[data-state="open"] {animation:dashboard-popup-open 280ms cubic-bezier(.2,.8,.2,1);}
+.dashboard-origin-popover[data-state="closed"] {animation:dashboard-popup-close 220ms cubic-bezier(.4,0,.8,.2);pointer-events:none;}
+@keyframes dashboard-popup-open {from {opacity:0;transform:translate(var(--popup-from-x),var(--popup-from-y)) scale(var(--popup-from-scale-x),var(--popup-from-scale-y));}to {opacity:1;transform:translate(0,0) scale(1);}}
+@keyframes dashboard-popup-close {from {opacity:1;transform:translate(0,0) scale(1);}to {opacity:0;transform:translate(var(--popup-from-x),var(--popup-from-y)) scale(var(--popup-from-scale-x),var(--popup-from-scale-y));}}
+@media(prefers-reduced-motion:reduce){.dashboard-origin-popover[data-state]{animation:none;}}
+
+/* One consistent metric rhythm across current and projected service. */
+.adereso-global-metrics .service-overview {grid-template-columns:minmax(140px,.75fr) minmax(210px,1.15fr) minmax(420px,2.3fr);padding-block:12px;}
+.adereso-global-metrics .service-overview > .service-growth-widget {padding-block:12px;gap:0;}
+.service-growth-grid {gap:0;height:100%;}
+.service-growth-column {gap:4px;justify-content:flex-start;}
+.service-growth-column + .service-growth-column {margin-left:18px;padding-left:18px;border-left:0;position:relative;}
+.service-growth-column + .service-growth-column::before {content:'';position:absolute;left:0;top:0;bottom:0;width:1px;background:linear-gradient(transparent,var(--glass-stroke),transparent);}
+.service-growth-label {font-size:10px;letter-spacing:.07em;text-transform:uppercase;line-height:1.4;min-height:14px;font-weight:400;color:var(--muted);}
+.service-growth-column > strong {font-size:22px;line-height:1.2;font-weight:600;}
+.service-growth-projection {flex-direction:row;align-items:baseline;flex-wrap:wrap;gap:3px 6px;margin-top:0;min-height:17px;font-size:10px;line-height:1.5;}
+.service-growth-projection b {font-size:11px;font-weight:550;}
+.service-growth-footnote {font-size:10px;font-weight:400;color:var(--muted);line-height:1.5;}
+@media(max-width:1000px){.adereso-global-metrics .service-overview {grid-template-columns:minmax(140px,.75fr) minmax(0,1.15fr);}}
+@media(max-width:460px){.service-growth-label {min-height:28px;}.service-growth-column + .service-growth-column {margin-left:12px;padding-left:12px;}}
+@media(max-width:380px){.adereso-global-metrics .service-overview {grid-template-columns:minmax(0,1fr);}}
+
+/* Give grouped alerts focus without blurring their portal or changing alert state. */
+.notification-focus-backdrop {position:fixed;inset:0;z-index:1390;background:rgb(0 0 0 / .16);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);pointer-events:auto;animation:notification-focus-in 160ms ease-out;}
+@keyframes notification-focus-in {from {opacity:0;}to {opacity:1;}}
+@media(prefers-reduced-motion:reduce){.notification-focus-backdrop {animation:none;}}
+
+.metric-exposure {font-size:12px;font-weight:550;line-height:1.5;color:var(--body);margin-top:4px;}
+.metric-exposure + .metric-note {margin-top:4px;}
+
+.notification-action-value {display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.notification-action-value > small {font-size:10px;color:var(--muted);white-space:nowrap;}
+
+/* Forecast has three distinct jobs, with no duplicate diagnostic cards. */
+.forecast-next-grid {grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);}
+.forecast-next-grid .forecast-weighted-inline {display:flex;align-items:baseline;gap:6px;margin:6px 0;font-size:11px;color:var(--muted);padding:0;}
+.forecast-weighted-inline b {color:var(--body);font-weight:550;}
+.forecast-task-shortcuts > button {flex-wrap:wrap;align-items:center;}
+.forecast-task-shortcuts > button > small {font-size:10px;color:var(--muted);}
+.forecast-signals {margin-top:18px;padding:18px;border:1px solid var(--border);border-radius:14px;background:var(--card-fill);}
+.forecast-signals header {margin-bottom:12px;}
+.forecast-signals h3 {margin:0;font-size:18px;}
+.forecast-signals header p {margin:4px 0 0;font-size:11px;color:var(--muted);}
+.forecast-signal-list {display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.forecast-signal-list > button {display:grid;grid-template-columns:minmax(0,1fr) auto 15px;align-items:center;gap:5px 12px;padding:12px 14px;border:1px solid var(--border);border-radius:9px;background:transparent;color:var(--foreground);text-align:left;cursor:pointer;min-width:0;}
+.forecast-signal-list > button:hover {background:var(--glass-track);}
+.forecast-signal-list > button:focus-visible {outline:2px solid var(--brand);outline-offset:2px;}
+.forecast-signal-list > button > span:first-child {grid-column:1;grid-row:1;}
+.forecast-signal-list strong {font-size:12px;font-weight:550;display:block;line-height:1.5;}
+.forecast-signal-list small {font-size:10px;color:var(--muted);line-height:1.5;display:block;}
+.forecast-signal-count {grid-column:2;grid-row:1;font-size:20px;font-weight:550;text-align:right;}
+.forecast-signal-count small {font-weight:400;}
+.forecast-signal-value {grid-column:1/3;grid-row:2;font-size:10px;color:var(--body);}
+.forecast-signal-list svg {grid-column:3;grid-row:1/3;color:var(--muted);}
+@media(max-width:760px){.forecast-signal-list {grid-template-columns:1fr;}}
+@media(max-width:640px){.forecast-next-grid {grid-template-columns:1fr;}.forecast-next-grid > button {display:block;}.forecast-next-grid strong {margin:9px 0 5px;}.forecast-signals {padding:14px;}}
+
+/* Shared tracks align both executive bars and their legends, even with wrapped text. */
+@media(min-width:801px){
+  .executive-story {grid-template-rows:repeat(6,auto) auto;row-gap:5px;}
+  .executive-story > .exec-pipeline-column,.executive-story > .exec-won-column {grid-row:1/span 6;grid-template-rows:subgrid;row-gap:5px;}
+  .executive-story .exec-generation,.executive-story .exec-won-column > .exec-won {display:grid;grid-row:1/span 6;grid-template-rows:subgrid;row-gap:5px;}
+  .executive-story > .exec-pipeline-health {grid-row:7;margin-top:7px;}
+}
+.exec-generation .exec-sub-label,.exec-won .exec-sub-label {margin-top:6px;font-size:10px;font-weight:500;}
+.exec-generation .won-bar,.exec-won .won-bar {margin-top:14px;margin-bottom:0;}
+.exec-generation .ex-chips,.exec-won .ex-chips {align-content:start;align-items:center;gap:4px 10px;line-height:1.6;}
+.exec-generation .ex-chips i,.exec-won .ex-chips i {white-space:nowrap;}
+@media(max-width:800px){.exec-won-column > .exec-won {grid-template-columns:minmax(0,1fr);}}

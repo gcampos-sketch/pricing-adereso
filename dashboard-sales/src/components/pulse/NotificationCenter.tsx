@@ -1,4 +1,6 @@
+import { dealExposure } from '@/lib/deal-exposure';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, RefreshCw, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -19,7 +21,8 @@ export function NotificationCenterView({ scope, groups = EMPTY_GROUPS, generated
   const [open, setOpen] = useState(false);
   const entireTeam = scope.owner === 'team' && scope.role === 'all' && scope.type === 'all' && scope.stages.length === 0;
   const review = (group: ActionGroup) => { setOpen(false); onReview(group); };
-  return <TooltipProvider><Popover open={open} onOpenChange={setOpen}>
+  return <TooltipProvider><Popover modal open={open} onOpenChange={setOpen}>
+    {open && typeof document !== 'undefined' ? createPortal(<div className="notification-focus-backdrop" aria-hidden="true" onClick={() => setOpen(false)} />, document.body) : null}
     <Tooltip><TooltipTrigger asChild><PopoverTrigger asChild>
       <Button variant="outline" size="icon" aria-label={`Tareas comerciales: ${groups.length} grupos pendientes`} className="notification-bell">
         <Bell aria-hidden="true" className="size-5" />
@@ -38,15 +41,17 @@ export function NotificationCenterView({ scope, groups = EMPTY_GROUPS, generated
             <span className="notification-action-count">{group.deals.length}<ArrowUpRight aria-hidden="true" /></span>
           </a> : <button type="button" className="notification-action-main" onClick={() => review(group)}>
             <span><strong>{group.title}</strong><small>{group.description}</small></span>
-            <span className="notification-action-count">{group.deals.length}<ArrowUpRight aria-hidden="true" /></span>
+            <span className="notification-action-value"><span className="notification-action-count">{group.deals.length}<ArrowUpRight aria-hidden="true" /></span>
+              {group.id === 'lost-candidate' ? <small>{new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}).format(dealExposure(group.deals).mrr)} MRR</small> : null}
+            </span>
           </button>}
           {group.id === 'off-track' && !entireTeam && <a className="notification-hubspot-link" href={OFF_TRACK_HUBSPOT_VIEW} target="_blank" rel="noreferrer">Abrir vista del equipo en HubSpot <ArrowUpRight aria-hidden="true" /></a>}
-          {group.reasons.length > 0 && <div className="notification-reason-groups" aria-label="Motivos del warning">
-            {group.reasons.map(reason => <button type="button" key={reason.label} onClick={() => review({...group, title: `E6.1 · ${reason.label}`, description: reason.label, deals: reason.deals, reasons: []})}>{reason.label} <b>{reason.deals.length}</b></button>)}
+          {group.reasons.length > 0 && <div className="notification-reason-groups" aria-label={group.id === "warning" ? "Motivos del warning" : "Motivos de candidatos a perdido"}>
+            {group.reasons.map(reason => <button type="button" key={reason.label} onClick={() => review({...group, title: `${group.id === "warning" ? "E6.1" : "Candidatos a perdido"} · ${reason.label}`, description: reason.label, deals: reason.deals, reasons: []})}>{reason.label} <b>{reason.deals.length}</b></button>)}
           </div>}
         </article>)}
       </div>
-      <p className="notification-grouped-note">Solo el alcance comercial seleccionado, sin filtro de año o trimestre.</p>
+      <p className="notification-grouped-note">Se mantienen hasta resolver la condición en HubSpot. Abrirlas no las marca como resueltas.</p>
       {generatedAt && <small className="notification-grouped-stamp">Actualizado {new Date(generatedAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</small>}
     </PopoverContent>
   </Popover></TooltipProvider>;
