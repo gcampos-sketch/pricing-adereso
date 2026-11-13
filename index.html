@@ -230,6 +230,28 @@
   .hg-go{position:absolute;top:16px;right:16px;color:var(--z500);font-size:14px;transition:color .2s}
   .hg-card:hover .hg-go{color:var(--brand)}
   .hg-tag{position:absolute;top:14px;right:14px}
+  /* Brochure worksite: the entire vehicle envelope stays in the upper-right half. */
+  .hg-card.construction{cursor:default;padding-bottom:53px;border-color:rgba(255,213,64,.3);overflow:visible}
+  .hg-card.construction:hover{transform:none;background:linear-gradient(180deg,#24262D,#1B1D22);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 18px 40px -18px rgba(0,0,0,.75);border-color:rgba(255,213,64,.4)}
+  .hg-worksite{position:absolute;left:50%;right:12px;top:-30px;height:30px;pointer-events:none}
+  .hg-worksite:after{content:"";position:absolute;bottom:-2px;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,#e8ac42 0 3px,transparent 3px 9px);opacity:.65}
+  .hg-machine{position:absolute;bottom:0;width:39px;height:30px;filter:drop-shadow(0 2px 3px #0008)}
+  .hg-digger{left:0;animation:hgDigTravel 10s ease-in-out infinite}
+  .hg-truck{left:43px;animation:hgTruckTravel 10s ease-in-out infinite}
+  .hg-machine svg{display:block;width:100%;height:100%;overflow:visible}
+  .hg-digger-arm{transform-origin:20px 17px;animation:hgScoop 2.5s ease-in-out infinite}
+  .hg-truck-bed{transform-origin:18px 20px;animation:hgTip 10s ease-in-out infinite}
+  .hg-machine-eye{animation:hgBlink 5s step-end infinite}
+  .hg-construction-clip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+  .hg-caution{position:absolute;left:-12px;bottom:13px;width:calc(100% + 24px);height:22px;display:flex;align-items:center;justify-content:center;transform:rotate(-7deg);background:#ffd540;color:#242019;border-block:3px solid transparent;border-image:repeating-linear-gradient(125deg,#25221c 0 7px,#ffd540 7px 14px) 3;box-shadow:0 3px 9px #0007;font-size:9px;font-weight:800;letter-spacing:.11em;white-space:nowrap}
+  .hg-caution span{padding:0 10px}
+  .hg-build-label{display:block;color:var(--brand);font-size:10px;font-weight:600;letter-spacing:.04em;margin-top:3px}
+  @keyframes hgDigTravel{0%,25%,100%{left:0}45%,70%{left:calc(100% - 82px)}}
+  @keyframes hgTruckTravel{0%,25%,100%{left:43px}45%,70%{left:calc(100% - 39px)}}
+  @keyframes hgScoop{0%,100%{transform:rotate(0)}45%{transform:rotate(-20deg)}70%{transform:rotate(8deg)}}
+  @keyframes hgTip{0%,48%,80%,100%{transform:rotate(0)}60%,70%{transform:rotate(24deg)}}
+  @keyframes hgBlink{0%,43%,47%,100%{opacity:1}45%{opacity:0}}
+  @media(prefers-reduced-motion:reduce){.hg-worksite *{animation:none!important}}
   .embed-view{height:100vh}
   .ev-bar{display:flex;align-items:center;gap:14px;height:48px;padding:0 18px;border-bottom:1px solid var(--b-subtle);background:rgba(18,19,23,0.9)}
   .ev-bar b{color:#fff;font-size:14px;font-weight:500}
@@ -10840,7 +10862,7 @@ const DASHBOARD_SALES_URL=window.ADERESO_DASHBOARD_URL || (['localhost','127.0.0
   : 'dashboard/');
 const TOOLS=[
  {g:'Para reunión',items:[
-  {k:'brochure',name:'Brochure',desc:'Una plataforma para conectar y mejorar tu operación.',view:'brochure'},
+  {k:'brochure',name:'Brochure',desc:'Una plataforma para conectar y mejorar tu operación.',view:'brochure',construction:true},
   {k:'pricing',name:'Pricing a tu medida',desc:'Cotiza servicios, canales, implementación y ROI.',view:'pricing'},
   {k:'progpartners',name:'Prog. Partners',desc:'Explicación del funcionamiento y fee asociado.',view:'progpartners'}]},
  {g:'Entrenamiento',items:[
@@ -10900,8 +10922,8 @@ function trackHubViewLoad(v,k){
 function renderAppRail(){const r=document.getElementById('apprail');if(!r)return;
   const scroll=r.querySelector('.ar-sections')?.scrollTop||0;
   const it=t=>{const on=t.view==='embed'?curView==='embed'&&curTool===t.k:(t.view&&curView===t.view)||(t.url&&curView==='embed'&&curTool===t.k);
-    const tail=t.soon?'<span class="ar-soon">Próximamente</span>':t.url&&!t.view?'<span class="ar-ext">Abrir en pestaña nueva ↗</span>':on?'<span class="ar-meta">En esta sección</span>':'';
-    return `<button type="button" class="ar-item ${on?'on':''} ${t.soon?'soon':''}" data-tool="${t.k}" aria-label="${t.name}" aria-describedby="ar-tip-${t.k}"${on?' aria-current="page"':''}><span class="ar-ico">${tIco(t.k,19)}</span><div class="ar-fly" role="tooltip" id="ar-tip-${t.k}"><b${on?' class="ar-cur"':''}>${t.name}</b>${tail}</div></button>`;};
+    const tail=t.construction?'<span class="ar-soon">En construcción</span>':t.soon?'<span class="ar-soon">Próximamente</span>':t.url&&!t.view?'<span class="ar-ext">Abrir en pestaña nueva ↗</span>':on?'<span class="ar-meta">En esta sección</span>':'';
+    return `<button type="button" class="ar-item ${on?'on':''} ${t.soon?'soon':''}" data-tool="${t.k}" aria-label="${t.name}${t.construction?' · En construcción':''}"${t.construction?' aria-disabled="true"':''} aria-describedby="ar-tip-${t.k}"${on?' aria-current="page"':''}><span class="ar-ico">${tIco(t.k,19)}</span><div class="ar-fly" role="tooltip" id="ar-tip-${t.k}"><b${on?' class="ar-cur"':''}>${t.name}</b>${tail}</div></button>`;};
   const labels=['Reunión','Aprender','Gestión','Portales'];
   r.innerHTML=`<button type="button" class="ar-brand ${curView==='home'?'on':''}" data-tool="home" aria-label="Inicio" title="Inicio"><img class="adereso-symbol" src="assets/adereso-symbol.svg" width="28" height="28" alt=""></button><div class="ar-sections">`+
     TOOLS.map((g,gi)=>`<div class="ar-group" role="group" aria-label="${g.g}"><span class="ar-group-label" aria-hidden="true">${labels[gi]}</span>${g.items.map(it).join('')}</div>`).join('')+'</div>';
@@ -10929,8 +10951,20 @@ document.getElementById('homeGrid').addEventListener('pointermove',e=>{
     p.card.style.setProperty('--card-light-y',(p.y-r.top)+'px');
   });
 },{passive:true});
+function homeConstruction(){return `<span class="hg-worksite" aria-hidden="true">
+  <span class="hg-machine hg-digger"><svg viewBox="0 0 42 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="24" width="26" height="7" rx="3.5" fill="#363c48" stroke="#11151e"/><path d="M7 27.5h18" stroke="#8993a3" stroke-width="2" stroke-dasharray="2 2"/>
+    <path d="M6 23V13h13l4 10z" fill="#f9c543" stroke="#9e681e"/><path d="M8 14h8v7H8z" fill="#9cdae5"/><path d="M5 23h22v3H5z" fill="#e59b2d"/><circle class="hg-machine-eye" cx="12" cy="17" r="1.2" fill="#202734"/>
+    <g class="hg-digger-arm"><path d="m21 21 5-15 9 8" stroke="#8e5e23" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="m21 20 5-14 9 8" stroke="#ffd540" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="m33 14-2 8 8 1 1-4z" fill="#edaa31" stroke="#9e681e"/><circle cx="26" cy="6" r="2" fill="#fff0a2"/></g>
+  </svg></span>
+  <span class="hg-machine hg-truck"><svg viewBox="0 0 42 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 22h32v5H4z" fill="#d68c28"/><path d="M25 14h9l6 8v5H25z" fill="#ffc943" stroke="#a46e25"/><path d="M28 16h5l4 6h-9z" fill="#9cdae5"/><circle class="hg-machine-eye" cx="31" cy="19" r="1.2" fill="#202734"/>
+    <g class="hg-truck-bed"><path d="m4 15 3-6 5 1 4-4 7 5 2 5z" fill="#a87b54"/><path d="m2 14 4 10h18V14z" fill="#ebad34" stroke="#9e681e"/><path d="M8 16v6m6-6v6m6-6v6" stroke="#ffd86b" stroke-width="2"/></g>
+    <circle cx="11" cy="27" r="4" fill="#252d39"/><circle cx="33" cy="27" r="4" fill="#252d39"/><circle cx="11" cy="27" r="1.7" fill="#a5afbd"/><circle cx="33" cy="27" r="1.7" fill="#a5afbd"/>
+  </svg></span>
+</span><span class="hg-construction-clip" aria-hidden="true"><span class="hg-caution"><span>PELIGRO · NO PASAR · EN CONSTRUCCIÓN</span></span></span>`;}
 function renderHome(){const g=document.getElementById('homeGrid');if(!g)return;
-  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map((t,i)=>`<button type="button" class="hg-card ${t.soon?'soon':''}" data-tool="${t.k}" style="--d:${i*60}ms"><span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small></span>${t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`).join('')}</div></div>`).join('');}
+  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map((t,i)=>`<button type="button" class="hg-card ${t.soon?'soon':''} ${t.construction?'construction':''}" data-tool="${t.k}"${t.construction?' aria-disabled="true" aria-label="Brochure · En construcción"':''} style="--d:${i*60}ms"><span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small>${t.construction?'<span class="hg-build-label">En construcción</span>':''}</span>${t.construction?homeConstruction():t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`).join('')}</div></div>`).join('');}
 function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool=k||'';
   document.body.classList.toggle('v-brochure',v==='brochure');
   document.body.classList.toggle('v-home',v==='home');document.body.classList.toggle('v-embed',v==='embed');document.body.classList.toggle('v-desc',v==='descuentos');if(v==='descuentos')renderDisc();
@@ -10998,7 +11032,7 @@ function goView(v,el){if(v===curView&&v!=='embed')return;
     requestAnimationFrame(()=>{home.classList.add('vx-run','vx-from');wrap&&(wrap.classList.add('vx-run'),wrap.classList.remove('vx-rise-from'));});}
   _vxT=setTimeout(()=>{b.classList.remove('vx-both');home.classList.remove('vx-run','vx-from');wrap&&wrap.classList.remove('vx-run','vx-dim','vx-rise-from');},560);}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(!b)return;const k=b.dataset.tool;
-  if(k==='home')return goView('home',b);const t=ALL_TOOLS.find(x=>x.k===k);if(!t||t.soon)return;
+  if(k==='home')return goView('home',b);const t=ALL_TOOLS.find(x=>x.k===k);if(!t||t.soon||t.construction)return;
   if(t.view)goView(t.view,b);else window.open(t.url,'_blank','noopener');});
 /* The login screen and home share one visual sky. */
 let aiCleanup=null,aiLoading=null;
