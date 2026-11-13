@@ -455,9 +455,92 @@
 .br-pdf-export .br-desk-intake-demo .br-intake-query{margin-bottom:24px}.br-pdf-export .br-intake-route{height:45px}.br-pdf-export .br-intake-route>span{display:none}
 .br-desk-intake-demo .br-intake-channels{column-gap:0}
 
+/* Incoming tickets take their place only on arrival; existing rows slide down. */
+.br-desk-intake-demo[data-intake-moving="1"] [data-intake-ticket="1"],.br-desk-intake-demo[data-intake-moving="2"] [data-intake-ticket="2"],.br-desk-intake-demo[data-intake-moving="3"] [data-intake-ticket="3"],.br-desk-intake-demo[data-intake-moving="4"] [data-intake-ticket="4"]{display:none!important}
+.br-desk-intake-demo .br-ticket-owner-chip.is-assigning{box-shadow:0 9px 24px #0008;outline:1px solid #b8debe80}
+.br-desk-intake-demo .br-ticket-owner-chip.is-assigning:before{font-size:6px;padding:4px 6px;bottom:calc(100% + 7px);color:#e3f6e9}
+
+/* A quiet queue remains in place while the front query travels to its channel. */
+.br-desk-intake-demo .br-intake-query-stack{display:grid;position:relative;isolation:isolate;width:min(440px,100%);min-height:88px;margin:42px auto 90px}
+.br-desk-intake-demo .br-intake-query-stack>.br-intake-query{grid-area:1/1;position:relative;z-index:2;width:100%;margin:0!important}
+.br-intake-queue{grid-area:1/1;position:relative;z-index:0;min-height:88px;border-radius:13px;background:#1c252d;border:1px solid #53646f50;box-shadow:0 12px 25px #0002;box-sizing:border-box;pointer-events:none}
+.br-intake-queue:before,.br-intake-queue:after,.br-intake-queue>.br-queue-back{content:'';display:block;position:absolute;inset:0;border-radius:13px;border:1px solid #91a5b626;background:#202a33;z-index:-1;transform:translateY(-12px) scale(.96);transform-origin:top center;box-shadow:0 -4px 12px #0001}
+.br-intake-queue:after{transform:translateY(-24px) scale(.92);background:#1b242d;border-color:#91a5b61c;z-index:-2}
+.br-intake-queue>.br-queue-back{transform:translateY(-36px) scale(.88);background:#18212a;border-color:#91a5b614;z-index:-3}
+.br-queue-avatar{position:absolute;left:18px;top:16px;width:27px;height:27px;border-radius:50%;background:#40515c70}
+.br-queue-line{position:absolute;left:56px;top:25px;width:84px;height:6px;border-radius:5px;background:#6d83944a}
+.br-queue-line-short{left:18px;top:60px;width:61%;height:5px;background:#6d83942b}
+@media(max-width:760px){.br-desk-intake-demo .br-intake-query-stack{margin-bottom:70px}}
+.br-pdf-export .br-desk-intake-demo .br-intake-query-stack{margin:30px auto 24px}
+
+/* One readable focal column at each step of the Desk walkthrough. */
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus] :is(.br-desk-inbox,.br-desk-thread,.br-desk-assignment){transition:filter .45s ease,opacity .45s ease;filter:none;opacity:1}
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="intake"] :is(.br-desk-thread,.br-desk-assignment),
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="conversation"] :is(.br-desk-inbox,.br-desk-assignment),
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="context"] :is(.br-desk-inbox,.br-desk-thread){filter:blur(1.8px);opacity:.82}
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-assignment-active] .br-desk-ticket:not(.is-assigning-ticket){filter:none;opacity:1}
+.br-desk-intake-demo[data-br-live-demo="dispatch"] .br-desk-ticket.is-assigning-ticket>div,
+.br-desk-intake-demo[data-br-live-demo="dispatch"] .br-desk-ticket.is-assigning-ticket>p,
+.br-desk-intake-demo[data-br-live-demo="dispatch"] .br-desk-ticket.is-assigning-ticket>footer>span{filter:blur(1.5px);opacity:.75;transition:filter .4s,opacity .4s}
+.br-pdf-export .br-desk-intake-demo[data-br-live-demo="dispatch"] :is(.br-desk-inbox,.br-desk-thread,.br-desk-assignment){filter:none!important;opacity:1!important}
+@media(prefers-reduced-motion:reduce){.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus] :is(.br-desk-inbox,.br-desk-thread,.br-desk-assignment){filter:none;opacity:1;transition:none}}
+
 /* Align the two proof headings and keep the customer marks supporting the story. */
 .br-proof-intro{align-items:start;padding-top:34px}
 .br-proof-intro>div:first-child>.br-kicker,.br-proof-brands>span{display:block;margin:0;font-size:9px;line-height:1.5}
 .br-proof-brands>div{width:100%;max-width:400px;grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:850px){.br-proof-intro{padding-top:20px}}
 @media(max-width:540px){.br-proof-intro{padding-top:0}.br-proof-brands>div{max-width:360px}}
+
+/* The capsule lifts first; the vertical reel only spins once it is in focus. */
+.br-desk-intake-demo .br-ticket-owner-chip.is-assigning{box-sizing:border-box;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+.br-owner-reel{display:none}
+.br-ticket-owner-chip.is-assigning>.br-owner-label{visibility:hidden}
+.br-ticket-owner-chip.is-assigning>.br-owner-reel{display:block;position:absolute;top:50%;transform:translateY(-50%);left:3px;right:3px;height:16px;overflow:hidden;border-radius:8px;mask-image:linear-gradient(transparent,#000 15%,#000 85%,transparent)}
+.br-owner-reel-track{display:block;will-change:transform}
+.br-owner-reel-track>span{display:block;height:16px;line-height:16px;white-space:nowrap;font-size:6.5px;font-weight:600;text-align:center}
+.br-desk-intake-demo .br-ticket-owner-chip.is-assignment-chosen{background:#3a6549;border-color:#c5edcd;outline-color:#c5edcd}
+
+.br-desk-ticket[data-owner-pending] .br-ticket-owner-chip{color:transparent}
+.br-desk-ticket[data-owner-pending] .br-ticket-owner-chip:after{content:'Sin asignar';position:absolute;inset:0;display:grid;place-items:center;color:#b9c8bd;font-size:8px}
+
+/* Juan stays readable as the open ticket while the middle column tells his story. */
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="conversation"] .br-desk-inbox{filter:none;opacity:1}
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="conversation"] .br-desk-inbox>header,
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="conversation"] .br-desk-ticket:not([data-intake-ticket="1"]){filter:blur(1.8px);opacity:.82;transition:filter .45s,opacity .45s}
+.br-desk-intake-demo[data-br-live-demo="dispatch"][data-desk-focus="conversation"] [data-intake-ticket="1"]{filter:none;opacity:1;border-color:#91b8a0;box-shadow:inset 3px 0 #91b8a0;background:#1e3025}
+.br-desk-intake-demo .br-typing-particle{z-index:25;background:#c0e4d0;box-shadow:0 0 0 3px #9ac7b11c,0 0 14px #9ac7b180}
+
+.br-desk-intake-demo .br-desk-composer{min-width:0;box-sizing:border-box}
+.br-desk-intake-demo .br-desk-composer>span{padding:10px 12px;box-sizing:border-box;max-width:100%;min-width:0;overflow-wrap:anywhere;line-height:1.5}
+
+/* Studio continues the same Desk story, adding the AI queue before the human team. */
+.br-shopping-v2[data-shopping-view="team"] .br-ticket-inside{grid-template-columns:minmax(0,.68fr) minmax(0,.68fr) minmax(0,1.4fr) minmax(0,1fr);height:570px;gap:9px}
+.br-shopping-v2 .br-ticket-inside>.br-ticket-list{display:block;min-width:0;padding:0 0 10px;overflow:visible}
+.br-shopping-v2 .br-ticket-list>header{padding:13px 9px;min-height:45px;box-sizing:border-box}
+.br-shopping-v2 .br-ticket-list>header>b{font-size:10px;display:flex;gap:5px;align-items:center}
+.br-shopping-v2 .br-ticket-list>header svg{width:16px;height:16px;color:#c4dcd0;flex:none}
+.br-shopping-v2 .br-ticket-list>small{display:block;font-size:8px;padding:0 9px 8px;line-height:1.6;color:#91a197}
+.br-shopping-v2 .br-ticket-list article{margin:7px;padding:11px 8px;border-radius:11px;box-sizing:border-box}
+.br-shopping-v2 .br-ticket-list article>div{gap:7px}.br-shopping-v2 .br-ticket-list article>div>i{width:25px;height:25px;font-size:10px;flex:none}
+.br-shopping-v2 .br-ticket-list article b{font-size:10px}.br-shopping-v2 .br-ticket-list article b>small{font-size:7px;line-height:1.6}
+.br-shopping-v2 .br-ticket-list article p{font-size:9px;line-height:1.8;margin:11px 0}
+.br-shopping-v2 .br-ticket-list article footer{display:flex;flex-wrap:wrap;gap:7px;font-size:7px;justify-content:space-between}
+.br-studio-owner-chip{padding:4px 6px;border-radius:999px;background:#2b4937;color:#d6eddf;white-space:nowrap}
+.br-shopping-v2 .br-ticket-list .br-studio-seed{border:1px solid #ffffff09;background:#151d18;color:#d0d9d2}
+.br-shopping-v2 .br-studio-seed>small{font-size:7px;color:#91a197}
+.br-shopping-v2 .br-ticket-thread,.br-shopping-v2 .br-ticket-properties,.br-shopping-v2 .br-ticket-list>article,.br-shopping-v2 .br-ticket-list>header{transition:filter .45s,opacity .45s,box-shadow .45s}
+.br-shopping-v2[data-studio-focus="assign"] :is(.br-ticket-thread,.br-ticket-properties,.br-studio-human-queue),
+.br-shopping-v2[data-studio-focus="handoff"] :is(.br-ticket-thread,.br-ticket-properties),
+.br-shopping-v2[data-studio-focus="context"] :is(.br-ticket-thread,.br-studio-ai-queue,.br-studio-human-queue){filter:blur(1.5px);opacity:.82}
+.br-shopping-v2[data-studio-focus="conversation"] :is(.br-ticket-properties,.br-ticket-list>header,.br-studio-seed){filter:blur(1.5px);opacity:.82}
+.br-shopping-v2[data-studio-focus="assign"] [data-studio-ai-card],.br-shopping-v2[data-studio-focus="handoff"] [data-studio-human-card]{border-color:#a6ccaf;box-shadow:0 0 0 1px #a6ccaf30,0 9px 20px #0003}
+.br-shopping-v2[data-studio-transferring="true"] [data-studio-human-card]{visibility:hidden}
+.br-studio-ticket-transfer{position:absolute;z-index:30;transform-origin:top left;padding:11px 8px;border:1px solid #a6ccaf;border-radius:11px;background:#23392b;color:#e4f2e8;box-sizing:border-box;box-shadow:0 10px 24px #0006;pointer-events:none;font-size:9px;line-height:1.8}
+.br-studio-ticket-transfer>div{display:flex;gap:7px;align-items:center}.br-studio-ticket-transfer i{font-style:normal;border-radius:50%;padding:5px 9px;background:#516747}.br-studio-ticket-transfer b{font-size:10px}.br-studio-ticket-transfer b>small{display:block;font-size:7px}.br-studio-ticket-transfer footer{display:flex;gap:6px;justify-content:space-between;font-size:7px}.br-studio-ticket-transfer p{margin:11px 0}
+.br-shopping-handoff-note{align-self:stretch;padding:12px;border:1px solid #93bda34a;border-radius:11px;background:#1e3025;color:#d2eadb;font-size:10px;line-height:1.8}.br-shopping-handoff-note>small{color:#98b19f;font-size:8px}
+.br-shopping-v2 .br-ticket-chat .br-shopping-human-reply{background:#263847;border-color:#8caabd30}
+@media(max-width:1000px){.br-shopping-v2 .br-ticket-demo{overflow-x:auto}.br-shopping-v2[data-shopping-view="team"] .br-ticket-inside{min-width:960px}}
+.br-pdf-export .br-shopping-v2[data-shopping-view="team"] .br-ticket-inside{min-width:0;height:auto}.br-pdf-export .br-shopping-v2 :is(.br-ticket-thread,.br-ticket-properties,.br-ticket-list,.br-ticket-list>header,.br-studio-seed){filter:none!important;opacity:1!important}
+
+.br-studio-cases{display:flex;flex-wrap:wrap;gap:10px 24px;margin-top:18px;font-size:10px;color:#96a69c}.br-studio-cases>span{display:flex;gap:8px;align-items:center}.br-studio-cases b{font-size:8px;color:#c1deca;font-weight:500;padding:4px 7px;border:1px solid #9abcab25;border-radius:999px}

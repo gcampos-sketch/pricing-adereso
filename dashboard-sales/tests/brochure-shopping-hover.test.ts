@@ -25,10 +25,30 @@ test('the conversation waits for hover, types progressively, pauses on leave and
  const c=setup();c.visible();expect(c.timers.size).toBe(0);c.stageHandlers.pointerenter();c.tick();expect(c.node.dataset.demoStep).toBe('1');c.tick();const partial=c.reply.textContent;expect(partial.length).toBe(2);c.stageHandlers.pointerleave();expect(c.timers.size).toBe(0);expect(c.reply.textContent).toBe(partial);c.stageHandlers.pointerenter();c.tick();expect(c.reply.textContent.length).toBe(4);
 });
 test('the carousel slides before tags appear, then ticket fields are filled one at a time',()=>{
- const c=setup();c.visible();c.stageHandlers.pointerenter();c.until(3);expect(c.tags.every(t=>t.hidden)).toBe(true);c.until(4);expect(c.bodies[0].carousel.lastScroll.left).toBe(210);expect(c.tags.every(t=>t.hidden)).toBe(true);c.until(5);expect(c.node.dataset.shoppingView).toBe('team');expect(c.tags.every(t=>t.hidden)).toBe(true);c.tick();expect(c.tags.filter(t=>!t.hidden).length).toBe(1);expect(c.fields.every(f=>f.textContent==='—')).toBe(true);c.until(6);c.tick();expect(c.fields[0].textContent).toBe('J');expect(c.fields[1].textContent).toBe('—');c.until(7);expect(c.fields.map(f=>f.textContent)).toEqual(c.fields.map(f=>f.dataset.shoppingValue));expect(c.timers.size).toBe(0);
+ const c=setup();c.visible();c.stageHandlers.pointerenter();c.until(3);expect(c.tags.every(t=>t.hidden)).toBe(true);c.until(4);expect(c.bodies[1].carousel.lastScroll.left).toBe(210);expect(c.tags.every(t=>t.hidden)).toBe(true);c.until(5);expect(c.node.dataset.shoppingView).toBe('team');expect(c.tags.every(t=>t.hidden)).toBe(true);c.tick();expect(c.tags.filter(t=>!t.hidden).length).toBe(1);expect(c.fields.every(f=>f.textContent==='—')).toBe(true);c.until(6);c.tick();expect(c.fields[0].textContent).toBe('J');expect(c.fields[1].textContent).toBe('—');c.until(7);expect(c.fields.map(f=>f.textContent)).toEqual(c.fields.map(f=>f.dataset.shoppingValue));expect(c.timers.size).toBe(1);c.until(8);expect(c.node.dataset.studioFocus).toBe('conversation');c.until(9);expect(c.node.dataset.studioFocus).toBe('handoff');c.until(10);expect(c.timers.size).toBe(0);
 });
 test('a hidden page stops typing and reduced motion has a complete, static ticket',()=>{
- const c=setup();c.visible();c.stageHandlers.pointerenter();c.until(1);c.doc.hidden=true;c.handlers.visibilitychange();expect(c.timers.size).toBe(0);const reduced=setup(true);reduced.visible();reduced.stageHandlers.pointerenter();expect(reduced.node.dataset.demoStep).toBe('7');expect(reduced.fields.every(f=>f.textContent===f.dataset.shoppingValue)).toBe(true);expect(reduced.timers.size).toBe(0);
+ const c=setup();c.visible();c.stageHandlers.pointerenter();c.until(1);c.doc.hidden=true;c.handlers.visibilitychange();expect(c.timers.size).toBe(0);const reduced=setup(true);reduced.visible();reduced.stageHandlers.pointerenter();expect(reduced.node.dataset.demoStep).toBe('10');expect(reduced.fields.every(f=>f.textContent===f.dataset.shoppingValue)).toBe(true);expect(reduced.timers.size).toBe(0);
 });
 
 test('manual classification and context steps open the team ticket rather than the client chat',()=>{const c=setup();c.visible();c.handlers['node-click']({target:{closest:(selector:string)=>selector==='[data-demo-phase]'?{dataset:{demoPhase:'7'}}:null}});expect(c.node.dataset.shoppingView).toBe('team');expect(c.node.dataset.demoStep).toBe('7');expect(c.fields.every(f=>f.textContent===f.dataset.shoppingValue)).toBe(true);expect(c.timers.size).toBe(0);});
+
+test('the exception transfers the same ticket from the AI queue to the human queue',async()=>{
+ const c=setup(),original=c.node.querySelector;let finish!:()=>void;let removed=false;let frames:any,options:any;
+ const ghost:any={style:{},removeAttribute(){},classList:{add(){}},remove(){removed=true;},animate(f:any,o:any){frames=f;options=o;return{finished:new Promise<void>(r=>finish=r),play(){},pause(){}};}};
+ const ai={getBoundingClientRect:()=>({left:50,top:100,width:160,height:130}),cloneNode:()=>ghost},human={getBoundingClientRect:()=>({left:230,top:100,width:160,height:130})};
+ c.node.getBoundingClientRect=()=>({left:0,top:0});c.node.append=()=>{};c.node.querySelector=(q:string)=>q==='[data-studio-ai-card]'?ai:q==='[data-studio-human-card]'?human:original(q);
+ c.handlers['node-click']({target:{closest:(s:string)=>s==='[data-demo-phase]'?{dataset:{demoPhase:'9'}}:null}});
+ expect(c.node.dataset.studioFocus).toBe('handoff');expect(c.node.dataset.studioTransferring).toBe('true');expect(options.duration).toBe(1800);expect(frames.at(-1).transform).toBe('translate(180px,0px) scale(1)');finish();await Promise.resolve();expect(removed).toBe(true);expect(c.node.dataset.studioTransferring).toBeUndefined();
+});
+
+
+test('advancing during a paused transfer removes the ghost and reveals the final human ticket',()=>{
+ const c=setup(),original=c.node.querySelector;let cancelled=false,removed=false;
+ const ghost:any={style:{},removeAttribute(){},classList:{add(){}},remove(){removed=true;},animate(){return{finished:new Promise(()=>{}),cancel(){cancelled=true;},play(){},pause(){}};}};
+ const ai={getBoundingClientRect:()=>({left:50,top:100,width:160,height:130}),cloneNode:()=>ghost},human={getBoundingClientRect:()=>({left:230,top:100,width:160,height:130})};
+ c.node.getBoundingClientRect=()=>({left:0,top:0});c.node.append=()=>{};c.node.querySelector=(q:string)=>q==='[data-studio-ai-card]'?ai:q==='[data-studio-human-card]'?human:original(q);
+ const originalAll=c.node.querySelectorAll;c.node.querySelectorAll=(q:string)=>q==='.br-studio-ticket-transfer,.br-typing-particle'&&c.node.dataset.studioTransferring?[ghost]:originalAll(q);
+ const choose=(phase:string)=>c.handlers['node-click']({target:{closest:(s:string)=>s==='[data-demo-phase]'?{dataset:{demoPhase:phase}}:null}});
+ choose('9');expect(c.node.dataset.studioTransferring).toBe('true');choose('10');expect(cancelled).toBe(true);expect(removed).toBe(true);expect(c.node.dataset.studioTransferring).toBeUndefined();expect(c.node.dataset.demoStep).toBe('10');
+});
