@@ -8802,24 +8802,29 @@ function paintIcons(root=document){
   });
 }
 
-const BAG=[{c:2000,p:558},{c:3000,p:752},{c:4000,p:945},{c:5000,p:1058},{c:10000,p:1915},{c:15000,p:2558},{c:20000,p:3340},{c:50000,p:7492},{c:100000,p:14827},{c:500000,p:64970}];
+/* CRM ae_rules_v1: plan del tramo activo + unidades contratadas × tarifa del tramo.
+   Fuente: adereso-crm-sp/docs/AE_PRICING_LOGIC.md, tablas Desk/Flows/Agents. */
+const DESK_BAG=[{c:2000,p:199,r:0.0874},{c:5000,p:399,r:0.0773},{c:15000,p:1099,r:0.0706},{c:45000,p:2999,r:0.0662},{c:135000,p:8299,r:0.0612},{c:405000,p:23699,r:0.0585},{c:1215000,p:66999,r:0.0551},{c:3645000,p:193499,r:0.0531}];
+const AGENT_BAG=[{c:2000,p:199,r:0.1063},{c:5000,p:499,r:0.0940},{c:15000,p:1299,r:0.0858},{c:45000,p:3599,r:0.0805},{c:135000,p:9999,r:0.0744},{c:405000,p:28799,r:0.0711},{c:1215000,p:81499,r:0.0670},{c:3645000,p:235399,r:0.0646}];
+const STUDIO_FLOW_BAG=[{c:2000,p:99,r:0.0437},{c:5000,p:199,r:0.0386},{c:15000,p:499,r:0.0353},{c:45000,p:1499,r:0.0331},{c:135000,p:4099,r:0.0306},{c:405000,p:11799,r:0.0292},{c:1215000,p:33499,r:0.0276},{c:3645000,p:96799,r:0.0265}];
+const BAG=DESK_BAG.map((d,i)=>({c:d.c,p:d.p+AGENT_BAG[i].p+160,r:d.r+AGENT_BAG[i].r}));
+const FLOW_BAG=DESK_BAG.map((d,i)=>({c:d.c,p:d.p+STUDIO_FLOW_BAG[i].p+160,r:d.r+STUDIO_FLOW_BAG[i].r}));
 const TILES=[2000,3000,4000,5000,10000,15000,20000,30000];
-/* Desk solo: tramos oficiales (Notion «Pricing y márgenes — Desk, Flows y Agents»). Entre tramos se interpola, igual que la bolsa con Studio. */
-const DESK_BAG=[{c:2000,p:199},{c:5000,p:399},{c:15000,p:1099},{c:45000,p:2999},{c:135000,p:8299},{c:405000,p:23699},{c:1215000,p:66999},{c:3645000,p:193499}];
 const DESK_TILES=[2000,5000,15000,45000,135000];
-/* Desk + Flows: tramos oficiales (misma página Notion, columna «Desk + Flows»). La bolsa con Agents sigue usando BAG. */
-const FLOW_BAG=[{c:2000,p:298},{c:5000,p:598},{c:15000,p:1598},{c:45000,p:4498},{c:135000,p:12398},{c:405000,p:35498},{c:1215000,p:100498},{c:3645000,p:290298}];
-/* El tipo de Studio (Agent o Flow) se decide en la bolsa: aplica a todo el proyecto y cambia el precio */
 function studioType(){return state.studioType==='flow'?'flow':'agent';}
 function studioBag(){return studioType()==='flow'?FLOW_BAG:BAG;}
+function studioOnlyBag(){return studioType()==='flow'?STUDIO_FLOW_BAG:AGENT_BAG;}
 function curVol(){return state.volMode==='custom'?(state.volCustom||2000):(state.vol||2000);}
+function packTier(v,t){let active=t[0];for(const tier of t){if(v>=tier.c)active=tier;}return active;}
 function priceForVolume(v,t=BAG){
-  v=Math.max(2000,Math.round(v||0));
-  const exact=t.find(b=>b.c===v);if(exact)return exact.p;
-  if(v<=t[0].c)return t[0].p;
-  if(v>=t[t.length-1].c){const a=t[t.length-2],b=t[t.length-1];return b.p+(b.p-a.p)/(b.c-a.c)*(v-b.c);}
-  for(let i=0;i<t.length-1;i++){const a=t[i],b=t[i+1];if(v>=a.c&&v<=b.c)return a.p+(v-a.c)/(b.c-a.c)*(b.p-a.p);}
-  return t[0].p;
+  v=Math.max(2000,Math.round(v||0));const tier=packTier(v,t);
+  return Math.round((tier.p+(v-tier.c)*tier.r)*1000)/1000;
+}
+function studioMultiplier(){return state.studio&&!state.desk?1+STUDIO_NO_DESK_SURCHARGE/100:1;}
+function packagePrice(v){
+  const desk=state.desk?priceForVolume(v,DESK_BAG):0;
+  const studio=state.studio?(priceForVolume(v,studioOnlyBag())+BOT_MANT)*studioMultiplier():0;
+  return desk+studio;
 }
 const SETUP={
  estandar:{name:'Empaquetado Estándar',price:0,tag:'Rápido · 1 semana',hh:'Autogestionable',endpoints:'Preconfigurado',ses:'Adereso Academy',mant:'—'},
@@ -8959,7 +8964,7 @@ function applyReveal(area,sel){const first=!area.dataset.revealed;area.querySele
 
 /* Cliente vigente: ya paga la mantención de bot (160/mes), así que la bolsa con Studio no la vuelve a cobrar. */
 const BOT_MANT=160;
-function mantDiscount(){return (state.existing&&state.studio&&scopeBag())?BOT_MANT:0;}
+function mantDiscount(){return (state.existing&&state.studio&&scopeBag())?BOT_MANT*studioMultiplier():0;}
 function renderCust(){const el=document.getElementById('custSeg');if(!el)return;const ex=state.existing;
   el.classList.add('seg');el.classList.toggle('right',ex);
   el.innerHTML=`<button class="seg-opt ${!ex?'on':''}" data-cust="new"><span class="seg-ico" data-i="gift" data-sz="16"></span><span class="seg-txt"><b>Cliente nuevo</b><small>Primera contratación</small></span></button>
@@ -9002,9 +9007,7 @@ function monthlyBase(){
 /* Precio de la bolsa elegida (para cliente vigente con Studio, sin la mantención de bot que ya paga). */
 function bagPrice(){
   if(!hasService())return 0;
-  let base=state.studio?priceForVolume(state.volMode==='custom'?state.volCustom:state.vol,studioBag()):priceForVolume(curVol(),DESK_BAG);
-  if(state.studio&&!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)base=base*(1+STUDIO_NO_DESK_SURCHARGE/100);
-  return base-mantDiscount();
+  return packagePrice(curVol())-mantDiscount();
 }
 /* Cliente vigente: qué amplía (bolsa, bot nuevo o ambos) y cuánto paga hoy. */
 /* «Mejora del agente actual»: solo setup, sin mensualidad. Va como último agente de la lista de implementación. */
@@ -9014,10 +9017,10 @@ function isImprove(i){return improveN()>0&&i===agentsN()-1;}
 function scopeBag(){return !state.existing||(state.scope!=='bot'&&!improveOnly());}
 function scopeBot(){return !state.existing||state.scope!=='bolsa'||!!state.improve;}
 function botsN(){return Math.max(1,Math.round(+state.bots||1));}
-function newBotsMant(){return (state.existing&&state.scope!=='bolsa')?BOT_MANT*botsN():0;}
+function newBotsMant(){return (state.existing&&state.scope!=='bolsa')?BOT_MANT*botsN()*studioMultiplier():0;}
 /* Cliente nuevo con Studio: la bolsa incluye 1 agente IA; cada agente extra suma su mantención mensual */
 function extraAgentsN(){return (!state.existing&&state.studio)?Math.max(0,Math.round(+state.extraAgents||0)):0;}
-function extraAgentsMant(){return BOT_MANT*extraAgentsN();}
+function extraAgentsMant(){return BOT_MANT*extraAgentsN()*studioMultiplier();}
 function bagDelta(){return scopeBag()?Math.max(0,bagPrice()-(+state.currentPay||0)):0;}
 function upsellMonthly(){return bagDelta()+newBotsMant();}
 /* Canal X: bolsa independiente; ampliación contratada y excedentes tienen tarifas distintas. */
@@ -9072,8 +9075,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ep]');if(!
 /* Ticket extra fuera de bolsa = extraRate del tramo activo × 1,15 (lógica del cotizador).
    Tramo activo = último tramo cuyo cap ≤ volumen. La mantención de bot (160) no entra en el unitario. */
 const EXTRA_MARKUP=1.15;
-const DESK_TIERS=[{cap:2000,extraRate:0.0874},{cap:5000,extraRate:0.0773},{cap:15000,extraRate:0.0706},{cap:45000,extraRate:0.0662},{cap:135000,extraRate:0.0612}];
-const STUDIO_AGENT_TIERS=[{cap:2000,extraRate:0.1063},{cap:5000,extraRate:0.0940},{cap:15000,extraRate:0.0858},{cap:45000,extraRate:0.0805}];
+const DESK_TIERS=DESK_BAG.map(t=>({cap:t.c,extraRate:t.r}));
+const STUDIO_AGENT_TIERS=AGENT_BAG.map(t=>({cap:t.c,extraRate:t.r}));
+const STUDIO_FLOW_TIERS=STUDIO_FLOW_BAG.map(t=>({cap:t.c,extraRate:t.r}));
+function studioTiers(){return studioType()==='flow'?STUDIO_FLOW_TIERS:STUDIO_AGENT_TIERS;}
 function tierRate(tiers,q){let t=tiers[0];for(const x of tiers){if(q>=x.cap)t=x;}return t.extraRate*EXTRA_MARKUP;}
 /* Bolsa spot (upsell): conversaciones adicionales a la tarifa normal del tramo (sin +15% y sin mantención). */
 function spotUnit(){
@@ -9089,7 +9094,7 @@ function extraTicket(){
   if(!hasService())return null;
   const vol=(state.studio||state.desk)?Math.max(2000,state.volMode==='custom'?state.volCustom:state.vol):2000;
   const desk=state.desk?tierRate(DESK_TIERS,vol):null;
-  const studio=state.studio?tierRate(STUDIO_AGENT_TIERS,vol):null;
+  const studio=state.studio?tierRate(studioTiers(),vol):null;
   return {total:(desk||0)+(studio||0),desk,studio,split:desk!=null&&studio!=null};
 }
 const usd3=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
@@ -9614,11 +9619,13 @@ function renderSummary(){renderTerm();
 
   /* --- MENSUAL --- */
   const soloStudio=state.studio&&!state.desk;
-  let mTable;
-  if(!state.studio){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;}
-  else if(soloStudio){mTable=`<div class="rr"><span class="k">Studio · Agente IA (bolsa)</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div><div class="rr"><span class="k">Recargo sin Desk</span><span class="v">+${STUDIO_NO_DESK_SURCHARGE}% incluido</span></div>`;}
-  else if(isBase){mTable=`<div class="rr"><span class="k">Adereso Desk · Mesa de ayuda</span><span class="v">USD 199</span></div><div class="rr"><span class="k">Add-on Studio · IA Generativa</span><span class="v">USD ${359-mantDiscount()}</span></div>`;}
-  else{mTable=`<div class="rr"><span class="k">Desk + Studio · bolsa mensual</span><span class="v">${usd(m)}/mes</span></div><div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;}
+  let mTable='';
+  if(state.desk)mTable+=`<div class="rr"><span class="k">Adereso Desk · bolsa</span><span class="v">${usd(priceForVolume(volNow,DESK_BAG))}/mes</span></div>`;
+  if(state.studio){
+    mTable+=`<div class="rr"><span class="k">Studio · ${studioType()==='flow'?'Flows':'Agents'} · bolsa</span><span class="v">${usd(priceForVolume(volNow,studioOnlyBag())*studioMultiplier())}/mes</span></div><div class="rr"><span class="k">Soporte Studio</span><span class="v">${usd(BOT_MANT*studioMultiplier()-mantDiscount())}/mes</span></div>`;
+    if(soloStudio)mTable+=`<div class="rr"><span class="k">Recargo sin Desk</span><span class="v">+${STUDIO_NO_DESK_SURCHARGE}% incluido</span></div>`;
+  }
+  mTable+=`<div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;
   const mTitle=!state.studio?'Mesa de ayuda':(soloStudio?'Agente IA (sin Desk)':'Bolsa de conversaciones');
   if(extraAgentsN()>0)mTable+=`<div class="rr"><span class="k">Agentes IA extra <small class="xsplit">${extraAgentsN()} × USD ${BOT_MANT} mantención · setup por confirmar</small></span><span class="v">${usd(extraAgentsMant())}</span></div>`;
   if(mantDiscount()>0)mTable+=`<div class="rr"><span class="k">Mantención de bot <small class="xsplit">ya incluida en tu contrato vigente</small></span><span class="v" style="color:var(--success)">USD 0</span></div>`;
@@ -10611,8 +10618,8 @@ function modalMorph(opening,done){
 /* Simulador: quedarse en la bolsa y pagar conversaciones extra (+15%) vs cambiar a una bolsa que cubra el consumo real.
    Valores de lista mensuales, sin descuento por plazo. */
 const SIM={bag:0,real:0};
-function simExtraRate(v){const d=state.desk?tierRate(DESK_TIERS,v):0,s=state.studio?tierRate(STUDIO_AGENT_TIERS,v):0;return d+s;}
-function simBagPrice(v){return state.studio?priceForVolume(v,studioBag())*((!state.desk&&STUDIO_NO_DESK_SURCHARGE!=null)?1+STUDIO_NO_DESK_SURCHARGE/100:1):priceForVolume(v,DESK_BAG);}
+function simExtraRate(v){const d=state.desk?tierRate(DESK_TIERS,v):0,s=state.studio?tierRate(studioTiers(),v):0;return d+s;}
+function simBagPrice(v){return packagePrice(v)+extraAgentsMant();}
 function simCalc(){
   const bag=Math.max(2000,Math.round(SIM.bag||0)),real=Math.max(0,Math.round(SIM.real||0));
   const over=Math.max(0,real-bag),rate=simExtraRate(bag);
