@@ -30,3 +30,5 @@ test('malformed history entry fails closed',async()=>{const r=await inspectAcqui
 test('unmatched event rows count toward scan limit',async()=>{let calls=0;const r=await inspectAcquisition(async p=>p.startsWith('/events/')?(calls++,{results:Array(50).fill(null),paging:{next:{after:'cursor'}}}):get(p),eventConfig());assert.equal(calls,1);assert.equal(r.events.complete,false);assert.equal(r.events.status,'bounded_partial')});
 
 test('null association entry is invalid rather than aborting probe',async()=>{const r=await inspectAcquisition(async p=>p.includes('/associations/')?{results:[null]}:get(p),cfg());assert.equal(r.deals[0].associations.status,'invalid');assert.equal(r.deals[0].associations.complete,false);assert.equal(r.activationAllowed,false)});
+
+test('Events request uses API-supported contact name not CRM type ID',async()=>{await inspectAcquisition(async p=>{if(p.startsWith('/events/')){assert.equal(new URL('https://api.hubapi.com'+p).searchParams.get('objectType'),'contact');return {results:[]}}return get(p)},eventConfig())});

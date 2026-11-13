@@ -67,7 +67,7 @@ export async function inspectAcquisition(get, config) {
   if(events) {
     const rows=[]; let scanned=0; let after; let complete=false; let status='bounded_partial';
     for(let page=0;page<3 && scanned<50;page++) {
-      const q=new URLSearchParams({objectType:'0-1',objectId:events.contactId,eventType:events.type,occurredAfter:events.since,occurredBefore:events.until,properties:events.formProperty,limit:String(50-scanned)});
+      const q=new URLSearchParams({objectType:'contact',objectId:events.contactId,eventType:events.type,occurredAfter:events.since,occurredBefore:events.until,properties:events.formProperty,limit:String(50-scanned)});
       if(after) q.set('after',after);
       const r=await safeGet(`/events/v3/events?${q}`);
       if(r.error){status=r.error;break;}
