@@ -15,3 +15,17 @@ The exact proposal and staging-tests.sql from PR head 04832dbf8680c87fd9e0ccf880
 A private Unix socket server start failed with Operation not permitted in the execution sandbox. Tests used the real PostgreSQL standalone backend (postgres --single -j), not an emulation. There was no listening socket or TCP port.
 Two-session concurrency, actual Supabase service-role/PostgREST configuration, network endpoint permissions, webhook signatures/payload delivery, completeness, and temporal identity were NOT validated. Successful synthetic tests do not authorize activation, migration, or CRM writes.
 No production schema was applied. The proposal remains inactive and must not be applied directly to production.
+
+## Normal-server CI validation: PASSED
+
+The local standalone limitation was subsequently resolved using a disposable official postgres:17 service in GitHub Actions, not by weakening assertions.
+
+- Tested commit: 415649bdbccd6c19999e7fabafd879db800b866a.
+- Run: https://github.com/gcampos-sketch/pricing-adereso/actions/runs/43447910352
+- Job: isolated-ledger, 131962127070; completed SUCCESS.
+- psql ON_ERROR_STOP=1 executed staging-tests.sql and role-tests.sql successfully under a normal PostgreSQL server.
+- Actual SET ROLE tests passed for service_role NOBYPASSRLS and BYPASSRLS, anon and authenticated; verified RLS active when expected, RPC/table privilege denials, no self-attestation, coverage gates, direct-insert checks and append-only triggers even under simulated accidental grants.
+- concurrency-tests.py passed three READ COMMITTED contention cases: identical evidence gives one insert plus one deduplication; conflicting evidence fails SQLSTATE23505 without overwrite; competing attestations produce one immutable winner and frozen_conflict for the loser. Each case observed session A after write in PgSleep and session B waiting on a Lock before checking outcomes.
+- Service container was stopped at job completion. No external service credentials, secrets, CRM payloads or customer records were used. Workflow has pull_request path filters, contents:read only, pinned checkout with persist-credentials:false, and no deployment step.
+
+This supersedes only the unvalidated role/concurrency statements above. Hosted Supabase/PostgREST exposure and permissions, real provider signature/payload delivery, complete temporal identity, durable capture watermark, and activation remain unvalidated. postgres:17 is an official moving-major image; pin an approved image digest/version for production parity validation.

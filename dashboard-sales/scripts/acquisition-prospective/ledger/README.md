@@ -1,6 +1,6 @@
 # Acquisition webhook ledger proposal — NOT APPLIED
 
-`ledger-proposal.sql` is a reviewed-design starting point, not an installed migration or a production-validated schema. No database was changed. The SQL proposal and staging-tests.sql have now passed in an isolated real PostgreSQL 17.11 standalone backend. **RLS/role enforcement and concurrency remain unvalidated**: a private-socket server was prohibited by the environment, and standalone mode failed the role-test RLS guard because of its implicit superuser behavior. See VALIDATION.md. No production database was changed. No SQLite imitation is offered as evidence of PostgreSQL locking or role behavior.
+`ledger-proposal.sql` is a reviewed-design starting point, not an installed migration or a production-validated schema. No database was changed. The proposal, staging-tests.sql, real-role/RLS tests and concurrent-ingestion/freeze tests passed in an isolated official PostgreSQL 17 CI service. The earlier local standalone attempt could not validate RLS and is documented rather than hidden. See VALIDATION.md for exact run/commit and remaining hosted-integration limits. No production database was changed. No SQLite imitation is offered as evidence of PostgreSQL locking or role behavior.
 
 Scope constants in this artifact are synthetic: portal 1, app 2, pipelines 3/4. Review and replace them privately for the intended portal before integration; no customer identifiers belong in this public proposal.
 
