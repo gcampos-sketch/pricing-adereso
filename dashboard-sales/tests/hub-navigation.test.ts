@@ -42,3 +42,11 @@ test('navigation is saved immediately to this tab and both frame and outer addre
   expect(JSON.parse(stored.get('adereso_hub_navigation_v1')!)).toEqual({ view: 'embed', tool: 'crm', y: 42 });
   expect(updates).toEqual(['https://hub.example/hub-content/index.html?hubView=embed&hubTool=crm', 'https://hub.example/?keep=1&hubView=embed&hubTool=crm']);
 });
+
+test('fresh tabs tolerate unfinished menu entries without a view',()=>{
+ const incomplete=[...tools,{k:'pending'}];
+ for(const saved of [null,undefined,{},17]){
+  expect(context.resolveHubNavigation(saved,incomplete,'?hubView=pricing')).toEqual({view:'pricing',tool:'',y:0});
+  expect(context.resolveHubNavigation(saved,incomplete,'')).toEqual({view:'home',tool:'',y:0});
+ }
+});
