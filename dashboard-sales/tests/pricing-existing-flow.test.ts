@@ -38,3 +38,11 @@ test('existing Studio types keep CRM tariffs and bot-only/improvement charges se
  run.setState({desk:false,studio:false,scope:'bot',bots:2,hasDeskContracted:false});expect(run('monthly()')).toBe(432);expect(run('spotUnit()')).toBeNull();
  run.setState({scope:'bolsa',improve:true});expect(run('monthly()')).toBe(0);expect(run('setupCost()')).toBe(990);
 });
+
+test('reload restores Studio type, Desk integration and per-agent endpoint additions',()=>{
+ const source=html.slice(html.indexOf('const state={'),html.indexOf('/* Hub navigation persistence:'));
+ const saved={studioType:'flow',deskInteg:true,epA:[2,1],existing:true};
+ const ctx:any={localStorage:{getItem:()=>JSON.stringify({state:saved})}};
+ runInNewContext(source+';this.restored=state;',ctx);
+ expect(ctx.restored.studioType).toBe('flow');expect(ctx.restored.deskInteg).toBe(true);expect(Array.from(ctx.restored.epA)).toEqual([2,1]);
+});

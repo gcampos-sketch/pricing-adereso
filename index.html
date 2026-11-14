@@ -8912,7 +8912,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={studioType:'agent',epA:[],existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* recuerda la cotización en este navegador: al recargar o volver a entrar, sigue donde quedó */
 const SAVE_KEY='adereso_pricing_v1';
@@ -9804,7 +9804,7 @@ function renderSummary(){renderTerm();
     return;
   }
   document.getElementById('sumCard').innerHTML=`
-    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${withIA&&scopeBot()?pagoCard:''}${hhCard}</div>`;
+    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${implVisible()?pagoCard:''}${hhCard}</div>`;
   paintIcons(document.getElementById('sumCard'));
   alignCards();
   applyReveal(document.getElementById('sumCard'),'.rcard');
