@@ -21,5 +21,5 @@ export function ScenarioProjection({summary,quota,scope,deals,onClear,report,onV
    </ScenarioDrawer>
   </div>
  </>;
- return summary.count ? <DealSelectionSummary summary={summary} quota={quota} onClear={onClear} actions={actions}/> : <div className="scenario-no-selection" aria-label="Escenarios">{actions}</div>;
+ return summary.count ? <DealSelectionSummary compact summary={summary} quota={quota} onClear={onClear} actions={actions}/> : <div className="scenario-no-selection" aria-label="Escenarios">{actions}</div>;
 }

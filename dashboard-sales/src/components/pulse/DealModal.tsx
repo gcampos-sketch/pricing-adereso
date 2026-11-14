@@ -1793,7 +1793,7 @@ export function DealModal({
         if (event.target === event.currentTarget) requestClose();
       }}
     >
-      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-won-view={isWonView} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
+      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-won-view={isWonView} data-quota-view={!!selectionQuota && !isWonView} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
         <div className="modal-head">
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="deal-modal-intro"><div className="deal-modal-intro-content"><h3 className="pulse-h3">{visiblePayload.title}</h3>
@@ -1982,7 +1982,7 @@ export function DealModal({
           </p> : null}
           <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
         </section> : null)}
-        {scenarioScope && selectionQuota && scenarioReport ? <ScenarioProjection report={scenarioReport} onViewScenarios={()=>onViewScenarios?.()} summary={selectionTotal} quota={selectionQuota} scope={{...scenarioScope,owner:scenarioOwner}} deals={deals.filter(deal=>selectedIds.includes(deal.id))} onClear={()=>setSelected([])} /> : <DealSelectionSummary summary={selectionTotal} quota={selectionQuota ?? null} onClear={()=>setSelected([])} />}
+        {scenarioScope && selectionQuota && scenarioReport ? <ScenarioProjection report={scenarioReport} onViewScenarios={()=>onViewScenarios?.()} summary={selectionTotal} quota={selectionQuota} scope={{...scenarioScope,owner:scenarioOwner}} deals={deals.filter(deal=>selectedIds.includes(deal.id))} onClear={()=>setSelected([])} /> : <DealSelectionSummary compact={!!selectionQuota} summary={selectionTotal} quota={selectionQuota ?? null} onClear={()=>setSelected([])} />}
         {selectedIds.length > 0 ? (
           <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>
           <div className="bulk-bar" role="group" aria-label="Herramientas para los deals seleccionados">
