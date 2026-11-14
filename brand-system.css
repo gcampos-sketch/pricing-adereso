@@ -417,3 +417,8 @@ body.v-embed:has(#evFrame[src*="dashboard=1"]) { padding-bottom:0; overflow:hidd
 .academy-source-provenance {display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11px;color:#92929c;margin:12px 0;}
 .academy-source-text {white-space:pre-wrap;overflow-wrap:anywhere;font:400 13px/1.8 var(--font-body);color:#c4c4cb;}
 .academy-source-library :is(button,input,a,summary):focus-visible,.academy-source-intro button:focus-visible {outline:2px solid #ffd540;outline-offset:3px;}
+
+/* Pricing uses its direct reset action above the chapter list in both customer modes. */
+.chapter-index>.chapter-reset-icon{position:absolute;left:0;bottom:100%;display:grid;place-items:center;width:28px;height:28px;margin:0 0 4px;padding:0;border:0;border-radius:8px;background:transparent;color:#8d929e;cursor:pointer;}
+.chapter-index>.chapter-reset-icon:hover{color:var(--brand);background:rgba(255,213,64,.08);transform:none;}
+.chapter-index>.chapter-reset-icon:focus-visible{outline:2px solid var(--brand);outline-offset:3px;}
