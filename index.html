@@ -8905,14 +8905,14 @@ function hasService(){return state.desk||state.studio||botScope();}
 
 const MODULES=[
  {k:'desk',label:'Desk',desc:'Mesa de ayuda',bag:'Bolsa de conversaciones',bagTip:'Todo ticket entra a Desk: es la bolsa de conversaciones',icon:'msg',color:'#FFFFFF'},
- {k:'studio',label:'Studio',desc:'Agents / Flow',bag:'Add-on · bolsa automatizada',bagNew:'Add-on · bolsa unificada',bagTip:'Studio automatiza esa misma bolsa de conversaciones',icon:'robot',color:'#186EFA'},
+ {k:'studio',label:'Studio',desc:'Agents / Flow',bag:'Add-on · bolsa unificada',bagNew:'Add-on · bolsa unificada',bagTip:'Studio automatiza esa misma bolsa de conversaciones',icon:'robot',color:'#186EFA'},
  {k:'botOnly',label:'Desarrollo agente IA',desc:'Agente nuevo · USD 160/mes + setup',descNew:'Incluido con Studio',icon:'robot',color:'#186EFA'},
  {k:'improve',label:'Mejora del agente actual',desc:'Solo setup · sin mensualidad',icon:'tool',color:'#186EFA',existingOnly:true},
  {k:'engage',label:'Engage',desc:'Comunicación outbound',icon:'mega',color:'#25D366'},
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* recuerda la cotización en este navegador: al recargar o volver a entrar, sigue donde quedó */
 const SAVE_KEY='adereso_pricing_v1';
@@ -9015,7 +9015,7 @@ function renderCust(){const el=document.getElementById('custSeg');if(!el)return;
   paintIcons(ep);if(xa){paintIcons(xa);if(xaFocus){const f=xa.querySelector(`[data-ex="${xaFocus}"]`);if(f){f.focus();const v=f.value;f.value="";f.value=v;}}}
   if(focus){const f=ep.querySelector(`[data-ex="${focus}"]`);if(f){f.focus();const v=f.value;f.value='';f.value=v;}}
 }
-document.addEventListener('change',e=>{if(!e.target.matches('[data-has-desk]'))return;state.hasDeskContracted=e.target.checked;renderCust();renderSummary();renderRoi();renderRail();});
+document.addEventListener('change',e=>{if(!e.target.matches('[data-has-desk]'))return;state.hasDeskContracted=e.target.checked;renderMods();renderAll();refreshFlow();});
 /* Plazo de contrato: ajusta el mensual del servicio Adereso (recargo o descuento) */
 const TERMS={m3:{lbl:'3 meses',adj:0.40,pre:null,txt:'40% de recargo'},y1:{lbl:'1 año',adj:0,pre:0.06,txt:'Sin descuento'},y2:{lbl:'2 años',adj:-0.03,pre:0.11,txt:'3% de descuento'},y3:{lbl:'3 años',adj:-0.05,pre:0.16,txt:'5% de descuento'}};
 /* 3 meses ya no se ofrece (se deja en TERMS solo por compatibilidad) */
@@ -9075,9 +9075,9 @@ const RAPID_NOTE=`<div class="rn-head"><b>Rápida · paquetizado</b><span class=
 </div>
 <div class="rn-foot">Más adelante puede evolucionar a un agente custom.</div>`;
 /* solo Desk: onboarding sin costo; si requiere integraciones se cotiza con los planes de setup */
-function deskInteg(){return !iaSetup()&&state.desk&&!state.existing&&!!state.deskInteg;}
-/* implementación: con agente IA, o con solo Desk en cliente nuevo (onboarding + integraciones opcionales) */
-function implVisible(){return (iaSetup()&&scopeBot())||(!iaSetup()&&state.desk&&!state.existing);}
+function deskInteg(){return !iaSetup()&&state.desk&&!!state.deskInteg;}
+/* Implementación compartida: agente IA o Desk con onboarding e integraciones opcionales. */
+function implVisible(){return (iaSetup()&&scopeBot())||(!iaSetup()&&state.desk);}
 function setupBase(){if(deskInteg())return SETUP[state.setup].price;if(!iaSetup()||!scopeBot())return 0;let t=0;for(let i=0;i<Math.max(1,agentsN());i++)if(agentMode(i)==='acompanada')t+=SETUP[agentPlan(i)].price;return t;}
 /* add-on: endpoint extra USD 80 c/u (pago único), por cada bot con Plan 2 · Inteligente (los planes 3 y 4 ya traen hasta 8/16) */
 const EP_EXTRA=80;
@@ -9108,7 +9108,7 @@ function studioTiers(){return studioType()==='flow'?STUDIO_FLOW_TIERS:STUDIO_AGE
 function tierRate(tiers,q){let t=tiers[0];for(const x of tiers){if(q>=x.cap)t=x;}return t.extraRate*EXTRA_MARKUP;}
 /* Bolsa spot (upsell): conversaciones adicionales a la tarifa normal del tramo (sin +15% y sin mantención). */
 function spotUnit(){
-  if(!hasService())return null;
+  if(!hasService()||!scopeBag())return null;
   const d=extraTicket();
   /* alcance de la spot: Desk y/o Studio (por defecto ambos) */
   const dk=(state.spotDesk&&d.desk!=null)?d.desk:null,sd=(state.spotStudio&&d.studio!=null)?d.studio:null;
@@ -9163,7 +9163,7 @@ function renderMods(){/* «Desarrollo agente IA»: en cliente nuevo va encendido
     return `<button class="${cls}" data-mod="${m.k}" ${m.soon||m.locked?'aria-disabled="true"':''}>
       ${tag}${tick}
       <span class="mod-ico"><span data-i="${m.icon}" data-sz="26" style="color:${m.color}"></span></span>
-      <span class="mod-txt"><span class="mod-label">${m.label}</span><span class="mod-desc">${(!state.existing&&m.descNew)?m.descNew:m.desc}</span>${m.bag?'<span class="mod-bag" title="'+m.bagTip+'">'+((!state.existing&&m.bagNew)?m.bagNew:m.bag)+'</span>':''}</span>${(m.k==='desk'&&!state.existing)?'<span class="mod-users" title="Usuarios ilimitados">Usuarios <b>∞</b></span>':''}${(m.k==='studio'&&!state.existing&&state.studio)?modAgents():''}${(m.k==='botOnly'&&state.existing&&state.botOnly)?modBots():''}
+      <span class="mod-txt"><span class="mod-label">${m.label}</span><span class="mod-desc">${m.k==='botOnly'?`${studioType()==='flow'?'Flow':'Agente'} nuevo · USD ${BOT_MANT*studioMultiplier()}/mes + setup`:((!state.existing&&m.descNew)?m.descNew:m.desc)}</span>${m.bag?'<span class="mod-bag" title="'+m.bagTip+'">'+((!state.existing&&m.bagNew)?m.bagNew:m.bag)+'</span>':''}</span>${m.k==='desk'?'<span class="mod-users" title="Usuarios ilimitados">Usuarios <b>∞</b></span>':''}${m.k==='studio'&&state.studio?(state.existing?modStudioType():modAgents()):''}${state.existing&&state[m.k]&&(m.k==='botOnly'||m.k==='improve')?modStudioType():''}${(m.k==='botOnly'&&state.existing&&state.botOnly)?modBots():''}
     </button>`;
   }).join('');
   paintIcons(document.getElementById('modgrid'));
@@ -9202,12 +9202,15 @@ function deskToastShow(tt,tx){
   paintIcons(t);t.classList.remove('show');void t.offsetWidth;t.classList.add('show');
   clearTimeout(_dtT);_dtT=setTimeout(hide,10000);
 }
-function modBots(){const n=botsN();
-  return `<span class="mod-ag" title="Cada agente IA extra suma USD ${BOT_MANT*studioMultiplier()}/mes."><span class="mag-b ${n<=1?'dis':''}" data-bot-step="-1" role="button" aria-label="Menos agentes">−</span><span class="mag-n">${n} agente${n>1?'s':''} IA</span><span class="mag-b" data-bot-step="1" role="button" aria-label="Más agentes">+</span></span>`;}
+function modBots(){const n=botsN(),w=studioType()==='flow'?'flow':'agente';
+  return `<span class="mod-ag" title="Cada agente IA extra suma USD ${BOT_MANT*studioMultiplier()}/mes."><span class="mag-b ${n<=1?'dis':''}" data-bot-step="-1" role="button" aria-label="Menos agentes">−</span><span class="mag-n">${n} ${w}${n>1?'s':''}</span><span class="mag-b" data-bot-step="1" role="button" aria-label="Más agentes">+</span></span>`;}
 document.getElementById('modgrid').addEventListener('click',e=>{const s=e.target.closest('#modgrid [data-bot-step]');if(!s)return;
   e.stopPropagation();e.preventDefault();state.bots=Math.max(1,botsN()+(+s.dataset.botStep));renderMods();exRefresh();},true);
-function modAgents(){const n=1+extraAgentsN(),f=studioType()==='flow',w=f?'flow':'agent';
-  return `<span class="mod-st" role="group" aria-label="Tipo de Studio" title="Cambia el precio de la bolsa"><span class="mst-o ${!f?'on':''}" data-stype="agent" role="button">Agent</span><span class="mst-o ${f?'on':''}" data-stype="flow" role="button">Flow</span></span><span class="mod-ag" title="Studio incluye 1 ${w}. Cada ${w} extra suma USD ${BOT_MANT*studioMultiplier()}/mes."><span class="mag-b ${n<=1?'dis':''}" data-ag-step="-1" role="button" aria-label="Menos">−</span><span class="mag-n">${n} ${w}${n>1?'s':''}</span><span class="mag-b" data-ag-step="1" role="button" aria-label="Más">+</span></span>`;}
+function modStudioType(){const f=studioType()==='flow';
+  return `<span class="mod-st" role="group" aria-label="Tipo de Studio" title="Cambia el tipo de Studio y el precio de su bolsa"><span class="mst-o ${!f?'on':''}" data-stype="agent" role="button" aria-pressed="${!f}" tabindex="0">Agent</span><span class="mst-o ${f?'on':''}" data-stype="flow" role="button" aria-pressed="${f}" tabindex="0">Flow</span></span>`;}
+function modAgents(){const n=1+extraAgentsN(),w=studioType()==='flow'?'flow':'agent';
+  return `${modStudioType()}<span class="mod-ag" title="Studio incluye 1 ${w}. Cada ${w} extra suma USD ${BOT_MANT*studioMultiplier()}/mes."><span class="mag-b ${n<=1?'dis':''}" data-ag-step="-1" role="button" aria-label="Menos">−</span><span class="mag-n">${n} ${w}${n>1?'s':''}</span><span class="mag-b" data-ag-step="1" role="button" aria-label="Más">+</span></span>`;}
+document.getElementById('modgrid').addEventListener('keydown',e=>{const t=e.target.closest('[data-stype]');if(t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();t.click();}});
 document.getElementById('modgrid').addEventListener('click',e=>{const t=e.target.closest('#modgrid [data-stype]');if(!t)return;
   e.stopPropagation();e.preventDefault();if(state.studioType===t.dataset.stype)return;state.studioType=t.dataset.stype;renderMods();renderAll();refreshFlow();},true);
 document.getElementById('modgrid').addEventListener('click',e=>{const s=e.target.closest('#modgrid [data-ag-step]');if(!s)return;
@@ -9669,12 +9672,13 @@ function renderSummary(){renderTerm();
   if(state.existing){
     /* cliente vigente: solo lo que sube respecto de lo que paga hoy */
     const cur=+state.currentPay||0,sc=state.scope;
-    mTitleX=sc==='bolsa'?'Ampliación de bolsa':(sc==='bot'?'Bot nuevo':'Ampliación de bolsa + bot nuevo');
-    if(state.improve)mTitleX+=' + mejora de agente';
+    mTitleX=improveOnly()?'Mejora del agente actual':sc==='bolsa'?'Ampliación de bolsa':(sc==='bot'?'Bot nuevo':'Ampliación de bolsa + bot nuevo');
+    if(state.improve&&!improveOnly())mTitleX+=' + mejora de agente';
     mSub='Upsell · cliente vigente';mIco=sc==='bolsa'?'chart':'robot';
     mDesc=sc==='bot'?'Mantiene su bolsa actual. Se suma la mantención de cada bot nuevo.':'Se cobra solo la diferencia con lo que paga hoy.';
     let t='';
     if(scopeBag()){
+      t+=mTable;
       t+=`<div class="rr"><span class="k">Nueva bolsa · ${volNow.toLocaleString('es-CL')} conv <small class="xsplit">valor total del servicio</small></span><span class="v">${usd(bagPrice())}</span></div>`;
       t+=`<div class="rr"><span class="k">Menos lo que paga hoy</span><span class="v">${cur>0?'−'+usd(cur):'<span style="color:var(--warning)">ingresa el monto</span>'}</span></div>`;
       t+=`<div class="rr"><span class="k">Diferencia de bolsa</span><span class="v">${usd(bagDelta())}</span></div>`;
@@ -9734,7 +9738,7 @@ function renderSummary(){renderTerm();
   const impTableX=(!paq&&nAg>1)?Array.from({length:nAg},(_,i)=>{const p=SETUP[agentPlan(i)],t=agentType(i)==='flow'?'Flow':'Agent';return agentMode(i)==='paquetizado'?`<div class="rr"><span class="k">${t} ${i+1} · Rápida <small class="xsplit">paquetizado</small></span><span class="v">Gratis</span></div>`:`<div class="rr"><span class="k">${t} ${i+1} · ${p.name} <small class="xsplit">${p.hh} · ${p.endpoints}</small></span><span class="v">${usd(p.price)}</span></div>`;}).join('')+`<div class="rr"><span class="k">Mantención mensual</span><span class="v">${sp.mant} por agente</span></div>`:impTable;
   const epRow=epExtraN()?`<div class="rr"><span class="k">Endpoints extra × ${epExtraN()} <small class="xsplit">add-on USD ${EP_EXTRA} c/u</small></span><span class="v">${usd(epExtraN()*EP_EXTRA)}</span></div>`:'';
   const planEditor=withIA?`<div class="redit"><label class="re-ico" title="Editar implementación" aria-label="Editar implementación"><span data-i="edit" data-sz="14"></span></label><select data-ed="plan">
-      <option value="paquetizado" ${paq?'selected':''}>Rápida · paquetizado (gratis)</option>
+      ${nAg===1&&agentType(0)!=='flow'?`<option value="paquetizado" ${paq?'selected':''}>Rápida · paquetizado (gratis)</option>`:''}
       ${SETUP_ORDER.map(k=>`<option value="${k}" ${(!paq&&state.setup===k)?'selected':''}>Acompañada · ${SETUP[k].name}</option>`).join('')}
     </select></div>`:'';
   const pagoCard=`
@@ -9800,7 +9804,7 @@ function renderSummary(){renderTerm();
     return;
   }
   document.getElementById('sumCard').innerHTML=`
-    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${withIA&&scopeBot()?pagoCard:''}${hhCard}</div>`;
+    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${spotCard}${cassperCard}${prepagoCard}${implVisible()?pagoCard:''}${hhCard}</div>`;
   paintIcons(document.getElementById('sumCard'));
   alignCards();
   applyReveal(document.getElementById('sumCard'),'.rcard');
@@ -10220,7 +10224,7 @@ function buildNav(){
 }
 function refreshFlow(){
   document.getElementById('sc').classList.toggle('hidden',!hasService());
-  document.getElementById('s2').classList.toggle('hidden',!hasService());
+  document.getElementById('s2').classList.toggle('hidden',!hasService()||!scopeBag());
   document.getElementById('s3').classList.toggle('hidden',!implVisible());
   document.getElementById('s0').classList.toggle('hidden',!state.existing);
   document.getElementById('s4').classList.toggle('hidden',!waActive());
@@ -10275,11 +10279,9 @@ document.getElementById('modgrid').addEventListener('click',e=>{
   /* cliente vigente: «Desarrollo agente IA» cotiza solo el bot (mantiene su bolsa) */
   /* cliente vigente: «Mejora del agente actual» cotiza solo el setup, sin mensualidad */
   if(k==='improve'){state.improve=!state.improve;if(state.improve&&!SETUP[state.setup])state.setup='inteligente';if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();return;}
-  if(k==='botOnly'){state.scope=state.botOnly?'bolsa':'bot';if(state.scope==='bot'){state.desk=false;state.studio=false;if(!SETUP[state.setup])state.setup='inteligente';}if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();return;}
+  if(k==='botOnly'){state.scope=state.botOnly?'bolsa':((state.desk||state.studio)?'ambas':'bot');if(state.scope!=='bolsa'){if(!SETUP[state.setup])state.setup='inteligente';}if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();return;}
   state[k]=!state[k];
   /* cliente vigente con agente extra: prender Desk/Studio = también amplía su bolsa; apagar ambos = solo agente */
-  /* vigente: ampliar la bolsa de Studio también amplía la de Desk (salvo mesa de ayuda externa) */
-  if(state.existing&&k==='studio'&&state.studio&&!state.desk){state.desk=true;deskToast();}
   /* nuevo o vigente: apagar Desk con Studio activo avisa que van juntos (salvo mesa de ayuda externa) */
   if(k==='desk'&&!state.desk&&state.studio)deskToast('off');
   if(k==='desk'&&!state.desk)state.spotDesk=state.spotStudio?false:state.spotDesk;
@@ -10288,13 +10290,13 @@ document.getElementById('modgrid').addEventListener('click',e=>{
   if(state.existing&&(k==='desk'||k==='studio')&&state.scope!=='bolsa'){state.scope=(state.desk||state.studio)?'ambas':'bot';}
   if(k==='desk'&&!state.desk){state.whatsapp=false;state.engage=false;}
   /* cliente nuevo: Engage no se contrata solo; parte con Desk en la bolsa mínima (2.000) */
-  if(!state.existing&&k==='engage'&&state.engage&&!state.desk){state.desk=true;state.spotDesk=true;if(!state.studio){state.vol=2000;state.volMode='tile';}deskToast('engage');}
+  if(k==='engage'&&state.engage&&!state.desk&&!hasExistingDesk()){state.desk=true;state.spotDesk=true;if(!state.studio){state.vol=2000;state.volMode='tile';}deskToast('engage');}
   if(k==='engage'&&state.engage&&!state.out.correo&&!state.out.whatsapp)state.out.correo=true;
   if(k==='studio'&&state.studio&&!SETUP[state.setup])state.setup='inteligente';
   renderMods();renderAll();refreshFlow();
 });
 document.getElementById('optWa').addEventListener('click',e=>{
-  const cm=e.target.closest('[data-chanmode]');if(cm){state.chanNew=cm.dataset.chanmode==='new';renderOpts();renderRail();renderSummary();renderRoi();return;}
+  const cm=e.target.closest('[data-chanmode]');if(cm){state.chanNew=cm.dataset.chanmode==='new';renderAll();refreshFlow();return;}
   const o=e.target.closest('[data-out]');
   if(o){state.out[o.dataset.out]=!state.out[o.dataset.out];renderAll();refreshFlow();return;}
   const b=e.target.closest('[data-chan]');if(!b)return;
@@ -10466,7 +10468,7 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=iaSetup()?(allRapid()?'Rápida · paquetizado con mejores prácticas (Shopify/VTEX/Magento) — Gratis':(agentsN()>1?Array.from({length:agentsN()},(_,i)=>(agentType(i)==='flow'?'Flow ':'Agent ')+(i+1)+': '+(agentMode(i)==='paquetizado'?'Rápida':SETUP[agentPlan(i)].name+' (acompañada)')).join(' · ')+' — '+usd(s):(agentType(0)==='flow'?'Flow · ':'')+SETUP[state.setup].name+' (acompañada) — '+usd(s))):(deskInteg()?'Onboarding Desk sin costo + integraciones · '+SETUP[state.setup].name+' — '+usd(s):'Onboarding Desk (capacitación por rol, conexión de canales; sin integraciones) — Gratis');
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
-  if(hasService()){L.push('Servicio: '+(improveOnly()?'Mejora del agente actual (solo setup)':state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk (sin IA)'));L.push('Volumen: '+(curVol().toLocaleString('es-CL')+(state.volMode==='custom'?' (a medida)':''))+' conversaciones/mes');L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+((+state.currentPay||0)>0?' · hoy paga '+usd(+state.currentPay)+' → nuevo total '+usd((+state.currentPay)+m):'')+(state.scope!=='bolsa'?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+(BOT_MANT*studioMultiplier()):'')+(state.improve?' · mejora del agente actual: solo setup':'')):('Mensual (contrato a '+term().lbl+(state.prepay&&term().pre!=null?', pago anticipado':'')+'): '+usd(m)+'/mes'+(termAdj()?' · '+termTxt():'')));if(xCost()>0){L.push('Canal X — mensualidad: USD '+xMoney(xCost())+'/mes · bolsa propia de '+xVolume().toLocaleString('es-CL')+' conversaciones/mes');L.push('Canal X — bolsa base: USD '+X_PRICE+'/mes por '+X_MSGS.toLocaleString('es-CL')+' conversaciones');if(xBagAdded()>0)L.push('Canal X — ampliación contratada: '+xBagAdded().toLocaleString('es-CL')+' × USD '+X_BAG_RATE.toFixed(3)+' = USD '+xMoney(xBagAddedCost())+'/mes');L.push('Canal X — ticket extra fuera de su bolsa contratada: USD '+X_EXTRA.toFixed(4)+' c/u, según consumo');}if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
+  if(hasService()){L.push('Servicio: '+selService());L.push('Volumen: '+selVol());L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+((+state.currentPay||0)>0?' · hoy paga '+usd(+state.currentPay)+' → nuevo total '+usd((+state.currentPay)+m):'')+(state.scope!=='bolsa'?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+(BOT_MANT*studioMultiplier()):'')+(state.improve?' · mejora del agente actual: solo setup':'')):('Mensual (contrato a '+term().lbl+(state.prepay&&term().pre!=null?', pago anticipado':'')+'): '+usd(m)+'/mes'+(termAdj()?' · '+termTxt():'')));if(xCost()>0){L.push('Canal X — mensualidad: USD '+xMoney(xCost())+'/mes · bolsa propia de '+xVolume().toLocaleString('es-CL')+' conversaciones/mes');L.push('Canal X — bolsa base: USD '+X_PRICE+'/mes por '+X_MSGS.toLocaleString('es-CL')+' conversaciones');if(xBagAdded()>0)L.push('Canal X — ampliación contratada: '+xBagAdded().toLocaleString('es-CL')+' × USD '+X_BAG_RATE.toFixed(3)+' = USD '+xMoney(xBagAddedCost())+'/mes');L.push('Canal X — ticket extra fuera de su bolsa contratada: USD '+X_EXTRA.toFixed(4)+' c/u, según consumo');}if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
     const xt=extraTicket();if(xt)L.push('Conversación extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
   if(iaSetup())L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
@@ -10878,7 +10880,7 @@ document.getElementById('custSeg')?.addEventListener('click',e=>{const b=e.targe
   if(ex){setActive('s0');requestAnimationFrame(()=>{setActive('s0');document.getElementById('exPay')?.focus({preventScroll:true});});}
   else computeActive();});
 /* panel de cliente vigente: lo que paga hoy, alcance y bots nuevos */
-function exRefresh(){if(!state.roiCostTouched)state.roiCost=null;renderSetup();renderRail();renderSummary();renderRoi();}
+function exRefresh(){if(!state.roiCostTouched)state.roiCost=null;renderMods();renderOpts();renderVol();renderSetup();renderWa();renderTerm();renderRail();renderSummary();renderRoi();refreshFlow();}
 ['existPanel','exAgent'].forEach(id=>document.getElementById(id)?.addEventListener('click',e=>{
   const s=e.target.closest('[data-scope]');
   if(s){state.scope=s.dataset.scope;if(state.scope!=='bolsa'&&!SETUP[state.setup])state.setup='inteligente';if(state.scope==='ambas'&&!state.desk&&!state.studio){state.desk=true;state.studio=true;}if(state.scope==='bot'){state.desk=false;state.studio=false;}

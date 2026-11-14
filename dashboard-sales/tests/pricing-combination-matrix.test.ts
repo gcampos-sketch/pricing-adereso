@@ -25,7 +25,7 @@ for(const combo of combos)test('matrix · '+combo.name,()=>{
    expect(run('monthly()')).toBeCloseTo(expected,7);
    const rate=(combo.desk?d.rate:0)+(combo.studio?s.rate:0);
    expect(run('extraTicket().total')).toBeCloseTo(rate*1.15,10);
-   expect(run('spotUnit().total')).toBeCloseTo(rate,10);
+   if(existing&&scope==='bot')expect(run('spotUnit()')).toBeNull();else expect(run('spotUnit().total')).toBeCloseTo(rate,10);
    if(!existing)expect(run(`simBagPrice(${Math.max(2000,q)})`)).toBeCloseTo(expected,7);
    rows.push({combination:combo.name,volume:q,existing,hasDeskContracted:contractedDesk,moreBots,scope,currentPay:current,expected,actual:run('monthly()')});
   }
