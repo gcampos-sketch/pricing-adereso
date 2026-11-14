@@ -19,7 +19,13 @@
     side.classList.add('chapter-old-side');
   }
   const reset=document.getElementById('resetBtn');
-  if(reset){reset.classList.add('chapter-reset');reset.innerHTML='Reiniciar cotización';panel.append(reset);}
+  if(reset){
+    if(source.id==='secnav'){
+      reset.type='button';reset.classList.add('chapter-reset-icon');
+      reset.innerHTML='<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a9 9 0 1 1 2.5 8.5M3 4v6h6"/></svg>';
+      nav.prepend(reset);
+    }else{reset.classList.add('chapter-reset');reset.innerHTML='Reiniciar cotización';panel.append(reset);}
+  }
   if(panel.children.length){
     if(source.id==='secnav'){
       summary.setAttribute('aria-label','Notas y opciones');summary.title='Notas y opciones';
@@ -75,6 +81,7 @@
     const visible=entries.filter(e=>e.target.getClientRects().length&&getComputedStyle(e.target).display!=='none');
     nav.hidden=visible.length<2;
     resources.hidden=nav.hidden;
+    if(reset&&source.id==='secnav')reset.hidden=nav.hidden;
     if(nav.hidden){currentY=null;return;}
     entries.forEach(e=>{e.button.hidden=!visible.includes(e);});
     nav.style.setProperty('--chapter-count',visible.length);

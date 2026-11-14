@@ -10862,8 +10862,10 @@ document.getElementById('portalMain').addEventListener('click',e=>{
 
 /* reset + volver arriba */
 function resetAll(){
+  const existing=state.existing;
   Object.assign(state,JSON.parse(JSON.stringify(INITIAL_STATE)));
-  renderMods();renderAll();refreshFlow();renderPortal();paintIcons();setActive('s1');
+  state.existing=existing;state.desk=!existing;state.studio=!existing;
+  renderMods();renderAll();refreshFlow();renderPortal();paintIcons();setActive(existing?'s0':'s1');
   glideTo(0);
 }
 document.getElementById('resetBtn').addEventListener('click',resetAll);
