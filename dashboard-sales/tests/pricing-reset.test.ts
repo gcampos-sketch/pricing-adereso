@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 const html=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
-const defaults=html.slice(html.indexOf('const state={'),html.indexOf('/* recuerda la cotización'));
+const defaults=html.slice(html.indexOf('const state={'),html.indexOf('/* Cada carga inicia'));
 const reset=html.slice(html.indexOf('function resetAll(){'),html.indexOf("document.getElementById('resetBtn').addEventListener"));
 for(const existing of [false,true])test(`reset clears the quote and preserves ${existing?'existing':'new'} customer mode`,()=>{
  const active:string[]=[],ctx:any={};

@@ -39,10 +39,24 @@ test('existing Studio types keep CRM tariffs and bot-only/improvement charges se
  run.setState({scope:'bolsa',improve:true});expect(run('monthly()')).toBe(0);expect(run('setupCost()')).toBe(990);
 });
 
-test('reload restores Studio type, Desk integration and per-agent endpoint additions',()=>{
+test('reload starts a fresh quote even when a previous browser quote exists',()=>{
  const source=html.slice(html.indexOf('const state={'),html.indexOf('/* Hub navigation persistence:'));
- const saved={studioType:'flow',deskInteg:true,epA:[2,1],existing:true};
- const ctx:any={localStorage:{getItem:()=>JSON.stringify({state:saved})}};
- runInNewContext(source+';this.restored=state;',ctx);
- expect(ctx.restored.studioType).toBe('flow');expect(ctx.restored.deskInteg).toBe(true);expect(Array.from(ctx.restored.epA)).toEqual([2,1]);
+ const saved={studioType:'flow',deskInteg:true,epA:[2,1],existing:true,vol:30000,currentPay:2500,extraAgents:3,wa:{amount:900}};
+ const stored=new Map([['adereso_pricing_v1',JSON.stringify({state:saved})],['unrelated-preference','keep']]);
+ const ctx:any={localStorage:{getItem:(key:string)=>stored.get(key),removeItem:(key:string)=>stored.delete(key)}};
+ runInNewContext(source+';this.restored=state;this.initial=INITIAL_STATE;',ctx);
+ expect(ctx.restored).toEqual(ctx.initial);
+ expect(ctx.restored.studioType).toBe('agent');expect(ctx.restored.existing).toBe(false);
+ expect(ctx.restored.vol).toBe(2000);expect(ctx.restored.currentPay).toBe(0);
+ expect(ctx.restored.deskInteg).toBe(false);expect(Array.from(ctx.restored.epA)).toEqual([]);
+ expect(stored.has('adereso_pricing_v1')).toBe(false);expect(stored.get('unrelated-preference')).toBe('keep');
+});
+
+test('session saving preserves navigation without persisting quote inputs',()=>{
+ const start=html.indexOf('function saveSession(){');
+ const source=html.slice(start,html.indexOf('window.addEventListener',start));
+ let saves=0;
+ const ctx={saveHubNavigation:()=>saves++,localStorage:{setItem:()=>{throw new Error('Quote must not persist');}}};
+ runInNewContext(source+';saveSession();',ctx);
+ expect(saves).toBe(1);
 });
