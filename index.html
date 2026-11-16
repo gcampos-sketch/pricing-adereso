@@ -970,14 +970,19 @@
   .vtile .vp{font-size:15px;color:var(--brand);font-weight:500}
   .vtile .vp small{color:var(--z500);font-size:11px}
   /* cuadrito editable: mismo estilo que los demás, con el número escrito a mano */
-  .vtile-in{display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:text;border-style:dashed}
+  .vtile-in{position:relative;display:flex;align-items:center;justify-content:center;padding:0;border-style:dashed}
   .vtile-in.sel{border-style:solid}
-  .vtile-in input{width:100%;max-width:130px;background:none;border:0;border-bottom:1px dashed rgba(255,255,255,0.18);border-radius:0;padding:0 0 2px;text-align:center;font-family:var(--font-head);font-size:22px;font-weight:500;color:#fff;-moz-appearance:textfield}
-  .vtile-in input::placeholder{color:var(--z600,#52525B)}
-  .vtile-in input::-webkit-outer-spin-button,.vtile-in input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .vtile-in input:focus{outline:none;border-bottom-color:var(--brand)}
-  .vtile-in:focus-within{border-color:rgba(255,213,64,0.55)}
-  .vtile-in .lbl{margin:4px 0 0}
+  #volArea .custom-volume-display{width:100%;padding:16px 14px;border:0;border-radius:inherit;background:transparent;color:inherit;text-align:center;cursor:pointer}
+  #volArea .custom-volume-display:hover{background:transparent;transform:none}
+  #volArea .custom-volume-display:focus-visible{outline:2px solid var(--brand);outline-offset:4px}
+  .custom-volume-display .conv.empty{font-size:18px}
+  .custom-volume-check{position:absolute;right:10px;top:7px;color:var(--brand);font-size:13px;pointer-events:none}
+  #volArea .vtile-in input{width:calc(100% - 28px);min-width:0;max-width:none;background:transparent;border:0;border-bottom:1px solid var(--brand);border-radius:0;padding:0;text-align:center;font-family:var(--font-head);font-size:22px;font-weight:500;color:#fff;box-shadow:none;-moz-appearance:textfield}
+  #volArea .vtile-in input::-webkit-outer-spin-button,#volArea .vtile-in input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  #volArea .vtile-in input:focus{outline:none;box-shadow:none}
+  .vtile-in.editing{flex-direction:column;padding:16px 0;border-color:var(--brand)}
+  .vtile-in .custom-volume-hint{font-size:10px;color:var(--z400);margin-top:4px}
+  .vtile-in [hidden]{display:none!important}
   .vt-pen{color:var(--brand);text-transform:none}
   /* add-on endpoint extra: fila compacta con contador, bajo el plan elegido */
   .ep-add{display:flex;align-items:center;gap:14px;max-width:600px;margin:14px 0 0;padding:12px 16px;border-radius:var(--r3);border:1px dashed var(--b-default);background:rgba(255,255,255,0.02);transition:border-color .2s var(--ease),background .2s var(--ease)}
@@ -9298,7 +9303,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]')
 /* volumen: 7 cuadritos fijos y el último es editable a mano (reemplaza al de 30.000) */
 function volGrid(cSel){
   return `<div class="vgrid">`+TILES.slice(0,7).map(c=>`<button class="vtile ${(!cSel&&c===state.vol)?'sel':''}" data-vol="${c}"><div class="conv">${c.toLocaleString('es-CL')}</div><div class="lbl">conversaciones</div></button>`).join('')+
-    `<label class="vtile vtile-in ${cSel?'sel':''}" id="vcustom" for="volInput" title="Escribe el volumen que necesites"><input type="number" id="volInput" min="2000" step="500" inputmode="numeric" data-vol-custom value="${state.volCustom||''}" placeholder="30.000" aria-label="Otro volumen de conversaciones al mes"><div class="lbl">personalizado <span class="vt-pen" aria-hidden="true">✎</span></div></label></div>`;}
+    `<div class="vtile vtile-in ${cSel?'sel':''}" id="vcustom"><button type="button" class="custom-volume-display" data-vol-edit aria-pressed="${cSel}" aria-label="${cSel?'Bolsa personalizada: '+state.volCustom.toLocaleString('es-CL')+' conversaciones. Editar':'Personalizar bolsa de conversaciones'}"><span class="custom-volume-check" aria-hidden="true" ${cSel?'':'hidden'}>✓</span><div class="conv ${cSel?'':'empty'}">${cSel?state.volCustom.toLocaleString('es-CL'):'Otra cantidad'}</div><div class="lbl">${cSel?'bolsa personalizada':'personalizar bolsa ✎'}</div></button><input hidden type="number" id="volInput" min="2000" step="1" inputmode="numeric" data-vol-custom value="${state.volCustom||''}" placeholder="30000" aria-label="Otro volumen de conversaciones al mes" aria-describedby="customVolumeHint"><span hidden class="custom-volume-hint" id="customVolumeHint">Enter o clic fuera para confirmar · mín. 2.000</span></div></div>`;}
 function renderVol(){
   const area=document.getElementById('volArea');
   if(!state.studio){
@@ -10304,7 +10309,35 @@ document.getElementById('optWa').addEventListener('click',e=>{
   else{state.chan[k]=!state.chan[k];}
   renderMods();renderAll();refreshFlow();
 });
+function finishCustomVolume(inp){
+  const raw=Number(inp.value);
+  if(Number.isFinite(raw)&&raw>0){state.volMode='custom';state.volCustom=Math.max(2000,Math.round(raw));}
+  const box=inp.closest('.vtile-in'),button=box.querySelector('[data-vol-edit]'),selected=state.volMode==='custom';
+  inp.hidden=true;box.classList.remove('editing');box.querySelector('.custom-volume-hint').hidden=true;
+  button.hidden=false;button.setAttribute('aria-pressed',String(selected));
+  button.setAttribute('aria-label',selected?'Bolsa personalizada: '+state.volCustom.toLocaleString('es-CL')+' conversaciones. Editar':'Personalizar bolsa de conversaciones');
+  button.querySelector('.conv').textContent=selected?state.volCustom.toLocaleString('es-CL'):'Otra cantidad';
+  button.querySelector('.conv').classList.toggle('empty',!selected);
+  button.querySelector('.lbl').textContent=selected?'bolsa personalizada':'personalizar bolsa ✎';
+  button.querySelector('.custom-volume-check').hidden=!selected;
+  document.querySelectorAll('#volArea .vtile').forEach(t=>t.classList.toggle('sel',t===box?selected:!selected&&+t.dataset.vol===state.vol));
+  updateSpot();syncRoiVolume();renderRail();renderSummary();
+}
+document.getElementById('volArea').addEventListener('focusout',e=>{
+  if(e.target.matches('[data-vol-custom]'))finishCustomVolume(e.target);
+});
+document.getElementById('volArea').addEventListener('keydown',e=>{
+  const inp=e.target.closest('[data-vol-custom]');if(!inp)return;
+  if(e.key==='Enter'||e.key==='Escape'){
+    e.preventDefault();if(e.key==='Escape')inp.value='';inp.blur();
+    document.querySelector('[data-vol-edit]')?.focus({preventScroll:true});
+  }
+});
 document.getElementById('volArea').addEventListener('click',e=>{
+  const edit=e.target.closest('[data-vol-edit]');
+  if(edit){const box=edit.closest('.vtile-in'),inp=box.querySelector('[data-vol-custom]');
+    edit.hidden=true;inp.hidden=false;inp.value=state.volCustom||'';box.classList.add('editing');box.querySelector('.custom-volume-hint').hidden=false;inp.focus({preventScroll:true});inp.select();return;}
+
   /* alcance de la spot: Desk y/o Studio; quitar Desk con Studio activo muestra el aviso */
   const ss=e.target.closest('[data-spot-scope]');
   if(ss){if(ss.disabled)return;const k=ss.dataset.spotScope==='desk'?'spotDesk':'spotStudio',other=k==='spotDesk'?'spotStudio':'spotDesk';
@@ -10324,14 +10357,7 @@ document.getElementById('volArea').addEventListener('click',e=>{
 document.getElementById('volArea').addEventListener('input',e=>{
   const sp=e.target.closest('[data-spot]');
   if(sp){state.spotQty=Math.max(0,Math.round(+sp.value||0));updateSpot();renderRail();renderSummary();return;}
-  const inp=e.target.closest('[data-vol-custom]');if(!inp)return;
-  const raw=+inp.value||0;
-  if(raw>0){state.volMode='custom';state.volCustom=raw;}else{state.volMode='tile';state.volCustom=0;}
-  updateSpot();
-  syncRoiVolume();
-  document.querySelectorAll('#volArea .vtile').forEach(t=>t.classList.toggle('sel',state.volMode==='tile'&&+t.dataset.vol===state.vol));
-  document.getElementById('vcustom')?.classList.toggle('sel',state.volMode==='custom');
-  renderRail();renderSummary();
+
 });
 document.getElementById('setupArea').addEventListener('click',e=>{
   /* tipo por agente (Agent/Flow) y modalidad por agente (Acompañada/Rápida) */
