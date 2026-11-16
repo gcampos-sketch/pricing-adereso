@@ -71,3 +71,10 @@ de Render ni todo el tráfico del servicio. Los registros `[report-transfer]` no
 datos comerciales. `scripts/measure-report-transfer.ts` mide las copias existentes en
 modo lectura y verifica su reconstrucción exacta; su resultado privado queda en
 `.migration-backups/report-transfer-baseline.json`.
+
+
+## Reuniones y coaching: ediciones privadas publicadas
+
+`bun --env-file=.env.local scripts/publish-commercial-evidence.ts /ruta/privada` compila y valida las fuentes revisadas; `--publish` inserta la edición privada en `report_cache`, comprueba la escritura exacta y conserva las anteriores. Nunca incluir ese directorio ni su contenido en Git o Docker. La fecha original de captura permanece visible; las actividades sin deal comercial y los cuerpos de Calendar/Memory no se publican. La cobertura parcial y los cruces pendientes no se convierten en ausencia de reuniones ni evaluaciones resueltas. El reporte de Coaching v3 separa el estado actual de HubSpot del histórico corroborado, sin crear eventos al leer.
+
+La publicación de una edición no configura sincronización automática. La conexión nativa de Diio requiere sus credenciales de servidor y la de Calendar una autorización de servidor propia. No extraer credenciales de conectores ni reutilizar el permiso de Gmail. La edición publicada y verificada se conserva cuando una fuente está bloqueada; una nueva edición solo se anuncia después de validar y leer la escritura.

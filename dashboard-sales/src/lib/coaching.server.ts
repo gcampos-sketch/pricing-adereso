@@ -1,13 +1,4 @@
-/**
- * Calidad Comercial: oportunidades de mejora detectadas por Adobo en la última
- * reunión Tipo A/B de cada deal.
- *
- * HubSpot guarda solo el snapshot del último estado del deal
- * (`adobo_oportunidad_de_mejora` + `adobo_oportunidad_de_mejora_evidencia`),
- * así que cada lectura se acumula como evento histórico por reunión
- * (`coaching-improvement/<diio_id>`) en la base de la app. Eso permite ver la
- * evolución semanal y llevar el estado de los accionables.
- */
+/** Coaching reads are read-only. Deal snapshots never manufacture or overwrite meeting history. */
 import {
   COMMERCIAL_PIPELINE,
   getOwners,
@@ -17,7 +8,15 @@ import {
 } from "./hubspot.server";
 import { STAGE_KEY } from "./pulse.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import type { CoachingReport, CoachingRow, CoachingStatus } from "./coaching-types";
+import type { CoachingReport, CoachingSnapshot, CoachingStatus } from "./coaching-types";
+import type { MeetingReport } from "./meeting-metrics";
+import { roleOfOwner } from "./owner-roles";
+import {
+  COACHING_EVIDENCE_VERSION,
+  coachingCandidateFromMemory,
+  reconcileCoachingEvents,
+  type CoachingCandidate,
+} from "./coaching-evidence";
 
 const PROPS = [
   "dealname",
@@ -27,27 +26,29 @@ const PROPS = [
   "adobo_oportunidad_de_mejora_evidencia",
   "adobo_last_reu_date",
   "adobo_last_reu_tipo",
+  "adobo_last_diio_meeting_id",
+  "adobo_last_reu_quality",
   "adobo_reus_analizadas_count",
 ];
-
-/** "tipo a" / "A" / vacío → "Tipo A" | "Tipo B" | "Sin tipo" */
-function meetingType(raw: string | null | undefined): string {
-  const value = (raw ?? "").toLowerCase();
-  if (value.includes("a")) return "Tipo A";
-  if (value.includes("b")) return "Tipo B";
-  return "Sin tipo";
-}
-
-function iso(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  const time = Date.parse(raw);
-  return Number.isFinite(time) ? new Date(time).toISOString() : null;
+const iso = (raw: string | null | undefined) =>
+  raw && Number.isFinite(Date.parse(raw)) ? new Date(raw).toISOString() : null;
+const UUID_KEY =
+  /^coaching-improvement\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+async function privateEdition(name: string): Promise<unknown | null> {
+  if (!import.meta.env.DEV) return null;
+  const { readFile } = await import("node:fs/promises");
+  const { resolve } = await import("node:path");
+  try {
+    return JSON.parse(await readFile(resolve(process.cwd(), ".migration-backups", name), "utf8"));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
 }
 
 export async function buildCoachingReport(fresh = false): Promise<CoachingReport> {
-  // Al refrescar a mano se descarta la caché para leer la propiedad tal cual está hoy.
   if (fresh) invalidateCache("deals:coaching");
-  const [deals, owners, labels] = await Promise.all([
+  const [deals, rawOwners, labels] = await Promise.all([
     searchDealsCached(
       "coaching",
       [{ propertyName: "pipeline", operator: "EQ", value: COMMERCIAL_PIPELINE }],
@@ -57,126 +58,163 @@ export async function buildCoachingReport(fresh = false): Promise<CoachingReport
     getOwners(),
     getPropertyOptionLabels("adobo_oportunidad_de_mejora"),
   ]);
-
-  const ownerName = new Map(
-    owners.map((owner) => [
-      owner.id,
-      [owner.firstName, owner.lastName].filter(Boolean).join(" ") || owner.email || owner.id,
-    ]),
-  );
-
-  // Snapshot → eventos por reunión. Sin id de reunión usamos deal + fecha,
-  // que identifica igual de bien la reunión analizada.
-  const pending = deals
+  const owners = rawOwners.map((owner) => ({
+    id: owner.id,
+    email: owner.email ?? "",
+    name: [owner.firstName, owner.lastName].filter(Boolean).join(" ") || owner.email || owner.id,
+  }));
+  const names = new Map(owners.map((owner) => [owner.id, owner.name]));
+  const snapshots: CoachingSnapshot[] = deals
+    .filter((deal) => deal.properties["adobo_oportunidad_de_mejora"])
     .map((deal) => {
-      const p = deal.properties;
-      const key = p["adobo_oportunidad_de_mejora"];
-      if (!key) return null;
-      const date = iso(p["adobo_last_reu_date"]);
-      const meetingId = `${deal.id}-${date ? date.slice(0, 10) : "sin-fecha"}`;
+      const p = deal.properties,
+        count = Number(p["adobo_reus_analizadas_count"]);
       return {
-        event_key: `coaching-improvement/${meetingId}`,
-        deal_id: deal.id,
-        stage: STAGE_KEY.get(p["dealstage"] ?? "") ?? "",
-        deal_name: p["dealname"] ?? "Sin nombre",
-        owner_id: p["hubspot_owner_id"] ?? "",
-        meeting_date: date,
-        meeting_type: meetingType(p["adobo_last_reu_tipo"]),
-        categoria_key: key,
-        categoria_label: labels.get(key) ?? key,
-        evidencia: p["adobo_oportunidad_de_mejora_evidencia"] ?? null,
-        updated_at: new Date().toISOString(),
-      };
-    })
-    .filter((row): row is NonNullable<typeof row> => row !== null);
-
-  if (pending.length) {
-    // El upsert solo toca las columnas enviadas: el estado del accionable se conserva.
-    const { error } = await supabaseAdmin
-      .from("coaching_events")
-      .upsert(pending as never, { onConflict: "event_key" });
-    if (error) console.warn("No se pudo guardar el histórico de coaching", error);
-  }
-
-  const stored = await supabaseAdmin
-    .from("coaching_events")
-    .select(
-      "event_key, deal_id, deal_name, owner_id, stage, meeting_date, meeting_type, categoria_key, categoria_label, evidencia, status, action_note, closed_at",
-    )
-    .order("meeting_date", { ascending: false, nullsFirst: false })
-    .limit(3000);
-  if (stored.error) console.warn("No se pudo leer el histórico de coaching", stored.error);
-
-  // Si la base no responde, el reporte se arma con la foto de HubSpot: la página
-  // sigue viva (sin evolución histórica ni estado de accionables).
-  const source =
-    stored.data && stored.data.length
-      ? stored.data
-      : pending.map((row) => ({ ...row, status: "pendiente", action_note: null, closed_at: null }));
-
-  // La foto de HubSpot manda sobre lo guardado: si el comercial cambia la
-  // propiedad `adobo_oportunidad_de_mejora` (o su evidencia), el reporte lo
-  // refleja en la siguiente lectura sin esperar a que expire nada.
-  const live = new Map(pending.map((row) => [row.event_key, row]));
-  // Deals cuyo snapshot ya no tiene oportunidad de mejora: se dejan de mostrar.
-  const dealsWithSnapshot = new Set(pending.map((row) => row.deal_id));
-  const dealsInPipeline = new Set(deals.map((deal) => deal.id));
-
-  const rows: CoachingRow[] = source
-    .filter((row) => {
-      if (live.has(row.event_key)) return true;
-      // Evento histórico de un deal que sigue en el pipeline pero ya sin gap
-      // registrado en HubSpot: quedó obsoleto.
-      if (dealsInPipeline.has(row.deal_id) && !dealsWithSnapshot.has(row.deal_id)) return false;
-      return true;
-    })
-    .map((row) => {
-      const fresh = live.get(row.event_key);
-      return {
-        eventKey: row.event_key,
-        dealId: row.deal_id,
-        dealName: fresh?.deal_name ?? row.deal_name ?? "Sin nombre",
-        stage: fresh?.stage ?? row.stage ?? "",
-        ownerId: fresh?.owner_id ?? row.owner_id ?? "",
-        ownerName: ownerName.get(fresh?.owner_id ?? row.owner_id ?? "") ?? "Sin comercial",
-        date: fresh?.meeting_date ?? row.meeting_date,
-        meetingType: fresh?.meeting_type ?? row.meeting_type ?? "Sin tipo",
-        categoryKey: fresh?.categoria_key ?? row.categoria_key,
-        categoryLabel: fresh?.categoria_label ?? row.categoria_label,
-        evidence: fresh ? fresh.evidencia : row.evidencia,
-        status: (row.status === "abordado" ? "abordado" : "pendiente") as CoachingStatus,
-        actionNote: row.action_note,
-        closedAt: row.closed_at,
+        dealId: deal.id,
+        dealName: p["dealname"] || "Sin nombre",
+        ownerId: p["hubspot_owner_id"] || "",
+        ownerName: names.get(p["hubspot_owner_id"] || "") || "Sin comercial",
+        stage: STAGE_KEY.get(p["dealstage"] || "") || "",
+        date: iso(p["adobo_last_reu_date"]),
+        meetingId: p["adobo_last_diio_meeting_id"] || null,
+        rawMeetingType: p["adobo_last_reu_tipo"] || "Sin tipo registrado",
+        categoryKey: p["adobo_oportunidad_de_mejora"]!,
+        categoryLabel:
+          labels.get(p["adobo_oportunidad_de_mejora"]!) || p["adobo_oportunidad_de_mejora"]!,
+        evidence: p["adobo_oportunidad_de_mejora_evidencia"] || null,
+        informationQuality: p["adobo_last_reu_quality"] || null,
+        recordedMeetingCount:
+          p["adobo_reus_analizadas_count"] && Number.isInteger(count) && count >= 0 ? count : null,
       };
     });
-
-
+  const candidates: CoachingCandidate[] = [];
+  let legacyRows = 0;
+  // Complete stable pagination. A failed read must not become a claim of no history.
+  for (let offset = 0; ; offset += 1000) {
+    const { data, error } = await supabaseAdmin
+      .from("coaching_events")
+      .select(
+        "event_key,deal_id,deal_name,owner_id,stage,meeting_date,categoria_key,categoria_label,evidencia,status,action_note,closed_at",
+      )
+      .order("event_key")
+      .range(offset, offset + 999);
+    if (error) throw Error(`No se pudo leer el histórico de coaching (${error.code}).`);
+    for (const row of data ?? []) {
+      const meetingId = UUID_KEY.exec(row.event_key)?.[1];
+      if (!meetingId) {
+        legacyRows++;
+        continue;
+      }
+      candidates.push({
+        eventKey: row.event_key,
+        meetingId,
+        dealId: row.deal_id,
+        dealName: row.deal_name || "Sin nombre",
+        ownerId: row.owner_id || "",
+        stage: row.stage || "",
+        date: row.meeting_date,
+        categoryKey: row.categoria_key,
+        evidence: row.evidencia,
+        persisted: true,
+        status: row.status,
+        actionNote: row.action_note,
+        closedAt: row.closed_at,
+      });
+    }
+    if (!data || data.length < 1000) break;
+  }
+  const published = !import.meta.env.DEV
+    ? await (await import('./commercial-evidence.server')).readCommercialEvidence()
+    : null;
+  if (published) candidates.push(...published.coaching.candidates);
+  let meetings: MeetingReport | null = published?.meetings ?? null,
+    rejectedDocuments = published?.coaching.rejectedDocuments ?? 0;
+  const edition = (await privateEdition("coaching-memory-events.json")) as {
+    source?: string;
+    fetchedAt?: string;
+    documents?: { documentId: string; text: string }[];
+  } | null;
+  if (edition) {
+    if (
+      edition.source !== "adereso-memory" ||
+      !Array.isArray(edition.documents) ||
+      !iso(edition.fetchedAt)
+    )
+      throw Error("Edición de coaching inválida.");
+    for (const document of edition.documents) {
+      const candidate = coachingCandidateFromMemory(document.documentId, document.text, owners);
+      if (candidate) candidates.push(candidate);
+      else rejectedDocuments++;
+    }
+  }
+  const localMeetings = (await privateEdition("diio-meetings.json")) as MeetingReport | null;
+  if (localMeetings) {
+    if (!Array.isArray(localMeetings.events) || !iso(localMeetings.fetchedAt))
+      throw Error("Edición de reuniones inválida.");
+    meetings = localMeetings;
+  } else if (!meetings && candidates.length) {
+    // Existing canonical events can only become history after an authoritative meeting cross-check.
+    const { readMeetingMetrics } = await import("./meeting-metrics.server");
+    meetings = await readMeetingMetrics("all");
+  }
+  const { rows, pending } = reconcileCoachingEvents(candidates, meetings, owners, labels);
+  const pendingReasons = new Map<string, number>();
+  for (const item of pending)
+    pendingReasons.set(item.reason, (pendingReasons.get(item.reason) ?? 0) + 1);
+  if (rejectedDocuments)
+    pendingReasons.set("Documento sin identidad comercial inequívoca", rejectedDocuments);
+  const dates = rows.map((row) => row.date!).sort();
   const years = [
-    ...new Set(rows.map((row) => (row.date ? row.date.slice(0, 4) : null)).filter(Boolean) as string[]),
-  ].sort((a, b) => b.localeCompare(a));
-
-  const seen = new Map<string, string>();
-  for (const row of rows) if (!seen.has(row.ownerId)) seen.set(row.ownerId, row.ownerName);
-
+    ...new Set(
+      [...rows.map((row) => row.date), ...snapshots.map((row) => row.date)]
+        .filter((date): date is string => Boolean(date))
+        .map((date) => date.slice(0, 4)),
+    ),
+  ]
+    .sort()
+    .reverse();
   return {
     generatedAt: new Date().toISOString(),
+    evidenceVersion: COACHING_EVIDENCE_VERSION,
+    ...(published ? { evidenceSourceAt: published.sourceAt } : {}),
     years: years.length ? years : [String(new Date().getUTCFullYear())],
-    owners: [...seen.entries()]
-      .filter(([id]) => id)
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    categories: [...labels.entries()].map(([key, label]) => ({ key, label })),
+    owners: owners
+      .filter(
+        (owner) =>
+          roleOfOwner(owner.id) !== null ||
+          rows.some((row) => row.ownerId === owner.id) ||
+          snapshots.some((row) => row.ownerId === owner.id),
+      )
+      .map(({ id, name }) => ({ id, name })),
+    categories: [...labels].map(([key, label]) => ({ key, label })),
     rows,
+    snapshots,
+    coverage: {
+      partial: true,
+      source: published
+        ? `Memory + Diio · edición del ${published.coaching.fetchedAt.slice(0, 10)} · actualización manual`
+        : edition ? "Memory + Diio · validación local" : "Histórico pendiente de conciliación",
+      candidates: candidates.length + rejectedDocuments,
+      verified: rows.length,
+      pending: pending.length + rejectedDocuments,
+      pendingReasons: [...pendingReasons].map(([reason, count]) => ({ reason, count })),
+      legacyRows,
+      firstDate: dates[0] ?? null,
+      lastDate: dates.at(-1) ?? null,
+      note: "Solo el coaching con reunión, fecha, deal y comercial corroborados alimenta las gráficas. La foto actual y los registros antiguos sin ID verificable se conservan aparte. El histórico disponible no acredita todas las reuniones ni continuidad posterior a su última fecha.",
+    },
   };
 }
 
-/** Marca un accionable como abordado (o lo devuelve a pendiente). */
+/** Explicit action only; never creates events. Verify the requested persisted row was actually updated. */
 export async function saveCoachingStatus(
   eventKey: string,
   status: CoachingStatus,
   note: string | null,
 ) {
-  const { error } = await supabaseAdmin
+  if (!UUID_KEY.test(eventKey))
+    throw Error("Este registro no tiene una reunión verificada para guardar el estado.");
+  const { data, error } = await supabaseAdmin
     .from("coaching_events")
     .update({
       status,
@@ -184,7 +222,10 @@ export async function saveCoachingStatus(
       closed_at: status === "abordado" ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     })
-    .eq("event_key", eventKey);
-  if (error) throw new Error(`No se pudo guardar el accionable: ${error.message}`);
+    .eq("event_key", eventKey)
+    .select("event_key,status")
+    .maybeSingle();
+  if (error || !data || data.status !== status)
+    throw Error("No se pudo verificar el guardado del accionable.");
   return { ok: true };
 }

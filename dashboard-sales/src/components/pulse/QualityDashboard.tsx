@@ -10,7 +10,11 @@ const NO_APLICA = "no_aplica";
 
 function fmtDate(iso: string | null) {
   if (!iso) return "Sin fecha";
-  return new Date(iso).toLocaleDateString("es-CL", { day: "2-digit", month: "short" });
+  return new Date(iso).toLocaleDateString("es-CL", {
+    day: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+  });
 }
 
 /** lunes de la semana ISO de una fecha */
@@ -84,7 +88,9 @@ export function QualityDashboard({
   const [year, setYear] = useState(report.years[0] ?? String(new Date().getUTCFullYear()));
   const [quarter, setQuarter] = useState("all");
   const [ownerId, setOwnerId] = useState("team");
-  const [typeTab, setTypeTab] = useState<"todos" | "Tipo A" | "Tipo B">("todos");
+  const [typeTab, setTypeTab] = useState<
+    "todos" | "Tipo A" | "Tipo B" | "Tipo C" | "Sin tipo verificado"
+  >("todos");
   const [actionTab, setActionTab] = useState<"pendientes" | "abordados">("pendientes");
   const [saving, setSaving] = useState<string | null>(null);
   const [local, setLocal] = useState<Record<string, "pendiente" | "abordado">>({});
@@ -99,7 +105,7 @@ export function QualityDashboard({
   );
 
   const scoped = useMemo(() => {
-    return report.rows.filter((row) => {
+    return (report.evidenceVersion === "coaching-evidence/v3" ? report.rows : []).filter((row) => {
       if (role !== "all" && roleOfOwner(row.ownerId) !== role) return false;
       if (ownerId !== "team" && row.ownerId !== ownerId) return false;
       if (stageFilter.length && !stageFilter.includes(row.stage)) return false;
@@ -111,7 +117,28 @@ export function QualityDashboard({
       }
       return true;
     });
-  }, [report.rows, report.years, ownerId, year, quarter, stageFilter, role]);
+  }, [
+    report.rows,
+    report.years,
+    report.evidenceVersion,
+    ownerId,
+    year,
+    quarter,
+    stageFilter,
+    role,
+  ]);
+
+  const currentSnapshots = (report.snapshots ?? []).filter(
+    (row) =>
+      (role === "all" || roleOfOwner(row.ownerId) === role) &&
+      (ownerId === "team" || row.ownerId === ownerId) &&
+      (!stageFilter.length || stageFilter.includes(row.stage)) &&
+      (!row.date
+        ? quarter === "all" && year === report.years[0]
+        : row.date.slice(0, 4) === year &&
+          (quarter === "all" ||
+            Math.floor((Number(row.date.slice(5, 7)) - 1) / 3) + 1 === Number(quarter))),
+  );
 
   const handleRole = (item: "all" | "AE" | "KAM") => {
     onRole?.(item);
@@ -176,7 +203,7 @@ export function QualityDashboard({
         <div>
           <h1 className="pulse-h1">Calidad Comercial</h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
-            Oportunidades de mejora detectadas por Adobo en las reuniones Tipo A y Tipo B
+            Coaching por reunión, con evidencia y clasificación verificadas en Diio
           </div>
         </div>
       </header>
@@ -201,13 +228,47 @@ export function QualityDashboard({
         label="Filtros de calidad comercial"
       />
 
-      <SectionTitle note="Reuniones con análisis registrado en el rango">Indicadores</SectionTitle>
+      <aside className="coaching-coverage" role="status">
+        <strong>Histórico parcial · {report.coverage?.source ?? "pendiente de verificar"}</strong>
+        <p>
+          {report.coverage?.note ??
+            "Actualiza el reporte para verificar las fuentes del histórico."}
+        </p>
+        {report.coverage ? (
+          <small>
+            {report.coverage.verified} eventos corroborados · {report.coverage.pending} por
+            corroborar · {report.coverage.legacyRows} registros antiguos separados
+            {report.coverage.firstDate && report.coverage.lastDate
+              ? ` · evidencia desde ${fmtDate(report.coverage.firstDate)} hasta ${fmtDate(report.coverage.lastDate)}`
+              : ""}
+          </small>
+        ) : null}
+        {report.coverage?.pendingReasons?.length ? (
+          <details className="coaching-pending-reasons">
+            <summary>Ver motivos pendientes de corroboración</summary>
+            <ul>
+              {report.coverage.pendingReasons.map((item) => (
+                <li key={item.reason}>
+                  {item.reason} · {item.count}
+                </li>
+              ))}
+            </ul>
+          </details>
+        ) : null}
+      </aside>
+      <SectionTitle note="Solo coaching corroborado · filtros actuales del informe">
+        Indicadores
+      </SectionTitle>
       <section className="grid-4">
-        <Card label="Reuniones analizadas" value={String(rows.length)} note="Con categoría registrada" />
         <Card
-          label="No aplica sincero"
+          label="Reuniones con coaching verificado"
+          value={String(rows.length)}
+          note="Cada ID de reunión cuenta una vez"
+        />
+        <Card
+          label="Sin mejora detectada"
           value={rows.length ? `${Math.round((noAplica / rows.length) * 100)}%` : "—"}
-          note={`${noAplica} reuniones sin gap significativo`}
+          note={`${noAplica} de ${rows.length} eventos de coaching recuperados; no es una tasa de todas las reuniones`}
           tone="success"
         />
         <Card
@@ -225,7 +286,7 @@ export function QualityDashboard({
 
       <SectionTitle note="Distribución y evolución de las categorías">Lectura cuanti</SectionTitle>
       <nav className="tabs" aria-label="Tipo de reunión">
-        {(["todos", "Tipo A", "Tipo B"] as const).map((item) => (
+        {(["todos", "Tipo A", "Tipo B", "Tipo C", "Sin tipo verificado"] as const).map((item) => (
           <button
             key={item}
             type="button"
@@ -249,8 +310,15 @@ export function QualityDashboard({
           {weekly.length ? (
             <div className="cq-weeks">
               {weekly.map(([week, item]) => (
-                <div key={week} className="cq-week" title={`${item.gaps} gaps de ${item.total} reuniones`}>
-                  <span className="cq-week-bar" style={{ height: `${(item.total / weeklyMax) * 100}%` }}>
+                <div
+                  key={week}
+                  className="cq-week"
+                  title={`${item.gaps} gaps de ${item.total} reuniones`}
+                >
+                  <span
+                    className="cq-week-bar"
+                    style={{ height: `${(item.total / weeklyMax) * 100}%` }}
+                  >
                     <span
                       className="cq-week-gap"
                       style={{ height: `${item.total ? (item.gaps / item.total) * 100 : 0}%` }}
@@ -268,7 +336,9 @@ export function QualityDashboard({
         </div>
       </div>
 
-      <SectionTitle note="Reunión por reunión, con la evidencia registrada">Vista cualí</SectionTitle>
+      <SectionTitle note="Reunión por reunión, con la evidencia registrada">
+        Vista cualí
+      </SectionTitle>
       <div className="table-wrap">
         <table className="pulse-table">
           <thead>
@@ -286,25 +356,59 @@ export function QualityDashboard({
               <tr key={row.eventKey}>
                 <td>{fmtDate(row.date)}</td>
                 <td>{row.ownerName}</td>
-                <td>{row.meetingType}</td>
-                <td>{row.dealName}</td>
+                <td>
+                  {row.meetingUrl ? (
+                    <a
+                      href={row.meetingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={row.classification}
+                    >
+                      {row.meetingType} ↗
+                    </a>
+                  ) : (
+                    row.meetingType
+                  )}
+                </td>
+                <td>
+                  <a
+                    href={`https://app.hubspot.com/contacts/23480943/deal/${row.dealId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {row.dealName} ↗
+                  </a>
+                </td>
                 <td>{row.categoryLabel}</td>
                 <td className="cq-evidence">{row.evidence ?? "Sin evidencia registrada"}</td>
               </tr>
             ))}
             {!rows.length ? (
               <tr>
-                <td colSpan={6}>Sin reuniones analizadas en el rango.</td>
+                <td colSpan={6}>
+                  Sin coaching corroborado en este rango; no significa que no se hayan realizado
+                  reuniones.
+                </td>
               </tr>
             ) : null}
           </tbody>
         </table>
       </div>
 
-      <SectionTitle note="Gaps reales convertidos en acciones de coaching">Accionables</SectionTitle>
+      <SectionTitle note="Gaps reales convertidos en acciones de coaching">
+        Accionables
+      </SectionTitle>
       <section className="grid-4">
-        <Card label="Accionables abiertos" value={String(openCount)} tone={openCount ? "warning" : "success"} />
-        <Card label="Abordados" value={`${doneCount}/${gaps.length}`} note="Marcados como trabajados" />
+        <Card
+          label="Accionables abiertos"
+          value={String(openCount)}
+          tone={openCount ? "warning" : "success"}
+        />
+        <Card
+          label="Abordados"
+          value={`${doneCount}/${gaps.length}`}
+          note="Marcados como trabajados"
+        />
         <Card
           label="Próximo foco"
           value={focus && focus.value ? focus.label : "Sin foco"}
@@ -343,10 +447,19 @@ export function QualityDashboard({
                   <button
                     type="button"
                     className="tab"
-                    disabled={saving === row.eventKey}
+                    disabled={!row.persisted || saving === row.eventKey}
+                    title={
+                      !row.persisted
+                        ? "Evento validado solo en local; no se guarda estado en el registro compartido"
+                        : "Actualizar estado del coaching"
+                    }
                     onClick={() => void toggle(row)}
                   >
-                    {status(row) === "abordado" ? "Abordado" : "Marcar abordado"}
+                    {!row.persisted
+                      ? "Solo lectura local"
+                      : status(row) === "abordado"
+                        ? "Abordado"
+                        : "Marcar abordado"}
                   </button>
                 </td>
                 <td>{row.ownerName}</td>
@@ -354,7 +467,15 @@ export function QualityDashboard({
                 <td className="cq-evidence">
                   {COACHING_ACTIONS[row.categoryKey] ?? "Revisar la evidencia con el comercial."}
                 </td>
-                <td>{row.dealName}</td>
+                <td>
+                  <a
+                    href={`https://app.hubspot.com/contacts/23480943/deal/${row.dealId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {row.dealName} ↗
+                  </a>
+                </td>
                 <td>{row.closedAt ? fmtDate(row.closedAt) : fmtDate(row.date)}</td>
               </tr>
             ))}
@@ -371,43 +492,78 @@ export function QualityDashboard({
         </table>
       </div>
 
-      <SectionTitle note="De dónde sale cada dato de esta página">Fuentes de datos</SectionTitle>
-      <div className="split-2">
-        <div className="rep-chart">
-          <span className="metric-label">Histórico por reunión</span>
-          <ul className="cq-source">
-            <li>
-              <b>Evento</b> coaching-improvement/&lt;diio_id&gt;
-            </li>
-            <li>
-              <b>Categoría</b> categoria_key / categoria_label
-            </li>
-            <li>
-              <b>Evidencia</b> evidencia
-            </li>
-            <li>
-              <b>Relación</b> comercial / fecha / tipo de reunión / negocio
-            </li>
-          </ul>
+      <details className="coaching-snapshots">
+        <summary>Última foto de los deals · {currentSnapshots.length} registros</summary>
+        <p>
+          Estado actual de HubSpot para estos filtros. No es un histórico de reuniones. El tipo y el
+          contador son los valores registrados, pendientes de conciliación; la calidad mide la
+          información disponible, no el desempeño del comercial.
+        </p>
+        <div className="table-wrap">
+          <table className="pulse-table">
+            <thead>
+              <tr>
+                <th>Deal</th>
+                <th>Comercial</th>
+                <th>Última reunión registrada</th>
+                <th>Mejora y evidencia</th>
+                <th>Calidad informativa</th>
+                <th>Contador registrado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentSnapshots.slice(0, 60).map((row) => (
+                <tr key={row.dealId}>
+                  <td>
+                    <a
+                      href={`https://app.hubspot.com/contacts/23480943/deal/${row.dealId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {row.dealName} ↗
+                    </a>
+                  </td>
+                  <td>{row.ownerName}</td>
+                  <td>
+                    {fmtDate(row.date)}
+                    <small className="coaching-snapshot-meta">
+                      {row.rawMeetingType} ·{" "}
+                      {row.meetingId ? "ID de reunión registrado" : "Sin ID de reunión"}
+                    </small>
+                  </td>
+                  <td className="cq-evidence">
+                    <strong>{row.categoryLabel}</strong>
+                    <p>{row.evidence ?? "Sin evidencia registrada"}</p>
+                  </td>
+                  <td>{row.informationQuality ?? "Sin dato"}</td>
+                  <td>
+                    {row.recordedMeetingCount ?? "Sin dato"}
+                    <small className="coaching-snapshot-meta">Sin conciliación por reunión</small>
+                  </td>
+                </tr>
+              ))}
+              {!currentSnapshots.length ? (
+                <tr>
+                  <td colSpan={6}>Sin coaching registrado en estos filtros.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
-        <div className="rep-chart">
-          <span className="metric-label">Propiedades HubSpot</span>
-          <ul className="cq-source">
-            <li>
-              <b>Selector</b> adobo_oportunidad_de_mejora
-            </li>
-            <li>
-              <b>Evidencia</b> adobo_oportunidad_de_mejora_evidencia
-            </li>
-            <li>
-              <b>Objeto</b> Negocio
-            </li>
-            <li>
-              <b>Uso</b> snapshot operativo del último estado
-            </li>
-          </ul>
-        </div>
-      </div>
+        {currentSnapshots.length > 60 ? (
+          <p>Se muestran los primeros 60 de {currentSnapshots.length} registros.</p>
+        ) : null}
+      </details>
+      <SectionTitle note="Coaching, reuniones y estado actual son fuentes distintas">
+        Fuentes y alcance
+      </SectionTitle>
+      <p className="coaching-source-note">
+        Las gráficas usan eventos de coaching existentes en Memory, contrastados con el ID, la
+        fecha, el deal y la participación del comercial en Diio. La clasificación A/B/C viene del
+        análisis terminado y su playbook verificado. Cambiar la foto actual del deal no borra ni
+        modifica ese histórico. Los documentos de coaching y el contador del deal no equivalen por
+        sí solos a reuniones únicas. La validación local no activa una sincronización publicada.
+      </p>
     </main>
   );
 }

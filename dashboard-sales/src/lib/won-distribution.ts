@@ -13,6 +13,7 @@ const sources = [
   { key: 'inbound', label: 'Inbound', color: '#75d5df' },
   { key: 'cs', label: 'Oportunidad desde CS', color: '#a6a0ed' },
   { key: 'kam', label: 'Oportunidad desde KAM', color: '#83c7a1' },
+  { key: 'ae', label: 'Oportunidad desde AE', color: '#e6a779' },
   { key: 'other', label: 'Otras fuentes', color: '#a6aabd' },
   { key: 'unknown', label: 'Sin fuente registrada', color: '#747d8d' },
 ];
@@ -35,8 +36,9 @@ export function wonAcquisitionSource(deal: Pick<DealDTO, 'source'>) {
   if (!source) return 'unknown';
   if (['prospeccion sdr', 'prospeccion sdr adereso', 'prospeccion sdr [adereso]'].includes(source)) return 'outbound';
   if (['form de contacto inbound', 'form de contacto inbound adereso', 'form de contacto inbound [adereso]'].includes(source)) return 'inbound';
-  if (source === 'customer success') return 'cs';
-  if (['kam adereso', 'kam adereso recuperacion'].includes(source)) return 'kam';
+  if (['customer success', 'cs cassper'].includes(source)) return 'cs';
+  if (['kam', 'kam cassper', 'kam adereso', 'kam adereso recuperacion', 'kam cassper recuperacion'].includes(source)) return 'kam';
+  if (['account exec', 'ae adereso recuperacion', 'ae cassper', 'ae cassper recuperacion'].includes(source)) return 'ae';
   return 'other';
 }
 

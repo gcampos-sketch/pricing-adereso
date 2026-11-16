@@ -12,6 +12,7 @@ export const PIPELINE_SOURCES: Record<string, string> = {
   inbound: "Inbound",
   cs: "Oportunidad desde CS",
   kam: "Oportunidad desde KAM",
+  ae: "Oportunidad desde AE",
   other: "Otras fuentes",
   unknown: "Sin fuente registrada",
 };
