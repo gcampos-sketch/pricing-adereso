@@ -982,7 +982,8 @@
   #volArea .vtile-in input::-webkit-outer-spin-button,#volArea .vtile-in input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   #volArea .vtile-in input:focus{outline:none;box-shadow:none}
   .vtile-in.editing{flex-direction:column;padding:16px 0;border-color:var(--brand)}
-  .vtile-in .custom-volume-hint{font-size:10px;color:var(--z400);margin-top:4px}
+  .vtile-in .custom-volume-hint{font-size:11px;color:var(--z400);margin-top:6px}
+  .custom-volume-hint kbd{display:inline-block;padding:1px 5px;border:1px solid var(--b-default);border-radius:4px;font:inherit;color:var(--z200);background:rgba(255,255,255,.04)}
   .vtile-in [hidden]{display:none!important}
   .vt-pen{color:var(--brand);text-transform:none}
   /* add-on endpoint extra: fila compacta con contador, bajo el plan elegido */
@@ -9304,7 +9305,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]')
 /* volumen: 7 cuadritos fijos y el último es editable a mano (reemplaza al de 30.000) */
 function volGrid(cSel){
   return `<div class="vgrid">`+TILES.slice(0,7).map(c=>`<button class="vtile ${(!cSel&&c===state.vol)?'sel':''}" data-vol="${c}"><div class="conv">${c.toLocaleString('es-CL')}</div><div class="lbl">conversaciones</div></button>`).join('')+
-    `<div class="vtile vtile-in ${cSel?'sel':''}" id="vcustom"><button type="button" class="custom-volume-display" data-vol-edit aria-pressed="${cSel}" aria-label="${cSel?'Bolsa personalizada: '+state.volCustom.toLocaleString('es-CL')+' conversaciones. Editar':'Personalizar bolsa de conversaciones'}"><span class="custom-volume-check" aria-hidden="true" ${cSel?'':'hidden'}>✓</span><div class="conv ${cSel?'':'empty'}">${cSel?state.volCustom.toLocaleString('es-CL'):'Otra cantidad'}</div><div class="lbl">${cSel?'bolsa personalizada':'personalizar bolsa ✎'}</div></button><input hidden type="number" id="volInput" min="2000" step="1" inputmode="numeric" data-vol-custom value="${state.volCustom||''}" placeholder="30000" aria-label="Otro volumen de conversaciones al mes" aria-describedby="customVolumeHint"><span hidden class="custom-volume-hint" id="customVolumeHint">Enter o clic fuera para confirmar · mín. 2.000</span></div></div>`;}
+    `<div class="vtile vtile-in ${cSel?'sel':''}" id="vcustom"><button type="button" class="custom-volume-display" data-vol-edit aria-pressed="${cSel}" aria-label="${cSel?'Bolsa personalizada: '+state.volCustom.toLocaleString('es-CL')+' conversaciones. Editar':'Personalizar bolsa de conversaciones'}"><span class="custom-volume-check" aria-hidden="true" ${cSel?'':'hidden'}>✓</span><div class="conv ${cSel?'':'empty'}">${cSel?state.volCustom.toLocaleString('es-CL'):'Otra cantidad'}</div><div class="lbl">${cSel?'bolsa personalizada':'personalizar bolsa ✎'}</div></button><input hidden type="number" id="volInput" min="2000" step="1" inputmode="numeric" data-vol-custom value="${state.volCustom||''}" placeholder="30000" aria-label="Otro volumen de conversaciones al mes" aria-describedby="customVolumeHint"><span hidden class="custom-volume-hint" id="customVolumeHint">Presiona <kbd>Enter</kbd> para seleccionar</span></div></div>`;}
 function renderVol(){
   const area=document.getElementById('volArea');
   if(!state.studio){
