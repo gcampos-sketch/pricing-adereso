@@ -21,6 +21,7 @@ import { wonStageBreakdown } from "@/lib/won-stage-breakdown";
 import { closeMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { pipelineCoverage } from "@/lib/pipeline-coverage";
 import { useLiveNow } from './AdoboIntelligence';
+import { MeetingsWidget } from './MeetingsWidget';
 import { PipelineHistory } from './PipelineHistory';
 type MetricChip = { label: string; value: string; tone?: Tone; onClick?: () => void; detail?: WonStageDetail };
 import { MiniBars, MiniLine } from "./MiniCharts";
@@ -1530,6 +1531,7 @@ export function PulseDashboard({
       </>}
       {section === "pipeline" && <>
       <Fold defaultOpen title="Generación y gestión del pipeline" subtitle={`Creación, valorización, activación y pérdidas · ${rangeLabel}`}>
+      <MeetingsWidget includeUnlinked={dealType === 'all'} ownerFilter={ownerFilter} deals={(report.stageJourneys ?? []).map(row => row.deal).filter(deal => matchesType(deal))} periods={selectedPeriods} rangeLabel={rangeLabel} isTeam={isTeam} owners={ownerOptions} role={role} readAt={report.generatedAt}/>
       <div className="pipeline-history-access"><span>Por fecha de entrada a etapa · período y filtros principales</span><PipelineHistory journeys={(report.stageJourneys ?? []).filter(row => (ownerFilter === 'team' || row.deal.ownerId === ownerFilter) && matchesType(row.deal))} scopeLabel={`${isTeam ? 'Equipo' : ownerRow?.name ?? 'Comercial seleccionado'} · ${role === 'all' ? 'Todos los roles' : role} · ${dealType === 'all' ? 'Todos los tipos' : dealType}`}  /></div>
       <section className="grid-4 generation-entry-cards" style={{ marginTop: 16 }}>
         <Metric

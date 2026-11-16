@@ -1,6 +1,114 @@
 {
-  "updatedAt": "2026-11-10",
+  "updatedAt": "2026-11-13",
   "releases": [
+    {
+      "id": "desk-comentarios-internos-2026-11-12",
+      "date": "2026-11-12",
+      "product": "Desk",
+      "title": "Coordina a tu equipo dentro del ticket",
+      "summary": "Puedes responder en hilos, adjuntar archivos y mencionar a tu equipo en comentarios internos.",
+      "benefit": "Reúnes la coordinación y los documentos junto al caso, sin enviarlos al cliente.",
+      "details": [
+        "Los comentarios y sus archivos son internos: no se envían al cliente.",
+        "Los avisos de menciones se pueden revisar en Desk; mencionar a alguien no le concede acceso al ticket."
+      ],
+      "availability": "En Desk → Ticket → Comentarios internos. Las menciones respetan los permisos de acceso al ticket.",
+      "guide": "https://help.adereso.ai/gesti%C3%B3n-del-agente-ejecutivo/wyPWvKJunzeTwyUof2BLCc/comentarios-internos-del-ticket/95uFuwXMLdGUUQi7SoqxFJ",
+      "visual": "comments",
+      "before": "Los comentarios del ticket no permitían adjuntar archivos ni organizar respuestas en hilos.",
+      "shareText": "💬 ¡Coordina a tu equipo dentro del ticket!\n\nPuedes responder en hilos, adjuntar archivos y mencionar a tu equipo en comentarios internos.\n\n✅ Reúnes la coordinación y los documentos junto al caso, sin enviarlos al cliente.\n\n📍 En Desk → Ticket → Comentarios internos. Las menciones respetan los permisos de acceso al ticket.\n\nℹ️ Los comentarios y sus archivos son internos: no se envían al cliente. Los avisos de menciones se pueden revisar en Desk; mencionar a alguien no le concede acceso al ticket."
+    },
+    {
+      "id": "studio-timers-independientes-2026-11-12",
+      "date": "2026-11-12",
+      "product": "Studio",
+      "title": "Organiza varios seguimientos en una conversación",
+      "summary": "El agente puede programar varios seguimientos y consultar, cambiar o cancelar cada uno.",
+      "benefit": "Ajustas los seguimientos que siguen siendo necesarios sin reemplazar los demás.",
+      "details": [
+        "Define en las instrucciones cuándo programar, ajustar o cancelar un seguimiento; el agente debe haber iniciado su ejecución.",
+        "Permite cambiar el tiempo, la instrucción y el agente destino; si vence durante una respuesta, incorpora la instrucción a la ejecución en curso.",
+        "No es el evento por inactividad de Studio. Un ticket cerrado no permite enviar por este mecanismo; no implica una nueva herramienta de envío de plantillas."
+      ],
+      "availability": "Con una herramienta Timer activa en el agente; su administración se habilita automáticamente. Opera sobre el mismo ticket, no como una campaña proactiva de WhatsApp.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
+      "visual": "timers",
+      "before": "Volver a usar la misma herramienta Timer reemplazaba su programación pendiente.",
+      "shareText": "⏱️ ¡Organiza varios seguimientos en una conversación!\n\nEl agente puede programar varios seguimientos y consultar, cambiar o cancelar cada uno.\n\n✅ Ajustas los seguimientos que siguen siendo necesarios sin reemplazar los demás.\n\n📍 Con una herramienta Timer activa en el agente; su administración se habilita automáticamente. Opera sobre el mismo ticket, no como una campaña proactiva de WhatsApp.\n\nℹ️ Define en las instrucciones cuándo programar, ajustar o cancelar un seguimiento; el agente debe haber iniciado su ejecución. Permite cambiar el tiempo, la instrucción y el agente destino; si vence durante una respuesta, incorpora la instrucción a la ejecución en curso. No es el evento por inactividad de Studio. Un ticket cerrado no permite enviar por este mecanismo; no implica una nueva herramienta de envío de plantillas."
+    },
+    {
+      "id": "studio-herramienta-codigo-2026-11-12",
+      "date": "2026-11-12",
+      "product": "Studio",
+      "title": "Tus reglas de negocio dentro de Studio",
+      "summary": "Una herramienta de código permite aplicar cálculos, validaciones y reglas propias al agente.",
+      "benefit": "Centralizas esa lógica y pruebas sus resultados dentro de Studio.",
+      "details": [
+        "Puedes usar datos de la conversación y credenciales guardadas en Secretos, según los accesos configurados.",
+        "Los ejemplos y las pruebas ayudan a preparar la herramienta; debes validar las reglas y los errores antes de ponerla en uso.",
+        "Si consulta un servicio externo, necesitas su conexión y permisos; la herramienta no elimina esos requisitos."
+      ],
+      "availability": "En el agente → Herramientas e integraciones → Agregar herramienta → Herramienta de código. Requiere permiso de edición y conocimientos de Python.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj/configurar-y-probar-una-herramienta-de-c%C3%B3digo-en-studio/95uFuwXMLbn4AhEQWqEMis",
+      "visual": "logic",
+      "before": "Algunos cálculos y reglas propias podían requerir crear y mantener un servicio externo.",
+      "shareText": "🧩 ¡Tus reglas de negocio dentro de Studio!\n\nUna herramienta de código permite aplicar cálculos, validaciones y reglas propias al agente.\n\n✅ Centralizas esa lógica y pruebas sus resultados dentro de Studio.\n\n📍 En el agente → Herramientas e integraciones → Agregar herramienta → Herramienta de código. Requiere permiso de edición y conocimientos de Python.\n\nℹ️ Puedes usar datos de la conversación y credenciales guardadas en Secretos, según los accesos configurados. Los ejemplos y las pruebas ayudan a preparar la herramienta; debes validar las reglas y los errores antes de ponerla en uso. Si consulta un servicio externo, necesitas su conexión y permisos; la herramienta no elimina esos requisitos."
+    },
+    {
+      "id": "studio-recuperacion-reglas-2026-11-10",
+      "date": "2026-11-10",
+      "product": "Studio",
+      "title": "Un mensaje para cada carrito",
+      "summary": "Puedes definir reglas para elegir qué plantilla de WhatsApp enviar y qué carritos excluir.",
+      "benefit": "Adaptas la recuperación a los criterios de tu negocio desde un mismo editor.",
+      "details": [
+        "La primera condición que coincide decide el camino; cada rama termina en Enviar mensaje o Finalizar sin enviar.",
+        "Los datos disponibles dependen de cada integración y catálogo; si falta un dato necesario para una condición, se evita ese envío.",
+        "Shopify mantiene su evento de abandono mediante Shopify Flow. En WooCommerce, captar carritos antes de crear una orden requiere Adereso Cart Capture.",
+        "Esta entrega permite WhatsApp con plantillas aprobadas; el envío por correo no está disponible."
+      ],
+      "availability": "En Studio → Tiendas → Recuperación → Configurar. Para Shopify, VTEX, Magento, WooCommerce y Jumpseller con integración y recuperación configuradas; requiere cuenta de WhatsApp y plantilla aprobada.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
+      "visual": "recovery",
+      "before": "La recuperación elegía su plantilla sin este árbol de condiciones y prioridades.",
+      "shareText": "🛒 ¡Un mensaje para cada carrito!\n\nPuedes definir reglas para elegir qué plantilla de WhatsApp enviar y qué carritos excluir.\n\n✅ Adaptas la recuperación a los criterios de tu negocio desde un mismo editor.\n\n📍 En Studio → Tiendas → Recuperación → Configurar. Para Shopify, VTEX, Magento, WooCommerce y Jumpseller con integración y recuperación configuradas; requiere cuenta de WhatsApp y plantilla aprobada.\n\nℹ️ La primera condición que coincide decide el camino; cada rama termina en Enviar mensaje o Finalizar sin enviar. Los datos disponibles dependen de cada integración y catálogo; si falta un dato necesario para una condición, se evita ese envío. Shopify mantiene su evento de abandono mediante Shopify Flow. En WooCommerce, captar carritos antes de crear una orden requiere Adereso Cart Capture. Esta entrega permite WhatsApp con plantillas aprobadas; el envío por correo no está disponible."
+    },
+    {
+      "id": "studio-comentarios-internos-2026-11-10",
+      "date": "2026-11-10",
+      "product": "Studio",
+      "title": "La IA deja notas para tu equipo",
+      "summary": "El agente puede publicar notas y archivos internos para que tu equipo continúe la atención.",
+      "benefit": "Recibes los antecedentes y documentos junto al caso para revisarlos antes de responder.",
+      "details": [
+        "La capacidad para tickets reales ya está disponible; la pestaña de comentarios del tester sigue pendiente de publicación.",
+        "Son comentarios internos, no mensajes al cliente ni borradores en la caja de respuesta.",
+        "Esta entrega no incorpora menciones dinámicas del agente."
+      ],
+      "availability": "En el agente → Configurar → Mensajes y archivos → Capacidades → Publicar comentarios internos. Desactivado por defecto: habilita, guarda y publica el agente.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
+      "visual": "internal-notes",
+      "before": "El agente no podía dejar texto y archivos como comentarios internos del ticket.",
+      "shareText": "📝 ¡La IA deja notas para tu equipo!\n\nEl agente puede publicar notas y archivos internos para que tu equipo continúe la atención.\n\n✅ Recibes los antecedentes y documentos junto al caso para revisarlos antes de responder.\n\n📍 En el agente → Configurar → Mensajes y archivos → Capacidades → Publicar comentarios internos. Desactivado por defecto: habilita, guarda y publica el agente.\n\nℹ️ La capacidad para tickets reales ya está disponible; la pestaña de comentarios del tester sigue pendiente de publicación. Son comentarios internos, no mensajes al cliente ni borradores en la caja de respuesta. Esta entrega no incorpora menciones dinámicas del agente."
+    },
+    {
+      "id": "studio-estados-chat-web-2026-11-10",
+      "date": "2026-11-10",
+      "product": "Studio + Chat Web",
+      "title": "Tu cliente ve que la IA avanza",
+      "summary": "La IA puede mostrar avisos breves mientras busca o compara información en el nuevo Chat Web.",
+      "benefit": "Tu cliente tiene una señal de avance mientras espera la respuesta.",
+      "details": [
+        "Indica al agente que use avisos cortos sobre acciones reales, como «Buscando opciones…».",
+        "Los estados se actualizan y desaparecen al responder; no se guardan en el historial.",
+        "No se anuncia esta capacidad para WhatsApp ni para el Chat Web clásico. Antes de migrar se revisan las integraciones, la autenticación y las configuraciones especiales."
+      ],
+      "availability": "En Agente → Configurar → Mensajes y archivos → Enviar mensajes de estado. Solo en el nuevo Chat Web, con activación por agente; migrar desde el chat clásico requiere evaluación y habilitación gradual.",
+      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
+      "visual": "progress",
+      "before": "Durante las búsquedas, el cliente esperaba sin estos avisos temporales de avance.",
+      "shareText": "✨ ¡Tu cliente ve que la IA avanza!\n\nLa IA puede mostrar avisos breves mientras busca o compara información en el nuevo Chat Web.\n\n✅ Tu cliente tiene una señal de avance mientras espera la respuesta.\n\n📍 En Agente → Configurar → Mensajes y archivos → Enviar mensajes de estado. Solo en el nuevo Chat Web, con activación por agente; migrar desde el chat clásico requiere evaluación y habilitación gradual.\n\nℹ️ Indica al agente que use avisos cortos sobre acciones reales, como «Buscando opciones…». Los estados se actualizan y desaparecen al responder; no se guardan en el historial. No se anuncia esta capacidad para WhatsApp ni para el Chat Web clásico. Antes de migrar se revisan las integraciones, la autenticación y las configuraciones especiales."
+    },
     {
       "id": "epa-respuestas-naturales-2026-11-06",
       "date": "2026-11-06",
@@ -19,23 +127,6 @@
       "shareText": "✨ ¡Las encuestas de Adereso entienden a tus clientes!\n\nSi alguien responde «Ya quedó solucionado, gracias», la encuesta puede reconocerlo como un «Sí» y continuar.\n\n✅ Una conversación más natural, sin pedirle al cliente que repita una opción.\n\n📍 Ya disponible en el flujo de encuesta post-atención actualizado; se aplica automáticamente.\n\nℹ️ Si la respuesta es ambigua, vuelve a preguntar. Mantiene las opciones configuradas y no convierte frases en notas numéricas."
     },
     {
-      "id": "studio-proyectos-2026-11-06",
-      "date": "2026-11-06",
-      "product": "Studio",
-      "title": "Tus agentes, juntos en un proyecto",
-      "summary": "Proyectos reúne tus agentes, conexiones, pruebas y actividad en un solo lugar.",
-      "benefit": "Entiendes cómo trabaja el equipo de agentes y revisas su actividad con más claridad.",
-      "details": [
-        "Tus bots actuales quedan en el Proyecto predeterminado. Siguen funcionando igual y sus versiones publicadas siguen activas.",
-        "Desde el proyecto puedes revisar agentes, pruebas, métricas y monitoreo."
-      ],
-      "availability": "En Studio → Proyectos → Proyecto predeterminado → Agentes.",
-      "guide": "https://help.adereso.ai/adereso-studio/949N1jefqPuH1stCBVAgbj",
-      "visual": "agents",
-      "before": "Sin una vista común por objetivo, era más difícil seguir cómo se conectaban tus agentes.",
-      "shareText": "🧩 ¡Tus agentes de IA, juntos en Proyectos de Adereso Studio!\n\nReúne a los agentes de un mismo objetivo y explora sus conexiones, pruebas y actividad desde un solo lugar.\n\n✅ Más claridad para entender cómo trabaja tu equipo de agentes y revisar su desempeño.\n\n📍 En Studio → Proyectos → Proyecto predeterminado → Agentes.\n\nℹ️ Tus bots actuales siguen funcionando igual y sus versiones publicadas siguen activas. Este cambio organiza el trabajo; no cambia su comportamiento."
-    },
-    {
       "id": "studio-tester-2026-11-06",
       "date": "2026-11-06",
       "product": "Studio",
@@ -51,41 +142,6 @@
       "visual": "tester",
       "before": "Probar una conversación y revisar la configuración eran pasos menos integrados.",
       "shareText": "🎙️ ¡Más formas de probar tus agentes en Adereso Studio!\n\nEl chat de pruebas ahora se abre al costado: puedes probar con audios y archivos mientras sigues configurando tu agente.\n\n✅ Revisa más situaciones de tus clientes sin interrumpir los ajustes, antes de poner los cambios en uso.\n\n📍 Abre Probar desde tu agente o usa Cmd/Ctrl + P. Disponible en ambos modos de prueba."
-    },
-    {
-      "id": "engage-respuestas-boton-2026-10-27",
-      "date": "2026-10-27",
-      "product": "Engage",
-      "title": "Ve qué botones eligen tus clientes",
-      "summary": "Un panel reúne las selecciones, los usuarios y el porcentaje por botón.",
-      "benefit": "Identificas qué opciones interesan a tus clientes sin revisar cada conversación.",
-      "details": [
-        "Aplica a campañas nuevas de Adereso BSP con botones de respuesta rápida. No recupera campañas históricas.",
-        "Una persona puede elegir varias veces: selecciones y usuarios son cifras distintas. El porcentaje se calcula sobre selecciones válidas.",
-        "No incluye enlaces, llamadas, Flows, carruseles ni otros proveedores. Si faltan datos, «No disponible» no significa cero respuestas."
-      ],
-      "availability": "En Analítica → Engage → Campañas. Para campañas nuevas de Adereso BSP con respuestas rápidas.",
-      "guide": "https://help.adereso.ai/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFuc3QJXWBTqY5e/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFw31hv5oYRktX9",
-      "visual": "campaign",
-      "before": "Comparar qué botones elegían tus clientes requería revisar las conversaciones por separado.",
-      "shareText": "📊 ¡Descubre qué botones eligen tus clientes en Adereso Engage!\n\nEl panel Respuestas por botón reúne las selecciones, los usuarios y el porcentaje de cada opción de tus campañas de WhatsApp.\n\n✅ Compara qué opciones interesan a tus clientes sin abrir cada conversación.\n\n📍 Analítica → Engage → Campañas.\n\nℹ️ Para campañas nuevas de Adereso BSP con botones de respuesta rápida; no reconstruye envíos históricos. Una persona puede seleccionar varias veces: el porcentaje se calcula sobre selecciones válidas. No incluye enlaces, llamadas, Flows, carruseles ni otros proveedores. «No disponible» indica datos incompletos, no cero respuestas."
-    },
-    {
-      "id": "desk-email-proactivo-2026-10-26",
-      "date": "2026-10-26",
-      "product": "Desk",
-      "title": "Escribe primero desde Desk",
-      "summary": "Puedes redactar un correo desde Desk e iniciar un ticket al aceptarse el envío.",
-      "benefit": "Tomas la iniciativa en el seguimiento y continúas la atención desde el mismo lugar.",
-      "details": [
-        "Puedes agregar destinatarios, CC, CCO y adjuntos, y revisar el correo antes de enviarlo.",
-        "El ticket se crea cuando Desk acepta el envío. Eso no confirma que el correo llegó: la entrega se informa por separado."
-      ],
-      "availability": "Requiere envío proactivo habilitado y una cuenta de correo accesible para tu usuario.",
-      "guide": "https://help.adereso.ai/gesti%C3%B3n-del-agente-ejecutivo/wyPWvKJunzeTwyUof2BLCc/enviar-mensajes-proactivos-nuevo-ticket/78f9N27ekHR2ca4KPu5Y2h",
-      "visual": "email",
-      "before": "Para atender por correo desde Desk, dependías de que el cliente escribiera primero.",
-      "shareText": "📧 ¡Toma la iniciativa por correo desde Adereso Desk!\n\nRedacta un correo, agrega copias y adjuntos, y revisa el mensaje antes de enviarlo. Cuando Desk acepta el envío, crea un ticket para continuar la atención.\n\n✅ Haz seguimiento a tus clientes sin esperar a que te escriban primero, desde el mismo lugar donde los atiendes.\n\n📍 Desde Nuevo ticket o Clientes → Contactar. Requiere envío proactivo habilitado y una cuenta de correo accesible para tu usuario.\n\nℹ️ El envío aceptado confirma la solicitud y la creación del ticket; la entrega al destinatario se informa por separado."
     }
   ]
 }

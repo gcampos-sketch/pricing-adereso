@@ -21,6 +21,9 @@ test('channel uses exact creation-source values, never the old segment or a subs
   for (const source of ['Prospección SDR', 'Prospeccion SDR Adereso', 'Prospección SDR [Adereso]']) expect(wonAcquisitionSource({ source })).toBe('outbound');
   expect(wonAcquisitionSource({ source: 'Prospección SDR Partner' })).toBe('other');
   expect(wonAcquisitionSource({ source: null })).toBe('unknown');
+  for (const source of ['KAM', 'KAM Cassper', 'KAM Adereso', 'KAM Adereso - Recuperación', 'KAM Cassper - Recuperación']) expect(wonAcquisitionSource({ source })).toBe('kam');
+  for (const source of ['Account Exec', 'AE Adereso - Recuperación', 'AE Cassper', 'AE Cassper - Recuperación']) expect(wonAcquisitionSource({ source })).toBe('ae');
+  expect(wonAcquisitionSource({ source: 'CS Cassper' })).toBe('cs');
 });
 
 test('mixes reconcile to the same unique eligible won population inside selected periods', () => {
@@ -47,7 +50,7 @@ test('mixes reconcile to the same unique eligible won population inside selected
 test('other and unknown sources remain explicit; zero-MRR wins still appear in deal-count mode', () => {
   const result = wonDistribution([
     deal('a', { amountValue: 0, source: null, dealType: 'Cross sell' }),
-    deal('b', { amountValue: 0, source: 'Account Exec', dealType: null }),
+    deal('b', { amountValue: 0, source: 'Referido', dealType: null }),
   ], ['2026-Q4']);
   expect(result.types.every(row => row.mrrShare === null)).toBe(true);
   expect(result.types.filter(row => row.count > 0).map(row => row.key)).toEqual(['cross', 'unknown']);
@@ -66,7 +69,7 @@ test('CS and KAM sources have separate shares without changing the business type
   expect(result.sources.find(row => row.key === 'kam')).toMatchObject({ label: 'Oportunidad desde KAM', count: 2, mrrShare: 40 });
   expect(result.sources.find(row => row.key === 'cs')?.deals.map(row => row.id)).toEqual(['cs']);
   expect(result.sources.find(row => row.key === 'kam')?.deals.map(row => row.id).sort()).toEqual(['kam', 'kam-recovery']);
-  expect(result.sources.find(row => row.key === 'other')?.mrrShare).toBe(20);
+  expect(result.sources.find(row => row.key === 'ae')).toMatchObject({ label: 'Oportunidad desde AE', mrrShare: 20, count: 1 });
   expect(result.types.find(row => row.key === 'upsell')?.mrr).toBe(200);
   expect(result.sources.reduce((sum, row) => sum + row.mrr, 0)).toBe(result.totalMrr);
   expect(wonAcquisitionSource({ source: 'Customer Success Partner' })).toBe('other');

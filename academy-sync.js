@@ -73,6 +73,9 @@
       if (!response.ok) throw new Error('unavailable'); const data = await response.json();
       if (data.schema !== 'academy-content/v1' || !Array.isArray(data.documents) || !Array.isArray(data.sources)) throw new Error('invalid');
       documents = data.documents.filter(d => ['help','notion'].includes(d.source) && typeof d.title === 'string' && typeof d.text === 'string');
+      // Metadata only: learning editions can flag a changed source without copying source prose.
+      window.academySourceDates = documents.filter(d => d.source === 'notion').map(d => ({ id: d.id, editedAt: d.sourceEditedAt }));
+      document.dispatchEvent(new CustomEvent('academy:sources-checked'));
       const notes = data.sources.map(s => {
         if (!s.configured) return labels[s.source] + ': conexión pendiente';
         if (s.error) return labels[s.source] + ': lectura pendiente' + (s.version ? ' · última versión conservada' : '');

@@ -6,6 +6,15 @@ import type { InsightsReport } from "./insights-types";
 import type { CoachingReport } from "./coaching-types";
 import { packReport } from './report-wire';
 import type { PropertyHistoryV1 } from './adobo-intelligence';
+import type { MeetingReport } from './meeting-metrics';
+export const getMeetingMetrics = createServerFn({ method: 'GET' })
+  .middleware([requireMfa])
+  .inputValidator((input?: { role?: string }) => ({ role: input?.role === 'AE' || input?.role === 'KAM' ? input.role : 'all' as const }))
+  .handler(async ({data}): Promise<MeetingReport> => {
+    const {readMeetingMetrics} = await import('./meeting-metrics.server');
+    return readMeetingMetrics(data.role as import('./owner-roles').RoleFilter);
+  });
+
 /** Global operational customer/service directory, protected by the same corporate MFA. */
 export const getServiceOverview = createServerFn({ method: 'GET' })
   .middleware([requireMfa])
@@ -101,7 +110,10 @@ export const getCoachingReport = createServerFn({ method: "GET" })
       import("./coaching.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("coaching", data.fresh, () => buildCoachingReport(data.fresh), undefined, data.force);
+    if (import.meta.env.DEV) return buildCoachingReport(data.fresh);
+    const { readCommercialEvidenceDate } = await import('./commercial-evidence.server');
+    const sourceAt = await readCommercialEvidenceDate();
+    return withSnapshot("coaching", data.fresh, () => buildCoachingReport(data.fresh), report => report.evidenceVersion === "coaching-evidence/v3" && report.evidenceSourceAt === sourceAt, data.force);
   });
 
 /** Marca un accionable de calidad comercial como abordado o pendiente. */
