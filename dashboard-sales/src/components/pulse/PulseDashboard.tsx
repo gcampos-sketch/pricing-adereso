@@ -1388,15 +1388,15 @@ export function PulseDashboard({
         </div>
       </section>
 
-      <div className="story-divider">
-        <div><strong>Resultados del período</strong></div>
-        <div className="results-date-controls">
-          <span>{rangeLabel}</span>
-          <div className="service-period-toggle" role="group" aria-label="Fecha para resultados del período">
-            <button type="button" aria-pressed={resultDateBasis === "close"} onClick={() => {closeModal();setResultDateBasis("close");}}>Fecha de cierre</button>
-            <button type="button" aria-pressed={resultDateBasis === "stage6"} title="Solo entradas registradas a E6 dentro del año y trimestre seleccionados; sin usar la fecha de cierre como reemplazo." onClick={() => {closeModal();setResultDateBasis("stage6");}}>Entrada a ganado · E6</button>
+      <div className="story-divider results-period-header">
+        <div className="results-date-heading">
+          <strong>Resultados del período</strong>
+          <div className="service-period-toggle results-date-toggle" role="group" aria-label="Fecha para calcular el cumplimiento">
+            <button type="button" aria-pressed={resultDateBasis === "close"} title="Ganados con fecha de cierre dentro del año y trimestre del filtro principal." onClick={() => {closeModal();setResultDateBasis("close");}}>Fecha de cierre</button>
+            <button type="button" aria-pressed={resultDateBasis === "stage6"} title="Ganados que entraron a E6 dentro del período del filtro principal, aunque su fecha de cierre se haya movido a otro Q. Sin entrada registrada a E6, no se incluyen." onClick={() => {closeModal();setResultDateBasis("stage6");}}>Entrada a etapa 6 (ganado)</button>
           </div>
         </div>
+        <span className="results-period-label">{rangeLabel}</span>
       </div>
 
       {/* Fila 1 — Cuota / Ganado (héroe) / Falta */}

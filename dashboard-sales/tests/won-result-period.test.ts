@@ -12,3 +12,12 @@ test('changing won attribution updates amounts and OTF while preserving separate
  expect([stats.won,stats.wonAmount,stats.wonOtf,stats.lost]).toEqual([1,100,120,0]);
  expect(stage6AttributionDates([row('a',String(Date.parse('2026-10-01T00:00:00Z')))])).toEqual({a:'2026-10-01'});
 });
+
+test('moving the close date into a later Q does not move the recorded E6 attainment',()=>{
+ const deal=row('moved-close','2026-10-09','1086544542','2027-01-20');
+ expect(wonByStage6Entry([deal],['2026-Q4']).map(d=>d.id)).toEqual(['moved-close']);
+ expect(wonByStage6Entry([deal],['2027-Q1'])).toEqual([]);
+ expect(deal.deal.closeDateValue).toBe('2027-01-20');
+ const amount=withWonDeals(undefined,wonByStage6Entry([deal],['2026-Q4']));
+ expect(amount.wonAmount+amount.wonOtf/12).toBe(110);
+});

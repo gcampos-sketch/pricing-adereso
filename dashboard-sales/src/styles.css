@@ -6611,3 +6611,12 @@ button.won-exec-stat:hover { color:var(--brand); }
 .coaching-snapshots summary {cursor:pointer;font-size:13px;font-weight:550;}
 .coaching-snapshots > p,.coaching-source-note {color:var(--muted);font-size:11px;line-height:1.7;}
 .coaching-snapshot-meta {display:block;margin-top:5px;color:var(--muted);font-size:10px;}
+
+/* Keep the attainment date basis beside its title, including narrow embedded views. */
+.results-period-header{align-items:flex-start;gap:12px;flex-wrap:wrap}
+.story-divider>.results-date-heading{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0}
+.results-date-toggle{display:flex;flex-wrap:wrap;gap:3px;padding:3px;max-width:100%;border:1px solid #ffffff18;background:#ffffff03;border-radius:11px}
+.results-date-toggle button{padding:7px 11px;min-width:0;font-size:11px;line-height:1.4;white-space:normal;border-radius:8px}
+.results-date-toggle button[aria-pressed=true]{background:#ffda3518;color:#ffe481;box-shadow:inset 0 0 0 1px #ffda352e}
+.results-period-label{align-self:flex-start;font-size:11px;padding-top:3px}
+@media(max-width:640px){.results-period-header{flex-direction:row;align-items:flex-start}.results-period-label{margin-left:auto}.results-date-toggle button{padding:7px 9px}}
