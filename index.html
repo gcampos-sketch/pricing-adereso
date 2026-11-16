@@ -8914,9 +8914,8 @@ const MODULES=[
 
 const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{x:false,webchat:true,correo:true,instagram:true,facebook:true,linkedin:true,tiktok:true},out:{correo:true,whatsapp:false,wacall:false},vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
-/* recuerda la cotización en este navegador: al recargar o volver a entrar, sigue donde quedó */
-const SAVE_KEY='adereso_pricing_v1';
-try{const sv=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(sv&&sv.state&&typeof sv.state==='object'){Object.keys(INITIAL_STATE).forEach(k=>{if(k in sv.state)state[k]=sv.state[k];});}}catch(e){}
+/* Cada carga inicia una cotización nueva; retirar la antigua copia del navegador. */
+try{localStorage.removeItem('adereso_pricing_v1');}catch(e){}
 /* Hub navigation persistence: per tab, separate from the saved quotation. */
 const HUB_NAV_KEY='adereso_hub_navigation_v1';
 function resolveHubNavigation(saved,tools,search){
@@ -8942,7 +8941,7 @@ function saveHubNavigation(){
   try{if(parent!==window&&parent.document.querySelector('.hub-portal-frame')?.contentWindow===window)update(parent);}catch(e){}
 }
 /* End Hub navigation persistence. */
-function saveSession(){if(new URLSearchParams(location.search).get('vista')==='partners')return;try{saveHubNavigation();localStorage.setItem(SAVE_KEY,JSON.stringify({state,view:curView,tool:curTool,y:window.scrollY,at:Date.now()}));}catch(e){}}
+function saveSession(){saveHubNavigation();}
 window.addEventListener('pagehide',saveSession);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveSession();});
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 const CHANNELS=[
@@ -11182,7 +11181,6 @@ renderHome();
 /* vuelve a la vista y al punto del scroll donde estaba */
 (function(){let saved=null;
   try{saved=JSON.parse(sessionStorage.getItem(HUB_NAV_KEY)||'null');}catch(e){}
-  if(!saved)try{saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch(e){}
   const navigation=resolveHubNavigation(saved,ALL_TOOLS,location.search);
   setView(navigation.view,navigation.tool);
   if(!PARTNERS_SHARED_VIEW&&navigation.y>0){requestAnimationFrame(()=>requestAnimationFrame(()=>{
