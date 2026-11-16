@@ -27,7 +27,7 @@ export function KamMeetingCoverage({
         <h4>
           Cobertura de cartera <small>Solo KAM · cuentas agrupadas por ID Holding</small>
         </h4>
-        <p>{rangeLabel} y filtros actuales · cartera asignada hoy</p>
+        <p>{rangeLabel} y filtros actuales · cartera verificada al {new Date(portfolio.checkedAt).toLocaleDateString("es-CL")}</p>
       </header>
       <div className="kam-coverage-grid">
         {kams.map(([id, name]) => (
@@ -106,7 +106,7 @@ function KamCoverageCard({
             </h4>
             <p>
               Una cuenta por holding; sin holding, una por ID de empresa. Empresas asignadas
-              actualmente en HubSpot, sin filtro de ciclo de vida.
+              en HubSpot al {new Date(portfolio.checkedAt).toLocaleDateString("es-CL")}, sin filtro de ciclo de vida.
             </p>
           </div>
           <button aria-label="Cerrar cobertura de cartera" onClick={() => setOpen(false)}>
