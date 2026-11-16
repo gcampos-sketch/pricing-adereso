@@ -342,7 +342,7 @@ export function MeetingsCoverage({
           <footer className="meeting-coverage">
             Cruce exacto por enlace, ID y fecha. Agenda revisada del 01/10/2026 al 31/12/2026; otras
             agendas o períodos quedan pendientes. A/B/C se asigna únicamente con evidencia de Diio.
-            Lectura local: {new Date(coverage.checkedAt).toLocaleString("es-CL")}.
+            Registro verificado al: {new Date(coverage.checkedAt).toLocaleString("es-CL")}.
           </footer>
         </PopoverContent>
       </Popover>

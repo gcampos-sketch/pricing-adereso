@@ -450,13 +450,13 @@ export function QualityDashboard({
                     disabled={!row.persisted || saving === row.eventKey}
                     title={
                       !row.persisted
-                        ? "Evento validado solo en local; no se guarda estado en el registro compartido"
+                        ? "Evento corroborado de la edición privada; no existe una fila editable en el registro de acciones"
                         : "Actualizar estado del coaching"
                     }
                     onClick={() => void toggle(row)}
                   >
                     {!row.persisted
-                      ? "Solo lectura local"
+                      ? "Solo lectura"
                       : status(row) === "abordado"
                         ? "Abordado"
                         : "Marcar abordado"}
@@ -562,7 +562,7 @@ export function QualityDashboard({
         fecha, el deal y la participación del comercial en Diio. La clasificación A/B/C viene del
         análisis terminado y su playbook verificado. Cambiar la foto actual del deal no borra ni
         modifica ese histórico. Los documentos de coaching y el contador del deal no equivalen por
-        sí solos a reuniones únicas. La validación local no activa una sincronización publicada.
+        sí solos a reuniones únicas. Publicar una edición verificada no activa la sincronización automática de las fuentes.
       </p>
     </main>
   );
