@@ -50,3 +50,31 @@ test('fresh tabs tolerate unfinished menu entries without a view',()=>{
   expect(context.resolveHubNavigation(saved,incomplete,'')).toEqual({view:'home',tool:'',y:0});
  }
 });
+
+
+test('Brochure stays visibly under construction while its published content remains accessible', () => {
+  const toolSource = html.match(/\{k:'brochure',name:'Brochure'[^\n]+/)! [0].replace(/,$/, '');
+  const brochure = runInNewContext('(' + toolSource + ')');
+  expect(brochure.construction).toBe(true);
+  expect(brochure.openWhileBuilding).toBe(true);
+  const grid = { innerHTML: '' };
+  const render = html.slice(html.indexOf('function renderHome(){'), html.indexOf('function setView(', html.indexOf('function renderHome(){')));
+  runInNewContext(render + ';renderHome();', {
+    document: { getElementById: () => grid }, TOOLS: [{g:'Para reunión',items:[brochure]}],
+    hgClosed: () => [], tIco: () => '', homeConstruction: () => '<span>worksite</span>'
+  });
+  expect(grid.innerHTML).toContain('hg-card  construction');
+  expect(grid.innerHTML).toContain('worksite');
+  expect(grid.innerHTML).toContain('En construcción');
+  expect(grid.innerHTML).not.toContain('aria-disabled');
+  const start = html.indexOf("document.addEventListener('click',e=>{const b=e.target.closest('[data-tool]')");
+  const listener = html.slice(start, html.indexOf('});', start)+3);
+  let click: any; const opened: string[] = [];
+  runInNewContext(listener, {
+    document: { addEventListener: (_:string, cb:any) => {click=cb;} },
+    ALL_TOOLS: [brochure, {k:'blocked',view:'blocked',construction:true}],
+    goView: (view:string) => opened.push(view), window: {open:()=>{throw Error('unexpected external navigation')}}
+  });
+  for (const key of ['brochure','blocked']) click({target:{closest:()=>({dataset:{tool:key}})}});
+  expect(opened).toEqual(['brochure']);
+});
