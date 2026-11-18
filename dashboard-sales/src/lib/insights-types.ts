@@ -21,6 +21,8 @@ export type InsightDeal = DealDTO & {
   stageDays: number;
   lostReason: string | null;
   lostReasonText: string | null;
+  /** Exact native closed_lost_reason free text, without category/development fallback. */
+  lostReasonNarrative?: string | null;
   lostStage: string;
   lostStageDays: number;
   /** Native entry to the current exact lost stage; never falls back to close/creation. Absent in older editions. */
@@ -36,6 +38,7 @@ export type InsightDeal = DealDTO & {
 };
 
 export type InsightsReport = {
+  lossNarrativesVersion?: "closed-lost-reason/v1";
   lossEntryDatesVersion?: "native-loss-entry/v1";
   generatedAt: string;
   currentPeriod: string;
