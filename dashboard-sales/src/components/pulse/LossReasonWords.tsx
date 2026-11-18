@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { buildLossReasonWords, type LossNarrative } from '@/lib/loss-reason-words';
 import './LossReasonWords.css';
 
@@ -16,9 +16,9 @@ export function LossReasonWords({ deals, available }: { deals: LossNarrative[]; 
         {cloud.words.map(word => <button type="button" key={word.term} aria-pressed={selected?.term === word.term}
           aria-label={`Ver ${word.count} ${word.count === 1 ? 'comentario' : 'comentarios'} con ${word.term}`}
           title={`${word.count} ${word.count === 1 ? 'deal menciona' : 'deals mencionan'} «${word.term}»`}
-          style={{ fontSize: `${15 + 19 * Math.sqrt(word.count / max)}px` }}
+          style={{ '--bubble-size': `${Math.round(76 + 62 * Math.sqrt((word.count - 1) / Math.max(1, max - 1)))}px` } as CSSProperties}
           onClick={() => setSelection(selected?.term === word.term ? null : { context, term: word.term, expanded: false })}>
-          {word.term}<small>{word.count}</small>
+          <span className="loss-word-label">{word.term}</span><small>{word.count} {word.count === 1 ? "deal" : "deals"}</small>
         </button>)}
       </div> : <p>{cloud.commented ? 'Las explicaciones no contienen palabras significativas para una nube.' : 'Sin explicaciones registradas en este alcance.'}</p>}
       {selected ? <div className="loss-words-evidence" aria-live="polite">
