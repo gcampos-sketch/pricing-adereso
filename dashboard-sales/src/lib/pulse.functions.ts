@@ -113,7 +113,7 @@ export const getCoachingReport = createServerFn({ method: "GET" })
     if (import.meta.env.DEV) return buildCoachingReport(data.fresh);
     const { readCommercialEvidenceDate } = await import('./commercial-evidence.server');
     const sourceAt = await readCommercialEvidenceDate();
-    return withSnapshot("coaching", data.fresh, () => buildCoachingReport(data.fresh), report => report.evidenceVersion === "coaching-evidence/v3" && report.evidenceSourceAt === sourceAt, data.force);
+    return withSnapshot("coaching", data.fresh, () => buildCoachingReport(data.fresh), report => report.evidenceVersion === "coaching-evidence/v3" && report.evidenceSourceAt === sourceAt && report.adoboVersion === "adobo-quality/v1", data.force);
   });
 
 /** Marca un accionable de calidad comercial como abordado o pendiente. */

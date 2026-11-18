@@ -172,7 +172,6 @@ function commercialProps(managedStageIds: string[]): string[] {
     "hs_v2_date_entered_173990327",
     "hs_v2_date_entered_1086544542",
     // entrega: avance hacia kick off, portal cliente, contratos y finanzas
-    "adobo_avance_kickoff_pct",
     "adobo_etapa_actual_portal_cliente",
     "adobo_dias_en_etapa_actual",
     "adobo_tasa_contactabilidad_prospecto",

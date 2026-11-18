@@ -548,9 +548,6 @@ function deliveryRows(
   return [...groups.entries()]
     .map(([label, list], index) => {
       const key = `${prefix}-${index}`;
-      const progress = list.map((d) => numberOf(d.properties["adobo_avance_kickoff_pct"])).filter(
-        (v): v is number => v !== null,
-      );
       const days = list
         .map((d) => numberOf(d.properties["adobo_dias_en_etapa_actual"]))
         .filter((v): v is number => v !== null);
@@ -560,9 +557,7 @@ function deliveryRows(
         label,
         count: list.length,
         amount: list.reduce((sum, d) => sum + Number(d.properties["amount"] ?? 0), 0),
-        avgProgress: progress.length
-          ? progress.reduce((a, b) => a + b, 0) / progress.length
-          : -1,
+        avgProgress: -1,
         medDays: median(days),
         modal: key,
       };
@@ -605,10 +600,6 @@ function buildDelivery(
     const stuck = inFlight.filter(
       (d) => (numberOf(d.properties["adobo_dias_en_etapa_actual"]) ?? 0) > STUCK_DAYS,
     );
-    const progress = inFlight
-      .map((d) => numberOf(d.properties["adobo_avance_kickoff_pct"]))
-      .filter((v): v is number => v !== null);
-
     const portalGroups = new Map<string, RawDeal[]>();
     for (const deal of inFlight) {
       const label = deal.properties["adobo_etapa_actual_portal_cliente"]?.trim() || "Sin etapa registrada";
@@ -722,8 +713,8 @@ function buildDelivery(
       liveAmount: live.reduce((sum, d) => sum + Number(d.properties["amount"] ?? 0), 0),
       stuckCount: stuck.length,
       stuckAmount: stuck.reduce((sum, d) => sum + Number(d.properties["amount"] ?? 0), 0),
-      avgProgress: progress.length ? progress.reduce((a, b) => a + b, 0) / progress.length : -1,
-      progressBase: progress.length,
+      avgProgress: -1,
+      progressBase: 0,
       portal: deliveryRows(
         `${base}-portal`,
         portalGroups,
@@ -2025,6 +2016,7 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
     monthly,
     stageJourneys,
     generatedAt: new Date(now).toISOString(),
+    adoboQualityVersion: "adobo-quality/v1",
     currentPeriod,
     currentLabel: `${shortPeriod(currentPeriod)} QTD`,
     roleScope: role ?? null,

@@ -107,7 +107,6 @@ function RowTable({
             <th>Deals</th>
             <th>Monto</th>
             <th>Share</th>
-            {showProgress ? <th>Avance kick off</th> : null}
             {showProgress ? <th>Días en etapa</th> : null}
           </tr>
         </thead>
@@ -130,8 +129,7 @@ function RowTable({
               </td>
               <td>{money(row.amount)}</td>
               <td>{total ? pct((row.count / total) * 100) : "—"}</td>
-              {showProgress ? <td>{row.avgProgress >= 0 ? pct(row.avgProgress) : "s/n"}</td> : null}
-              {showProgress ? (
+                {showProgress ? (
                 <td>{row.medDays >= 0 ? `${Math.round(row.medDays)}d` : "s/n"}</td>
               ) : null}
             </tr>
@@ -168,11 +166,6 @@ export function Delivery({
   const liveAmount = sum((r) => r.liveAmount);
   const stuckCount = sum((r) => r.stuckCount);
   const stuckAmount = sum((r) => r.stuckAmount);
-  const progressBase = sum((r) => r.progressBase);
-  const progressAvg = progressBase
-    ? rows.reduce((acc, r) => acc + (r.avgProgress >= 0 ? r.avgProgress * r.progressBase : 0), 0) /
-      progressBase
-    : -1;
   const setupPaid = sum((r) => r.setupPaid);
   const setupBase = sum((r) => r.setupBase);
   const mrrPaid = sum((r) => r.mrrPaid);
@@ -247,14 +240,6 @@ export function Delivery({
           tone={stuckCount ? "bad" : "ok"}
           onClick={() => last && onModal(last.stuckModal)}
           tooltip="Ganados en curso que llevan más de 30 días en la misma etapa del portal cliente."
-        />
-        <Metric
-          label="Avance hacia kick off"
-          value={progressAvg >= 0 ? pct(progressAvg) : "s/n"}
-          note={progressBase ? `${progressBase} deals con dato` : "sin dato en HubSpot"}
-          tone={progressAvg < 0 ? "neutral" : progressAvg >= 70 ? "ok" : progressAvg >= 40 ? "warn" : "bad"}
-          {...(progressAvg >= 0 ? { progress: progressAvg } : {})}
-          tooltip="Promedio del avance hacia kick off registrado por Adobo."
         />
       </section>
 

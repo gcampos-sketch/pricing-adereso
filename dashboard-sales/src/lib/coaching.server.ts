@@ -4,9 +4,11 @@ import {
   getOwners,
   getPropertyOptionLabels,
   invalidateCache,
-  searchDealsCached,
+  gateway, getCached, TTL_DEALS, type RawDeal,
 } from "./hubspot.server";
-import { STAGE_KEY } from "./pulse.server";
+import { ADOBO_INTELLIGENCE_PROPS } from "./adobo-intelligence";
+import { activeQualityDeal, completeQualityInventory } from "./adobo-quality";
+import { STAGE_KEY, WON_STAGES, LOST_STAGES, toDTO } from "./pulse.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { CoachingReport, CoachingSnapshot, CoachingStatus } from "./coaching-types";
 import type { MeetingReport } from "./meeting-metrics";
@@ -19,6 +21,8 @@ import {
 } from "./coaching-evidence";
 
 const PROPS = [
+  ...ADOBO_INTELLIGENCE_PROPS,
+  "pipeline", "hs_is_closed", "amount", "closedate", "hs_next_step", "dealtype", "fuente_de_creacion",
   "dealname",
   "dealstage",
   "hubspot_owner_id",
@@ -49,12 +53,11 @@ async function privateEdition(name: string): Promise<unknown | null> {
 export async function buildCoachingReport(fresh = false): Promise<CoachingReport> {
   if (fresh) invalidateCache("deals:coaching");
   const [deals, rawOwners, labels] = await Promise.all([
-    searchDealsCached(
-      "coaching",
-      [{ propertyName: "pipeline", operator: "EQ", value: COMMERCIAL_PIPELINE }],
-      PROPS,
-      20,
-    ),
+    getCached("deals:coaching-adobo-v1", TTL_DEALS, () => completeQualityInventory<RawDeal>(after =>
+      gateway("/crm/v3/objects/deals/search", {method:"POST", body:JSON.stringify({
+        filterGroups:[{filters:[{propertyName:"pipeline",operator:"EQ",value:COMMERCIAL_PIPELINE}]}],
+        properties:[...new Set(PROPS)], sorts:["hs_object_id"], limit:200, ...(after ? {after}:{}),
+      })}))),
     getOwners(),
     getPropertyOptionLabels("adobo_oportunidad_de_mejora"),
   ]);
@@ -64,6 +67,8 @@ export async function buildCoachingReport(fresh = false): Promise<CoachingReport
     name: [owner.firstName, owner.lastName].filter(Boolean).join(" ") || owner.email || owner.id,
   }));
   const names = new Map(owners.map((owner) => [owner.id, owner.name]));
+  const adoboDeals = deals.filter(deal => activeQualityDeal(deal.properties, WON_STAGES, LOST_STAGES))
+    .map(deal => toDTO(deal, names, Date.now(), Date.now()));
   const snapshots: CoachingSnapshot[] = deals
     .filter((deal) => deal.properties["adobo_oportunidad_de_mejora"])
     .map((deal) => {
@@ -176,6 +181,8 @@ export async function buildCoachingReport(fresh = false): Promise<CoachingReport
   return {
     generatedAt: new Date().toISOString(),
     evidenceVersion: COACHING_EVIDENCE_VERSION,
+    adoboVersion: "adobo-quality/v1",
+    adoboDeals,
     ...(published ? { evidenceSourceAt: published.sourceAt } : {}),
     years: years.length ? years : [String(new Date().getUTCFullYear())],
     owners: owners
@@ -183,7 +190,8 @@ export async function buildCoachingReport(fresh = false): Promise<CoachingReport
         (owner) =>
           roleOfOwner(owner.id) !== null ||
           rows.some((row) => row.ownerId === owner.id) ||
-          snapshots.some((row) => row.ownerId === owner.id),
+          snapshots.some((row) => row.ownerId === owner.id) ||
+          adoboDeals.some(row => row.ownerId === owner.id),
       )
       .map(({ id, name }) => ({ id, name })),
     categories: [...labels].map(([key, label]) => ({ key, label })),

@@ -41,6 +41,12 @@ export const ADOBO_GROUPS = [
     ['adobo_last_reu_quality', 'Calidad de reunión', 'Calidad registrada.'],
     ['adobo_snapshot_confidence', 'Confianza', 'Confianza declarada por Adobo.'],
   ] },
+  { name: 'Alertas', explanation: 'Estado registrado en CRM; los textos no acreditan una revisión completa ni vigencia.', fields: [
+    ['adobo_alertas_estado', 'Estado de alertas', 'Estado declarado por el productor.'],
+    ['adobo_alertas_riesgo', 'Riesgos de alertas', 'Riesgos registrados; pueden solaparse.'],
+    ['adobo_alertas_evidencia', 'Evidencia de alertas', 'Respaldo registrado de las alertas.'],
+    ['adobo_alertas_ultima_revision', 'Última revisión de alertas', 'No equivale a evaluación del score.'],
+  ] },
   { name: 'Seguimiento', explanation: 'Solo representa el estado del CRM; no cambia pinzas.', fields: [
     ['seguimiento_con_pinzas', 'Seguimiento con pinzas', 'Marca del CRM. Sin evidencia específica no se atribuye un motivo.'],
   ] },
@@ -54,7 +60,6 @@ export const ADOBO_GROUPS = [
     ['adobo_handoff_riesgo_operativo', 'Riesgo operativo', 'Riesgo de traspaso registrado.'],
     ['adobo_etapa_actual_portal_cliente', 'Etapa del portal', 'Etapa operativa actual.'],
     ['adobo_dias_en_etapa_actual', 'Días en etapa', 'Antigüedad operativa registrada.'],
-    ['adobo_avance_kickoff_pct', 'Avance kickoff (%)', 'Porcentaje operativo, no score comercial.'],
   ] },
   { name: 'Métricas independientes', explanation: 'Probabilidades CRM y on track no son Adobo score.', fields: [
     ['hs_deal_stage_probability', 'Probabilidad de etapa CRM', 'Contrato CRM fraccional 0–1; se muestra en porcentaje.'],
@@ -62,6 +67,9 @@ export const ADOBO_GROUPS = [
     ['on_track', 'On track', 'Estado del CRM independiente de pinzas.'],
   ] },
 ] as const;
+
+export const ADOBO_COMMERCIAL_GROUPS = ADOBO_GROUPS.filter(g => g.name !== 'Traspaso y portal' && g.name !== 'Métricas independientes');
+export const ADOBO_DELIVERY_GROUPS = ADOBO_GROUPS.filter(g => g.name === 'Traspaso y portal');
 
 export const ADOBO_INTELLIGENCE_PROPS = ADOBO_GROUPS.flatMap(g => g.fields.map(f => f[0]));
 export type AdoboProperty = typeof ADOBO_GROUPS[number]['fields'][number][0];

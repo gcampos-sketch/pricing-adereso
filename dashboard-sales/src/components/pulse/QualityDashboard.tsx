@@ -1,3 +1,5 @@
+import { AdoboQuality } from "./AdoboQuality";
+import { qualityScope } from "@/lib/adobo-quality";
 import { useMemo, useState } from "react";
 import { CompactFilterBar } from "./FilterBar";
 import { SectionTitle, useAgo } from "./insights-shared";
@@ -85,6 +87,7 @@ export function QualityDashboard({
   onRole?: (value: "all" | "AE" | "KAM") => void;
 }) {
   const ago = useAgo(report.generatedAt);
+  const [qualityView, setQualityView] = useState<'health'|'coverage'|'meetings'>('health');
   const [year, setYear] = useState(report.years[0] ?? String(new Date().getUTCFullYear()));
   const [quarter, setQuarter] = useState("all");
   const [ownerId, setOwnerId] = useState("team");
@@ -96,18 +99,20 @@ export function QualityDashboard({
   const [local, setLocal] = useState<Record<string, "pendiente" | "abordado">>({});
   const [stageFilter, setStageFilter] = useState<string[]>([]);
 
+  const adoboDeals = useMemo(() => qualityScope(report.adoboDeals ?? [], ownerId, role, stageFilter), [report.adoboDeals,ownerId,role,stageFilter]);
   const roleOwnerOptions = useMemo(
     () =>
       report.owners
         .filter((owner) => role === "all" || roleOfOwner(owner.id) === role)
-        .map((owner) => [owner.id, owner.name] as [string, string]),
-    [report.owners, role],
+        .map((owner) => [owner.id, owner.name] as [string, string])
+        .concat(role === 'all' ? [...new Map((report.adoboDeals ?? []).filter(d => !report.owners.some(o => o.id === d.ownerId)).map(d => [d.ownerId || '__unassigned', d.owner || 'Sin comercial'] as [string,string])).entries()] : []),
+    [report.owners, report.adoboDeals, role],
   );
 
   const scoped = useMemo(() => {
     return (report.evidenceVersion === "coaching-evidence/v3" ? report.rows : []).filter((row) => {
       if (role !== "all" && roleOfOwner(row.ownerId) !== role) return false;
-      if (ownerId !== "team" && row.ownerId !== ownerId) return false;
+      if (ownerId !== "team" && row.ownerId !== (ownerId === "__unassigned" ? "" : ownerId)) return false;
       if (stageFilter.length && !stageFilter.includes(row.stage)) return false;
       if (!row.date) return quarter === "all" && year === report.years[0];
       if (row.date.slice(0, 4) !== year) return false;
@@ -131,7 +136,7 @@ export function QualityDashboard({
   const currentSnapshots = (report.snapshots ?? []).filter(
     (row) =>
       (role === "all" || roleOfOwner(row.ownerId) === role) &&
-      (ownerId === "team" || row.ownerId === ownerId) &&
+      (ownerId === "team" || row.ownerId === (ownerId === "__unassigned" ? "" : ownerId)) &&
       (!stageFilter.length || stageFilter.includes(row.stage)) &&
       (!row.date
         ? quarter === "all" && year === report.years[0]
@@ -203,7 +208,7 @@ export function QualityDashboard({
         <div>
           <h1 className="pulse-h1">Calidad Comercial</h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
-            Coaching por reunión, con evidencia y clasificación verificadas en Diio
+            Adobo · salud comercial, reuniones y cobertura de evidencia
           </div>
         </div>
       </header>
@@ -228,6 +233,10 @@ export function QualityDashboard({
         label="Filtros de calidad comercial"
       />
 
+      <nav className="aq-tabs" aria-label="Vistas de calidad comercial">{([
+        ['health','Salud comercial'],['meetings','Reuniones y coaching'],['coverage','Cobertura y vigencia']
+      ] as const).map(([key,label]) => <button key={key} aria-current={qualityView===key?'page':undefined} onClick={()=>setQualityView(key)}>{label}</button>)}</nav>
+      {qualityView !== 'meetings' ? report.adoboVersion === 'adobo-quality/v1' ? <AdoboQuality deals={adoboDeals} readAt={report.generatedAt} view={qualityView} year={year} quarter={quarter}/> : <p role="status">Esta copia aún no incluye el inventario Adobo completo. Actualiza el reporte.</p> : <>
       <aside className="coaching-coverage" role="status">
         <strong>Histórico parcial · {report.coverage?.source ?? "pendiente de verificar"}</strong>
         <p>
@@ -564,6 +573,7 @@ export function QualityDashboard({
         modifica ese histórico. Los documentos de coaching y el contador del deal no equivalen por
         sí solos a reuniones únicas. Publicar una edición verificada no activa la sincronización automática de las fuentes.
       </p>
+      </>}
     </main>
   );
 }

@@ -3,7 +3,7 @@ import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Ref
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import type { DealDTO } from '@/lib/pulse-types';
-import { ADOBO_GROUPS, crmFractionPercent, dealIntelligence, evidenceChronology, freshnessReport, validEvidence, type AdoboProperty } from '@/lib/adobo-intelligence';
+import { ADOBO_COMMERCIAL_GROUPS, crmFractionPercent, dealIntelligence, evidenceChronology, freshnessReport, validEvidence, type AdoboProperty } from '@/lib/adobo-intelligence';
 import { adoboSortCompare, type AdoboSortKey } from '@/lib/adobo-period';
 import { REASONS, SUGGESTIONS, alertFingerprint, alertKinds, applyTransition, effectiveState, emptyStore, parseStore, storeKey,
   type AlertKind, type TransitionInput, type WorkflowState, type WorkflowStore } from '@/lib/adobo-workflow';
@@ -69,7 +69,7 @@ function PropertyAudit({ deal }: { deal: DealDTO }) {
     return raw;
   }
   return <div className="adobo-audit">
-    {ADOBO_GROUPS.map(group => <details key={group.name} className="adobo-audit-group">
+    {ADOBO_COMMERCIAL_GROUPS.map(group => <details key={group.name} className="adobo-audit-group">
       <summary>{group.name}</summary>
       <p className="text-muted-foreground text-sm">{group.explanation}</p>
       <dl>{group.fields.map(([key, label, explanation]) => <div key={key} className="adobo-audit-field">
