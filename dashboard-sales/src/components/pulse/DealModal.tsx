@@ -1162,9 +1162,12 @@ export function DealModal({
   ownerQuotas,
   executiveSummary,
   hideCloseSummary = false,
+  detailContent,
 }: {
   /** Entry-date event lists must not show an unrelated close-date monthly summary. */
   hideCloseSummary?: boolean;
+  /** Read-only detail follows the exact locally filtered deal population. */
+  detailContent?: ((deals: DealDTO[]) => ReactNode) | undefined;
   executiveSummary?: ReactNode | ((context: { selectedOwner: string | null; onOwnerSelect: (owner: string | null) => void }) => ReactNode);
   payload: Drilldown | null;
   onClose: () => void;
@@ -1982,6 +1985,7 @@ export function DealModal({
           </p> : null}
           <p className="deal-month-filter-status" aria-live="polite">{summaryDateFilter ? "Filtro por fecha activo · vuelve a pulsar el cuadro seleccionado para quitarlo" : "Pulsa un cuadro para filtrar la tabla por fecha de cierre"}</p>
         </section> : null)}
+        {detailContent?.(deals)}
         {scenarioScope && selectionQuota && scenarioReport ? <ScenarioProjection report={scenarioReport} onViewScenarios={()=>onViewScenarios?.()} summary={selectionTotal} quota={selectionQuota} scope={{...scenarioScope,owner:scenarioOwner}} deals={deals.filter(deal=>selectedIds.includes(deal.id))} onClear={()=>setSelected([])} /> : <DealSelectionSummary compact={!!selectionQuota} summary={selectionTotal} quota={selectionQuota ?? null} onClear={()=>setSelected([])} />}
         {selectedIds.length > 0 ? (
           <details className="deal-selection-actions"><summary>Acciones para seleccionados</summary>

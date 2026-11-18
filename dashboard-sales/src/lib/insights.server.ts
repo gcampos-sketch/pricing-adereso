@@ -300,6 +300,7 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
       stageKey: dto.stage,
       stageDays: Number.isFinite(stageMs) && stageMs > 0 ? Math.round(stageMs / DAY_MS) : 0,
       lostReason: (p["razones_de_cierre_perdidos_especifico"] ?? "").trim() || null,
+      lostReasonNarrative: (p["closed_lost_reason"] ?? "").trim() || null,
       lostReasonText:
         (p["closed_lost_reason"] ?? "").trim() ||
         (p["motivo_de_deal_perdido_en_desarrollo"] ?? "").trim() ||
@@ -345,6 +346,7 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
 
   return {
     lossEntryDatesVersion: LOSS_ENTRY_DATES_VERSION,
+    lossNarrativesVersion: "closed-lost-reason/v1",
     generatedAt: new Date(now).toISOString(),
     currentPeriod,
     periods,

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
+import { LossReasonWords } from "./LossReasonWords";
 import { LossSankey } from "./LossSankey";
 import { DealModal } from "./DealModal";
 import { MetricTrend } from "./MetricTrend";
@@ -45,7 +46,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 }) {
   const ago = useAgo(report.generatedAt);
   const filters = useInsightFilters(report, undefined, role, onRole);
-  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean }) | null>(null);
+  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean; reasonWords?: boolean }) | null>(null);
   const [creationSource, setCreationSource] = useState("");
   const sourceOptions = useMemo(() => lossCreationSources(report.deals), [report.deals]);
   const sourceDeals = useMemo(() => scopeLossCreationSource(report.deals, creationSource), [report.deals, creationSource]);
@@ -97,7 +98,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const visibleRows = expandedRows === rowsKey ? rows : rows.slice(0, 5);
   const max = Math.max(1, ...rows.map(row => row[measure]));
   const total = measure === "amount" ? scopedAmount : scoped.length;
-  const open = (title: string, deals: InsightDeal[]) => setDrill({ title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}${path.length ? ` · ${path.map(slice => slice.key).join(" → ")}` : ""}`, deals });
+  const open = (title: string, deals: InsightDeal[], reasonWords = false) => setDrill({ reasonWords: reasonWords || path.some(slice => slice.dimension === "reason"), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}${path.length ? ` · ${path.map(slice => slice.key).join(" → ")}` : ""}`, deals });
   const updatePath = (next: Slice[]) => setExploration({ scope: scopeKey, path: next });
   const enter = (key: string) => {
     const next = [...path, { dimension, key }];
@@ -138,7 +139,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 
     <LossSankey deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
       scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
-      onOpen={(title, deals, basis) => setDrill({ title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
+      onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
 
     <section className="rep-chart loss-explorer" aria-label="Explorar pérdidas">
       <nav className="loss-breadcrumb" aria-label="Recorrido del análisis">
@@ -159,15 +160,16 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         <button type="button" className="cell-button" onClick={() => { const last = path[path.length - 1]!; updatePath(path.slice(0, -1)); setDimension(last.dimension); }}><ArrowLeft size={14} aria-hidden="true" /> Volver un nivel</button>
         <button type="button" className="cell-button" onClick={() => open(path.map(slice => slice.key).join(" · "), scoped)}>Ver {scoped.length} deals</button>
       </div>}
+      {path.some(slice => slice.dimension === "reason") && <LossReasonWords deals={scoped} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />}
       <div className="loss-rows">
         {visibleRows.map(row => <div key={row.key} className="loss-row">
-          <button type="button" className="loss-category" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals)} aria-label={`Analizar ${row.key}`}>
+          <button type="button" className="loss-category" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals, dimension === "reason")} aria-label={`Analizar ${row.key}`}>
             <span className="loss-row-label">{row.key}</span>
             <span className="loss-row-track"><span style={{ width: `${row[measure] / max * 100}%` }} /></span>
             <span className="loss-row-value">{measure === "amount" ? money(row.amount) : row.count}<small>{pct(total ? row[measure] / total * 100 : 0)}</small></span>
             <ChevronRight size={15} aria-hidden="true" />
           </button>
-          <button type="button" className="loss-deals-link" onClick={() => open(row.key, row.deals)} aria-label={`Ver ${row.count} deals de ${row.key}`}>{row.count} deals</button>
+          <button type="button" className="loss-deals-link" onClick={() => open(row.key, row.deals, dimension === "reason")} aria-label={`Ver ${row.count} deals de ${row.key}`}>{row.count} deals</button>
         </div>)}
         {!rows.length && <div className="empty-state">Sin pérdidas en este alcance. Cambia los filtros o vuelve al resumen.</div>}
       </div>
@@ -192,6 +194,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       </table></div>
       <p className="loss-intro">Mediana de tiempo en etapa: {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
     </details>
-    <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope)} />
+    <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope || drill?.reasonWords)}
+      detailContent={drill?.reasonWords ? rows => <LossReasonWords key={drill.title} deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} /> : undefined} />
   </main>;
 }

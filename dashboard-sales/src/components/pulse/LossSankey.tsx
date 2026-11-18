@@ -12,7 +12,7 @@ const quantity = (count: number) => `${count} ${count === 1 ? 'deal' : 'deals'}`
 
 export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable, onOpen }: {
   deals: InsightDeal[]; periods: string[]; scope: string; readAt: string; entryDatesAvailable: boolean;
-  onOpen: (title: string, deals: InsightDeal[], basis: LossDateBasis) => void;
+  onOpen: (title: string, deals: InsightDeal[], basis: LossDateBasis, reasonDetail?: boolean) => void;
 }) {
   const origin = 'all' as const;
   const [basis, setBasis] = useState<LossDateBasis>('entry');
@@ -22,7 +22,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
   const [inspection, setInspection] = useState<{ context: string; key: string; title: string; count: number; amount: number } | null>(null);
   const hover = inspection?.context === context ? inspection : null;
   const setHover = (value: { key: string; title: string; count: number; amount: number } | null) => setInspection(value ? { ...value, context } : null);
-  const open = (title: string, rows: InsightDeal[]) => onOpen(title, rows, basis);
+  const open = (title: string, rows: InsightDeal[], reasonDetail = false) => onOpen(title, rows, basis, reasonDetail);
   const height = Math.max(420, Math.max(...(['owner', 'stage', 'reason'] as const).map(kind => graph.nodes.filter(node => node.kind === kind).length)) * 36 + 20);
   const keyboard = (event: React.KeyboardEvent<SVGElement>, action: () => void) => {
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); action(); }
@@ -52,7 +52,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
                 const title = `${node.kind === 'owner' ? 'Comercial' : node.kind === 'stage' ? 'Etapa al perderse' : 'Motivo'} · ${node.name}`;
                 const labelX = node.kind === 'owner' ? x - 10 : x + width + 10;
                 const focus = () => setHover({ key: node.key, title, count: node.deals.length, amount: node.amount });
-                return <g className="loss-sankey-node" role="button" tabIndex={0} aria-label={`Ver ${quantity(node.deals.length)} · ${title}`} onClick={() => open(title, node.deals)} onKeyDown={event => keyboard(event, () => open(title, node.deals))} onMouseEnter={focus} onMouseLeave={() => setHover(null)} onFocus={focus} onBlur={() => setHover(null)}>
+                return <g className="loss-sankey-node" role="button" tabIndex={0} aria-label={`Ver ${quantity(node.deals.length)} · ${title}`} onClick={() => open(title, node.deals, node.kind === 'reason')} onKeyDown={event => keyboard(event, () => open(title, node.deals, node.kind === 'reason'))} onMouseEnter={focus} onMouseLeave={() => setHover(null)} onFocus={focus} onBlur={() => setHover(null)}>
                   <title>{`${title} · ${quantity(node.deals.length)} · ${money(node.amount)} MRR`}</title>
                   <rect x={node.kind === 'owner' ? x - 112 : x} y={Math.min(y, y + nodeHeight / 2 - 11)} width={node.kind === 'owner' ? 124 : node.kind === 'stage' ? 110 : 190} height={Math.max(nodeHeight, 24)} fill="transparent" />
                   <rect x={x} y={y} width={width} height={Math.max(nodeHeight, 2)} rx={3} fill={COLORS[node.kind]} />
@@ -67,7 +67,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
                 return <path className="loss-sankey-link" role="button" tabIndex={0} aria-label={`Ver ${quantity(link.value)} · ${title}`}
                   d={`M${props.sourceX},${props.sourceY} C${props.sourceControlX},${props.sourceY} ${props.targetControlX},${props.targetY} ${props.targetX},${props.targetY}`}
                   fill="none" stroke={COLORS[link.source.kind]} strokeWidth={Math.max(props.linkWidth, 2)} strokeOpacity={hover?.key === `link:${link.key}` ? .85 : .26}
-                  onClick={() => open(title, link.deals)} onKeyDown={event => keyboard(event, () => open(title, link.deals))} onMouseEnter={focus} onMouseLeave={() => setHover(null)} onFocus={focus} onBlur={() => setHover(null)}>
+                  onClick={() => open(title, link.deals, link.target.kind === 'reason')} onKeyDown={event => keyboard(event, () => open(title, link.deals, link.target.kind === 'reason'))} onMouseEnter={focus} onMouseLeave={() => setHover(null)} onFocus={focus} onBlur={() => setHover(null)}>
                   <title>{`${title} · ${quantity(link.value)} · ${money(link.amount)} MRR`}</title>
                 </path>;
               }} />
