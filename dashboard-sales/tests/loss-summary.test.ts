@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { lossMonthlyHistory } from '../src/lib/loss-summary';
+import { lossMonthlyHistory, lossValuation, lossTicketComparison } from '../src/lib/loss-summary';
 import type { InsightDeal } from '../src/lib/insights-types';
 const deal = (id: string, close: string, amount: number, status = 'lost') => ({ id, closeDateValue: close, amountValue: amount, status } as InsightDeal);
 const periods = ['2026-Q2', '2026-Q3', '2026-Q4'];
@@ -19,4 +19,22 @@ test('past-period trends end at the selected quarter and cross years chronologic
   const result = lossMonthlyHistory([], ['2025-Q4', '2026-Q1'], '2026', '1', '2026-11-18T12:00:00Z');
   expect(result.map(row => row.month)).toEqual(['2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03']);
   expect(result.some(row => row.partial)).toBe(false);
+});
+
+test('valuation coverage counts only positive finite MRR and keeps zero/unknown deals in its denominator', () => {
+  const rows = [deal('a', '', 200), deal('b', '', 0), deal('c', '', NaN), deal('d', '', -1)];
+  expect(lossValuation(rows)).toEqual({ valuedCount: 1, valuedPercent: 25 });
+  expect(lossValuation([])).toEqual({ valuedCount: 0, valuedPercent: null });
+});
+test('ticket difference uses the team deal-weighted average including zero deals and the selected owner', () => {
+  const mine = [deal('a', '', 600)];
+  const team = [...mine, deal('b', '', 0), deal('c', '', 300)];
+  expect(lossTicketComparison(mine, team)).toEqual({ teamTicket: 300, differencePercent: 100 });
+  expect(lossTicketComparison([team[1]], team)).toEqual({ teamTicket: 300, differencePercent: -100 });
+  expect(lossTicketComparison(team, team)).toEqual({ teamTicket: 300, differencePercent: 0 });
+});
+test('ticket difference stays unknown when either population is missing or the team base is zero', () => {
+  expect(lossTicketComparison([], [deal('a', '', 100)]).differencePercent).toBeNull();
+  expect(lossTicketComparison([deal('a', '', 100)], []).differencePercent).toBeNull();
+  expect(lossTicketComparison([deal('a', '', 0)], [deal('b', '', 0)]).differencePercent).toBeNull();
 });

@@ -23,3 +23,19 @@ export function lossMonthlyHistory(deals: InsightDeal[], coveredPeriods: string[
       ticket: covered && rows.length ? amount / rows.length : null, partial: end - 5 + index === readMonth };
   });
 }
+
+/** Valued means a recorded finite MRR > 0; the denominator keeps every scoped lost deal. */
+export function lossValuation(deals: InsightDeal[]) {
+  const valuedCount = deals.filter(deal => Number.isFinite(deal.amountValue) && deal.amountValue > 0).length;
+  return { valuedCount, valuedPercent: deals.length ? valuedCount / deals.length * 100 : null };
+}
+
+/** Team averages include $0 deals, and compare averages rather than total MRR or owner averages. */
+export function lossTicketComparison(selected: InsightDeal[], team: InsightDeal[]) {
+  const average = (deals: InsightDeal[]) => deals.length ? deals.reduce((total, deal) => total + deal.amountValue, 0) / deals.length : null;
+  const selectedTicket = average(selected);
+  const teamTicket = average(team);
+  const differencePercent = selectedTicket !== null && Number.isFinite(selectedTicket) && teamTicket !== null && Number.isFinite(teamTicket) && teamTicket > 0
+    ? (selectedTicket / teamTicket - 1) * 100 : null;
+  return { teamTicket, differencePercent };
+}
