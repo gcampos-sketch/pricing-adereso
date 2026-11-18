@@ -160,7 +160,7 @@ export function PriceConversionView({ report, onRefresh, refreshing, ...props }:
       <p>Filtra paquete, plan, modelo y volumen para acercarte a ofertas comparables. La muestra completa puede mezclar alcances distintos; no se ajusta por descuentos ni por cambios de precio históricos.</p>
     </details>
     <Dialog open={selected !== null} onOpenChange={open => { if (!open) setSelected(null); }}>
-      <DialogContent className="price-deal-dialog"><DialogHeader><DialogTitle>{selected?.title}</DialogTitle>
+      <DialogContent className="price-deal-dialog" overlayClassName="price-deal-overlay"><DialogHeader><DialogTitle>{selected?.title}</DialogTitle>
         <DialogDescription>{selected?.rows.length ?? 0} negocios · {props.ownerName} · {period === 'rolling' ? 'Últimos 12 meses' : props.rangeLabel} · valores actuales registrados en HubSpot</DialogDescription></DialogHeader>
         <div className="price-detail-scroll">
         <div className="price-distributions">{(['industry', 'companySize'] as const).map(field => <section key={field}><h4>{field === 'industry' ? 'Industria Adereso' : 'Tamaño de empresa'}</h4><p>Distribución por número de deals · {selected?.rows.length ?? 0} negocios</p>

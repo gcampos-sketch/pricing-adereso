@@ -57,3 +57,7 @@
 .price-distribution-track > span { display:block; height:100%; background:var(--brand); }
 .price-detail-selection { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; font-size:12px; margin-bottom:8px; }
 @media(max-width:600px) { .price-distributions { grid-template-columns:1fr; } .price-type-trigger { font-size:16px; } }
+
+/* Price drilldowns cover the fixed report navigation, including the mobile drawer. */
+.price-deal-overlay { z-index:1100; }
+.price-deal-dialog { z-index:1101; }
