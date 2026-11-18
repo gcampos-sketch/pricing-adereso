@@ -19,3 +19,9 @@
 .loss-words-evidence blockquote p { white-space:pre-wrap; margin:0 0 6px; overflow-wrap:anywhere; }
 .loss-words-evidence footer { font-size:11px; color:var(--muted); }
 .loss-words-evidence a { color:var(--brand); text-decoration:underline; }
+
+.loss-reason-words[data-compact=true] .loss-words-cloud { display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); grid-auto-rows:112px; justify-items:center; gap:8px; padding:10px 0; }
+.loss-reason-words[data-compact=true] .loss-words-cloud button { width:min(var(--bubble-size,76px),104px,100%); }
+.loss-reason-words[data-compact=true] .loss-word-label { font-size:12px; }
+.loss-words-more { border:0; background:none; padding:7px 0; color:var(--brand); cursor:pointer; font-size:11px; text-decoration:underline; text-underline-offset:3px; }
+@media(max-width:480px) { .loss-reason-words[data-compact=true] .loss-words-cloud { grid-template-columns:repeat(auto-fill,minmax(82px,1fr)); grid-auto-rows:100px; gap:6px; } .loss-reason-words[data-compact=true] .loss-word-label { font-size:11px; } }

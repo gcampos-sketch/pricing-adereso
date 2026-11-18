@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
+import { LossReasonPopover } from "./LossReasonPopover";
 import { LossReasonWords } from "./LossReasonWords";
 import { LossSankey } from "./LossSankey";
 import { DealModal } from "./DealModal";
@@ -59,6 +60,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const scopeKey = JSON.stringify([filters.year, filters.quarter, filters.ownerId, role, stageFilter, creationSource]);
   const [exploration, setExploration] = useState<{ scope: string; path: Slice[] }>({ scope: "", path: [] });
   const path = exploration.scope === scopeKey ? exploration.path : [];
+  const wordScope = [filters.rangeLabel, filters.ownerName, sourceScope, ...path.filter(slice => slice.dimension !== "reason").map(slice => slice.key)].join(" · ");
   const roleOwnerOptions = report.owners.filter(owner => role === "all" || roleOfOwner(owner.id) === role)
     .map(owner => [owner.id, owner.name] as [string, string]);
   const closed = useMemo(() => scopeLossCreationSource(filters.deals, creationSource).filter(deal => role === "all" || roleOfOwner(deal.ownerId) === role), [filters.deals, role, creationSource]);
@@ -155,7 +157,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
           </button></span>)}
       </nav>
       <div className="loss-analysis-heading">
-        <div><h2>{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : "Elige una categoría para profundizar o abre sus deals."}</p></div>
+        <div><h2>{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa un motivo para ver sus palabras o el conteo para abrir sus deals." : "Elige una categoría para profundizar o abre sus deals."}</p></div>
         <div className="tabs" aria-label="Medida del análisis">{(["amount", "count"] as const).map(value => <button type="button" key={value} data-active={measure === value} aria-pressed={measure === value} onClick={() => setMeasure(value)}>{value === "amount" ? "MRR" : "Deals"}</button>)}</div>
       </div>
       <div className="loss-dimensions" aria-label="Analizar pérdidas por">
@@ -165,15 +167,22 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         <button type="button" className="cell-button" onClick={() => { const last = path[path.length - 1]!; updatePath(path.slice(0, -1)); setDimension(last.dimension); }}><ArrowLeft size={14} aria-hidden="true" /> Volver un nivel</button>
         <button type="button" className="cell-button" onClick={() => open(path.map(slice => slice.key).join(" · "), scoped)}>Ver {scoped.length} deals</button>
       </div>}
-      {path.some(slice => slice.dimension === "reason") && <LossReasonWords deals={scoped} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />}
+      {path.some(slice => slice.dimension === "reason") && <LossReasonPopover label={path.find(slice => slice.dimension === "reason")!.key} triggerLabel="Ver palabras del motivo" deals={scoped} scope={wordScope} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />}
       <div className="loss-rows">
         {visibleRows.map(row => <div key={row.key} className="loss-row">
-          <button type="button" className="loss-category" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals, dimension === "reason")} aria-label={`Analizar ${row.key}`}>
+          {dimension === "reason" ? <div className="loss-category loss-category--reason">
+            <LossReasonPopover label={row.key} deals={row.deals} scope={wordScope} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
+            <button type="button" className="loss-category-drill" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals, true)} aria-label={`Analizar ${row.key}`}>
+              <span className="loss-row-track"><span style={{ width: `${row[measure] / max * 100}%` }} /></span>
+              <span className="loss-row-value">{measure === "amount" ? money(row.amount) : row.count}<small>{pct(total ? row[measure] / total * 100 : 0)}</small></span>
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>
+          </div> : <button type="button" className="loss-category" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals)} aria-label={`Analizar ${row.key}`}>
             <span className="loss-row-label">{row.key}</span>
             <span className="loss-row-track"><span style={{ width: `${row[measure] / max * 100}%` }} /></span>
             <span className="loss-row-value">{measure === "amount" ? money(row.amount) : row.count}<small>{pct(total ? row[measure] / total * 100 : 0)}</small></span>
             <ChevronRight size={15} aria-hidden="true" />
-          </button>
+          </button>}
           <button type="button" className="loss-deals-link" onClick={() => open(row.key, row.deals, dimension === "reason")} aria-label={`Ver ${row.count} deals de ${row.key}`}>{row.count} deals</button>
         </div>)}
         {!rows.length && <div className="empty-state">Sin pérdidas en este alcance. Cambia los filtros o vuelve al resumen.</div>}
