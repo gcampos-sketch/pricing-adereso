@@ -4,8 +4,8 @@ import { lossPriorScore, type LossHistoryVersion, type LossPriorScore } from './
 export async function readLossPriorScores(ids: string[]): Promise<Record<string, LossPriorScore>> {
   const response = await gateway<{ status?: string; numErrors?: number; errors?: unknown[]; results?: { id: string; properties: Record<string,string|null>; propertiesWithHistory?: Record<string,LossHistoryVersion[]> }[] }>(
     '/crm/v3/objects/deals/batch/read', { method: 'POST', body: JSON.stringify({ inputs: ids.map(id => ({id})),
-      properties: ['pipeline','dealstage', ...[...LOST_STAGES].map(id => `hs_v2_date_entered_${id}`)],
-      propertiesWithHistory: ['dealstage','adobo_closing_score','hs_deal_stage_probability'] }) });
+      properties: ['pipeline','dealstage','adobo_icp_score','adobo_icp_fit', ...[...LOST_STAGES].map(id => `hs_v2_date_entered_${id}`)],
+      propertiesWithHistory: ['dealstage','adobo_closing_score','hs_deal_stage_probability','adobo_icp_score','adobo_icp_fit'] }) });
   const rows = response.results ?? [];
   if ((response.status && response.status !== 'COMPLETE') || response.numErrors || response.errors?.length || rows.length !== ids.length || new Set(rows.map(r=>r.id)).size !== ids.length || rows.some(r=>!ids.includes(r.id))) throw Error('No se pudo verificar todo el historial de este grupo. Vuelve a intentar.');
   const readAt = new Date().toISOString();

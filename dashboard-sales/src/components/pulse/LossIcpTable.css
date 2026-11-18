@@ -1,0 +1,11 @@
+.loss-icp-table { margin-top:24px; }
+.loss-icp-table h2 { margin:0; font:500 20px Outfit,sans-serif; }
+.loss-icp-scroll { overflow-x:auto; }
+.loss-icp-grid { width:100%; border-collapse:collapse; font-size:12px; }
+.loss-icp-grid th,.loss-icp-grid td { padding:12px 10px; border-bottom:1px solid var(--border); text-align:right; font-variant-numeric:tabular-nums; }
+.loss-icp-grid thead th { color:var(--muted); font-size:11px; font-weight:400; white-space:nowrap; }
+.loss-icp-grid th:first-child,.loss-icp-grid td:first-child { padding-left:0; text-align:left; }
+.loss-icp-grid tfoot th,.loss-icp-grid tfoot td { border-bottom:0; font-weight:500; padding-top:16px; }
+.loss-icp-open { display:inline-flex; align-items:center; gap:6px; padding:4px 0; border:0; background:none; color:var(--brand); cursor:pointer; font-size:11px; white-space:nowrap; }
+.loss-icp-open:disabled { opacity:.35; cursor:default; }
+@media(max-width:640px) { .loss-icp-grid { font-size:11px; } .loss-icp-grid td,.loss-icp-grid th { padding:11px 7px; } .loss-icp-table .loss-analysis-heading { flex-direction:column; } }
