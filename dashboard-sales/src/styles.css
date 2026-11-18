@@ -4425,6 +4425,8 @@
 
 .lost-field :is(input, select, textarea) { width: 100%; }
 
+.lost-field textarea { border-radius: var(--radius-md); }
+
 .lost-departments-trigger {
   display: flex;
   align-items: center;
