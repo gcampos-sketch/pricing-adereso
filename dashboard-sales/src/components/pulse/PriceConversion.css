@@ -1,0 +1,41 @@
+.price-analysis { display:flex; flex-direction:column; gap:16px; min-width:0; padding-top:12px; }
+.price-topline,.price-tools,.price-view-switch { display:flex; align-items:center; gap:6px; }
+.price-topline { justify-content:space-between; flex-wrap:wrap; }
+.price-view-switch { flex-wrap:wrap; }
+.price-view-switch button[aria-pressed="true"] { background:var(--surface); color:var(--foreground); box-shadow:inset 0 -2px var(--brand); }
+.price-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:12px; }
+.price-filter { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.price-filter > span { color:var(--muted); font-size:11px; }
+.price-filter select { width:100%; min-width:0; padding:8px 26px 8px 9px; border:1px solid var(--border); border-radius:6px; color:var(--foreground); background:var(--card); font:inherit; font-size:12px; text-overflow:ellipsis; }
+.price-filter select option { color:var(--foreground); background:var(--card); }
+.price-scope { display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:11px; }
+.price-chart-heading h3 { margin:0 0 4px; font-size:15px; font-weight:500; }
+.price-chart-heading p,.price-caveat { margin:0; font-size:12px; line-height:1.5; color:var(--muted); }
+.price-chart { width:100%; min-width:0; }
+.price-chart .recharts-bar-rectangle,.price-chart .recharts-scatter-symbol { cursor:pointer; }
+.price-tooltip { background:var(--card); color:var(--foreground); border:1px solid var(--border); border-radius:8px; padding:10px 12px; box-shadow:var(--shadow-modal); display:flex; flex-direction:column; gap:5px; font-size:12px; }
+.price-table-wrap { overflow-x:auto; max-width:100%; }
+.price-table { width:100%; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums; }
+.price-table caption { text-align:left; color:var(--muted); padding:0 0 10px; font-size:11px; }
+.price-table th,.price-table td { padding:10px 8px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
+.price-table th:first-child { text-align:left; }
+.price-table th { font-weight:500; }
+.price-table thead th { color:var(--muted); font-size:11px; }
+.price-table button { background:transparent; color:var(--foreground); border:0; text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:4px 8px; }
+.price-table button:disabled { color:var(--muted); text-decoration:none; cursor:default; }
+.price-table small { display:block; color:var(--muted); margin-top:3px; font-size:11px; }
+.price-coverage { color:var(--muted); font-size:12px; line-height:1.6; }
+.price-coverage summary { cursor:pointer; }
+.price-coverage p { margin:10px 0; }
+.price-coverage button { display:block; background:transparent; color:var(--foreground); border:0; padding:5px 0; text-align:left; text-decoration:underline; cursor:pointer; }
+.price-state { display:flex; gap:12px; flex-wrap:wrap; padding:25px 0; color:var(--muted); font-size:13px; }
+.price-method { width:min(440px,calc(100vw - 24px)); max-height:75vh; overflow:auto; font-size:12px; line-height:1.6; background:var(--card); color:var(--foreground); }
+.price-method p { margin:10px 0 0; }
+.price-deal-dialog { width:min(1100px,calc(100vw - 24px)); max-width:none; max-height:85vh; display:flex; flex-direction:column; background:var(--card); color:var(--foreground); }
+.price-deal-table { overflow:auto; min-height:0; }
+.price-deal-table th:first-child { max-width:260px; min-width:180px; white-space:normal; }
+.price-deal-table a { color:var(--foreground); text-decoration:underline; text-underline-offset:3px; }
+.price-deal-table td:last-child { max-width:300px; white-space:normal; text-align:left; }
+@media(max-width:600px) { .price-filters { grid-template-columns:repeat(2,minmax(0,1fr)); } .price-filter select { font-size:16px; } .price-chart-heading p { max-width:35ch; } }
+@media(prefers-reduced-motion:no-preference) { .price-spinning { animation:price-spin 1.5s linear infinite; } }
+@keyframes price-spin { to { transform:rotate(360deg); } }

@@ -1,5 +1,6 @@
 import { MetricTrend } from "./MetricTrend";
 import { trendPoints, type TrendUnit } from "@/lib/chart-trend";
+import { PriceConversion } from './PriceConversion';
 import {QuotaScenarios} from './QuotaScenarios';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
@@ -1499,6 +1500,9 @@ export function PulseDashboard({
           {...(lostTrend?.length ? { trend: lostTrend, trendLabels: monthly.months } : {})}
         />
       </section>
+      </Fold>
+      <Fold defaultOpen title="Precio y conversión" subtitle="Sensibilidad al precio, setup y demanda observada">
+        <PriceConversion role={role} owner={ownerFilter} ownerName={ownerName} periods={selectedPeriods} rangeLabel={rangeLabel} refreshKey={report.generatedAt} matchesType={matchesType} />
       </Fold>
       </>}
       {section === "pipeline" && <>
