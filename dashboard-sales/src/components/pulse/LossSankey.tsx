@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { ResponsiveContainer, Sankey } from 'recharts';
 import { buildLossSankey, type LossSankeyNode, type LossSankeyLink, type LossSankeyGrouping } from '@/lib/loss-sankey';
 import type { InsightDeal } from '@/lib/insights-types';
@@ -16,10 +16,12 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
   onOpen: (title: string, deals: InsightDeal[], basis: LossDateBasis, reasonDetail?: boolean) => void;
 }) {
   const origin = 'all' as const;
+  const coverageHelpId = useId();
   const [grouping, setGrouping] = useState<LossSankeyGrouping>('owner');
   const firstColumn = grouping === 'team' ? 'Equipo' : 'Comercial';
   const [basis, setBasis] = useState<LossDateBasis>('entry');
   const filtered = useMemo(() => scopeLossSankey(deals, { periods, origin, basis, readAt }), [deals, periods, origin, basis, readAt]);
+  const coverageExplanation = `Entre los perdidos disponibles con estos filtros de origen, comercial, rol y etapa, estos deals no tienen ${basis === 'entry' ? 'una entrada a perdido verificable' : 'una fecha de cierre válida'}. Se excluyen del Sankey sin asignarlos al período. Pulsa para revisar sus deals.`;
   const graph = useMemo(() => buildLossSankey(filtered.deals, grouping), [filtered, grouping]);
   const context = JSON.stringify([scope, readAt, origin, basis, grouping, graph.deals.map(deal => deal.id)]);
   const [inspection, setInspection] = useState<{ context: string; key: string; title: string; count: number; amount: number } | null>(null);
@@ -43,12 +45,19 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
         <button type="button" aria-pressed={basis === 'close'} data-active={basis === 'close'} onClick={() => setBasis('close')}>Fecha de cierre</button>
       </div></div>
     </div>
-    <p className="loss-sankey-help">El período y el equipo vienen de los filtros principales. Estos controles cambian solo el Sankey.</p>
-    {basis === 'entry' && !entryDatesAvailable && <p className="loss-sankey-coverage" role="status">La copia actual aún no incluye las fechas de entrada a perdido. Actualiza el dashboard para leerlas; no se sustituyen por fechas de cierre.</p>}
-    {filtered.missingDates.length > 0 && (basis === 'close' || entryDatesAvailable) && <p className="loss-sankey-coverage"><button type="button" className="loss-sankey-warning-link" onClick={() => onWarning(filtered.missingDates, basis)}>{quantity(filtered.missingDates.length)} sin {basis === 'entry' ? 'entrada a perdido verificable' : 'fecha de cierre válida'} ↗</button> entre los perdidos disponibles con estos filtros de origen, comercial, rol y etapa. Se excluyen sin asignarlos al período.</p>}
-    <p className="loss-sankey-help">{firstColumn} → etapa al perderse → motivo. Haz clic en un bloque o conexión para ver sus deals.</p>
+    <div className="loss-sankey-meta">
+      <div className="loss-sankey-inspection" aria-live="polite" title={`${firstColumn} → etapa al perderse → motivo. El período y el equipo vienen de los filtros principales; estos controles cambian solo el Sankey.`}>
+        {hover ? <><strong>{hover.title}</strong><span>{quantity(hover.count)} · {money(hover.amount)} MRR · clic para ver deals</span></> : <span>Pulsa un bloque o conexión para ver sus deals.</span>}
+      </div>
+      {basis === 'entry' && !entryDatesAvailable && <span className="loss-sankey-note" role="status" title="La copia actual aún no incluye las fechas de entrada a perdido; no se sustituyen por fechas de cierre.">Actualiza para leer las fechas de entrada.</span>}
+      {filtered.missingDates.length > 0 && (basis === 'close' || entryDatesAvailable) && <>
+        <button type="button" className="loss-sankey-warning-link" aria-describedby={coverageHelpId} title={coverageExplanation}
+          aria-label={`Ver ${quantity(filtered.missingDates.length)} sin ${basis === 'entry' ? 'entrada a perdido verificable' : 'fecha de cierre válida'}`}
+          onClick={() => onWarning(filtered.missingDates, basis)}>{filtered.missingDates.length} sin {basis === 'entry' ? 'entrada verificable' : 'fecha de cierre'} ↗</button>
+        <span id={coverageHelpId} className="sr-only">{coverageExplanation}</span>
+      </>}
+    </div>
     {graph.deals.length ? <>
-      <div className="loss-sankey-inspection" aria-live="polite">{hover ? <><strong>{hover.title}</strong><span>{quantity(hover.count)} · {money(hover.amount)} MRR · clic para ver deals</span></> : <span>Pasa el cursor por el gráfico para explorar cada grupo.</span>}</div>
       <div className="loss-sankey-scroll" tabIndex={0} role="region" aria-label={`Diagrama ${firstColumn.toLowerCase()}, etapa y motivo; desplazable horizontalmente`}>
         <div className="loss-sankey-canvas">
           <div className="loss-sankey-columns"><span>{firstColumn}</span><span>Etapa al perderse</span><span>Motivo</span></div>
