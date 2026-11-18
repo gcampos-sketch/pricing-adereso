@@ -78,7 +78,7 @@ export function buildExecutiveStrip(journeys: StageJourney[], onTrack: { yes: De
     wonJourney: {
       total: wonStages.reduce((sum, stage) => sum + stage.deals.length, 0), historicTotal: list.length, stages: wonStages, service,
       pending: list.filter(d => d.stageId !== '173990327'),
-      segments: ['Inbound', 'Outbound', 'Upsell', 'Cross sell'].map(seg => ({ seg, deals: service.filter(d => d.segment === seg) })).filter(x => x.deals.length),
+      segments: ['Inbound', 'Outbound', 'Upsell', 'Cross sell', 'Renovación', 'Sin clasificar'].map(seg => ({ seg, deals: service.filter(d => d.segment === seg) })).filter(x => x.deals.length),
       contracts,
       cBlank: contracts.filter(d => !d.contractStatus || /no inici|blanco/i.test(d.contractStatus)),
       cDraft: contracts.filter(d => /borrador/i.test(d.contractStatus ?? '')),
