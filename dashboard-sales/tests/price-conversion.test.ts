@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { analyzePrices, median, priceBands, priceCohorts, priceInWindow, priceNumber, type PriceFilters, type PriceObservation, type PriceRecord } from '../src/lib/price-conversion';
+import { analyzePrices, priceDistribution, median, priceBands, priceCohorts, priceInWindow, priceNumber, type PriceFilters, type PriceObservation, type PriceRecord } from '../src/lib/price-conversion';
 import { readPriceRecords } from '../src/lib/price-conversion.server';
 import type { DealDTO } from '../src/lib/pulse-types';
 
@@ -88,4 +88,35 @@ test('source reads page through to exact total and fail closed on truncation/dup
     ? { total: 3, results: [record('b')] }
     : { total: 2, results: [record('a')], paging: { next: { after: '1' } } }) as typeof request)).rejects.toThrow('cambió');
   await expect(readPriceRecords((async () => ({ total: 3, results: [record('a')], paging: { next: { after: '1' } } })) as typeof request)).rejects.toThrow('incompleta');
+});
+
+test('setup analysis includes real zero without MRR, excludes missing setup, and conserves exact band membership', () => {
+  const rows = [observation('free', 0, { setup: 0, won: true }), observation('missing', 558, { setup: null }),
+    observation('500', 0, { setup: 500 }), observation('1000', 0, { setup: 1000 }), observation('10000', 0, { setup: 10000 })];
+  const result = analyzePrices(rows, readAt, { ...filters, metric: 'setup' });
+  expect(result.eligible.map(row => row.deal.id)).toEqual(['free', '500', '1000', '10000']);
+  expect(result.bands.map(band => band.rows.map(row => row.deal.id))).toEqual([['free'], ['500'], ['1000'], [], [], ['10000']]);
+  expect(result.bands[0]).toMatchObject({ rate: 100, setupMedian: 0 });
+  expect(result.excluded['Sin setup/OTF registrado']?.map(row => row.deal.id)).toEqual(['missing']);
+  const uf = analyzePrices(rows.map(row => ({ ...row, currency: 'UF' })), readAt, { ...filters, metric: 'setup', currency: 'UF' });
+  expect(uf.bands.flatMap(band => band.rows)).toHaveLength(4);
+});
+
+test('native deal types combine with OR, preserve unknowns, and empty selection means no deals', () => {
+  const rows = [observation('new', 558, { deal: { id: 'new', closeDateValue: '2026-10-10', dealType: 'newbusiness' } as DealDTO }),
+    observation('up', 558, { deal: { id: 'up', closeDateValue: '2026-10-10', dealType: 'Upsell (mas de los mismo)' } as DealDTO }), observation('unknown')];
+  expect(analyzePrices(rows, readAt, { ...filters, dealTypes: ['newbusiness', 'Upsell (mas de los mismo)'] }).eligible.map(row => row.deal.id)).toEqual(['new', 'up']);
+  expect(analyzePrices(rows, readAt, { ...filters, dealTypes: ['newbusiness'] }).eligible.map(row => row.deal.id)).toEqual(['new']);
+  expect(analyzePrices(rows, readAt, { ...filters, dealTypes: ['unknown'] }).eligible.map(row => row.deal.id)).toEqual(['unknown']);
+  expect(analyzePrices(rows, readAt, { ...filters, dealTypes: [] }).eligible).toHaveLength(0);
+});
+
+test('industry and company-size distributions conserve deduplicated selected population including unknown values', () => {
+  const rows = [observation('a', 558, { industry: 'Retail', companySize: '2 - 50' }), observation('b', 558, { industry: 'Retail' }), observation('c')];
+  const industry = priceDistribution([...rows, rows[0]!], 'industry');
+  expect(industry.map(group => [group.label, group.count])).toEqual([['Retail', 2], ['Sin dato registrado', 1]]);
+  expect(industry.reduce((sum, group) => sum + group.share, 0)).toBeCloseTo(100);
+  expect(industry[0]?.rows.map(row => row.deal.id)).toEqual(['a', 'b']);
+  expect(priceDistribution(rows, 'companySize').map(group => group.count)).toEqual([2, 1]);
+  expect(priceDistribution([], 'industry')).toEqual([]);
 });

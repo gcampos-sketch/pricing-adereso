@@ -8,6 +8,9 @@ export type PriceRecord = { id: string; properties: Record<string, string | null
 export type PriceLinks = Record<string, { id: string; primary: boolean }[]>;
 export type PriceObservation = {
   deal: DealDTO;
+  industry?: string;
+  companySize?: string;
+  dealTypeLabel?: string;
   monthly: number | null;
   setup: number | null;
   currency: string;
@@ -80,7 +83,24 @@ export function median(values: number[]): number | null {
   const middle = Math.floor(sorted.length / 2);
   return sorted.length ? sorted.length % 2 ? sorted[middle]! : (sorted[middle - 1]! + sorted[middle]!) / 2 : null;
 }
+export type PriceMetric = 'mrr' | 'setup';
+export const priceTypeKey = (row: PriceObservation) => row.deal.dealType?.trim() || 'unknown';
+export const priceTypeLabel = (row: PriceObservation) => row.dealTypeLabel || (priceTypeKey(row) === 'newbusiness' ? 'Oportunidad' : priceTypeKey(row) === 'unknown' ? 'Sin tipo registrado' : priceTypeKey(row));
+
+/** Exact deal memberships; missing native values remain visible in the denominator. */
+export function priceDistribution(rows: PriceObservation[], field: 'industry' | 'companySize') {
+  const groups = new Map<string, PriceObservation[]>();
+  for (const row of new Map(rows.map(row => [row.deal.id, row])).values()) {
+    const label = row[field]?.trim() || 'Sin dato registrado';
+    groups.set(label, [...(groups.get(label) ?? []), row]);
+  }
+  const total = [...groups.values()].reduce((sum, group) => sum + group.length, 0);
+  return [...groups].map(([label, deals]) => ({ label, rows: deals, count: deals.length, share: total ? 100 * deals.length / total : 0 }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'es'));
+}
+
 export type PriceFilters = {
+  metric?: PriceMetric; dealTypes?: string[];
   currency: string; product: string; plan: string; pricingModel: string; volume: string;
   cohort: 'all' | PriceCohort;
   period: 'rolling' | 'master'; periods: string[];
@@ -106,15 +126,16 @@ export type PriceBand = {
   rate: number | null; setupMedian: number | null; setupKnown: number;
   monthlyMedian: number | null;
 };
-export function priceBands(rows: PriceObservation[], currency: string): PriceBand[] {
+export function priceBands(rows: PriceObservation[], currency: string, metric: PriceMetric = 'mrr'): PriceBand[] {
+  const value = (row: PriceObservation) => metric === 'setup' ? row.setup : row.monthly;
   // USD anchors include the recorded base price of 558; other native currencies get their own scale.
-  const max = Math.max(0, ...rows.map(row => row.monthly ?? 0));
+  const max = Math.max(0, ...rows.map(row => value(row) ?? 0));
   const power = max > 0 ? 10 ** Math.floor(Math.log10(max / 5 || 1)) : 1;
   const step = Math.max(power, Math.ceil(max / 5 / power) * power);
-  const bounds = currency === 'USD' ? [0, 199, 399, 558, 1000, 2000, Infinity] : [0, step, step * 2, step * 3, step * 4, Infinity];
+  const bounds = currency === 'USD' ? metric === 'setup' ? [0, 500, 1000, 2000, 5000, 10000, Infinity] : [0, 199, 399, 558, 1000, 2000, Infinity] : [0, step, step * 2, step * 3, step * 4, Infinity];
   return bounds.slice(0, -1).map((lower, index) => {
     const upper = bounds[index + 1]!;
-    const selected = rows.filter(row => row.monthly !== null && row.monthly > 0 && row.monthly >= lower && row.monthly < upper);
+    const selected = rows.filter(row => value(row) !== null && (metric === 'setup' ? value(row)! >= 0 : value(row)! > 0) && value(row)! >= lower && value(row)! < upper);
     const wonRows = selected.filter(row => row.won);
     const setups = selected.flatMap(row => row.setup === null ? [] : [row.setup]);
     return { key: String(index), lower, upper, rows: selected, wonRows,
@@ -129,6 +150,7 @@ export function analyzePrices(rows: PriceObservation[], readAt: string, filters:
   const unique = [...new Map(rows.map(row => [row.deal.id, row])).values()];
   const dated = unique.filter(row => priceInWindow(row.deal.closeDateValue, readAt, filters));
   const scoped = dated.filter(row =>
+    (!filters.dealTypes || filters.dealTypes.includes(priceTypeKey(row))) &&
     (filters.product === 'all' || (filters.product === 'unknown' ? !row.product : row.product === filters.product)) &&
     (filters.plan === 'all' || (filters.plan === 'unknown' ? !row.plan : row.plan === filters.plan)) &&
     (filters.pricingModel === 'all' || (filters.pricingModel === 'unknown' ? !row.pricingModel : row.pricingModel === filters.pricingModel)) &&
@@ -140,10 +162,11 @@ export function analyzePrices(rows: PriceObservation[], readAt: string, filters:
     const proposed = Date.parse(row.proposalAt), closed = Date.parse(row.deal.closeDateValue);
     const reason = !Number.isFinite(proposed) || proposed > closed ? 'Sin paso válido por propuesta' :
       !row.currency ? 'Sin moneda del importe' : row.currency !== filters.currency ? 'Otra moneda' :
+      filters.metric === 'setup' ? row.setup === null ? 'Sin setup/OTF registrado' : null :
       row.monthly === null || row.monthly <= 0 ? 'Sin MRR positivo' : null;
     if (reason) (excluded[reason] ??= []).push(row);
     else eligible.push(row);
   }
   return { eligible, excluded, scoped, undated: unique.filter(row => !pricePeriod(row.deal.closeDateValue)),
-    bands: priceBands(eligible, filters.currency) };
+    bands: priceBands(eligible, filters.currency, filters.metric) };
 }
