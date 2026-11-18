@@ -12,11 +12,20 @@ test('uses the native source exactly, preserving distinct inbound and outbound o
   expect(scopeLossCreationSource(rows, 'Inexistente')).toEqual([]);
 });
 test('available choices include all lost sources, including unknown, without unrelated won-only options', () => {
-  expect(lossCreationSources([deal('a', ' B '), deal('b', 'A'), deal('c', 'B'), deal('d', ''), deal('w', 'Solo ganado', '', 'won')])).toEqual(['A', 'B', 'Sin fuente']);
+  expect(lossCreationSources([deal('a', ' B '), deal('b', 'A'), deal('c', 'B'), deal('d', ''), deal('w', 'Solo ganado', '', 'won')]).map(option => option.value)).toEqual(['A', 'B', 'Sin fuente']);
 });
 test('master source supports outbound Sankey entry and close modes without an extra inbound restriction', () => {
   const rows = scopeLossCreationSource([deal('a', 'Prospección SDR'), deal('b', 'Form de Contacto Inbound')], 'Prospección SDR');
   for (const basis of ['entry', 'close'] as const) {
     expect(scopeLossSankey(rows, { periods: ['2026-Q4'], origin: 'all', basis, readAt: '2026-11-18' }).deals.map(d => d.id)).toEqual(['a']);
   }
+});
+
+test('matches native HubSpot order and labels, grouping without changing filter values', () => {
+  const options = lossCreationSources(['Referal', 'Partner ITNG', 'KAM', 'Prospección SDR', 'Account Exec', 'Form de Contacto Inbound', 'Customer Success', 'Partner Sixbell'].map((source, index) => deal(String(index), source)));
+  expect(options.map(option => option.value)).toEqual(['Form de Contacto Inbound', 'Prospección SDR', 'Account Exec', 'KAM', 'Customer Success', 'Partner Sixbell', 'Partner ITNG', 'Referal']);
+  expect(options.map(option => option.label)).toEqual(['Form de Contacto Inbound Adereso', 'Prospección SDR Adereso', 'AE Adereso', 'KAM Adereso', 'CS Adereso', 'Partner Sixbell', 'Partner ITNG', 'Referral']);
+  expect(options[0].group).toBe('Captación');
+  expect(options[5].group).toBe('Partners');
+  expect(scopeLossCreationSource([deal('a', 'Account Exec')], options[2].value).map(row => row.id)).toEqual(['a']);
 });
