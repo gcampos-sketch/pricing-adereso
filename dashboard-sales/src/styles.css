@@ -3336,9 +3336,7 @@
   width: max-content; max-width: calc(100vw - 24px); padding: 4px;
   border: 1px solid color-mix(in oklab, var(--foreground) 16%, transparent);
   border-radius: 20px;
-  background: linear-gradient(135deg, rgb(255 255 255 / 8%), rgb(255 255 255 / 2%)), color-mix(in oklab, var(--surface) 82%, transparent);
-  backdrop-filter: blur(18px) saturate(160%);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  background: var(--card-top);
   box-shadow: 0 8px 26px rgb(0 0 0 / 24%), inset 0 1px 0 rgb(255 255 255 / 8%);
   transform-origin: left center;
 }
