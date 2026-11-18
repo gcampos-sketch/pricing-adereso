@@ -1,3 +1,5 @@
+import { MetricTrend } from "./MetricTrend";
+import { trendPoints, type TrendUnit } from "@/lib/chart-trend";
 import {QuotaScenarios} from './QuotaScenarios';
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
@@ -93,6 +95,8 @@ export function Metric({
   tooltip,
   trend,
   trendLabels,
+  trendUnit = "money",
+  trendCaption,
   chips,
   chipAddon,
   chipsTop,
@@ -119,6 +123,8 @@ export function Metric({
   /** serie sutil (últimos meses); null = sin dato */
   trend?: (number | null)[];
   trendLabels?: string[];
+  trendUnit?: TrendUnit;
+  trendCaption?: string;
   /** chips sutiles al pie de la tarjeta (ej. WR por segmento) */
   chips?: MetricChip[];
   chipAddon?: ReactNode;
@@ -130,43 +136,20 @@ export function Metric({
   footer?: ReactNode;
   reference?: number | null;
 }) {
-  const trendPoints = (trend ?? []).filter((v): v is number => v !== null && Number.isFinite(v));
-  let referenceY: number | null = null;
-  let spark: string | null = null;
-  let sparkDots: { x: number; y: number; label: string }[] = [];
-  if (trend && trendPoints.length >= 2) {
-    const min = Math.min(...trendPoints, ...(reference != null ? [reference] : []));
-    const max = Math.max(...trendPoints, ...(reference != null ? [reference] : []));
-    const span = max - min || 1;
-    referenceY = reference != null ? 17 - ((reference - min) / span) * 14 : null;
-    const step = 66 / (trend.length - 1 || 1);
-    spark = trend
-      .map((v, i) => {
-        const x = 3 + i * step;
-        const y = v === null ? 17 : 17 - ((v - min) / span) * 14;
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(" ");
-    sparkDots = trend.map((v, i) => {
-      const x = 3 + i * step;
-      const y = v === null ? 17 : 17 - ((v - min) / span) * 14;
-      const month = trendLabels?.[i] ?? `Mes ${i + 1}`;
-      const val = v === null ? "sin dato" : v >= 1000 ? money(v) : v % 1 === 0 ? String(v) : v.toFixed(1);
-      return { x, y, label: `${month}: ${val}` };
-    });
-  }
-  const Card = chipAddon || footer ? 'div' : 'button';
+  const hasTrend = Boolean(trend?.length);
+  const Card = chipAddon || footer || hasTrend ? 'div' : 'button';
   return (
     <Card
       className="metric"
       data-tone={tone}
+      data-has-trend={hasTrend || undefined}
       data-hero={hero ? "" : undefined}
       data-chip-layout={chipLayout}
       data-has-tooltip={tooltip ? "" : undefined}
       type="button"
       onClick={onClick}
     >
-      {chipAddon || footer ? <button type="button" className="metric-label metric-label-action">{label}</button> : <span className="metric-label">{label}</span>}
+      {chipAddon || footer || hasTrend ? <button type="button" className="metric-label metric-label-action">{label}</button> : <span className="metric-label">{label}</span>}
       {chipsTop && chipsTop.length ? (
         <span className="metric-corner-chips" aria-hidden="true">
           {chipsTop.map((chip) => (
@@ -216,19 +199,6 @@ export function Metric({
           </span>
         ) : null}
       </strong>
-      {spark ? (
-        <span className="metric-trend" title="Pasa el cursor por cada punto para ver mes y monto">
-          <svg viewBox="0 0 72 20" preserveAspectRatio="none">
-            {referenceY != null ? <line x1="3" x2="69" y1={referenceY} y2={referenceY} stroke="currentColor" strokeWidth=".6" strokeDasharray="2 2" opacity=".5"><title>WR histórico: {reference?.toFixed(1)}%</title></line> : null}
-            <polyline points={spark} />
-            {sparkDots.map((dot, i) => (
-              <circle key={i} className="metric-trend-dot" cx={dot.x} cy={dot.y} r={2.6}>
-                <title>{dot.label}</title>
-              </circle>
-            ))}
-          </svg>
-        </span>
-      ) : null}
       {valuation ? <div className="metric-exposure">{valuation}</div> : null}
       {note ? <div className="metric-note">{note}</div> : null}
       {typeof progress === "number" && Number.isFinite(progress) ? (
@@ -297,6 +267,7 @@ export function Metric({
           {chipAddon}
         </div>
       ) : null}
+      {hasTrend && <MetricTrend data={trendPoints(trend!, trendLabels)} label={label} unit={trendUnit} caption={trendCaption ?? "Tendencia mensual"} {...(reference !== undefined ? { reference } : {})} referenceLabel="WR histórico" />}
       {footer}
     </Card>
   );
@@ -1506,6 +1477,7 @@ export function PulseDashboard({
           onClick={() => openPeriods(isTeam ? null : ownerFilter, "won")}
           tooltip="Win rate por cantidad: ganados / (ganados + perdidos), considerando solo deals con monto mayor a $0. El chip $$$ muestra el win rate en dinero: MRR ganado / (MRR ganado + MRR perdido) del mismo periodo. Los demás chips desagregan el WR por segmento según el rol."
           {...(wrTrend?.length ? { trend: wrTrend, trendLabels: monthly.months } : {})}
+          trendUnit="percent"
           reference={historicalWr}
           chips={[...wrSegmentChips,{label:"WR histórico",value:historicalWr==null?"Sin cerrados":`${historicalWr.toFixed(1)}% · ${historicalUnique.length} cerrados` }]}
         />
@@ -1539,6 +1511,8 @@ export function PulseDashboard({
           value={String(funnelTop.created.length)}
           trend={funnelTop.createdTrend}
           trendLabels={funnelTop.createdTrendLabels}
+          trendUnit="number"
+          trendCaption="Últimos 6 meses · entrada E0/E1"
           note={`${money(funnelTop.createdAmount)} ingresados en el período`}
           chips={[
             ...generationSourceChips(funnelTop.created, "Deals ingresados · E0/E1"),

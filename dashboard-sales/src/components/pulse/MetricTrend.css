@@ -1,0 +1,14 @@
+.metric-curve { display:block; width:100%; min-width:0; padding-top:14px; cursor:default; text-align:left; }
+.metric-curve-caption { color:var(--muted); font-size:10px; line-height:1.5; min-height:28px; }
+.metric-curve-periods { display:flex; justify-content:space-between; gap:3px; color:var(--muted); font-size:9px; line-height:1.5; font-variant-numeric:tabular-nums; }
+.metric-curve-periods > span { min-width:0; text-align:center; overflow-wrap:anywhere; }
+.metric-curve-empty { display:flex; align-items:center; height:72px; color:var(--muted); font-size:11px; }
+.metric-curve-reference { min-height:15px; color:var(--muted); font-size:10px; margin-top:6px; }
+.metric-curve-tooltip { display:flex; flex-direction:column; gap:4px; padding:8px 10px; color:var(--foreground); background:var(--card); border:1px solid var(--border); border-radius:8px; font-size:11px; box-shadow:var(--shadow-modal); }
+.metric-curve-tooltip strong { font-weight:500; }
+.metric-curve-point { cursor:pointer; }
+.metric-curve-point:focus-visible { outline:2px solid var(--foreground); outline-offset:3px; }
+.metric[data-has-trend] { min-width:0; display:flex; flex-direction:column; }
+.metric[data-has-trend] > .metric-curve { margin-top:auto; }
+.trend-cell .metric-curve { min-width:132px; }
+.rep-chart > .metric-curve { flex:1; }

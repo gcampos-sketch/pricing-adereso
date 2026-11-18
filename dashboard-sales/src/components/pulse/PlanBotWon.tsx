@@ -80,7 +80,7 @@ export function PlanBotWon({
           <div className="rep-charts">
             <div className="rep-chart">
               <span className="eyebrow">Ganados por trimestre (todos los planes)</span>
-              <MiniBars data={trend} onSelect={() => undefined} />
+              <MiniBars data={trend} unit="number" label="Deals ganados" />
             </div>
             <div className="rep-chart">
               <span className="eyebrow">Distribución de planes</span>

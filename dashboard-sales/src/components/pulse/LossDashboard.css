@@ -1,0 +1,64 @@
+.loss-intro { color: var(--muted); font-size: 13px; margin: 8px 0 0; line-height: 1.6; }
+.loss-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+.loss-explorer { margin-top: 24px; }
+.loss-breadcrumb { display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:12px; color:var(--muted); }
+.loss-breadcrumb > span { display:flex; gap:6px; align-items:center; }
+.loss-breadcrumb button { cursor:pointer; background:none; border:0; color:inherit; padding:4px 0; text-align:left; }
+.loss-breadcrumb button[aria-current=location] { color:var(--foreground); }
+.loss-analysis-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:18px 0; }
+.loss-analysis-heading h2 { font-size:20px; margin:0; font-family:Outfit,sans-serif; }
+.loss-analysis-heading p { color:var(--muted); font-size:12px; margin:6px 0 0; }
+.loss-dimensions { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; }
+.loss-dimensions button { padding:7px 13px; border:1px solid var(--border); border-radius:8px; color:var(--muted); background:transparent; cursor:pointer; font-size:12px; }
+.loss-dimensions button[data-active=true] { background:var(--foreground); color:var(--background); border-color:var(--foreground); }
+.loss-scope-actions { display:flex; justify-content:space-between; gap:12px; margin:0 0 12px; }
+.loss-scope-actions button { display:flex; gap:6px; align-items:center; }
+.loss-row { display:flex; align-items:center; gap:16px; border-top:1px solid var(--border); }
+.loss-category { display:grid; grid-template-columns:minmax(110px,1fr) minmax(45px,1.2fr) 85px 15px; align-items:center; gap:16px; flex:1; min-width:0; text-align:left; border:0; background:none; color:var(--foreground); padding:13px 0; cursor:pointer; }
+.loss-category:hover .loss-row-label { text-decoration:underline; }
+.loss-row-label { font-size:13px; overflow-wrap:anywhere; }
+.loss-row-track { height:6px; background:var(--border); border-radius:8px; overflow:hidden; }
+.loss-row-track > span { display:block; height:100%; border-radius:inherit; background:var(--muted); }
+.loss-row-value { font-variant-numeric:tabular-nums; text-align:right; font-size:13px; }
+.loss-row-value small { display:block; color:var(--muted); font-size:11px; margin-top:2px; }
+.loss-deals-link { color:var(--muted); white-space:nowrap; background:none; border:0; cursor:pointer; font-size:11px; min-width:55px; text-decoration:underline; text-underline-offset:3px; }
+.loss-analysis-total { display:flex; justify-content:space-between; gap:12px; border-top:1px solid var(--border); padding-top:16px; font-size:12px; color:var(--muted); }
+.loss-analysis-total strong { color:var(--foreground); font-weight:500; }
+.loss-details { margin-top:18px; }
+.loss-details summary { cursor:pointer; font-size:14px; }
+.loss-details summary span { color:var(--muted); font-size:12px; margin-left:12px; }
+.loss-record-tools { display:flex; gap:20px; flex-wrap:wrap; margin-top:20px; }
+.loss-record-owner { color:var(--muted); font-size:11px; margin-top:4px; }
+.loss-details .table-wrap { margin-top:16px; max-height:480px; overflow:auto; }
+.loss-dashboard button:focus-visible,.loss-dashboard summary:focus-visible { outline:2px solid var(--foreground); outline-offset:3px; }
+@media(max-width:640px) { .loss-summary { grid-template-columns:1fr; gap:8px; } .loss-analysis-heading { align-items:flex-start; flex-wrap:wrap; } .loss-category { grid-template-columns:minmax(90px,1fr) 65px 12px; gap:8px; } .loss-row-track { display:none; } .loss-row { gap:8px; } .loss-details summary span { display:block; margin:6px 0 0 16px; } }
+.loss-show-more { margin:12px 0 18px; font-size:12px; }
+.loss-analysis-heading .tabs { flex-shrink:0; }
+.loss-analysis-heading .tabs button { min-width:54px; padding:7px 12px; font-size:12px; }
+.loss-analysis-heading .tabs button[data-active=true] { color:#171717; }
+.loss-summary .metric { min-width:0; display:flex; flex-direction:column; }
+.loss-summary .metric-note { min-height:34px; }
+.loss-sankey { margin-top:24px; }
+.loss-sankey-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.loss-sankey h2 { margin:0; font-family:Outfit,sans-serif; font-size:20px; }
+.loss-sankey-heading p,.loss-sankey-help,.loss-sankey-footnote { font-size:12px; color:var(--muted); line-height:1.6; margin:6px 0 0; }
+.loss-sankey-unit { color:var(--muted); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:11px; }
+.loss-sankey-inspection { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 16px; min-height:46px; padding:10px 0; margin-top:8px; color:var(--muted); font-size:11px; }
+.loss-sankey-inspection strong { color:var(--foreground); font-weight:500; }
+.loss-sankey-scroll { overflow-x:auto; overscroll-behavior-x:contain; }
+.loss-sankey-canvas { min-width:780px; }
+.loss-sankey-columns { display:flex; justify-content:space-between; padding:0 65px 8px 40px; color:var(--muted); font-size:11px; }
+.loss-sankey-columns span:nth-child(2) { padding-left:10px; }
+.loss-sankey-label { fill:var(--foreground); font-size:11px; paint-order:stroke; stroke:var(--card); stroke-width:4px; stroke-linejoin:round; }
+.loss-sankey-count { fill:var(--muted); font-size:10px; paint-order:stroke; stroke:var(--card); stroke-width:3px; }
+.loss-sankey-node,.loss-sankey-link { cursor:pointer; }
+.loss-sankey-node:hover rect:not([fill="transparent"]),.loss-sankey-node:focus-visible rect:not([fill="transparent"]) { stroke:var(--foreground); stroke-width:2px; }
+.loss-sankey-link:hover,.loss-sankey-link:focus-visible { stroke-opacity:.85; outline:none; }
+.loss-sankey-footnote { border-top:1px solid var(--border); padding-top:12px; margin-top:12px; font-size:10px; }
+.loss-sankey-controls { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px 24px; margin:16px 0 10px; }
+.loss-sankey-control { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+.loss-sankey-control > span { font-size:10px; color:var(--muted); }
+.loss-sankey-control .tabs { display:flex; max-width:100%; flex-wrap:wrap; }
+.loss-sankey-control .tabs button { min-height:34px; padding:7px 12px; font-size:11px; white-space:normal; }
+.loss-sankey-control .tabs button[data-active=true] { color:#171717; }
+.loss-sankey-coverage { color:var(--muted); border-left:2px solid var(--border); padding-left:10px; font-size:11px; line-height:1.6; margin:12px 0; }

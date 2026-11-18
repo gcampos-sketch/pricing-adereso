@@ -136,15 +136,15 @@ export function TimeToService({
       <div className="rep-charts">
         <div className="rep-chart">
           <span className="eyebrow">Mediana de días por trimestre</span>
-          <MiniBars data={trend} onSelect={() => undefined} />
+          <MiniBars data={trend} unit="days" label="Mediana de días" />
         </div>
         <div className="rep-chart">
           <span className="eyebrow">MRR promedio por trimestre</span>
-          <MiniBars data={mrrTrend} onSelect={() => undefined} />
+          <MiniBars data={mrrTrend} label="MRR promedio" />
         </div>
         <div className="rep-chart">
           <span className="eyebrow">% que ya completó el tránsito</span>
-          <MiniLine data={conversion} />
+          <MiniLine data={conversion} label="Tránsito completado" />
         </div>
       </div>
 

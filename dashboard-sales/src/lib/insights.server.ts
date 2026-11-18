@@ -1,3 +1,4 @@
+import { LOSS_ENTRY_DATES_VERSION, lossEntryDate } from "./loss-sankey-scope";
 import {countDealWhatsApp} from "./whatsapp-count";
 import {
   getCached,
@@ -238,7 +239,7 @@ function daysBetween(from: string | null | undefined, to: string | null | undefi
 
 export async function buildInsightsReport(): Promise<InsightsReport> {
   const [deals, quotas, ownersRes] = await Promise.all([
-    getCommercialDeals(MANAGED_STAGES.map((stage) => stage.id)),
+    getCommercialDeals([...new Set([...MANAGED_STAGES.map((stage) => stage.id), ...LOST_STAGES])]),
     fetchQuotasCached(),
     fetchOwners(),
   ]);
@@ -272,7 +273,9 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     const reference = closeDate || p["createdate"] || new Date(now).toISOString();
     const period = periodOf(reference);
     const year = Number(period.split("-")[0]);
-    if (!Number.isFinite(year) || year < HISTORY_FROM_YEAR) continue;
+    const lostEnteredAt = isLost ? lossEntryDate(p, stageId, LOST_STAGES) : null;
+    const entryYear = lostEnteredAt ? new Date(lostEnteredAt).getUTCFullYear() : NaN;
+    if ((!Number.isFinite(year) || year < HISTORY_FROM_YEAR) && !(isLost && entryYear >= HISTORY_FROM_YEAR)) continue;
 
     const dto = toDTO(deal, ownerNames, now, quarterEnd);
     const { family, motion } = classify(p);
@@ -304,6 +307,7 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
         null,
       lostStage,
       lostStageDays,
+      lostEnteredAt,
       daysToKickoff: isWon ? daysBetween(closeDate, p["fecha_kickoff"]) : null,
       daysToService: isWon ? daysBetween(closeDate, serviceStart) : null,
       onTrack: (p["on_track"] ?? "").trim() || null,
@@ -340,6 +344,7 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return {
+    lossEntryDatesVersion: LOSS_ENTRY_DATES_VERSION,
     generatedAt: new Date(now).toISOString(),
     currentPeriod,
     periods,

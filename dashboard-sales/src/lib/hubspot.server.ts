@@ -246,9 +246,9 @@ async function paginate(body: Record<string, unknown>, maxPages: number): Promis
   return out;
 }
 
-/** Deals del pipeline Comercial, un solo recorrido cacheado para todos los tabs. */
+/** Cache identical property sets together; a narrower prior read must never hide requested stage dates. */
 export function getCommercialDeals(managedStageIds: string[]): Promise<RawDeal[]> {
-  return getCached("commercial-deals", TTL_DEALS, () =>
+  return getCached(`commercial-deals:${[...new Set(managedStageIds)].sort().join(",")}`, TTL_DEALS, () =>
     paginate(
       {
         filterGroups: [
