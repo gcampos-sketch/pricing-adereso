@@ -1,3 +1,4 @@
+import { acquisitionOf } from "./deal-segment";
 import type { DealDTO, Drilldown, Tone } from "./pulse-types";
 import type { Props, RawDeal } from "./pulse.server";
 import type {
@@ -239,7 +240,7 @@ async function loadIndustries(dealIds: string[]): Promise<Map<string, string>> {
   return out;
 }
 
-const motionOf = (p: Props) => (p["negocio_inbound"] === "true" ? "Inbound" : "Outbound");
+const motionOf = acquisitionOf;
 const dealTypeOf = (p: Props) => {
   const value = (p["dealtype"] ?? "").trim();
   return value ? titleCase(value) : "Sin tipo";
@@ -265,7 +266,7 @@ const WR_DIMENSIONS = [
   {
     id: "motion",
     label: "Inbound vs Outbound",
-    help: "negocio_inbound = Sí es Inbound; vacío o No se cuenta como Outbound.",
+    help: "Inbound: formulario inbound O Negocio Inbound = Sí. Outbound: Prospección SDR sin señal inbound. Sin evidencia: Sin clasificar.",
     of: motionOf,
   },
 ] as const;

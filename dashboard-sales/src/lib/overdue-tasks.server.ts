@@ -53,6 +53,7 @@ const dealProps = [
   "hubspot_owner_id",
   "dealtype",
   "negocio_inbound",
+  "fuente_de_creacion",
 ];
 function results<T>(batch: Batch<T>) {
   if (

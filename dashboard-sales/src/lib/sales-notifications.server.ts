@@ -5,7 +5,7 @@ import { RISK_PROPERTIES, corroboratedOwner, emptyRepository, reconcile, type Re
 const VERSION = '2026-09';
 const paths = { owners: `/crm/owners/${VERSION}`, stages: `/crm/pipelines/${VERSION}/deals/${COMMERCIAL_PIPELINE}/stages`,
   search: `/crm/objects/${VERSION}/deals/search`, batch: `/crm/objects/${VERSION}/deals/batch/read` };
-const props = ['dealname','pipeline','dealstage','hubspot_owner_id','dealtype','negocio_inbound','adobo_closing_score','hs_deal_stage_probability',
+const props = ['dealname','pipeline','dealstage','hubspot_owner_id','dealtype','negocio_inbound','fuente_de_creacion','adobo_closing_score','hs_deal_stage_probability',
   'hs_mrr','amount','otf','deal_currency_code', ...RISK_PROPERTIES];
 const number = (s: string | null | undefined) => s?.trim() && Number.isFinite(Number(s)) ? Number(s) : null;
 const date = (s: string | null | undefined) => {

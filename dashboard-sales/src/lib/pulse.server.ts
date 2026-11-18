@@ -1,6 +1,6 @@
 import { readCustomerEvidence } from "./customer-directory.server";
 import { reconcileCustomerAccounts } from "./customer-accounts";
-import { segmentOf } from "./deal-segment";
+import { segmentOf, acquisitionWarning } from "./deal-segment";
 import type { ReportPhase } from './report-phases';
 import { roleOwnerIds, type RoleFilter } from "./owner-roles";
 import { quotaStats } from "./quota-eligibility";
@@ -374,6 +374,7 @@ export function toDTO(deal: RawDeal, ownerNames: Map<string, string>, now: numbe
     dealType: p["dealtype"]?.trim() || null,
     lostReason: p["closed_lost_reason"]?.trim() ? p["closed_lost_reason"]!.trim() : null,
     source: p["fuente_de_creacion"] ?? null,
+    acquisitionWarning: acquisitionWarning(p),
     country: p["pais"]?.trim() ? p["pais"]!.trim() : null,
     signalDate:
       p["candidato_perdido_prioridad"] === "true" || p["candidato_perdido_competencia"] === "true"
@@ -1903,7 +1904,7 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
     if (period === currentPeriod) bucket.qtd[idx] += 1;
     if (period === prevPeriod) bucket.prev[idx] += 1;
   }
-  const segmentOrder = ["Inbound", "Outbound", "Upsell", "Cross sell", "Renovación"];
+  const segmentOrder = ["Inbound", "Outbound", "Upsell", "Cross sell", "Renovación", "Sin clasificar"];
   const segments: SegmentRow[] = [...segmentBuckets.entries()]
     .sort((a, b) => segmentOrder.indexOf(a[0]) - segmentOrder.indexOf(b[0]))
     .map(([segment, bucket]) => ({

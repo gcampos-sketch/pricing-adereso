@@ -1623,7 +1623,7 @@ export function DealModal({
       key: "source",
       label: "Fuente",
       width: 88, grow: .8,
-      render: (deal) => deal.source ?? "HubSpot",
+      render: (deal) => <span>{deal.source || "Sin fuente"}{deal.acquisitionWarning ? <span role="img" aria-label={deal.acquisitionWarning} title={deal.acquisitionWarning}> ⚠</span> : null}</span>,
       caption: () => "",
     });
     // Columna "Señal detectada" retirada: HubSpot no entrega la fecha real de la señal.
