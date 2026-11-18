@@ -83,8 +83,8 @@ async function priceCompanyLinks(records: RawDeal[]) {
 export async function readPriceReport(role: RoleFilter, fresh = false): Promise<PriceReport> {
   if (fresh) invalidateCache('price-conversion/detail-v2');
   const base = await getCached('price-conversion/detail-v2', 90_000, async (): Promise<PriceReport> => {
-    const [records, owners, industries, sizes, employeeSizes, types] = await Promise.all([readPriceRecords(), getOwners(),
-      getPropertyOptionLabels('industria_deal'), getPropertyOptionLabels('tamano_de_empresa_deal'),
+    const [records, owners, industries, employeeSizes, types] = await Promise.all([readPriceRecords(), getOwners(),
+      getPropertyOptionLabels('industria_deal'),
       getPropertyOptionLabels('tamano_empresa_empleados'), getPropertyOptionLabels('dealtype')]);
     const label = (map: Map<string, string>, value: string | null | undefined) => value?.trim() ? map.get(value.trim()) || value.trim() : '';
     const companies = await priceCompanyLinks(records);
@@ -97,7 +97,8 @@ export async function readPriceReport(role: RoleFilter, fresh = false): Promise<
         return {
           deal: toDTO(record, names, now, now),
           industry: label(industries, p['industria_deal']),
-          companySize: label(sizes, p['tamano_de_empresa_deal']) || label(employeeSizes, p['tamano_empresa_empleados']),
+          // Legacy size is sometimes present on records but has no property definition in this portal.
+          companySize: p['tamano_de_empresa_deal']?.trim() || label(employeeSizes, p['tamano_empresa_empleados']),
           dealTypeLabel: label(types, p['dealtype']),
           monthly: priceNumber(p['hs_mrr']), setup: priceNumber(p['otf']),
           // Amount currency is authoritative; quotation currency does not redenominate hs_mrr or otf.
