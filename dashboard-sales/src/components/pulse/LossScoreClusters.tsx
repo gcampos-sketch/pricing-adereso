@@ -48,7 +48,7 @@ export function LossScoreClusters({ deals, scope, readAt, available, onOpen }: {
     if (!visible) return;
     let cancelled=false;
     const ids: string[] = JSON.parse(idsKey);
-    setState(previous=>({key,cohort,loaded:0,rows:previous.cohort===cohort?previous.rows:undefined}));
+    setState(previous=>({key,cohort,loaded:0,...(previous.cohort===cohort && previous.rows ? {rows:previous.rows} : {})}));
     void (async()=>{
       const rows:Record<string,LossPriorScore>={};
       try {
