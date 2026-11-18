@@ -4,31 +4,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { getLossPriorScores } from '@/lib/loss-prior-score.functions';
 import { priorScoreBuckets, type LossPriorScore, type PriorMetric } from '@/lib/loss-prior-score';
 import type { InsightDeal } from '@/lib/insights-types';
-import { LossReasonWords } from './LossReasonWords';
+import { LossClusterDetail } from './LossClusterDetail';
 import './LossScoreClusters.css';
 
-function ClusterDetail({ deals, available, onOpen }: { deals: InsightDeal[]; available: boolean; onOpen: (title: string, deals: InsightDeal[]) => void }) {
-  const [reason, setReason] = useState('');
-  const [all, setAll] = useState(false);
-  const reasons = useMemo(() => {
-    const groups = new Map<string,InsightDeal[]>();
-    for (const deal of deals) { const key = deal.lostReason || 'Sin motivo listado'; groups.set(key,[...(groups.get(key) ?? []),deal]); }
-    return [...groups].map(([name,rows])=>({name,deals:rows})).sort((a,b)=>b.deals.length-a.deals.length || a.name.localeCompare(b.name,'es'));
-  }, [deals]);
-  const selected = reason ? reasons.find(row=>row.name===reason) : null;
-  const scoped = selected?.deals ?? deals;
-  return <>
-    <div className="loss-cluster-reasons" aria-label="Motivos de este grupo">
-      <button type="button" className="loss-cluster-reason" aria-pressed={!reason} onClick={()=>setReason('')}><span>Todos los motivos</span><strong>{deals.length}</strong></button>
-      {(all ? reasons : reasons.slice(0,5)).map(row=><button type="button" key={row.name} className="loss-cluster-reason" aria-pressed={reason===row.name} onClick={()=>setReason(reason===row.name?'':row.name)}>
-        <span>{row.name}</span><span className="loss-cluster-reason-bar"><i style={{width:`${row.deals.length/deals.length*100}%`}} /></span><strong>{row.deals.length} <small>· {Math.round(row.deals.length/deals.length*100)}%</small></strong>
-      </button>)}
-      {reasons.length>5 && <button type="button" className="loss-words-more" onClick={()=>setAll(!all)}>{all?'Mostrar los 5 principales':`Ver ${reasons.length-5} motivos restantes`}</button>}
-    </div>
-    <div className="loss-cluster-selection"><span>{selected?.name || 'Todos los motivos'}</span><button type="button" className="cell-button" onClick={()=>onOpen(selected?.name || 'Todos los motivos',scoped)}>Ver {scoped.length} deals</button></div>
-    <LossReasonWords key={reason} deals={scoped} available={available} compact initialLimit={6} />
-  </>;
-}
 
 export function LossScoreClusters({ deals, scope, readAt, available, onOpen }: {
   deals: InsightDeal[]; scope: string; readAt: string; available: boolean; onOpen: (title: string, deals: InsightDeal[]) => void;
@@ -81,7 +59,7 @@ export function LossScoreClusters({ deals, scope, readAt, available, onOpen }: {
           </button></PopoverTrigger>
           <PopoverContent className="loss-cluster-popover" aria-label={`${label} ${bucket.label}`} style={{width:'min(740px, calc(100vw - 32px))',maxHeight:'min(760px, calc(100dvh - 48px))'}} onEscapeKeyDown={event=>event.stopPropagation()}>
             <header className="loss-reason-popup-heading"><div><h3>{label} · {bucket.label}</h3><p>{bucket.deals.length} deals · {scope}</p></div><button type="button" className="loss-reason-popup-close" aria-label="Cerrar grupo de score" onClick={()=>setOpened(null)}><X size={17}/></button></header>
-            <ClusterDetail key={JSON.stringify(bucket.deals.map(deal=>[deal.id,deal.lostReason]))} deals={bucket.deals} available={available} onOpen={(reason,selected)=>{setOpened(null);onOpen(`${label} ${bucket.label} · ${reason}`,selected);}} />
+            <LossClusterDetail key={JSON.stringify(bucket.deals.map(deal=>[deal.id,deal.lostReason]))} deals={bucket.deals} available={available} onOpen={(reason,selected)=>{setOpened(null);onOpen(`${label} ${bucket.label} · ${reason}`,selected);}} />
           </PopoverContent>
         </Popover>)}
       </div>

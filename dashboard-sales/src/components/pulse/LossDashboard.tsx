@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { LossReasonPopover } from "./LossReasonPopover";
 import { LossReasonWords } from "./LossReasonWords";
+import { LossIcpTable } from "./LossIcpTable";
 import { LossScoreClusters } from "./LossScoreClusters";
 import { LossSankey } from "./LossSankey";
 import { DealModal } from "./DealModal";
@@ -150,6 +151,9 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 
     <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"}
       onOpen={(title, deals) => setDrill({title, deals, reasonWords: true, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · Grupo por historial anterior a la pérdida; tabla con valores CRM actuales`})} />
+
+    <LossIcpTable deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"}
+      onOpen={(title,deals)=>setDrill({title,deals,reasonWords:true,subtitle:`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ICP anterior a la pérdida; tabla con valores CRM actuales`})} />
 
     <section className="rep-chart loss-explorer" aria-label="Explorar pérdidas">
       <nav className="loss-breadcrumb" aria-label="Recorrido del análisis">
