@@ -1,4 +1,4 @@
-import { gateway, getCached, getOwners, invalidateCache, COMMERCIAL_PIPELINE, type RawDeal } from './hubspot.server';
+import { gateway, getCached, getOwners, invalidateCache, COMMERCIAL_PIPELINE, getPropertyOptionLabels, type RawDeal } from './hubspot.server';
 import { readCustomerCompanyLinks } from './customer-directory.server';
 import { toDTO } from './pulse.server';
 import {
@@ -11,6 +11,7 @@ const PROPERTIES = [
   'pipeline', 'dealname', 'dealstage', 'createdate', 'closedate', 'hubspot_owner_id', 'dealtype',
   'amount', 'hs_mrr', 'otf', 'deal_currency_code', 'moneda_cotizacion', 'productos_a_contratar',
   'modelo_pricing_deal', 'plan_de_bot', 'cantidad_de_tickets', 'fuente_de_creacion', 'negocio_inbound',
+  'industria_deal', 'tamano_de_empresa_deal', 'tamano_empresa_empleados', 'pais',
   'closed_lost_reason', 'hs_v2_date_entered_171385867', 'hs_v2_date_entered_1245768029', ...PRICE_WIN_DATES,
 ];
 
@@ -80,9 +81,12 @@ async function priceCompanyLinks(records: RawDeal[]) {
 
 /** Lazy, read-only, same corporate MFA gateway as Pulse. No CRM changes or persisted customer snapshots. */
 export async function readPriceReport(role: RoleFilter, fresh = false): Promise<PriceReport> {
-  if (fresh) invalidateCache('price-conversion/v1');
-  const base = await getCached('price-conversion/v1', 90_000, async (): Promise<PriceReport> => {
-    const [records, owners] = await Promise.all([readPriceRecords(), getOwners()]);
+  if (fresh) invalidateCache('price-conversion/detail-v2');
+  const base = await getCached('price-conversion/detail-v2', 90_000, async (): Promise<PriceReport> => {
+    const [records, owners, industries, sizes, employeeSizes, types] = await Promise.all([readPriceRecords(), getOwners(),
+      getPropertyOptionLabels('industria_deal'), getPropertyOptionLabels('tamano_de_empresa_deal'),
+      getPropertyOptionLabels('tamano_empresa_empleados'), getPropertyOptionLabels('dealtype')]);
+    const label = (map: Map<string, string>, value: string | null | undefined) => value?.trim() ? map.get(value.trim()) || value.trim() : '';
     const companies = await priceCompanyLinks(records);
     const cohorts = priceCohorts(records, companies.links, companies.complete);
     const names = new Map(owners.map(owner => [owner.id, `${owner.firstName ?? ''} ${owner.lastName ?? ''}`.trim() || 'Sin nombre']));
@@ -92,6 +96,9 @@ export async function readPriceReport(role: RoleFilter, fresh = false): Promise<
         const p = record.properties;
         return {
           deal: toDTO(record, names, now, now),
+          industry: label(industries, p['industria_deal']),
+          companySize: label(sizes, p['tamano_de_empresa_deal']) || label(employeeSizes, p['tamano_empresa_empleados']),
+          dealTypeLabel: label(types, p['dealtype']),
           monthly: priceNumber(p['hs_mrr']), setup: priceNumber(p['otf']),
           // Amount currency is authoritative; quotation currency does not redenominate hs_mrr or otf.
           currency: p['deal_currency_code']?.trim().toUpperCase() || '',
