@@ -31,3 +31,18 @@ test('bounds the cloud deterministically, covers empty comments and preserves ev
   expect(buildLossReasonWords(input).words[0].comments[0].url).toBe('https://example.test/a');
   expect(buildLossReasonWords([])).toEqual({ total: 0, commented: 0, words: [] });
 });
+
+test('removes narrative filler in Spanish and English without discarding commercial causes', () => {
+  expect(lossNarrativeTerms('Ahora comenta que hubo cambio de prioridades; por el momento no avanzan. He said by email: presupuesto, precio, integración, seguridad, plazo.')).toEqual(['prioridades', 'email', 'presupuesto', 'precio', 'integracion', 'seguridad', 'plazo']);
+  expect(lossNarrativeTerms('ahora cambio momento comenta dando deja he by ano meses actuales')).toEqual([]);
+});
+test('keeps useful short acronyms and technical terms rather than arbitrary short fragments', () => {
+  expect(lossNarrativeTerms('IA AI BI TI IT UX CX QA WA API CRM ERP SAP IVR bot voz ab xy')).toEqual(['ia', 'ai', 'bi', 'ti', 'it', 'ux', 'cx', 'qa', 'wa', 'api', 'crm', 'erp', 'sap', 'ivr', 'bot', 'voz']);
+});
+test('relevance filtering preserves negation and the full native comment as evidence', () => {
+  const text = 'Ahora comenta: no falta API, falta presupuesto.';
+  const result = buildLossReasonWords([deal('a', text), deal('b', 'Ahora por el momento')]);
+  expect(result.commented).toBe(2);
+  expect(result.words.map(word => word.term)).toEqual(['api', 'falta', 'presupuesto']);
+  expect(result.words.find(word => word.term === 'api')?.comments[0].text).toBe(text);
+});
