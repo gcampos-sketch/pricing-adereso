@@ -25,3 +25,38 @@ test('missing fields remain visible and same labels in distinct columns or disti
   expect(graph.nodes.find(node => node.name === 'Sin motivo listado')?.deals.map(deal => deal.id)).toEqual(['a']);
   expect(buildLossSankey([])).toEqual({ nodes: [], links: [], deals: [] });
 });
+
+test('team grouping uses shared owner roles, retains unknowns and preserves exact memberships including zero MRR', () => {
+  const a = row('a', '331766554', 'E5', 'Presupuesto', 0);
+  const b = row('b', '82596016', 'E2', 'Presupuesto', 300);
+  const c = row('c', '91603512', 'E5', 'Ghosting', 100);
+  const d = row('d', 'unmapped', 'E5', 'Ghosting', 50);
+  const e = row('e', '', '', null, 0);
+  const input = [a, a, b, c, d, e, { ...a, id: 'won', status: 'won' } as InsightDeal];
+  const graph = buildLossSankey(input, 'team');
+  const owners = graph.nodes.filter(node => node.kind === 'owner');
+  expect(owners.find(node => node.name === 'AE')?.deals.map(deal => deal.id)).toEqual(['a', 'b']);
+  expect(owners.find(node => node.name === 'KAM')?.deals.map(deal => deal.id)).toEqual(['c']);
+  expect(owners.find(node => node.name === 'Sin equipo')?.deals.map(deal => deal.id)).toEqual(['d', 'e']);
+  expect(graph.deals).toHaveLength(5);
+  for (const kind of ['owner', 'stage', 'reason']) {
+    const nodes = graph.nodes.filter(node => node.kind === kind);
+    expect(nodes.reduce((n, node) => n + node.deals.length, 0)).toBe(5);
+    expect(nodes.reduce((n, node) => n + node.amount, 0)).toBe(450);
+  }
+  for (const kind of ['owner', 'stage']) {
+    const links = graph.links.filter(link => graph.nodes[link.source]!.kind === kind);
+    expect(links.reduce((n, link) => n + link.value, 0)).toBe(5);
+    expect(links.reduce((n, link) => n + link.amount, 0)).toBe(450);
+  }
+  const link = graph.links.find(link => graph.nodes[link.source]!.name === 'AE' && graph.nodes[link.target]!.name === 'E5');
+  expect(link?.deals.map(deal => deal.id)).toEqual(['a']);
+  expect(link?.amount).toBe(0);
+  expect(buildLossSankey(input).nodes.filter(node => node.kind === 'owner')).toHaveLength(5);
+});
+test('grouping only uses the supplied master scope and never infers role from owner label', () => {
+  const rows = [{ ...row('a', 'unknown', 'E5', 'Presupuesto'), owner: 'Gonza' }, row('b', '93662868', 'E2', null)];
+  expect(buildLossSankey(rows.slice(1), 'team').nodes.find(node => node.kind === 'owner')?.name).toBe('KAM');
+  expect(buildLossSankey(rows.slice(0, 1), 'team').nodes.find(node => node.kind === 'owner')?.name).toBe('Sin equipo');
+  expect(buildLossSankey([], 'team')).toEqual({ nodes: [], links: [], deals: [] });
+});
