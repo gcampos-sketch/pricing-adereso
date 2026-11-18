@@ -10,8 +10,9 @@ type LinkShape = { sourceX: number; sourceY: number; targetX: number; targetY: n
 const COLORS = { owner: '#d8bd6f', stage: '#a79bd6', reason: '#79b4b5' };
 const quantity = (count: number) => `${count} ${count === 1 ? 'deal' : 'deals'}`;
 
-export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable, onOpen }: {
+export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable, onOpen, onWarning }: {
   deals: InsightDeal[]; periods: string[]; scope: string; readAt: string; entryDatesAvailable: boolean;
+  onWarning: (deals: InsightDeal[], basis: LossDateBasis) => void;
   onOpen: (title: string, deals: InsightDeal[], basis: LossDateBasis, reasonDetail?: boolean) => void;
 }) {
   const origin = 'all' as const;
@@ -44,7 +45,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
     </div>
     <p className="loss-sankey-help">El período y el equipo vienen de los filtros principales. Estos controles cambian solo el Sankey.</p>
     {basis === 'entry' && !entryDatesAvailable && <p className="loss-sankey-coverage" role="status">La copia actual aún no incluye las fechas de entrada a perdido. Actualiza el dashboard para leerlas; no se sustituyen por fechas de cierre.</p>}
-    {filtered.missingDates.length > 0 && (basis === 'close' || entryDatesAvailable) && <p className="loss-sankey-coverage">{quantity(filtered.missingDates.length)} sin {basis === 'entry' ? 'entrada a perdido verificable' : 'fecha de cierre válida'} entre los perdidos disponibles con estos filtros de origen, comercial, rol y etapa. Se excluyen sin asignarlos al período.</p>}
+    {filtered.missingDates.length > 0 && (basis === 'close' || entryDatesAvailable) && <p className="loss-sankey-coverage"><button type="button" className="loss-sankey-warning-link" onClick={() => onWarning(filtered.missingDates, basis)}>{quantity(filtered.missingDates.length)} sin {basis === 'entry' ? 'entrada a perdido verificable' : 'fecha de cierre válida'} ↗</button> entre los perdidos disponibles con estos filtros de origen, comercial, rol y etapa. Se excluyen sin asignarlos al período.</p>}
     <p className="loss-sankey-help">{firstColumn} → etapa al perderse → motivo. Haz clic en un bloque o conexión para ver sus deals.</p>
     {graph.deals.length ? <>
       <div className="loss-sankey-inspection" aria-live="polite">{hover ? <><strong>{hover.title}</strong><span>{quantity(hover.count)} · {money(hover.amount)} MRR · clic para ver deals</span></> : <span>Pasa el cursor por el gráfico para explorar cada grupo.</span>}</div>

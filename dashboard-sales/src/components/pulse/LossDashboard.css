@@ -69,3 +69,7 @@
 
 .loss-dashboard .loss-source-filter select { min-height: 40px; padding-left: 14px; border: 1px solid var(--border); border-radius: 999px; background-color: var(--glass-track, #1c1f24); color: var(--body); }
 .loss-dashboard .loss-source-filter optgroup { background: #24272d; color: var(--body, #eee); font-weight: 600; }
+
+.loss-sankey-warning-link { display:inline; padding:0; border:0; background:none; color:var(--brand); font:inherit; text-align:left; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.loss-sankey-warning-link:hover { text-decoration-thickness:2px; }
+.loss-sankey-warning-link:focus-visible { outline:2px solid var(--brand); outline-offset:4px; border-radius:3px; }

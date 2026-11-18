@@ -37,3 +37,13 @@ test('filtered graph preserves exact node/edge membership and excludes invalid-c
   const graph = buildLossSankey(scope.deals);
   for (const link of graph.links) expect(link.deals.map(deal => deal.id)).toEqual(['a']);
 });
+
+test('warning cohort keeps all unassignable dates across available years, with no invented period or duplicate IDs', () => {
+  const missing = { ...row('missing', null, ''), period: '2023-Q1' };
+  const malformed = { ...row('invalid', 'invalid', 'not-a-date'), period: '2025-Q2' };
+  const validOld = row('valid-old', '2025-01-02', '2025-01-03');
+  const result = scopeLossSankey([missing, missing, malformed, validOld, row('valid', '2026-10-01', '2026-10-02')], { ...base, basis: 'close' });
+  expect(result.missingDates.map(deal => deal.id)).toEqual(['missing', 'invalid']);
+  expect(result.deals.map(deal => deal.id)).toEqual(['valid']);
+  expect(result.missingDates[0]?.closeDateValue).toBe('');
+});
