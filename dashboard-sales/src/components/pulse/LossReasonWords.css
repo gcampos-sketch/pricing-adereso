@@ -2,11 +2,16 @@
 .loss-words-heading { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:8px; }
 .loss-words-heading h3 { margin:0; font-size:16px; font-weight:500; }
 .loss-words-heading span,.loss-reason-words > p { color:var(--muted); font-size:11px; line-height:1.6; }
-.loss-words-cloud { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:8px 18px; padding:15px 0; }
-.loss-words-cloud button { border:0; background:none; color:var(--body); cursor:pointer; line-height:1.4; padding:3px; max-width:100%; overflow-wrap:anywhere; }
-.loss-words-cloud button:hover,.loss-words-cloud button[aria-pressed=true] { color:var(--brand); }
-.loss-words-cloud button:focus-visible { outline:2px solid var(--brand); outline-offset:3px; border-radius:4px; }
-.loss-words-cloud small { font-size:10px; color:var(--muted); margin-left:4px; vertical-align:super; }
+.loss-words-cloud { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:12px; padding:20px 0; }
+.loss-words-cloud button { --bubble-color:#8dbfc0; display:flex; flex-direction:column; align-items:center; justify-content:center; flex:0 0 auto; width:var(--bubble-size,76px); aspect-ratio:1; padding:8px; border:1px solid color-mix(in oklab,var(--bubble-color) 35%,transparent); border-radius:50%; background:radial-gradient(circle at 30% 22%,color-mix(in oklab,var(--bubble-color) 19%,transparent),color-mix(in oklab,var(--bubble-color) 5%,transparent)); color:var(--body); cursor:pointer; line-height:1.25; box-shadow:inset 0 1px 0 oklch(1 0 0 / 7%); transition:transform 160ms ease,border-color 160ms ease,background 160ms ease; }
+.loss-words-cloud button:nth-child(3n+2) { --bubble-color:#b1a1d2; }
+.loss-words-cloud button:nth-child(3n) { --bubble-color:#d4be7f; }
+.loss-word-label { display:block; max-width:100%; font-size:clamp(11px,calc(var(--bubble-size) * .13),18px); font-weight:500; text-align:center; overflow-wrap:anywhere; }
+.loss-words-cloud button:hover { transform:scale(1.04); border-color:var(--bubble-color); }
+.loss-words-cloud button[aria-pressed=true] { --bubble-color:var(--brand); color:var(--brand); border-color:var(--brand); background:radial-gradient(circle at 30% 22%,color-mix(in oklab,var(--brand) 24%,transparent),color-mix(in oklab,var(--brand) 9%,transparent)); }
+.loss-words-cloud button:focus-visible { outline:2px solid var(--brand); outline-offset:4px; }
+.loss-words-cloud small { display:block; font-size:10px; color:var(--muted); margin-top:5px; }
+@media (prefers-reduced-motion:reduce) { .loss-words-cloud button { transition:none; } .loss-words-cloud button:hover { transform:none; } }
 .loss-words-evidence { border-top:1px solid var(--border); margin-top:12px; padding-top:14px; }
 .loss-words-evidence-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; font-size:12px; }
 .loss-words-evidence-heading button { background:none; border:0; color:var(--muted); cursor:pointer; font-size:11px; }
