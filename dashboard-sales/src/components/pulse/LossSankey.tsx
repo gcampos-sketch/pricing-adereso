@@ -14,7 +14,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
   deals: InsightDeal[]; periods: string[]; scope: string; readAt: string; entryDatesAvailable: boolean;
   onOpen: (title: string, deals: InsightDeal[], basis: LossDateBasis, origin: LossOrigin) => void;
 }) {
-  const [origin, setOrigin] = useState<LossOrigin>('inbound');
+  const origin: LossOrigin = 'inbound';
   const [basis, setBasis] = useState<LossDateBasis>('entry');
   const filtered = useMemo(() => scopeLossSankey(deals, { periods, origin, basis, readAt }), [deals, periods, origin, basis, readAt]);
   const graph = useMemo(() => buildLossSankey(filtered.deals), [filtered]);
@@ -31,16 +31,12 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
     <div className="loss-sankey-heading"><div><h2>¿Dónde se pierden los deals?</h2><p>{scope} · {origin === "inbound" ? "Inbound" : "Todos los orígenes"} · {basis === "entry" ? "Por entrada a perdido" : "Por cierre"} · {quantity(graph.deals.length)} · {money(graph.deals.reduce((total, deal) => total + deal.amountValue, 0))} MRR</p></div>
       <span className="loss-sankey-unit">Ancho = cantidad de deals</span></div>
     <div className="loss-sankey-controls">
-      <div className="loss-sankey-control"><span>Origen</span><div className="tabs" role="group" aria-label="Origen del Sankey">
-        <button type="button" aria-pressed={origin === 'all'} data-active={origin === 'all'} onClick={() => setOrigin('all')}>Todos</button>
-        <button type="button" aria-pressed={origin === 'inbound'} data-active={origin === 'inbound'} onClick={() => setOrigin('inbound')} title="Fuente de creación: Form de Contacto Inbound de Adereso o Cassper; no se infiere por tipo de deal.">Solo inbound</button>
-      </div></div>
       <div className="loss-sankey-control"><span>Fecha del período</span><div className="tabs" role="group" aria-label="Fecha del Sankey">
         <button type="button" aria-pressed={basis === 'entry'} data-active={basis === 'entry'} onClick={() => setBasis('entry')} title="Última entrada registrada a la etapa perdida actual. Sin sustituir fechas ausentes por cierre o creación.">Entrada a deal perdido</button>
         <button type="button" aria-pressed={basis === 'close'} data-active={basis === 'close'} onClick={() => setBasis('close')}>Fecha de cierre</button>
       </div></div>
     </div>
-    <p className="loss-sankey-help">El período y el equipo vienen de los filtros principales. Estos controles cambian solo el Sankey.</p>
+    <p className="loss-sankey-help">El período y el equipo vienen de los filtros principales. Este control cambia solo el Sankey.</p>
     {basis === 'entry' && !entryDatesAvailable && <p className="loss-sankey-coverage" role="status">La copia actual aún no incluye las fechas de entrada a perdido. Actualiza el dashboard para leerlas; no se sustituyen por fechas de cierre.</p>}
     {filtered.missingDates.length > 0 && (basis === 'close' || entryDatesAvailable) && <p className="loss-sankey-coverage">{quantity(filtered.missingDates.length)} sin {basis === 'entry' ? 'entrada a perdido verificable' : 'fecha de cierre válida'} entre los perdidos disponibles con estos filtros de origen, comercial, rol y etapa. Se excluyen sin asignarlos al período.</p>}
     <p className="loss-sankey-help">Comercial → etapa al perderse → motivo. Haz clic en un bloque o conexión para ver sus deals.</p>
