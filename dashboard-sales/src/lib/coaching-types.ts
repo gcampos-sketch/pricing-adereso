@@ -30,6 +30,9 @@ export type CoachingRow = {
 
 export type CoachingReport = {
   generatedAt: string;
+  adoboVersion?: 'adobo-quality/v1';
+  /** Complete current open Commercial population, independent of meeting/close period. */
+  adoboDeals?: import('./pulse-types').DealDTO[];
   evidenceVersion?: string;
   evidenceSourceAt?: string;
   snapshots?: CoachingSnapshot[];

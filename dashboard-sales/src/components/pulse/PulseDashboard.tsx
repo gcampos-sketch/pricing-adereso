@@ -1,3 +1,4 @@
+import { AdoboQuality } from "./AdoboQuality";
 import { MetricTrend } from "./MetricTrend";
 import { trendPoints, type TrendUnit } from "@/lib/chart-trend";
 import { PriceConversion } from './PriceConversion';
@@ -787,6 +788,10 @@ export function PulseDashboard({
   const deliveryScope =
     (report.delivery ?? []).find((item) => item.id === scopeId) ?? (report.delivery ?? [])[0] ?? null;
 
+  const adoboProjects = useMemo(() => [...new Map((deliveryScope?.periods ?? []).filter(p => selectedPeriods.includes(p.period))
+    .flatMap(p => report.drilldowns[p.wonModal]?.deals ?? [])
+    .filter(d => (ownerFilter === 'team' || d.ownerId === ownerFilter) && (role === 'all' || roleOfOwner(d.ownerId) === role) && matchesType(d) && (!stageFilter.length || stageFilter.includes(d.stage)))
+    .map(d => [d.id,d])).values()], [deliveryScope,selectedPeriods,report.drilldowns,ownerFilter,role,matchesType,stageFilter]);
   // Snapshot de pipeline abierto (siempre la foto actual, independiente del año/Q).
   const openAmount = isTeam ? report.team.openAmount : ownerRow?.openAmount ?? 0;
   const openCount = isTeam ? report.team.openCount : ownerRow?.openCount ?? 0;
@@ -1151,6 +1156,7 @@ export function PulseDashboard({
 
       {projectsOnly ? (
         <>
+          <AdoboQuality deals={adoboProjects} readAt={report.generatedAt} year={year} quarter={quarter} delivery/>
           {deliveryScope ? (
             <Delivery
               scope={deliveryScope}

@@ -576,6 +576,7 @@ export type ContactTempScope = {
 };
 
 export type PulseReport = {
+  adoboQualityVersion?: "adobo-quality/v1";
   /** Global executive cards, independent of the report's selected role. */
   executiveStrip?: import('./executive-strip').ExecutiveStrip;
   contactSnapshot?: ContactSnapshotV1 | null;
