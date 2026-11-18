@@ -39,7 +39,38 @@ async function withSlot<T>(task: () => Promise<T>): Promise<T> {
 const FETCH_TIMEOUT_MS = 25_000;
 
 export class HubSpotRequestError extends Error {
-  constructor(public status:number, public correlationId:string|null) { super(`HubSpot ${status}${correlationId ? ` · referencia ${correlationId}` : ""}`); }
+  constructor(
+    public status: number,
+    public correlationId: string | null,
+    public validationProperties: readonly string[] = [],
+  ) {
+    super(`HubSpot ${status}${correlationId ? ` · referencia ${correlationId}` : ""}`);
+  }
+}
+
+function validationPropertyNames(payload: { errors?: unknown; message?: unknown }): string[] {
+  const properties = new Set<string>();
+  const add = (name: unknown) => {
+    if (typeof name === "string" && /^[a-z][a-z0-9_]{0,99}$/.test(name)) properties.add(name);
+  };
+  if (Array.isArray(payload.errors)) {
+    for (const error of payload.errors) {
+      const names = error?.context?.propertyName;
+      if (Array.isArray(names)) names.forEach(add);
+      else add(names);
+    }
+  }
+  // Some CRM v3 responses encode the per-property errors in the message.
+  const prefix = "Property values were not valid:";
+  if (typeof payload.message === "string" && payload.message.startsWith(prefix)) {
+    try {
+      const details: unknown = JSON.parse(payload.message.slice(prefix.length).trim());
+      if (Array.isArray(details)) {
+        for (const detail of details) if (detail?.isValid === false) add(detail.name);
+      }
+    } catch { /* Keep the original error if no structured details can be read. */ }
+  }
+  return [...properties];
 }
 
 export async function gateway<T>(path: string, init?: RequestInit): Promise<T> {
@@ -63,9 +94,18 @@ export async function gateway<T>(path: string, init?: RequestInit): Promise<T> {
       await sleep(wait);
     }
     let correlationId: string | null = null;
-    try { const parsed=JSON.parse(lastBody); if(typeof parsed.correlationId==="string" && /^[a-zA-Z0-9-]+$/.test(parsed.correlationId)) correlationId=parsed.correlationId; } catch { /* non-JSON upstream error */ }
+    let validationProperties: string[] = [];
+    try {
+      const parsed = JSON.parse(lastBody);
+      if (typeof parsed?.correlationId === "string" && /^[a-zA-Z0-9-]+$/.test(parsed.correlationId)) {
+        correlationId = parsed.correlationId;
+      }
+      if (lastStatus === 400 && parsed?.category === "VALIDATION_ERROR") {
+        validationProperties = validationPropertyNames(parsed);
+      }
+    } catch { /* Non-JSON upstream error. */ }
     console.error(`HubSpot gateway failed [${lastStatus}]${correlationId ? ` ref ${correlationId}` : ""}`);
-    throw new HubSpotRequestError(lastStatus,correlationId);
+    throw new HubSpotRequestError(lastStatus, correlationId, validationProperties);
   });
 }
 

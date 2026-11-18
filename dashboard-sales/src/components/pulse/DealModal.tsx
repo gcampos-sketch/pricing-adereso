@@ -472,7 +472,7 @@ const LOST_MAIN_REASONS = [
 ];
 
 const LOST_INDUSTRIES = [
-  "Retail/Ecommerce",
+  "Retail",
   "Automotriz",
   "Servicios Básicos",
   "Salud",
@@ -725,7 +725,7 @@ function LostDialog({
               <option value="">Selecciona…</option>
               {LOST_INDUSTRIES.map((item) => (
                 <option key={item} value={item}>
-                  {item}
+                  {item === "Retail" ? "Retail/Ecommerce" : item}
                 </option>
               ))}
             </select>,

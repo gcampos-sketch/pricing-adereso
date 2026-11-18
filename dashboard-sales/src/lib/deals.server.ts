@@ -1,4 +1,4 @@
-import { gateway, invalidateCache } from "./hubspot.server";
+import { gateway, HubSpotRequestError, invalidateCache } from "./hubspot.server";
 
 export type DealFieldUpdate = {
   id: string;
@@ -71,6 +71,19 @@ export type LostForm = {
   source: string;
 };
 
+const lostFieldLabels = new Map([
+  ["dealstage", "Etapa del deal"],
+  ["closed_lost_reason", "Motivo de cierres perdidos"],
+  ["razones_de_cierre_perdidos_especifico", "Motivo principal de cierre perdido"],
+  ["adobo_tiene_whatsapp_b_api_negociacion", "WhatsApp Business API"],
+  ["industria_deal", "Industria Deal"],
+  ["pais", "País"],
+  ["deptcliente", "Departamentos del cliente"],
+  ["fuente_de_creacion", "Fuente de creación"],
+  ["recontactar", "Recontactar"],
+  ["amount", "Valor"],
+]);
+
 /** Mueve el deal a "Deal perdido" guardando el formulario de cierre. */
 export async function markDealLost(form: LostForm) {
   const properties: Record<string, string> = {
@@ -79,7 +92,8 @@ export async function markDealLost(form: LostForm) {
     razones_de_cierre_perdidos_especifico: form.mainReason,
     // HubSpot solo acepta los valores internos "si"/"no" en esta propiedad.
     adobo_tiene_whatsapp_b_api_negociacion: /^s/i.test(form.waba.trim()) ? "si" : "no",
-    industria_deal: form.industry,
+    // Older open forms may still submit the visible label instead of the internal value.
+    industria_deal: form.industry === "Retail/Ecommerce" ? "Retail" : form.industry,
     pais: form.country,
     deptcliente: form.departments.join(";"),
     fuente_de_creacion: form.source,
@@ -89,10 +103,20 @@ export async function markDealLost(form: LostForm) {
     properties["amount"] = String(form.amount);
   }
 
-  await gateway(`/crm/v3/objects/deals/${form.id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ properties }),
-  });
+  try {
+    await gateway(`/crm/v3/objects/deals/${form.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ properties }),
+    });
+  } catch (error) {
+    if (!(error instanceof HubSpotRequestError) || error.status !== 400) throw error;
+    const fields = error.validationProperties.map((name) => lostFieldLabels.get(name)).filter(Boolean);
+    const message = fields.length
+      ? `HubSpot rechazó el cierre. Revisa estos campos: ${fields.join(", ")}.`
+      : "HubSpot rechazó el cierre del deal.";
+    const reference = error.correlationId ? ` Referencia ${error.correlationId}.` : "";
+    throw new Error(message + reference);
+  }
 
   invalidateCache("commercial-deals");
   invalidateCache("deals:");
