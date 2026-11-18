@@ -274,6 +274,9 @@ export type FilterBarProps = {
   /** tipo de negocio: todo | inbound | outbound (opcional, solo donde aplica) */
   dealType?: string;
   onDealType?: (value: string) => void;
+  creationSource?: string;
+  creationSourceOptions?: string[];
+  onCreationSource?: (value: string) => void;
   actions?: ReactNode;
 };
 
@@ -298,6 +301,9 @@ export function CompactFilterBar({
   dealType,
   onDealType,
   actions,
+  creationSource = "",
+  creationSourceOptions = [],
+  onCreationSource,
 }: FilterBarProps) {
   const [openFilter, setOpenFilter] = useState<"role" | "year" | "quarter" | "owner" | "stage" | "type" | null>(null);
   const [floating, setFloating] = useState(false);
@@ -411,6 +417,18 @@ export function CompactFilterBar({
               onToggle={() => toggle("stage")}
               onChange={onStages}
             />
+          </div>
+        ) : null}
+        {onCreationSource ? (
+          <div className="filter-control-group loss-source-filter">
+            <div className="compact-filter-field">
+              <span className="compact-filter-label">Fuente de creación</span>
+              <select className="compact-filter-trigger" aria-label="Fuente de creación"
+                value={creationSource} onChange={event => { onCreationSource(event.target.value); setOpenFilter(null); }}>
+                <option value="">Todas las fuentes</option>
+                {creationSourceOptions.map(source => <option key={source} value={source}>{source}</option>)}
+              </select>
+            </div>
           </div>
         ) : null}
         {onDealType ? (
