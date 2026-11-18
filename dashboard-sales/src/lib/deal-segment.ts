@@ -1,8 +1,28 @@
-/** Shared current deal segmentation; matches the existing report definition. */
-export function segmentOf(p: Record<string, string | null>): string {
+type OriginProps = Record<string, string | null>;
+const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/\s+/g, " ");
+const inboundForms = new Set(["form de contacto inbound", "form de contacto inbound adereso", "form de contacto inbound [adereso]", "form de contacto inbound cassper"]);
+const prospectingSources = new Set(["prospeccion sdr", "prospeccion sdr adereso", "prospeccion sdr [adereso]", "prospeccion sdr cassper"]);
+
+/** Current deal evidence only; an empty/negative flag does not establish outbound. */
+export function acquisitionOf(p: OriginProps): "Inbound" | "Outbound" | "Sin clasificar" {
+  const source = normalize(p["fuente_de_creacion"] ?? "");
+  if (inboundForms.has(source) || p["negocio_inbound"] === "true") return "Inbound";
+  if (prospectingSources.has(source)) return "Outbound";
+  return "Sin clasificar";
+}
+
+export function acquisitionWarning(p: OriginProps): string | null {
+  const source = normalize(p["fuente_de_creacion"] ?? "");
+  if (inboundForms.has(source) && p["negocio_inbound"] === "false") return "Revisar origen: formulario inbound con Negocio Inbound = No. Clasificado Inbound por la regla O.";
+  if (prospectingSources.has(source) && p["negocio_inbound"] === "true") return "Revisar origen: Prospección SDR con Negocio Inbound = Sí. Clasificado Inbound por la regla O.";
+  return null;
+}
+
+/** Business type stays independent from the acquisition origin. */
+export function segmentOf(p: OriginProps): string {
   const type = p["dealtype"] ?? "";
   if (type.startsWith("Upsell")) return "Upsell";
   if (type.startsWith("Cross")) return "Cross sell";
   if (type.startsWith("Renovación")) return "Renovación";
-  return p["negocio_inbound"] === "true" ? "Inbound" : "Outbound";
+  return acquisitionOf(p);
 }

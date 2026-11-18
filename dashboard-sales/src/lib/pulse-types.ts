@@ -50,6 +50,8 @@ export type DealDTO = {
   /** valor crudo de dealtype (undefined en snapshots antiguos) */
   dealType?: string | null;
   source: string | null;
+  /** Contradictory native acquisition signals; never a CRM correction. */
+  acquisitionWarning?: string | null;
   /** País del deal (propiedad `pais` de HubSpot) */
   country: string | null;
   /** fecha en que HubSpot detectó la señal de pérdida (última modificación del deal) */
