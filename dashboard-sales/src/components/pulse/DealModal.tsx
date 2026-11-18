@@ -2,7 +2,7 @@ import { dealOwnerOptions, filterDealsByOwner } from "@/lib/deal-owner-filter";
 import type {ScenarioScope} from '@/lib/quota-scenarios';
 import {ScenarioProjection} from './ScenarioProjection';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Trash2, CheckCircle2, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
+import { Trash2, CheckCircle2, ChevronDown, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown, PulseReport } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
@@ -12,6 +12,12 @@ import { DealSelectionSummary } from "./DealSelectionSummary";
 import { TrendLine } from "./MiniCharts";
 import { addDealNote, addDealTask, enrollTouchpoint, getDealContacts, getAdoboHistory, markDealLostFn, updateDeals } from "@/lib/pulse.functions";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDealHeaderScroll } from "@/hooks/use-deal-header-scroll";
 import { compareDealSort, dealKind, initialDealSort, toggleDealSort, type DealKind, type DealSort, type SortKey } from "@/lib/deal-table-sort";
 import { closeMonthKey, currentMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
@@ -591,6 +597,9 @@ function LostDialog({
 
   const ready =
     reason.trim() && mainReason && waba && industry && country && departments.length > 0 && source;
+  const departmentSummary = departments.length > 1
+    ? `${departments.length} departamentos seleccionados`
+    : departments[0] ?? "Selecciona…";
 
   const save = async () => {
     if (!ready) return;
@@ -733,28 +742,42 @@ function LostDialog({
               ))}
             </select>,
           )}
-          {field(
-            "DeptCliente",
-            true,
-            <div className="lost-checks">
-              {LOST_DEPARTMENTS.map((item) => (
+          <div className="lost-field">
+            <span>Departamentos del cliente<b> *</b></span>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
                 <button
-                  key={item}
                   type="button"
-                  className="copy-btn"
-                  data-compact="1"
-                  data-state={departments.includes(item) ? "ok" : "idle"}
-                  onClick={() =>
-                    setDepartments((current) =>
-                      current.includes(item) ? current.filter((d) => d !== item) : [...current, item],
-                    )
-                  }
+                  className="modal-search lost-departments-trigger"
+                  aria-label={`Departamentos del cliente (obligatorio). ${departmentSummary}`}
                 >
-                  {item}
+                  <span>{departmentSummary}</span>
+                  <ChevronDown size={16} aria-hidden="true" />
                 </button>
-              ))}
-            </div>,
-          )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                collisionPadding={12}
+                className="lost-departments-menu"
+                onEscapeKeyDown={(event) => event.stopPropagation()}
+              >
+                {LOST_DEPARTMENTS.map((item) => (
+                  <DropdownMenuCheckboxItem
+                    key={item}
+                    checked={departments.includes(item)}
+                    onSelect={(event) => event.preventDefault()}
+                    onCheckedChange={(checked) =>
+                      setDepartments((current) =>
+                        checked ? [...current, item] : current.filter((department) => department !== item),
+                      )
+                    }
+                  >
+                    {item}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           {field(
             "Fuente de creación",
             true,
