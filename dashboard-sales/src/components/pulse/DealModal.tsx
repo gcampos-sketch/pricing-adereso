@@ -2,7 +2,7 @@ import { dealOwnerOptions, filterDealsByOwner } from "@/lib/deal-owner-filter";
 import type {ScenarioScope} from '@/lib/quota-scenarios';
 import {ScenarioProjection} from './ScenarioProjection';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Trash2, CheckCircle2, ChevronDown, Pencil, ListChecks, Zap, Search, X, Mail, MoreHorizontal, TriangleAlert } from "lucide-react";
+import { Trash2, CheckCircle2, ChevronDown, Pencil, ListChecks, Zap, Search, X, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown, PulseReport } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
 import type { PropertyHistoryV1 } from "@/lib/adobo-intelligence";
@@ -1659,7 +1659,7 @@ export function DealModal({
         const info = contacts[deal.id];
         if (!info) return contactsState === "error" || contactsState === "ready" ? <span title="No se pudo cargar el contacto asociado">No disponible</span> : "…";
         if (!info.contactName && !info.contactEmail) return <span style={{ color: "var(--label)" }}>sin contacto</span>;
-        return info.contactEmail ? <a className="deal-contact-link" href={`mailto:${encodeURIComponent(info.contactEmail)}`} title={contactLabel(info)} aria-label={`Escribir correo a ${info.contactName ?? 'este contacto'}`}><span>{info.contactName ?? 'Abrir correo'}</span><Mail size={13} aria-hidden="true"/></a> : <span title={info.contactTitle??undefined}>{info.contactName}</span>;
+        return info.contactEmail ? <a className="deal-contact-link" href={`mailto:${encodeURIComponent(info.contactEmail)}`} title={contactLabel(info)} aria-label={`Escribir correo a ${info.contactName ?? 'este contacto'}`}><span>{info.contactName ?? 'Abrir correo'}</span></a> : <span title={info.contactTitle??undefined}>{info.contactName}</span>;
       },
       caption: (deal) => {
         const info = contacts[deal.id];

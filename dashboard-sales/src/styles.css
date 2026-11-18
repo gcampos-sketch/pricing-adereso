@@ -3356,9 +3356,8 @@
 .deal-row .deal-stage-code { color: inherit; font-size: inherit; white-space: nowrap; }
 .deal-cell-contact, .deal-head-contact { padding-left: 8px; }
 @media (prefers-reduced-motion: reduce) { .deal-action-popup[data-state] { animation: none; } }
-.deal-row .deal-contact-link { display: inline-flex; align-items: center; gap: 5px; color: var(--foreground); font-weight: 400; }
+.deal-row .deal-contact-link { display: inline-flex; align-items: center; color: var(--foreground); font-weight: 400; }
 .deal-row .deal-contact-link > span { color: inherit; font-size: inherit; line-height: 20px; }
-.deal-contact-link svg { flex: 0 0 auto; color: var(--muted); opacity: .65; }
 .deal-row .deal-contact-link:hover { color: var(--brand); }
 .deal-row .deal-cell-context { font-size: 11px; line-height: 16px; margin-top: 3px; }
 @media (prefers-reduced-motion: reduce) {
