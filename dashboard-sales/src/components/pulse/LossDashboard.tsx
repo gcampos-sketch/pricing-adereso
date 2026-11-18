@@ -46,7 +46,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 }) {
   const ago = useAgo(report.generatedAt);
   const filters = useInsightFilters(report, undefined, role, onRole);
-  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean; reasonWords?: boolean }) | null>(null);
+  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean; reasonWords?: boolean; coverageWarning?: boolean }) | null>(null);
   const [creationSource, setCreationSource] = useState("");
   const sourceOptions = useMemo(() => lossCreationSources(report.deals), [report.deals]);
   const sourceDeals = useMemo(() => scopeLossCreationSource(report.deals, creationSource), [report.deals, creationSource]);
@@ -139,6 +139,11 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 
     <LossSankey deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
       scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
+      onWarning={(deals, basis) => setDrill({
+        title: basis === "close" ? "Deals sin fecha de cierre válida" : "Deals sin entrada a perdido verificable",
+        subtitle: `Perdidos disponibles · ${filters.ownerName} · ${sourceScope} · Rol ${role === "all" ? "Todos" : role} · Etapa ${stageFilter.join(", ") || "Todas"} · Sin período asignable; excluidos del Sankey`,
+        deals, coverageWarning: true,
+      })}
       onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
 
     <section className="rep-chart loss-explorer" aria-label="Explorar pérdidas">
@@ -194,7 +199,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       </table></div>
       <p className="loss-intro">Mediana de tiempo en etapa: {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
     </details>
-    <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope || drill?.reasonWords)}
+    <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope || drill?.reasonWords || drill?.coverageWarning)} showOwnerFilter={Boolean(drill?.coverageWarning)}
       detailContent={drill?.reasonWords ? rows => <LossReasonWords key={drill.title} deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} /> : undefined} />
   </main>;
 }

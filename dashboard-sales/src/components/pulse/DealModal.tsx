@@ -1,3 +1,4 @@
+import { dealOwnerOptions, filterDealsByOwner } from "@/lib/deal-owner-filter";
 import type {ScenarioScope} from '@/lib/quota-scenarios';
 import {ScenarioProjection} from './ScenarioProjection';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -1162,10 +1163,13 @@ export function DealModal({
   ownerQuotas,
   executiveSummary,
   hideCloseSummary = false,
+  showOwnerFilter = false,
   detailContent,
 }: {
   /** Entry-date event lists must not show an unrelated close-date monthly summary. */
   hideCloseSummary?: boolean;
+  /** Optional exact-ID owner filter for review lists; does not widen the parent scope. */
+  showOwnerFilter?: boolean;
   /** Read-only detail follows the exact locally filtered deal population. */
   detailContent?: ((deals: DealDTO[]) => ReactNode) | undefined;
   executiveSummary?: ReactNode | ((context: { selectedOwner: string | null; onOwnerSelect: (owner: string | null) => void }) => ReactNode);
@@ -1192,6 +1196,7 @@ export function DealModal({
   const isWonView = Boolean(executiveSummary);
   const [scenarioOwner,setScenarioOwner]=useState(scenarioScope?.owner ?? "team");
   const selectionQuota=scenarioScope && selectionQuotaForOwner ? selectionQuotaForOwner(scenarioOwner) : baseSelectionQuota;
+  const [reviewOwner, setReviewOwner] = useState<string | null>(null);
   const [summaryOwner, setSummaryOwner] = useState<string | null>(null);
   const [fixState, setFixState] = useState<"idle" | "loading" | "ok" | "error">("idle");
   const [fixMsg, setFixMsg] = useState("");
@@ -1288,6 +1293,10 @@ export function DealModal({
     if (!payloadKey) return;
     setQuery("");
     setSummaryOwner(null);
+    setReviewOwner(null);
+    if (showOwnerFilter) {
+      setMonthFilter("all"); setKindFilter("all"); setSeqFilter("all"); setHideWallet(false);
+    }
     setScenarioOwner(scenarioScope?.owner ?? "team");
     setSummaryDateFilter(initialSummaryDate ?? null);
     setSearchOpen(false);
@@ -1344,6 +1353,8 @@ export function DealModal({
     });
   }, [visiblePayload, edits]);
 
+  const reviewOwnerOptions = useMemo(() => dealOwnerOptions(baseDeals), [baseDeals]);
+
   const stagesPresent = useMemo(
     () =>
       [...new Set(baseDeals.map((deal) => deal.stage).filter(Boolean))].sort((a, b) =>
@@ -1370,6 +1381,7 @@ export function DealModal({
     if (stageFilter.length) {
       filtered = filtered.filter((deal) => stageFilter.includes(deal.stage));
     }
+    if (showOwnerFilter) filtered = filterDealsByOwner(filtered, reviewOwner);
     if (scenarioScope && scenarioOwner !== "team") filtered=filtered.filter(deal=>deal.ownerId===scenarioOwner);
     if (isWonView && summaryOwner) filtered = filtered.filter(deal => (deal.owner || 'Sin comercial') === summaryOwner);
     if (actFilter !== "all" && actIds.size) {
@@ -1393,7 +1405,7 @@ export function DealModal({
     }
     const now = Date.now();
     return [...filtered].sort((a, b) => compareDealSort(a, b, sort, contacts, now));
-  }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet, isWonView, summaryOwner, scenarioScope, scenarioOwner]);
+  }, [visiblePayload, baseDeals, query, sort, monthFilter, stageFilter, seqFilter, contacts, actFilter, actIds, kindFilter, hideWallet, isWonView, summaryOwner, scenarioScope, scenarioOwner, showOwnerFilter, reviewOwner]);
 
   // This temporary drilldown never mutates the existing filters or their ordering.
   const summaryNow = Date.now();
@@ -1810,6 +1822,12 @@ export function DealModal({
             </p>
             </div></div>
             <div className="deal-filter-toolbar" aria-label="Filtros del listado">
+              {showOwnerFilter && !isWonView && !scenarioScope ? <GlassSelect id="review-owner" label="Comercial"
+                display={reviewOwnerOptions.find(option => option.value === reviewOwner)?.label ?? 'Todos'}
+                options={[{ value: '__all', label: 'Todos' }, ...reviewOwnerOptions]}
+                activeValues={[reviewOwner ?? '__all']}
+                onSelect={owner => { setReviewOwner(owner === '__all' ? null : owner); setSelected([]); setOpenMenu(null); }}
+                open={openMenu === 'review-owner'} onToggle={() => setOpenMenu(openMenu === 'review-owner' ? null : 'review-owner')} /> : null}
               {scenarioScope ? <GlassSelect id="scenario-owner" label="Comercial" display={scenarioOwner==='team'?'Equipo':baseDeals.find(d=>d.ownerId===scenarioOwner)?.owner ?? 'Comercial'}
                 options={[...(scenarioScope.owner==='team'?[{value:'team',label:'Equipo'}]:[]),...[...new Map(baseDeals.filter(d=>scenarioScope.owner==='team'||d.ownerId===scenarioScope.owner).map(d=>[d.ownerId,{value:d.ownerId,label:d.owner}])).values()].sort((a,b)=>a.label.localeCompare(b.label))]}
                 activeValues={[scenarioOwner]} onSelect={owner=>{setScenarioOwner(owner);setSelected([]);setOpenMenu(null);}}
