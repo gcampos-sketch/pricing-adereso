@@ -4428,7 +4428,36 @@
 
 .lost-field :is(input, select, textarea) { width: 100%; }
 
-.lost-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.lost-departments-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.lost-departments-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lost-departments-trigger > svg { flex-shrink: 0; }
+
+.lost-departments-menu {
+  z-index: 100;
+  width: var(--radix-dropdown-menu-trigger-width);
+  max-width: var(--radix-dropdown-menu-content-available-width);
+  max-height: min(280px, var(--radix-dropdown-menu-content-available-height));
+  background: var(--surface);
+}
+
+.lost-departments-menu [role="menuitemcheckbox"] {
+  min-height: 36px;
+  cursor: pointer;
+}
 
 /* ---------- Generación de pipeline · embudo con escenarios ---------- */
 .funnel {
