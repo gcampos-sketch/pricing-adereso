@@ -3,7 +3,7 @@ import { ChevronRight, ArrowLeft } from "lucide-react";
 import { LossSankey } from "./LossSankey";
 import { DealModal } from "./DealModal";
 import { MetricTrend } from "./MetricTrend";
-import { lossMonthlyHistory, type LossMonth } from "@/lib/loss-summary";
+import { lossMonthlyHistory, lossValuation, lossTicketComparison, type LossMonth } from "@/lib/loss-summary";
 import { Metric } from "./PulseDashboard";
 import { CompactFilterBar } from "./FilterBar";
 import { SectionTitle, median, money, pct, sum, useAgo, useInsightFilters } from "./insights-shared";
@@ -36,7 +36,7 @@ type Slice = { dimension: Dimension; key: string };
 
 function LossCurve({ data, measure, label }: { data: LossMonth[]; measure: "amount" | "count" | "ticket"; label: string }) {
   return <MetricTrend data={data.map(point => ({ label: point.label, value: point[measure], partial: point.partial }))}
-    label={label} unit={measure === "count" ? "number" : "money"} caption="Últimos 6 meses por cierre" />;
+    label={label} unit={measure === "count" ? "number" : "money"} />;
 }
 
 export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "all", onRole }: {
@@ -68,6 +68,16 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     (!stageFilter.length || stageFilter.includes(deal.lostStage))), [sourceDeals, filters.ownerId, role, stageFilter]);
   const lostAmount = sum(lost, deal => deal.amountValue);
   const ticket = lost.length ? lostAmount / lost.length : null;
+  const valuation = lossValuation(lost);
+  // Full-team baseline deliberately removes both owner and role, retaining period/source/stage.
+  const teamLost = useMemo(() => sourceDeals.filter(deal => deal.status === "lost" &&
+    filters.periods.includes(deal.period) && (!stageFilter.length || stageFilter.includes(deal.lostStage))),
+    [sourceDeals, filters.periods, stageFilter]);
+  const comparison = lossTicketComparison(lost, teamLost);
+  const comparisonLabel = comparison.differencePercent === null ? "Sin comparación disponible con el equipo" :
+    `${comparison.differencePercent > 0 ? "+" : ""}${comparison.differencePercent.toLocaleString("es-CL", { maximumFractionDigits: 1 })}% vs equipo completo (${money(comparison.teamTicket!)})`;
+  const ticketNote = filters.ownerId === "team" ? `${lost.length} deals perdidos · MRR promedio por deal` :
+    `${lost.length} deals perdidos · ${comparisonLabel}`;
   const monthly = useMemo(() => lossMonthlyHistory(sourceDeals.filter(deal =>
     (filters.ownerId === "team" || deal.ownerId === filters.ownerId) &&
     (role === "all" || roleOfOwner(deal.ownerId) === role) &&
@@ -95,7 +105,6 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     const unused = DIMENSIONS.find(item => !next.some(slice => slice.dimension === item.key));
     if (unused) setDimension(unused.key);
   };
-  const late = lost.filter(deal => ["E5", "E5.1"].includes(deal.lostStage));
   const ghost = scoped.filter(deal => deal.ghost);
   const highScore = scoped.filter(deal => deal.adoboScoreValue > 60);
   const question = DIMENSIONS.find(item => item.key === dimension)!.question;
@@ -118,12 +127,12 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       <Metric label="MRR perdido" value={money(lostAmount)} note="Monto mensual de los deals perdidos" tone="neutral"
         onClick={() => open("MRR perdido", lost)} tooltip="MRR de los deals perdidos con fecha de cierre dentro del período seleccionado. La curva muestra los últimos seis meses hasta el fin del período o el mes de lectura, con los mismos filtros."
         footer={<LossCurve data={monthly} measure="amount" label="MRR perdido" />} />
-      <Metric label="Deals perdidos" value={String(lost.length)} note={`${late.length} llegaron a E5 o E5.1`}
-        tone="neutral" onClick={() => open("Deals perdidos", lost)} tooltip="Cantidad de deals perdidos del período y alcance seleccionados. La curva muestra cantidades mensuales."
+      <Metric label="Deals perdidos" value={String(lost.length)} note={`${valuation.valuedCount} valorizados · ${valuation.valuedPercent === null ? "—" : pct(valuation.valuedPercent)} del total`}
+        tone="neutral" onClick={() => open("Deals perdidos", lost)} tooltip="Cantidad de deals perdidos del período y alcance seleccionados. Valorizados: deals con MRR registrado mayor que $0; porcentaje sobre todos los deals perdidos de este alcance. La curva muestra cantidades mensuales."
         footer={<LossCurve data={monthly} measure="count" label="Deals perdidos" />} />
-      <Metric label="Ticket medio perdido" value={ticket === null ? "—" : money(ticket)} note={`${lost.length} deals perdidos · MRR promedio por deal`}
+      <Metric label="Ticket medio perdido" value={ticket === null ? "—" : money(ticket)} note={ticketNote}
         tone="neutral" onClick={() => open("Ticket medio perdido", lost)}
-        tooltip="MRR perdido dividido por la cantidad de deals perdidos del período, incluidos los de monto $0. Cada punto de la curva usa el promedio de su propio mes; los meses sin deals quedan sin dato."
+        tooltip="MRR perdido dividido por todos los deals perdidos, incluidos los de monto $0. Al seleccionar un comercial, la diferencia es (su ticket / ticket del equipo completo − 1) × 100. El equipo incluye todos los comerciales y roles con el mismo período, fuente y etapa; no es el promedio de promedios por comercial. Sin una base positiva comparable se muestra sin comparación. Cada mes de la curva usa su propio promedio."
         footer={<LossCurve data={monthly} measure="ticket" label="Ticket medio perdido" />} />
     </section>
 
