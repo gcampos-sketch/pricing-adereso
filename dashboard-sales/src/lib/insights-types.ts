@@ -23,6 +23,8 @@ export type InsightDeal = DealDTO & {
   lostReasonText: string | null;
   lostStage: string;
   lostStageDays: number;
+  /** Native entry to the current exact lost stage; never falls back to close/creation. Absent in older editions. */
+  lostEnteredAt?: string | null;
   daysToKickoff: number | null;
   daysToService: number | null;
   onTrack: string | null;
@@ -34,6 +36,7 @@ export type InsightDeal = DealDTO & {
 };
 
 export type InsightsReport = {
+  lossEntryDatesVersion?: "native-loss-entry/v1";
   generatedAt: string;
   currentPeriod: string;
   periods: string[];

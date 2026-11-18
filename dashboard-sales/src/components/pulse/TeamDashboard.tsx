@@ -674,7 +674,7 @@ function RepSheet({
       <div className="rep-charts">
         <div className="rep-chart">
           <span className="eyebrow">Ganado por trimestre</span>
-          <MiniBars data={wonTrend} onSelect={() => undefined} />
+          <MiniBars data={wonTrend} label="MRR ganado" />
         </div>
         <div className="rep-chart">
           <span className="eyebrow">Win rate por trimestre</span>
@@ -682,15 +682,15 @@ function RepSheet({
         </div>
         <div className="rep-chart">
           <span className="eyebrow">Ganado por mes · {rangeLabel}</span>
-          <MiniBars data={monthTrend} onSelect={() => undefined} />
+          <MiniBars data={monthTrend} label="MRR ganado mensual" />
         </div>
         <div className="rep-chart">
           <span className="eyebrow">Reuniones por trimestre</span>
-          <MiniBars data={meetingTrend} onSelect={() => undefined} />
+          <MiniBars data={meetingTrend} unit="number" label="Reuniones" detailLabel="reuniones" />
         </div>
         <div className="rep-chart">
           <span className="eyebrow">Deals marcados en riesgo por trimestre</span>
-          <MiniBars data={warningTrend} onSelect={() => undefined} />
+          <MiniBars data={warningTrend} unit="number" label="Deals en riesgo" />
         </div>
       </div>
 

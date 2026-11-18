@@ -99,7 +99,7 @@ export const getInsightsReport = createServerFn({ method: "GET" })
       import("./insights.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("insights", data.fresh, buildInsightsReport, undefined, data.force);
+    return withSnapshot("insights", data.fresh, buildInsightsReport, report => report.lossEntryDatesVersion === "native-loss-entry/v1", data.force);
   });
 
 export const getCoachingReport = createServerFn({ method: "GET" })
