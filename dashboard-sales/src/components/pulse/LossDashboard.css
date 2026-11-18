@@ -62,3 +62,7 @@
 .loss-sankey-control .tabs button { min-height:34px; padding:7px 12px; font-size:11px; white-space:normal; }
 .loss-sankey-control .tabs button[data-active=true] { color:#171717; }
 .loss-sankey-coverage { color:var(--muted); border-left:2px solid var(--border); padding-left:10px; font-size:11px; line-height:1.6; margin:12px 0; }
+
+.loss-dashboard .loss-source-filter { min-width: 190px; max-width: 100%; }
+.loss-dashboard .loss-source-filter select { width: 100%; max-width: 300px; cursor: pointer; text-overflow: ellipsis; padding-right: 24px; }
+.loss-dashboard .loss-source-filter option { background: var(--bg, #1c1f24); color: var(--body, #eee); }

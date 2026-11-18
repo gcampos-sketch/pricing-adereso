@@ -9,6 +9,7 @@ import { CompactFilterBar } from "./FilterBar";
 import { SectionTitle, median, money, pct, sum, useAgo, useInsightFilters } from "./insights-shared";
 import type { Drilldown } from "@/lib/pulse-types";
 import type { InsightDeal, InsightsReport } from "@/lib/insights-types";
+import { lossCreationSources, scopeLossCreationSource } from "@/lib/loss-creation-source";
 import { roleOfOwner } from "@/lib/owner-roles";
 import "./LossDashboard.css";
 
@@ -45,30 +46,34 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const ago = useAgo(report.generatedAt);
   const filters = useInsightFilters(report, undefined, role, onRole);
   const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean }) | null>(null);
+  const [creationSource, setCreationSource] = useState("");
+  const sourceOptions = useMemo(() => lossCreationSources(report.deals), [report.deals]);
+  const sourceDeals = useMemo(() => scopeLossCreationSource(report.deals, creationSource), [report.deals, creationSource]);
+  const sourceScope = creationSource || "Todas las fuentes";
   const [stageFilter, setStageFilter] = useState<string[]>([]);
   const [dimension, setDimension] = useState<Dimension>("reason");
   const [expandedRows, setExpandedRows] = useState("");
   const [measure, setMeasure] = useState<"amount" | "count">("amount");
   // Bind a path to its master scope: a new period/owner never inherits an old drilldown.
-  const scopeKey = JSON.stringify([filters.year, filters.quarter, filters.ownerId, role, stageFilter]);
+  const scopeKey = JSON.stringify([filters.year, filters.quarter, filters.ownerId, role, stageFilter, creationSource]);
   const [exploration, setExploration] = useState<{ scope: string; path: Slice[] }>({ scope: "", path: [] });
   const path = exploration.scope === scopeKey ? exploration.path : [];
   const roleOwnerOptions = report.owners.filter(owner => role === "all" || roleOfOwner(owner.id) === role)
     .map(owner => [owner.id, owner.name] as [string, string]);
-  const closed = useMemo(() => filters.deals.filter(deal => role === "all" || roleOfOwner(deal.ownerId) === role), [filters.deals, role]);
+  const closed = useMemo(() => scopeLossCreationSource(filters.deals, creationSource).filter(deal => role === "all" || roleOfOwner(deal.ownerId) === role), [filters.deals, role, creationSource]);
   const lost = useMemo(() => closed.filter(deal => deal.status === "lost" && (!stageFilter.length || stageFilter.includes(deal.lostStage))), [closed, stageFilter]);
-  const sankeyCandidates = useMemo(() => report.deals.filter(deal => deal.status === "lost" &&
+  const sankeyCandidates = useMemo(() => sourceDeals.filter(deal => deal.status === "lost" &&
     (filters.ownerId === "team" || deal.ownerId === filters.ownerId) &&
     (role === "all" || roleOfOwner(deal.ownerId) === role) &&
-    (!stageFilter.length || stageFilter.includes(deal.lostStage))), [report.deals, filters.ownerId, role, stageFilter]);
+    (!stageFilter.length || stageFilter.includes(deal.lostStage))), [sourceDeals, filters.ownerId, role, stageFilter]);
   const lostAmount = sum(lost, deal => deal.amountValue);
   const ticket = lost.length ? lostAmount / lost.length : null;
-  const monthly = useMemo(() => lossMonthlyHistory(report.deals.filter(deal =>
+  const monthly = useMemo(() => lossMonthlyHistory(sourceDeals.filter(deal =>
     (filters.ownerId === "team" || deal.ownerId === filters.ownerId) &&
     (role === "all" || roleOfOwner(deal.ownerId) === role) &&
     (!stageFilter.length || stageFilter.includes(deal.lostStage))),
     report.periods, filters.year, filters.quarter, report.generatedAt),
-    [report, filters.ownerId, role, stageFilter, filters.year, filters.quarter]);
+    [report, sourceDeals, filters.ownerId, role, stageFilter, filters.year, filters.quarter]);
   const scoped = lost.filter(deal => path.every(slice => keyOf(deal, slice.dimension) === slice.key));
   const scopedAmount = sum(scoped, deal => deal.amountValue);
   const grouped = new Map<string, InsightDeal[]>();
@@ -82,7 +87,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const visibleRows = expandedRows === rowsKey ? rows : rows.slice(0, 5);
   const max = Math.max(1, ...rows.map(row => row[measure]));
   const total = measure === "amount" ? scopedAmount : scoped.length;
-  const open = (title: string, deals: InsightDeal[]) => setDrill({ title, subtitle: `${filters.rangeLabel} · ${filters.ownerName}${path.length ? ` · ${path.map(slice => slice.key).join(" → ")}` : ""}`, deals });
+  const open = (title: string, deals: InsightDeal[]) => setDrill({ title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}${path.length ? ` · ${path.map(slice => slice.key).join(" → ")}` : ""}`, deals });
   const updatePath = (next: Slice[]) => setExploration({ scope: scopeKey, path: next });
   const enter = (key: string) => {
     const next = [...path, { dimension, key }];
@@ -105,6 +110,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       year={filters.year} quarter={filters.quarter} ownerId={filters.ownerId} stages={stageFilter}
       onYear={filters.setYear} onQuarter={filters.setQuarter} onOwner={filters.setOwnerId} onStages={setStageFilter}
       role={role} onRole={item => { onRole?.(item); filters.setOwnerId("team"); }}
+      creationSource={creationSource} creationSourceOptions={sourceOptions} onCreationSource={setCreationSource}
       ago={ago} isRefreshing={isRefreshing} onRefresh={onRefresh} label="Filtros de deals perdidos" />
 
     <SectionTitle note={filters.rangeLabel}>Resumen de pérdidas</SectionTitle>
@@ -122,8 +128,8 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     </section>
 
     <LossSankey deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
-      scope={`${filters.rangeLabel} · ${filters.ownerName}`} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
-      onOpen={(title, deals, basis, origin) => setDrill({ title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${origin === "inbound" ? "Solo inbound" : "Todos los orígenes"} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
+      scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
+      onOpen={(title, deals, basis) => setDrill({ title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
 
     <section className="rep-chart loss-explorer" aria-label="Explorar pérdidas">
       <nav className="loss-breadcrumb" aria-label="Recorrido del análisis">
