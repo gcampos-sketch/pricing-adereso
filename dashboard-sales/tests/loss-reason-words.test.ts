@@ -34,7 +34,7 @@ test('bounds the cloud deterministically, covers empty comments and preserves ev
 
 test('removes narrative filler in Spanish and English without discarding commercial causes', () => {
   expect(lossNarrativeTerms('Ahora comenta que hubo cambio de prioridades; por el momento no avanzan. He said by email: presupuesto, precio, integración, seguridad, plazo.')).toEqual(['prioridades', 'email', 'presupuesto', 'precio', 'integracion', 'seguridad', 'plazo']);
-  expect(lossNarrativeTerms('ahora cambio momento comenta dando deja he by ano meses actuales')).toEqual([]);
+  expect(lossNarrativeTerms('ahora cambio momento comenta dando deja he by ano meses actuales ver')).toEqual([]);
 });
 test('keeps useful short acronyms and technical terms rather than arbitrary short fragments', () => {
   expect(lossNarrativeTerms('IA AI BI TI IT UX CX QA WA API CRM ERP SAP IVR bot voz ab xy')).toEqual(['ia', 'ai', 'bi', 'ti', 'it', 'ux', 'cx', 'qa', 'wa', 'api', 'crm', 'erp', 'sap', 'ivr', 'bot', 'voz']);

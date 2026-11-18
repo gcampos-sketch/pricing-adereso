@@ -11,7 +11,7 @@ for (const word of `
   contemplan contempla considerando conversamos conversado conversacion hablamos hablado reunion reuniones
   contacto contactos contactar contactado conversando presenta presentar presentada presentado propuesta propuestas
   avanzar avanza avanzan avanzando avance seguir sigue siguen seguimos dando dado dar deja dejan dejo dejando
-  hacer hace hacen hacemos hecho hacerlo poder podria podrian podemos podra podran pudo pudieron
+  ver vemos veo vieron visto viendo hacer hace hacen hacemos hecho hacerlo poder podria podrian podemos podra podran pudo pudieron
   tener tenemos tenia tenian tendra tendrian siendo sido estar estaria estaban estuvo
   interesa interesado interesados interesada interesadas quiere queria querian quieren desea desean
   este estos esta estas estoy estas estaba estemos esto aquello aquellos aquella aquellas ese esos eso esa esas

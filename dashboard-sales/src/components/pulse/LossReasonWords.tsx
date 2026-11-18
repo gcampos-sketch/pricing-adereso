@@ -33,7 +33,7 @@ export function LossReasonWords({ deals, available, compact = false }: { deals: 
           <p>{comment.text}</p><footer>{comment.url ? <a href={comment.url} target="_blank" rel="noopener noreferrer">{comment.name}</a> : <span>{comment.name}</span>}</footer>
         </blockquote>)}
         {selected.comments.length > 5 && !selection?.expanded ? <button type="button" className="cell-button" onClick={() => setSelection({ context, term: selected.term, expanded: true })}>Ver los {selected.comments.length} comentarios</button> : null}
-      </div> : cloud.words.length ? <p>Pulsa una palabra para leer los comentarios originales. Se omiten palabras de relleno; se conservan los comentarios originales.</p> : null}
+      </div> : cloud.words.length ? <p>Pulsa una palabra para leer los comentarios completos. Se omiten palabras de relleno.</p> : null}
     </>}
   </section>;
 }
