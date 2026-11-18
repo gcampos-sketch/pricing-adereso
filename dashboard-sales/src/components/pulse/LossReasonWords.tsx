@@ -2,25 +2,31 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import { buildLossReasonWords, type LossNarrative } from '@/lib/loss-reason-words';
 import './LossReasonWords.css';
 
-export function LossReasonWords({ deals, available }: { deals: LossNarrative[]; available: boolean }) {
+export function LossReasonWords({ deals, available, compact = false }: { deals: LossNarrative[]; available: boolean; compact?: boolean }) {
   const cloud = useMemo(() => buildLossReasonWords(deals), [deals]);
   const context = JSON.stringify(cloud.words.map(word => [word.term, word.comments.map(comment => [comment.id, comment.text])]));
   const [selection, setSelection] = useState<{ context: string; term: string; expanded: boolean } | null>(null);
   const selected = selection?.context === context ? cloud.words.find(word => word.term === selection.term) : undefined;
+  const [expandedContext, setExpandedContext] = useState<string | null>(null);
+  const wordsExpanded = !compact || expandedContext === context;
+  const visibleWords = wordsExpanded ? cloud.words : cloud.words.slice(0, 12);
   const max = Math.max(1, ...cloud.words.map(word => word.count));
-  return <section className="loss-reason-words" aria-label="Palabras en las razones de pérdida">
-    <div className="loss-words-heading"><h3>¿Qué dicen las razones de pérdida?</h3><span>Fuente: Closed Lost Reason</span></div>
+  return <section className="loss-reason-words" data-compact={compact || undefined} aria-label="Palabras en las razones de pérdida">
+    <div className="loss-words-heading"><h3>{compact ? "Palabras más mencionadas" : "¿Qué dicen las razones de pérdida?"}</h3><span>Fuente: Closed Lost Reason</span></div>
     {!available ? <p>Actualiza el dashboard para cargar las explicaciones de pérdida.</p> : <>
-      <p>{cloud.commented} de {cloud.total} {cloud.total === 1 ? "deal" : "deals"} con explicación · tamaño = deals que mencionan cada palabra</p>
+      <p>{cloud.commented} de {cloud.total} {cloud.total === 1 ? "deal" : "deals"} con explicación · {compact ? "mayor frecuencia primero" : "tamaño = deals que mencionan cada palabra"}</p>
       {cloud.words.length ? <div className="loss-words-cloud" aria-label="Nube de palabras">
-        {cloud.words.map(word => <button type="button" key={word.term} aria-pressed={selected?.term === word.term}
+        {visibleWords.map(word => <button type="button" key={word.term} aria-pressed={selected?.term === word.term}
           aria-label={`Ver ${word.count} ${word.count === 1 ? 'comentario' : 'comentarios'} con ${word.term}`}
           title={`${word.count} ${word.count === 1 ? 'deal menciona' : 'deals mencionan'} «${word.term}»`}
-          style={{ '--bubble-size': `${Math.round(76 + 62 * Math.sqrt((word.count - 1) / Math.max(1, max - 1)))}px` } as CSSProperties}
+          style={{ '--bubble-size': `${Math.round(76 + (compact ? 28 : 62) * Math.sqrt((word.count - 1) / Math.max(1, max - 1)))}px` } as CSSProperties}
           onClick={() => setSelection(selected?.term === word.term ? null : { context, term: word.term, expanded: false })}>
           <span className="loss-word-label">{word.term}</span><small>{word.count} {word.count === 1 ? "deal" : "deals"}</small>
         </button>)}
       </div> : <p>{cloud.commented ? 'Las explicaciones no contienen palabras significativas para una nube.' : 'Sin explicaciones registradas en este alcance.'}</p>}
+      {compact && cloud.words.length > 12 && <button type="button" className="loss-words-more" onClick={() => { setExpandedContext(wordsExpanded ? null : context); if (wordsExpanded) setSelection(null); }}>
+        {wordsExpanded ? "Mostrar las 12 principales" : `Ver las ${cloud.words.length - 12} palabras restantes`}
+      </button>}
       {selected ? <div className="loss-words-evidence" aria-live="polite">
         <div className="loss-words-evidence-heading"><strong>Comentarios con «{selected.term}» · {selected.count} deals</strong><button type="button" onClick={() => setSelection(null)}>Cerrar comentarios</button></div>
         {(selection?.expanded ? selected.comments : selected.comments.slice(0, 5)).map(comment => <blockquote key={comment.id}>
