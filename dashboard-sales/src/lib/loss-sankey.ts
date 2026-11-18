@@ -1,16 +1,22 @@
 import type { InsightDeal } from './insights-types';
+import { roleOfOwner } from './owner-roles';
+
+export type LossSankeyGrouping = 'owner' | 'team';
 
 export type LossSankeyNode = { key: string; name: string; kind: 'owner' | 'stage' | 'reason'; deals: InsightDeal[]; amount: number };
 export type LossSankeyLink = { key: string; source: number; target: number; value: number; deals: InsightDeal[]; amount: number };
 
 /** Each lost deal occurs once per column and once per adjacent connection. Width is deal count, including $0 deals. */
-export function buildLossSankey(input: InsightDeal[]) {
+export function buildLossSankey(input: InsightDeal[], grouping: LossSankeyGrouping = 'owner') {
   const deals = [...new Map(input.filter(deal => deal.status === 'lost').map(deal => [deal.id, deal])).values()];
   const nodes: LossSankeyNode[] = [];
   const indices = new Map<string, number>();
   const paths = deals.map(deal => {
+    const team = roleOfOwner(deal.ownerId);
+    const first = grouping === 'team' ? { id: team ?? 'unknown', name: team ?? 'Sin equipo' } :
+      { id: deal.ownerId || deal.owner || 'unknown', name: deal.owner || 'Sin comercial' };
     const parts = [
-      { kind: 'owner' as const, id: deal.ownerId || deal.owner || 'unknown', name: deal.owner || 'Sin comercial' },
+      { kind: 'owner' as const, ...first },
       { kind: 'stage' as const, id: deal.lostStage || 'unknown', name: deal.lostStage || 'Sin recorrido' },
       { kind: 'reason' as const, id: deal.lostReason || 'unknown', name: deal.lostReason || 'Sin motivo listado' },
     ];
