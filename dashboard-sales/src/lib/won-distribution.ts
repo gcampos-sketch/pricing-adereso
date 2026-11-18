@@ -9,7 +9,7 @@ const types = [
   { key: 'unknown', label: 'Tipo sin identificar', color: '#9299a8' },
 ];
 const sources = [
-  { key: 'outbound', label: 'Outbound', color: '#f0c66d' },
+  { key: 'outbound', label: 'Prospección SDR', color: '#f0c66d' },
   { key: 'inbound', label: 'Inbound', color: '#75d5df' },
   { key: 'cs', label: 'Oportunidad desde CS', color: '#a6a0ed' },
   { key: 'kam', label: 'Oportunidad desde KAM', color: '#83c7a1' },

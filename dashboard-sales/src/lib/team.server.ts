@@ -266,7 +266,7 @@ const WR_DIMENSIONS = [
   {
     id: "motion",
     label: "Inbound vs Outbound",
-    help: "Inbound: formulario inbound O Negocio Inbound = Sí. Outbound: Prospección SDR sin señal inbound. Sin evidencia: Sin clasificar.",
+    help: "Inbound: formulario inbound O Negocio Inbound = Sí. Outbound: Negocio Inbound = No Y Prospección SDR Y Tipo de deal = Oportunidad. Sin evidencia: Sin clasificar.",
     of: motionOf,
   },
 ] as const;

@@ -54,7 +54,7 @@ export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, show
   const maxOwnerMrr = Math.max(0, ...owners.map(owner => owner.mrr));
   const closed = activeWr.won + activeWr.lost;
   const wr = closed > 0 ? activeWr.won / closed * 100 : null;
-  const methodology = `Base: ${money(mix.totalMrr)} MRR · ${mix.count} negocios · ${rangeLabel}. Aplica los filtros del tablero y el comercial seleccionado aquí; la búsqueda y los demás filtros del listado no alteran este resumen. Outbound: Prospección SDR Adereso. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Las demás fuentes se muestran aparte.`;
+  const methodology = `Base: ${money(mix.totalMrr)} MRR · ${mix.count} negocios · ${rangeLabel}. Aplica los filtros del tablero y el comercial seleccionado aquí; la búsqueda y los demás filtros del listado no alteran este resumen. Prospección SDR: fuente registrada en HubSpot; el segmento Outbound exige además Inbound = No y tipo Oportunidad. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Las demás fuentes se muestran aparte.`;
   return <section className="won-executive won-mix-summary won-widget-summary" aria-label="Composición de los ganados del período">
     <header className="won-mix-heading"><span title={methodology}>RESUMEN · {rangeLabel} · {dateBasisLabel}{selectedOwner ? ` · ${selectedOwner}` : ''}</span>
       <div className="won-mix-measure" role="group" aria-label="Medida de la distribución">
@@ -76,7 +76,7 @@ export function WonExecutiveSummary({ rangeLabel, deals, periods, periodWr, show
         {!owners.length ? <p className="won-mix-empty">Sin ganados en este período.</p> : null}
       </article> : null}
       <Distribution title="Qué vendimos" note="Tipo de negocio registrado en HubSpot. Categorías en cero ocultas." rows={mix.types} measure={measure} period={rangeLabel} />
-      <Distribution title="De dónde vino" note="Outbound: Prospección SDR Adereso. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Otras fuentes se muestran aparte." rows={mix.sources} measure={measure} period={rangeLabel} />
+      <Distribution title="De dónde vino" note="Prospección SDR: fuente registrada en HubSpot; el segmento Outbound exige además Inbound = No y tipo Oportunidad. Inbound: Form de contacto Inbound Adereso. CS: Customer Success. KAM: KAM Adereso, incluida Recuperación. Otras fuentes se muestran aparte." rows={mix.sources} measure={measure} period={rangeLabel} />
       <article className="won-wr-widget" title="WR = ganados ÷ (ganados + perdidos), con monto mayor a $0. Aplica el período, comercial, rol y tipo del tablero, además del comercial seleccionado aquí. Incluye todos los cierres de ese alcance, no solo los ganados elegibles para cuota. La búsqueda y los demás filtros de la tabla no cambian este indicador.">
         <h3>WR del período · por cierre</h3>
         <p>{rangeLabel} · {selectedOwner ?? 'filtros actuales del tablero'}</p>

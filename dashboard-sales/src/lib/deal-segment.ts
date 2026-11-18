@@ -7,7 +7,7 @@ const prospectingSources = new Set(["prospeccion sdr", "prospeccion sdr adereso"
 export function acquisitionOf(p: OriginProps): "Inbound" | "Outbound" | "Sin clasificar" {
   const source = normalize(p["fuente_de_creacion"] ?? "");
   if (inboundForms.has(source) || p["negocio_inbound"] === "true") return "Inbound";
-  if (prospectingSources.has(source)) return "Outbound";
+  if (prospectingSources.has(source) && p["negocio_inbound"] === "false" && p["dealtype"] === "newbusiness") return "Outbound";
   return "Sin clasificar";
 }
 

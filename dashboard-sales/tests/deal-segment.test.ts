@@ -8,8 +8,16 @@ test('inbound uses OR across exact native sources and the explicit checkbox', ()
   for (const source of [null, '', 'KAM', 'Prospección SDR']) expect(acquisitionOf({ fuente_de_creacion: source, negocio_inbound: 'true' })).toBe('Inbound');
 });
 
-test('outbound requires prospecting evidence; missing and other evidence stays unknown', () => {
-  for (const source of ['Prospección SDR', 'Prospección SDR Adereso', 'Prospección SDR Cassper']) expect(acquisitionOf({ fuente_de_creacion: source, negocio_inbound: null })).toBe('Outbound');
+test('outbound requires explicit No AND prospecting AND native opportunity type', () => {
+  for (const source of ['Prospección SDR', 'Prospección SDR Adereso', 'Prospección SDR Cassper']) {
+    const valid = { fuente_de_creacion: source, negocio_inbound: 'false', dealtype: 'newbusiness' };
+    expect(acquisitionOf(valid)).toBe('Outbound');
+    expect(segmentOf(valid)).toBe('Outbound');
+    for (const flag of [null, '', 'invalid']) expect(acquisitionOf({ ...valid, negocio_inbound: flag })).toBe('Sin clasificar');
+    for (const type of [null, '', 'Upsell (mas de los mismo)', 'Cross sell (producto nuevo)', 'Renovación (valida)', 'Partnership']) expect(acquisitionOf({ ...valid, dealtype: type })).toBe('Sin clasificar');
+    expect(acquisitionOf({ ...valid, negocio_inbound: 'true' })).toBe('Inbound');
+    expect(acquisitionOf({ ...valid, fuente_de_creacion: null })).toBe('Sin clasificar');
+  }
   for (const source of [null, '', 'KAM', 'Customer Success', 'Otra campaña inbound']) {
     for (const flag of [null, '', 'false']) expect(acquisitionOf({ fuente_de_creacion: source, negocio_inbound: flag })).toBe('Sin clasificar');
   }
