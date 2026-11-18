@@ -275,7 +275,7 @@ export type FilterBarProps = {
   dealType?: string;
   onDealType?: (value: string) => void;
   creationSource?: string;
-  creationSourceOptions?: string[];
+  creationSourceOptions?: { value: string; label: string; group: string }[];
   onCreationSource?: (value: string) => void;
   actions?: ReactNode;
 };
@@ -426,7 +426,12 @@ export function CompactFilterBar({
               <select className="compact-filter-trigger" aria-label="Fuente de creación"
                 value={creationSource} onChange={event => { onCreationSource(event.target.value); setOpenFilter(null); }}>
                 <option value="">Todas las fuentes</option>
-                {creationSourceOptions.map(source => <option key={source} value={source}>{source}</option>)}
+                {[...new Set(creationSourceOptions.map(source => source.group))].map(group => (
+                  <optgroup key={group} label={group}>
+                    {creationSourceOptions.filter(source => source.group === group).map(source =>
+                      <option key={source.value} value={source.value}>{source.label}</option>)}
+                  </optgroup>
+                ))}
               </select>
             </div>
           </div>

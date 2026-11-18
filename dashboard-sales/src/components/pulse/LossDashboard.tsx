@@ -49,7 +49,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const [creationSource, setCreationSource] = useState("");
   const sourceOptions = useMemo(() => lossCreationSources(report.deals), [report.deals]);
   const sourceDeals = useMemo(() => scopeLossCreationSource(report.deals, creationSource), [report.deals, creationSource]);
-  const sourceScope = creationSource || "Todas las fuentes";
+  const sourceScope = sourceOptions.find(option => option.value === creationSource)?.label || creationSource || "Todas las fuentes";
   const [stageFilter, setStageFilter] = useState<string[]>([]);
   const [dimension, setDimension] = useState<Dimension>("reason");
   const [expandedRows, setExpandedRows] = useState("");
