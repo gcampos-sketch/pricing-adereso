@@ -29,7 +29,7 @@ const PopoverContent = React.forwardRef<
   const source = React.useRef<HTMLElement | null>(null);
   const stopTracking = React.useRef<(() => void) | null>(null);
   // Details expand over their source card; only screen edges can displace them.
-  const overTrigger = /(?:won-mix-popover|service-directory-popup|commission-popover|won-stage-popover|notification-popup|adobo-score-popup|loss-reason-popover)/.test(className ?? "");
+  const overTrigger = /(?:won-mix-popover|service-directory-popup|commission-popover|won-stage-popover|notification-popup|adobo-score-popup|loss-reason-popover|loss-cluster-popover)/.test(className ?? "");
   const positionOrigin = (node: HTMLDivElement) => {
     const trigger = origin?.current ?? source.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     if (!trigger || trigger === document.body || node.contains(trigger)) return;

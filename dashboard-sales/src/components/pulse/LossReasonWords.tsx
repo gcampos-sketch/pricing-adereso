@@ -2,14 +2,14 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import { buildLossReasonWords, type LossNarrative } from '@/lib/loss-reason-words';
 import './LossReasonWords.css';
 
-export function LossReasonWords({ deals, available, compact = false }: { deals: LossNarrative[]; available: boolean; compact?: boolean }) {
+export function LossReasonWords({ deals, available, compact = false, initialLimit = 12 }: { deals: LossNarrative[]; available: boolean; compact?: boolean; initialLimit?: number }) {
   const cloud = useMemo(() => buildLossReasonWords(deals), [deals]);
   const context = JSON.stringify(cloud.words.map(word => [word.term, word.comments.map(comment => [comment.id, comment.text])]));
   const [selection, setSelection] = useState<{ context: string; term: string; expanded: boolean } | null>(null);
   const selected = selection?.context === context ? cloud.words.find(word => word.term === selection.term) : undefined;
   const [expandedContext, setExpandedContext] = useState<string | null>(null);
   const wordsExpanded = !compact || expandedContext === context;
-  const visibleWords = wordsExpanded ? cloud.words : cloud.words.slice(0, 12);
+  const visibleWords = wordsExpanded ? cloud.words : cloud.words.slice(0, initialLimit);
   const max = Math.max(1, ...cloud.words.map(word => word.count));
   return <section className="loss-reason-words" data-compact={compact || undefined} aria-label="Palabras en las razones de pérdida">
     <div className="loss-words-heading"><h3>{compact ? "Palabras más mencionadas" : "¿Qué dicen las razones de pérdida?"}</h3><span>Fuente: Closed Lost Reason</span></div>
@@ -24,8 +24,8 @@ export function LossReasonWords({ deals, available, compact = false }: { deals: 
           <span className="loss-word-label">{word.term}</span><small>{word.count} {word.count === 1 ? "deal" : "deals"}</small>
         </button>)}
       </div> : <p>{cloud.commented ? 'Sin palabras clave después de quitar el relleno. Puedes revisar las explicaciones en los deals.' : 'Sin explicaciones registradas en este alcance.'}</p>}
-      {compact && cloud.words.length > 12 && <button type="button" className="loss-words-more" onClick={() => { setExpandedContext(wordsExpanded ? null : context); if (wordsExpanded) setSelection(null); }}>
-        {wordsExpanded ? "Mostrar las 12 principales" : `Ver las ${cloud.words.length - 12} palabras restantes`}
+      {compact && cloud.words.length > initialLimit && <button type="button" className="loss-words-more" onClick={() => { setExpandedContext(wordsExpanded ? null : context); if (wordsExpanded) setSelection(null); }}>
+        {wordsExpanded ? `Mostrar las ${initialLimit} principales` : `Ver las ${cloud.words.length - initialLimit} palabras restantes`}
       </button>}
       {selected ? <div className="loss-words-evidence" aria-live="polite">
         <div className="loss-words-evidence-heading"><strong>Comentarios con «{selected.term}» · {selected.count} deals</strong><button type="button" onClick={() => setSelection(null)}>Cerrar comentarios</button></div>

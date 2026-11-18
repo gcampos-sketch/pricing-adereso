@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { LossReasonPopover } from "./LossReasonPopover";
 import { LossReasonWords } from "./LossReasonWords";
+import { LossScoreClusters } from "./LossScoreClusters";
 import { LossSankey } from "./LossSankey";
 import { DealModal } from "./DealModal";
 import { MetricTrend } from "./MetricTrend";
@@ -109,7 +110,6 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     if (unused) setDimension(unused.key);
   };
   const ghost = scoped.filter(deal => deal.ghost);
-  const highScore = scoped.filter(deal => deal.adoboScoreValue > 60);
   const question = DIMENSIONS.find(item => item.key === dimension)!.question;
 
   return <main className="pulse-main loss-dashboard">
@@ -147,6 +147,9 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         deals, coverageWarning: true,
       })}
       onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
+
+    <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"}
+      onOpen={(title, deals) => setDrill({title, deals, reasonWords: true, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · Grupo por historial anterior a la pérdida; tabla con valores CRM actuales`})} />
 
     <section className="rep-chart loss-explorer" aria-label="Explorar pérdidas">
       <nav className="loss-breadcrumb" aria-label="Recorrido del análisis">
@@ -194,7 +197,6 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     <details className="rep-chart loss-details" key={scopeKey + JSON.stringify(path)}>
       <summary>Profundizar en los registros <span>Comentarios, tiempo en etapa y actividad</span></summary>
       <div className="loss-record-tools">
-        <button type="button" className="cell-button" onClick={() => open("Score alto que terminó perdido", highScore)}>Score &gt; 60 · {highScore.length} deals</button>
         <button type="button" className="cell-button" onClick={() => open("Registros disponibles de ghosting", ghost)}>Actividad de ghosting · {ghost.length} con registros</button>
       </div>
       <p className="loss-intro">La actividad disponible puede ser parcial; la ausencia de registros no confirma ausencia de seguimiento.</p>

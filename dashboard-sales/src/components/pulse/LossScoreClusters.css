@@ -1,0 +1,30 @@
+.loss-score-clusters { margin-top:24px; }
+.loss-score-clusters h2 { font:500 20px Outfit,sans-serif; margin:0; }
+.loss-score-clusters .loss-analysis-heading p { max-width:600px; }
+.loss-cluster-coverage,.loss-cluster-footnote,.loss-cluster-status { color:var(--muted); font-size:11px; line-height:1.6; }
+.loss-cluster-status { min-height:160px; display:flex; align-items:center; gap:12px; }
+.loss-cluster-chart { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:18px; margin-top:18px; }
+.loss-cluster-column { display:flex; flex-direction:column; align-items:center; min-width:0; gap:8px; padding:0 8px; color:var(--body); border:0; background:none; cursor:pointer; font-size:11px; }
+.loss-cluster-column:disabled { cursor:default; opacity:.45; }
+.loss-cluster-count { font-size:14px; font-variant-numeric:tabular-nums; }
+.loss-cluster-bar-space { display:flex; align-items:flex-end; justify-content:center; width:100%; height:150px; border-bottom:1px solid var(--border); }
+.loss-cluster-bar { display:block; width:100%; max-width:68px; min-height:2px; background:#b1a1d2; border-radius:6px 6px 0 0; }
+.loss-cluster-bar[data-unknown=true] { background:var(--muted); opacity:.5; }
+.loss-cluster-column:hover:not(:disabled) .loss-cluster-bar,.loss-cluster-column[aria-expanded=true] .loss-cluster-bar { background:var(--brand); }
+.loss-cluster-footnote { margin:16px 0 0; font-size:10px; }
+.loss-cluster-popover { padding:16px; border-radius:18px; border:1px solid var(--border); background:var(--card,#202227); color:var(--body); box-shadow:0 20px 80px #0009; overscroll-behavior:contain; }
+.loss-cluster-reasons { margin:14px 0; }
+.loss-cluster-reason { display:grid; grid-template-columns:minmax(120px,1fr) minmax(40px,.7fr) 72px; gap:12px; align-items:center; width:100%; padding:8px 0; border:0; background:none; color:var(--body); text-align:left; font-size:12px; cursor:pointer; }
+.loss-cluster-reason:first-child { grid-template-columns:1fr 72px; }
+.loss-cluster-reason strong { text-align:right; font-size:12px; font-weight:500; }
+.loss-cluster-reason small { color:var(--muted); font-weight:400; }
+.loss-cluster-reason[aria-pressed=true] { color:var(--brand); }
+.loss-cluster-reason-bar { height:5px; background:var(--border); border-radius:4px; }
+.loss-cluster-reason-bar i { display:block; height:100%; background:var(--muted); border-radius:inherit; }
+.loss-cluster-reason[aria-pressed=true] i { background:var(--brand); }
+.loss-cluster-selection { display:flex; justify-content:space-between; gap:12px; padding-top:12px; border-top:1px solid var(--border); color:var(--muted); font-size:11px; }
+.loss-cluster-popover .loss-reason-words { margin:10px 0 0; border:0; padding:0; background:none; }
+.loss-cluster-popover .loss-words-heading h3 { font-size:13px; }
+@media(max-width:640px) { .loss-cluster-chart { gap:6px; } .loss-cluster-column { padding:0 2px; font-size:10px; } .loss-cluster-reason { grid-template-columns:minmax(90px,1fr) 44px 55px; gap:8px; } .loss-score-clusters .loss-analysis-heading { flex-direction:column; } }
+
+.loss-cluster-column:disabled .loss-cluster-bar { min-height:0; }
