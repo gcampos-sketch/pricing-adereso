@@ -23,7 +23,7 @@ export function LossReasonWords({ deals, available, compact = false }: { deals: 
           onClick={() => setSelection(selected?.term === word.term ? null : { context, term: word.term, expanded: false })}>
           <span className="loss-word-label">{word.term}</span><small>{word.count} {word.count === 1 ? "deal" : "deals"}</small>
         </button>)}
-      </div> : <p>{cloud.commented ? 'Las explicaciones no contienen palabras significativas para una nube.' : 'Sin explicaciones registradas en este alcance.'}</p>}
+      </div> : <p>{cloud.commented ? 'Sin palabras clave después de quitar el relleno. Puedes revisar las explicaciones en los deals.' : 'Sin explicaciones registradas en este alcance.'}</p>}
       {compact && cloud.words.length > 12 && <button type="button" className="loss-words-more" onClick={() => { setExpandedContext(wordsExpanded ? null : context); if (wordsExpanded) setSelection(null); }}>
         {wordsExpanded ? "Mostrar las 12 principales" : `Ver las ${cloud.words.length - 12} palabras restantes`}
       </button>}
@@ -33,7 +33,7 @@ export function LossReasonWords({ deals, available, compact = false }: { deals: 
           <p>{comment.text}</p><footer>{comment.url ? <a href={comment.url} target="_blank" rel="noopener noreferrer">{comment.name}</a> : <span>{comment.name}</span>}</footer>
         </blockquote>)}
         {selected.comments.length > 5 && !selection?.expanded ? <button type="button" className="cell-button" onClick={() => setSelection({ context, term: selected.term, expanded: true })}>Ver los {selected.comments.length} comentarios</button> : null}
-      </div> : cloud.words.length ? <p>Pulsa una palabra para leer los comentarios originales. Palabras literales; no causas inferidas.</p> : null}
+      </div> : cloud.words.length ? <p>Pulsa una palabra para leer los comentarios completos. Se omiten palabras de relleno.</p> : null}
     </>}
   </section>;
 }
