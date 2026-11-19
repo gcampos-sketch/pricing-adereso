@@ -380,7 +380,7 @@ export function StageVelocity({
   return (
     <>
           <section className="stage-flow-modal stage-flow-panel" aria-label="Pipeline animado por niveles">
-            <header><div><h2>Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = {dateBasis === 'entry' ? 'distribución de salidas' : 'avance de la cohorte'} · anomalías saltan E4</p></div></header>
+            <header><div><h2 className="pulse-h2">Pipeline animado por niveles</h2><p>Izquierda → derecha · grosor = cantidad · % = {dateBasis === 'entry' ? 'distribución de salidas' : 'avance de la cohorte'} · anomalías saltan E4</p></div></header>
               <div className="stage-flow-filters">
                 <div className="stage-date-toggle" role="group" aria-label="Filtrar pipeline por fecha">
                   <button type="button" aria-pressed={dateBasis === 'entry'} onClick={() => { setDateBasis('entry'); setActiveFlow(null); }}>Entrada a etapa</button>

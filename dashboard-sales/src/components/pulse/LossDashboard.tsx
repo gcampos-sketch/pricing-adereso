@@ -164,7 +164,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
           </button></span>)}
       </nav>
       <div className="loss-analysis-heading">
-        <div><h2>{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa un motivo para ver sus palabras o el conteo para abrir sus deals." : "Elige una categoría para profundizar o abre sus deals."}</p></div>
+        <div><h2 className="pulse-h2">{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa un motivo para ver sus palabras o el conteo para abrir sus deals." : "Elige una categoría para profundizar o abre sus deals."}</p></div>
         <div className="tabs" aria-label="Medida del análisis">{(["amount", "count"] as const).map(value => <button type="button" key={value} data-active={measure === value} aria-pressed={measure === value} onClick={() => setMeasure(value)}>{value === "amount" ? "MRR" : "Deals"}</button>)}</div>
       </div>
       <div className="loss-dimensions" aria-label="Analizar pérdidas por">

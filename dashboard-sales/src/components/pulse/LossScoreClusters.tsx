@@ -47,7 +47,7 @@ export function LossScoreClusters({ deals, scope, readAt, available, onOpen }: {
   const max = Math.max(1,...buckets.map(b=>b.deals.length));
   const label = metric==='adobo'?'Adobo Score':'Probabilidad de cierre';
   return <section ref={root} className="rep-chart loss-score-clusters" aria-label="Score antes de perderse">
-    <div className="loss-analysis-heading"><div><h2>¿Con qué score se perdieron?</h2><p>Último valor registrado antes de entrar a perdido · {scope}</p></div>
+    <div className="loss-analysis-heading"><div><h2 className="pulse-h2">¿Con qué score se perdieron?</h2><p>Último valor registrado antes de entrar a perdido · {scope}</p></div>
       <div className="tabs" aria-label="Score del análisis">{(['adobo','probability'] as const).map(value=><button type="button" key={value} aria-pressed={metric===value} data-active={metric===value} onClick={()=>{setMetric(value);setOpened(null);}}>{value==='adobo'?'Adobo Score':'Probabilidad de cierre'}</button>)}</div>
     </div>
     {!rows ? <div className="loss-cluster-status" role="status">{state.key===key && state.error ? <>{state.error} <button type="button" className="cell-button" onClick={()=>setRetry(r=>r+1)}>Reintentar</button></> : `Leyendo historial${state.key===key && state.loaded ? ` · ${state.loaded} de ${ids.length}` : '…'}`}</div> : <>

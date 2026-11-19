@@ -265,11 +265,13 @@ export function GlassFilters({ filters, report }: { filters: Filters; report: In
 
 export function SectionTitle({ children, note }: { children: React.ReactNode; note?: string }) {
   return (
-    <div className="team-section-head" data-section-head>
-      <h2 className="pulse-h2">{children}</h2>
-      {note ? <span className="eyebrow">{note}</span> : null}
+    <header className="pulse-section-head" data-section-head>
+      <div>
+        <h2 className="pulse-h2">{children}</h2>
+        {note ? <p className="pulse-section-context">{note}</p> : null}
+      </div>
       <CopySectionButton />
-    </div>
+    </header>
   );
 }
 

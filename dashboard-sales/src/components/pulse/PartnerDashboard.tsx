@@ -53,16 +53,7 @@ export function PartnerDashboard({
   return (
     <main className="pulse-main">
       {tabs}
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 24,
-          alignItems: "flex-end",
-          marginBottom: 52,
-          flexWrap: "wrap",
-        }}
-      >
+      <header className="team-header">
         <div>
           <h1 className="pulse-h1">Negocios de Partners</h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
@@ -103,23 +94,14 @@ export function PartnerDashboard({
         />
       </section>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          gap: 24,
-          margin: "64px 0 24px",
-          flexWrap: "wrap",
-        }}
-      >
+      <header className="pulse-section-head">
         <div>
           <h2 className="pulse-h2">Fuente de creación</h2>
-          <div className="eyebrow" style={{ marginTop: 8 }}>
+          <p className="pulse-section-context">
             La fuente es lo que declara el negocio como de partner. Haz click para ver los deals.
-          </div>
+          </p>
         </div>
-      </div>
+      </header>
       <div className="table-wrap">
         <table className="pulse-table">
           <thead>
@@ -157,16 +139,7 @@ export function PartnerDashboard({
         </table>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          gap: 24,
-          margin: "64px 0 24px",
-          flexWrap: "wrap",
-        }}
-      >
+      <header className="pulse-section-head">
         <h2 className="pulse-h2">Métricas por partner</h2>
         <div className="tabs">
           <button
@@ -186,7 +159,7 @@ export function PartnerDashboard({
             Acumulado histórico
           </button>
         </div>
-      </div>
+      </header>
       <div className="table-wrap">
         <table className="pulse-table">
           <thead>
@@ -271,9 +244,9 @@ export function PartnerDashboard({
         </table>
       </div>
 
-      <h2 className="pulse-h2" style={{ margin: "64px 0 24px" }}>
-        Alertas de partners
-      </h2>
+      <header className="pulse-section-head">
+        <h2 className="pulse-h2">Alertas de partners</h2>
+      </header>
       <section className="alerts">
         {report.alerts.length ? (
           report.alerts.map((alert) => (

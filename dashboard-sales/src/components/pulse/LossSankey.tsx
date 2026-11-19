@@ -33,7 +33,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); action(); }
   };
   return <section className="rep-chart loss-sankey" aria-label="Sankey de deals perdidos">
-    <div className="loss-sankey-heading"><div><h2>¿Dónde se pierden los deals?</h2><p>{scope} · {basis === "entry" ? "Por entrada a perdido" : "Por cierre"} · {quantity(graph.deals.length)} · {money(graph.deals.reduce((total, deal) => total + deal.amountValue, 0))} MRR</p></div>
+    <div className="loss-sankey-heading"><div><h2 className="pulse-h2">¿Dónde se pierden los deals?</h2><p>{scope} · {basis === "entry" ? "Por entrada a perdido" : "Por cierre"} · {quantity(graph.deals.length)} · {money(graph.deals.reduce((total, deal) => total + deal.amountValue, 0))} MRR</p></div>
       <span className="loss-sankey-unit">Ancho = cantidad de deals</span></div>
     <div className="loss-sankey-controls">
       <div className="loss-sankey-control"><span>Agrupar</span><div className="tabs" role="group" aria-label="Agrupación del Sankey">

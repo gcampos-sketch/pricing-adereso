@@ -346,7 +346,7 @@ export function AdoboQuality({
           <span className="eyebrow">
             {delivery ? "Proyectos ganados" : "Adobo · estado actual"}
           </span>
-          <h2>
+          <h2 className="pulse-h2">
             {delivery ? "Handoff y portal" : "De la salud del equipo a la evidencia del deal"}
           </h2>
         </div>

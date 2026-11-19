@@ -205,17 +205,21 @@ export function Delivery({
 
   return (
     <>
-      <div className="team-section-head" data-section-head="">
-        <h2 className="pulse-h2">Proyectos ganados en curso</h2>
-        <span className="eyebrow">
-          {scope.name} · {rangeLabel} · desde la firma hasta el inicio de servicio
-        </span>
+      <header className="pulse-section-head" data-section-head="">
+        <div>
+          <h2 className="pulse-h2">Proyectos ganados en curso</h2>
+          <p className="pulse-section-context">
+            {scope.name} · {rangeLabel} · desde la firma hasta el inicio de servicio
+          </p>
+        </div>
         <CopySectionButton />
-      </div>
-      <div className="team-section-head">
-        <h3 className="pulse-h3">Resumen operativo</h3>
-        <span className="eyebrow">pendientes que requieren acción comercial</span>
-      </div>
+      </header>
+      <header className="pulse-section-head">
+        <div>
+          <h3 className="pulse-h3">Resumen operativo</h3>
+          <p className="pulse-section-context">pendientes que requieren acción comercial</p>
+        </div>
+      </header>
       <section className="grid-4">
         <Metric
           label="Ganados en curso"
@@ -243,12 +247,14 @@ export function Delivery({
         />
       </section>
 
-      <div className="team-section-head">
-        <h3 className="pulse-h3">La carrera: etapa 6 → inicio de servicio</h3>
-        <span className="eyebrow">
-          distribución por etapa actual exacta · no es una suma acumulada
-        </span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h3 className="pulse-h3">La carrera: etapa 6 → inicio de servicio</h3>
+          <p className="pulse-section-context">
+            distribución por etapa actual exacta · no es una suma acumulada
+          </p>
+        </div>
+      </header>
       <div className="race-track">
         {[
           {
@@ -335,10 +341,12 @@ export function Delivery({
           </button>
         ))}
       </div>
-      <div className="team-section-head">
-        <h3 className="pulse-h3">Cobranza para comisión</h3>
-        <span className="eyebrow">primero lo pendiente · lo pagado se muestra como conteo</span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h3 className="pulse-h3">Cobranza para comisión</h3>
+          <p className="pulse-section-context">primero lo pendiente · lo pagado se muestra como conteo</p>
+        </div>
+      </header>
       <section className="grid-4">
         <Metric
           label="Setup pendiente de pago"
@@ -374,16 +382,20 @@ export function Delivery({
         />
       </section>
 
-      <div className="team-section-head">
-        <h3 className="pulse-h3">Status del proyecto</h3>
-        <span className="eyebrow">Status Proyecto de HubSpot · planificación, desarrollo y producción</span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h3 className="pulse-h3">Status del proyecto</h3>
+          <p className="pulse-section-context">Status Proyecto de HubSpot · planificación, desarrollo y producción</p>
+        </div>
+      </header>
       <RowTable rows={projects} onModal={onModal} firstLabel="Status proyecto" showProgress />
 
-      <div className="team-section-head">
-        <h3 className="pulse-h3">Estado de contratos</h3>
-        <span className="eyebrow">ganados del corte · ordenados por monto para priorizar la firma</span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h3 className="pulse-h3">Estado de contratos</h3>
+          <p className="pulse-section-context">ganados del corte · ordenados por monto para priorizar la firma</p>
+        </div>
+      </header>
       <RowTable rows={contracts} onModal={onModal} firstLabel="Status contrato" toneOf={contractTone} />
     </>
   );
