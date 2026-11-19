@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { buildLossReasonWords, lossNarrativeTerms, lossNarrativeText, type LossNarrative } from '../src/lib/loss-reason-words';
+import { buildLossReasonWords, lossNarrativeTerms, lossNarrativeText, summarizeLossReasons, type LossNarrative } from '../src/lib/loss-reason-words';
 const deal = (id: string, text: string | null): LossNarrative => ({ id, name: `Example ${id}`, url: `https://example.test/${id}`, lostReasonNarrative: text });
 test('word size counts distinct deals rather than repetitions or duplicate rows', () => {
   const a = deal('a', 'Integración integración API API');
@@ -45,4 +45,30 @@ test('relevance filtering preserves negation and the full native comment as evid
   expect(result.commented).toBe(2);
   expect(result.words.map(word => word.term)).toEqual(['api', 'falta', 'presupuesto']);
   expect(result.words.find(word => word.term === 'api')?.comments[0].text).toBe(text);
+});
+
+test('retains the full property value when extracting terms from formatted reasons', () => {
+  const text = '  WhatsApp  sin respuesta.\nSegunda línea con <b>API</b> y &amp;.  ';
+  const word = buildLossReasonWords([deal('a', text)]).words.find(word => word.term === 'whatsapp');
+  expect(word?.comments[0].text).toBe(text);
+});
+
+test('uses the exact deals in the reason or term, grouping by owner ID and retaining zero MRR', () => {
+  const a = { ...deal('a', 'WhatsApp'), ownerId: '1', owner: 'Alex', amountValue: 200 };
+  const b = { ...deal('b', null), ownerId: '1', owner: 'Alex', amountValue: 0 };
+  const c = { ...deal('c', 'WhatsApp'), ownerId: '2', owner: 'Alex', amountValue: 100 };
+  const d = { ...deal('d', 'Presupuesto'), ownerId: '', owner: '', amountValue: 50 };
+  const category = [a, b, c, d, a];
+
+  expect(summarizeLossReasons(category)).toEqual({
+    count: 4,
+    mrr: 350,
+    owners: [
+      { id: '1', name: 'Alex', count: 2, mrr: 200 },
+      { id: '2', name: 'Alex', count: 1, mrr: 100 },
+      { id: '', name: 'Sin comercial', count: 1, mrr: 50 },
+    ],
+  });
+  const matching = buildLossReasonWords(category).words.find(word => word.term === 'whatsapp')!.comments;
+  expect(summarizeLossReasons(matching)).toMatchObject({ count: 2, mrr: 300 });
 });
