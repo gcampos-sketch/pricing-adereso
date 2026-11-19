@@ -1615,7 +1615,7 @@ export function DealModal({
       {
         key: "stage",
         label: "Etapa",
-        width: 50,
+        width: 94,
         render: (deal) => <span className="deal-stage-code" title={deal.stageFull} aria-label={`${deal.stage} · ${deal.stageFull}`}>{deal.stage || "s/d"}</span>,
         caption: () => "",
       },

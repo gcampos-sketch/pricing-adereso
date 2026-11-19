@@ -3348,7 +3348,7 @@
 .deal-action-collapse:hover { background: rgb(255 255 255 / 8%); color: var(--foreground); }
 .deal-action-trigger[aria-expanded="true"] { opacity: 0; }
 .deal-action-popup .deal-actions { padding: 0; border: 0; background: transparent; }
-.deal-row .deal-stage-code { color: inherit; font-size: inherit; white-space: nowrap; }
+.deal-row .deal-stage-code { color: inherit; font-size: inherit; white-space: normal; }
 .deal-cell-contact, .deal-head-contact { padding-left: 8px; }
 @media (prefers-reduced-motion: reduce) { .deal-action-popup[data-state] { animation: none; } }
 .deal-row .deal-contact-link { display: inline-flex; align-items: center; color: var(--foreground); font-weight: 400; }
