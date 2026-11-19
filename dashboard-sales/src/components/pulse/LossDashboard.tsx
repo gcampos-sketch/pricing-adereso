@@ -1,6 +1,7 @@
 import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useRef, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
+import { LossConclusions } from "./LossConclusions";
 import { LossReasonPopover } from "./LossReasonPopover";
 import { LossDealDrawer, type LossDealSelection } from "./LossDealDrawer";
 import { LossExecutiveSummary, type LossMeasure } from "./LossExecutiveSummary";
@@ -87,12 +88,11 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const wordScope = [filters.rangeLabel, filters.ownerName, sourceScope, ...path.filter(slice => slice.dimension !== "reason").map(slice => slice.key)].join(" · ");
   const roleOwnerOptions = report.owners.filter(owner => role === "all" || roleOfOwner(owner.id) === role)
     .map(owner => [owner.id, owner.name] as [string, string]);
-  const closed = useMemo(() => scopeLossCreationSource(filters.deals, creationSource).filter(deal => role === "all" || roleOfOwner(deal.ownerId) === role), [filters.deals, role, creationSource]);
-  const lost = useMemo(() => closed.filter(deal => deal.status === "lost" && (!stageFilter.length || stageFilter.includes(deal.lostStage))), [closed, stageFilter]);
   const sankeyCandidates = useMemo(() => sourceDeals.filter(deal => deal.status === "lost" &&
     (filters.ownerId === "team" || deal.ownerId === filters.ownerId) &&
     (role === "all" || roleOfOwner(deal.ownerId) === role) &&
     (!stageFilter.length || stageFilter.includes(deal.lostStage))), [sourceDeals, filters.ownerId, role, stageFilter]);
+  const lost = useMemo(() => sankeyCandidates.filter(deal => filters.periods.includes(deal.period)), [sankeyCandidates, filters.periods]);
   const lostAmount = sum(lost, deal => deal.amountValue);
   const ticket = lost.length ? lostAmount / lost.length : null;
   const valuation = lossValuation(lost);
@@ -170,6 +170,8 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         tooltip="MRR perdido dividido por todos los deals perdidos, incluidos los de monto $0. Al seleccionar un comercial, la diferencia es (su ticket / ticket del equipo completo − 1) × 100. El equipo incluye todos los comerciales y roles con el mismo período, fuente y etapa; no es el promedio de promedios por comercial. Sin una base positiva comparable se muestra sin comparación. Cada mes de la curva usa su propio promedio."
         footer={<LossCurve data={monthly} measure="ticket" label="Ticket medio perdido" onOpen={openTrend} />} />
     </section>
+
+    <LossConclusions deals={lost} scope={[scope, ...stageFilter].join(" · ")} onOpen={openDeals} />
 
     <LossSankey deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
       scope={scope} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
