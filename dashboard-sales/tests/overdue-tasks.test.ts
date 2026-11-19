@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createOverdueTaskService, validateTaskScope } from "../src/lib/overdue-tasks.server";
-import { isOverduePendingTask, overdueTaskExposure } from "../src/lib/overdue-tasks";
+import { isOverduePendingTask, overdueTaskExposure, taskDaysOverdue } from "../src/lib/overdue-tasks";
 const now = Date.parse("2026-11-12T14:00:00Z");
 const scope = validateTaskScope({
   dealIds: ["100", "200"],
@@ -28,6 +28,8 @@ function fixture(
     today?: boolean;
     partial?: boolean;
     changedOwner?: boolean;
+    assignees?: Record<string, string>;
+    dealStage?: string;
     emptyDeal?: boolean;
     missingTask?: boolean;
     missingAssociationList?: boolean;
@@ -42,7 +44,7 @@ function fixture(
       hs_task_subject: `Tarea ${id}`,
       hs_task_status: id === "13" ? "COMPLETED" : status,
       hs_timestamp: options.today ? "2026-11-12T15:00:00Z" : "2026-11-10T15:00:00Z",
-      hubspot_owner_id: "331766554",
+      hubspot_owner_id: options.assignees?.[id] ?? "331766554",
     },
   });
   const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
@@ -53,6 +55,7 @@ function fixture(
         status: "COMPLETE",
         results: body.inputs.map((x: { id: string }) => {
           const row = deal(x.id, x.id === "100" ? "500" : "900");
+          if (options.dealStage) row.properties.dealstage = options.dealStage;
           if (options.changedOwner) row.properties.hubspot_owner_id = "93662868";
           return row;
         }),
@@ -206,4 +209,32 @@ test("when the last pending task is gone, no residual MRR or deal count remains"
 
 test("a missing association list is incomplete, never a confirmed empty report", async () => {
   await expect(fixture({ missingAssociationList: true }).service.read(scope)).rejects.toThrow("lectura parcial");
+});
+
+test("individual task scope excludes other and unassigned owners from counts and write access", async () => {
+  const f = fixture({ assignees: { "11": "93662868", "12": "" } });
+  expect(overdueTaskExposure(await f.service.read(scope))).toEqual({
+    tasks: 0, deals: 0, mrr: 0, unvalued: 0,
+  });
+  await expect(f.service.complete("11", scope)).rejects.toThrow("otro comercial");
+  expect(f.calls.some((call) => call.method === "PATCH")).toBe(false);
+  const team = validateTaskScope({ ...scope, owner: "team", role: "all" });
+  expect((await f.service.read(team)).tasks.map((task) => task.id)).toEqual(["11", "12"]);
+});
+
+test("won and lost tasks stay in their own deal state, including on completion", async () => {
+  for (const [outcome, dealStage] of [["won", "213244763"], ["lost", "213417520"]] as const) {
+    const f = fixture({ dealStage });
+    const closed = validateTaskScope({ ...scope, outcome, stages: ["E5"] });
+    expect((await f.service.read(scope)).tasks).toEqual([]);
+    expect(overdueTaskExposure(await f.service.read(closed)).mrr).toBe(1400);
+    await expect(f.service.complete("11", scope)).rejects.toThrow("ya no pertenece");
+    expect(await f.service.complete("11", closed)).toEqual({ taskId: "11", status: "COMPLETED" });
+  }
+  expect(() => validateTaskScope({ ...scope, outcome: "unknown" })).toThrow("Estado de deal");
+});
+
+test("days overdue counts local calendar midnights across a daylight-saving change", () => {
+  expect(taskDaysOverdue("2026-09-05T04:30:00Z", "2026-09-07")).toBe(2);
+  expect(taskDaysOverdue("2026-11-12T02:59:00Z", "2026-11-12")).toBe(1);
 });

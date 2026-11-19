@@ -9,7 +9,7 @@ export function useOverdueTasks(
   enabled: boolean,
   onChanged: () => void,
 ) {
-  const scopeKey = JSON.stringify([dealIds, scope.owner, scope.role, scope.type, scope.stages]);
+  const scopeKey = JSON.stringify([dealIds, scope.owner, scope.role, scope.type, scope.stages, scope.outcome]);
   const scopeRef = useRef(scopeKey);
   scopeRef.current = scopeKey;
   const inputRef = useRef({ ...scope, dealIds });
@@ -85,13 +85,12 @@ export function useOverdueTasks(
             }
           : old,
       );
-      notifyChange();
     } else if (enabledRef.current) {
       // A global task may also be in the newly selected scope. Re-read that scope,
       // never splice a response from the prior filter into it.
       await load();
-      notifyChange();
     }
+    notifyChange();
   };
   return {
     data: state.key === scopeKey ? state.data : null,
