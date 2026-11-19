@@ -1,9 +1,22 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, Check, LoaderCircle, RefreshCw, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowUpRight, LoaderCircle, RefreshCw, X } from "lucide-react";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { overdueTaskExposure, type OverdueTaskReport, type OverdueTask } from "@/lib/overdue-tasks";
-import type { OverdueTasksController } from "@/hooks/use-overdue-tasks";
+import {
+  TASK_OUTCOMES,
+  overdueTaskExposure,
+  taskDaysOverdue,
+  type OverdueTask,
+  type TaskOutcome,
+  type TaskScope,
+} from "@/lib/overdue-tasks";
+import { useOverdueTasks, type OverdueTasksController } from "@/hooks/use-overdue-tasks";
+
+const outcomes: Record<TaskOutcome, string> = {
+  active: "Activos",
+  won: "Ganados",
+  lost: "Perdidos",
+};
 const money = (value: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -17,87 +30,50 @@ const due = (value: string) =>
     year: "numeric",
     timeZone: "America/Coyhaique",
   });
+
+type Props = {
+  controller: OverdueTasksController;
+  scope: TaskScope;
+  dealIds: Record<TaskOutcome, string[]>;
+  readAt: string;
+  businessDay: string;
+  onChanged: () => void;
+  compact?: boolean;
+};
+
 export function OverdueTasks({
   controller,
-  compact = false,
-}: {
-  controller: OverdueTasksController;
-  compact?: boolean;
-}) {
-  const { data, error, loading, reload, complete, scopeKey } = controller;
-  const origin = useRef<HTMLButtonElement | null>(null),
-    closeRef = useRef<HTMLButtonElement | null>(null);
+  scope,
+  dealIds,
+  readAt,
+  businessDay,
+  onChanged,
+  compact,
+}: Props) {
+  const origin = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [placement, setPlacement] = useState<{
     side: "left" | "right" | "top" | "bottom";
     width: number;
   }>({ side: "bottom", width: 580 });
-  const [open, setOpen] = useState(false),
-    [view, setView] = useState<OverdueTaskReport | null>(null);
-  const [done, setDone] = useState<Set<string>>(new Set()),
-    [busy, setBusy] = useState<Set<string>>(new Set()),
-    [errors, setErrors] = useState<Record<string, string>>({}),
-    [notice, setNotice] = useState("");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    setOpen(false);
-    setView(null);
-    setDone(new Set());
-    setErrors({});
-  }, [scopeKey]);
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    [],
+  const [open, setOpen] = useState(false);
+  const [outcome, setOutcome] = useState<TaskOutcome>("active");
+  const closed = useOverdueTasks(
+    dealIds[outcome],
+    { ...scope, stages: [], outcome },
+    readAt,
+    businessDay,
+    open && outcome !== "active",
+    onChanged,
   );
-  useEffect(() => {
-    if (!open && view) {
-      const id = setTimeout(() => setView(null), 240);
-      return () => clearTimeout(id);
-    }
-    return undefined;
-  }, [open, view]);
-  useEffect(() => {
-    if (open && data)
-      setView((old) => ({
-        ...data,
-        tasks: [
-          ...data.tasks,
-          ...(old?.tasks.filter(
-            (task) => done.has(task.id) && !data.tasks.some((item) => item.id === task.id),
-          ) ?? []),
-        ],
-        deals: [
-          ...new Map(
-            [...(old?.deals ?? []), ...data.deals].map((deal) => [deal.id, deal]),
-          ).values(),
-        ],
-      }));
-  }, [data, open, done]);
-  const exposure = data ? overdueTaskExposure(data) : null;
-  const check = async (task: OverdueTask) => {
-    setBusy((old) => new Set(old).add(task.id));
-    setErrors((old) => ({ ...old, [task.id]: "" }));
-    try {
-      await complete(task);
-      setDone((old) => new Set(old).add(task.id));
-      setNotice("Tarea completada y verificada en HubSpot");
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => setNotice(""), 5000);
-    } catch (error) {
-      setErrors((old) => ({
-        ...old,
-        [task.id]: error instanceof Error ? error.message : "No se pudo verificar el guardado.",
-      }));
-    } finally {
-      setBusy((old) => {
-        const next = new Set(old);
-        next.delete(task.id);
-        return next;
-      });
-    }
-  };
-  if (!open && !view && !error && (!exposure || exposure.tasks === 0)) return null;
+  const current = outcome === "active" ? controller : closed;
+  const active = controller.data ? overdueTaskExposure(controller.data) : null;
+  const amount = active
+    ? `${money(active.mrr)} MRR`
+    : controller.error
+      ? "Sin lectura"
+      : "Cargando…";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverAnchor virtualRef={origin} />
@@ -105,24 +81,15 @@ export function OverdueTasks({
         type="button"
         ref={origin}
         className={compact ? "overdue-task-shortcut" : "exec-health-widget exec-overdue-task"}
-        title={
-          error ||
-          "Tareas de deals activos, vencidas antes de hoy. El MRR de cada deal se cuenta una vez."
-        }
-        aria-label={
-          error
-            ? "No se pudo actualizar tareas vencidas; reintentar"
-            : `Ver ${exposure?.tasks ?? 0} tareas vencidas · ${money(exposure?.mrr ?? 0)} MRR involucrado`
-        }
+        title="Ver tareas vencidas por estado del deal"
+        aria-label="Ver tareas vencidas"
+        aria-expanded={open}
+        aria-haspopup="dialog"
         onClick={() => {
-          if (error && !data) {
-            void reload();
-            return;
-          }
           const rect = origin.current!.getBoundingClientRect();
-          const right = window.innerWidth - rect.right,
-            left = rect.left,
-            available = Math.max(right, left);
+          const right = window.innerWidth - rect.right;
+          const left = rect.left;
+          const available = Math.max(right, left);
           const horizontal = available >= 380;
           setPlacement({
             side: horizontal
@@ -134,41 +101,24 @@ export function OverdueTasks({
                 : "bottom",
             width: Math.min(580, window.innerWidth - 24, ...(horizontal ? [available - 22] : [])),
           });
-          setView(data);
-          setDone(new Set());
-          setErrors({});
-          setNotice("");
+          setOutcome("active");
           setOpen(true);
         }}
       >
+        <span>Tareas</span>
         {compact ? (
-          <>
-            <span>Tareas vencidas</span>
-            <b>{exposure?.tasks ?? "—"}</b>
-            <small>{error ? "Lectura pendiente" : `${money(exposure?.mrr ?? 0)} MRR`}</small>
-          </>
+          <b>{active?.tasks ?? "—"}</b>
         ) : (
-          <>
-            <span>
-              Tareas vencidas {loading ? <LoaderCircle className="is-spinning" size={12} /> : null}
-            </span>
-            <strong>
-              {error && !data ? "Sin lectura" : (exposure?.tasks ?? "—")}
-              <ArrowUpRight size={14} />
-            </strong>
-            <small>
-              {error
-                ? data
-                  ? "Datos anteriores · actualizar"
-                  : "Reintentar lectura"
-                : `${exposure?.deals ?? 0} deals · ${money(exposure?.mrr ?? 0)} MRR involucrado`}
-            </small>
-          </>
+          <strong>
+            {active?.tasks ?? "—"}
+            <ArrowUpRight size={14} aria-hidden="true" />
+          </strong>
         )}
+        <small>{amount}</small>
       </button>
       <PopoverContent
         className="overdue-tasks-popup won-mix-popover"
-        aria-label="Tareas vencidas de HubSpot"
+        aria-label="Tareas vencidas"
         side={placement.side}
         style={{ width: placement.width }}
         align={placement.side === "left" || placement.side === "right" ? "center" : "end"}
@@ -184,122 +134,171 @@ export function OverdueTasks({
         }}
       >
         <header>
-          <div>
-            <h4>Tareas vencidas</h4>
-            <p>
-              Deals activos del filtro · vencidas antes de hoy en horario de Chile · sin filtro de
-              año o trimestre.
-            </p>
-          </div>
-          <button
-            ref={closeRef}
-            type="button"
-            aria-label="Cerrar tareas vencidas"
-            onClick={() => setOpen(false)}
-          >
+          <h4>Tareas vencidas</h4>
+          <button ref={closeRef} type="button" aria-label="Cerrar" onClick={() => setOpen(false)}>
             <X size={16} />
           </button>
         </header>
-        <div className="overdue-task-summary">
-          <div>
-            <strong>{exposure?.tasks ?? 0}</strong>
-            <span>tareas pendientes</span>
-          </div>
-          <div>
-            <strong>{exposure?.deals ?? 0}</strong>
-            <span>deals únicos</span>
-          </div>
-          <div>
-            <strong>{money(exposure?.mrr ?? 0)}</strong>
-            <span>MRR involucrado</span>
-          </div>
-        </div>
-        <p className="overdue-task-explainer">
-          MRR potencial asociado, no pérdida confirmada. Cada deal suma una vez aunque tenga varias
-          tareas.{exposure?.unvalued ? ` ${exposure.unvalued} deals sin MRR valorizado.` : ""}
-        </p>
-        <div className="overdue-task-notice" role="status" aria-live="polite">
-          {notice}
-        </div>
-        {error ? (
-          <p role="alert">
-            {error}{" "}
-            <button type="button" onClick={() => void reload()}>
-              Reintentar
+        <div className="overdue-task-filters" role="group" aria-label="Estado del deal">
+          {TASK_OUTCOMES.map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={outcome === value}
+              onClick={() => setOutcome(value)}
+            >
+              {outcomes[value]}
             </button>
-          </p>
-        ) : null}
-        <div className="overdue-task-items">
-          {(view?.tasks ?? []).map((task) => {
-            const related = view?.deals.filter((deal) => task.dealIds.includes(deal.id)) ?? [];
-            return (
-              <article
-                key={task.id}
-                className="overdue-task-row"
-                data-done={done.has(task.id) || undefined}
-              >
-                <Checkbox
-                  className="overdue-task-check"
-                  aria-label={`Completar tarea: ${task.subject}`}
-                  checked={done.has(task.id)}
-                  disabled={busy.has(task.id) || done.has(task.id)}
-                  onCheckedChange={(checked) => {
-                    if (checked === true) void check(task);
-                  }}
-                />
-                <div>
-                  <strong>{task.subject}</strong>
-                  <span className="overdue-task-meta">
-                    Venció {due(task.dueAt)} · {task.assignedTo}
-                    {task.priority === "HIGH" ? " · prioridad alta" : ""}
-                  </span>
-                  <div className="overdue-task-deals">
-                    {related.map((deal) => (
-                      <a key={deal.id} href={deal.url} target="_blank" rel="noreferrer">
-                        {deal.name} <small>{money(deal.amount)} MRR</small>
-                        <ArrowUpRight size={12} />
-                      </a>
-                    ))}
-                  </div>
-                  {busy.has(task.id) ? (
-                    <small className="overdue-task-saving">
-                      <LoaderCircle size={12} className="is-spinning" /> Guardando y verificando…
-                    </small>
-                  ) : done.has(task.id) ? (
-                    <small className="overdue-task-done">
-                      <Check size={12} /> Completada en HubSpot
-                    </small>
-                  ) : null}
-                  {errors[task.id] ? (
-                    <p className="overdue-task-error" role="alert">
-                      {errors[task.id]}
-                    </p>
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
-          {!exposure?.tasks ? (
-            <p className="empty-state">Ya no quedan tareas vencidas en este alcance.</p>
-          ) : null}
+          ))}
         </div>
-        <footer>
-          <span>
-            La casilla completa esa tarea en HubSpot.{" "}
-            {data
-              ? `Lectura ${new Date(data.readAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", timeZone: "America/Coyhaique" })}`
-              : ""}
-          </span>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => void reload()}
-            title="Actualizar tareas"
-          >
-            <RefreshCw size={13} />
-          </button>
-        </footer>
+        <OverdueTaskList
+          key={current.scopeKey}
+          controller={current}
+          showAssignee={scope.owner === "team"}
+        />
       </PopoverContent>
     </Popover>
+  );
+}
+
+function OverdueTaskList({
+  controller,
+  showAssignee,
+}: {
+  controller: OverdueTasksController;
+  showAssignee: boolean;
+}) {
+  const { data, error, loading, reload, complete } = controller;
+  const [busy, setBusy] = useState<Set<string>>(new Set());
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState("");
+  const exposure = data ? overdueTaskExposure(data) : null;
+  const deals = new Map(data?.deals.map((deal) => [deal.id, deal]));
+  // The service sorts by native due timestamp, also ordering calendar days from oldest to newest.
+  const tasks = data?.tasks ?? [];
+  const businessDay = data?.businessDay ?? "";
+
+  const check = async (task: OverdueTask) => {
+    setBusy((old) => new Set(old).add(task.id));
+    setErrors((old) => ({ ...old, [task.id]: "" }));
+    setNotice("");
+    try {
+      await complete(task);
+      setNotice("Tarea completada en HubSpot");
+    } catch (error) {
+      setErrors((old) => ({
+        ...old,
+        [task.id]: error instanceof Error ? error.message : "No se pudo verificar el guardado.",
+      }));
+    } finally {
+      setBusy((old) => {
+        const next = new Set(old);
+        next.delete(task.id);
+        return next;
+      });
+    }
+  };
+
+  return (
+    <>
+      {exposure && (
+        <div className="overdue-task-summary" aria-label="Resumen">
+          <span>
+            <strong>{exposure.tasks}</strong> {exposure.tasks === 1 ? "tarea" : "tareas"}
+          </span>
+          <span>
+            <strong>{exposure.deals}</strong> {exposure.deals === 1 ? "deal" : "deals"}
+          </span>
+          <span title="Cada deal suma una vez">
+            <strong>{money(exposure.mrr)}</strong> MRR
+            {exposure.unvalued > 0 && <small> · {exposure.unvalued} sin monto</small>}
+          </span>
+        </div>
+      )}
+      <div className="overdue-task-notice" role="status">
+        {notice}
+      </div>
+      <div className="overdue-task-items" aria-busy={loading}>
+        {error && (
+          <p className="overdue-task-error" role="alert">
+            {error}
+          </p>
+        )}
+        {loading && !data && (
+          <p className="empty-state" role="status">
+            Cargando tareas…
+          </p>
+        )}
+        {!loading && !error && data && tasks.length === 0 && (
+          <p className="empty-state">Sin tareas vencidas.</p>
+        )}
+        {tasks.map((task) => {
+          const days = taskDaysOverdue(task.dueAt, businessDay);
+          const saving = busy.has(task.id);
+          return (
+            <article key={task.id} className="overdue-task-row">
+              <Checkbox
+                className="overdue-task-check"
+                aria-label={`Completar tarea en HubSpot: ${task.subject}`}
+                checked={false}
+                disabled={saving}
+                onCheckedChange={(checked) => {
+                  if (checked === true) void check(task);
+                }}
+              />
+              <div>
+                <strong>{task.subject}</strong>
+                <div className="overdue-task-meta">
+                  <time dateTime={task.dueAt}>{due(task.dueAt)}</time>
+                  <span className="overdue-task-days">
+                    {days} {days === 1 ? "día de atraso" : "días de atraso"}
+                  </span>
+                  {showAssignee && <span>{task.assignedTo}</span>}
+                </div>
+                <div className="overdue-task-deals">
+                  {task.dealIds.map((id) => {
+                    const deal = deals.get(id);
+                    return (
+                      deal && (
+                        <a key={id} href={deal.url} target="_blank" rel="noreferrer">
+                          {deal.name}
+                          <small>
+                            {Number.isFinite(deal.amount) && deal.amount > 0
+                              ? `${money(deal.amount)} MRR`
+                              : "Sin monto"}
+                          </small>
+                          <ArrowUpRight size={12} aria-hidden="true" />
+                        </a>
+                      )
+                    );
+                  })}
+                </div>
+                {saving && (
+                  <small className="overdue-task-saving">
+                    <LoaderCircle size={12} className="is-spinning" /> Guardando…
+                  </small>
+                )}
+                {errors[task.id] && (
+                  <p className="overdue-task-error" role="alert">
+                    {errors[task.id]}
+                  </p>
+                )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      <footer>
+        <span>La casilla completa la tarea en HubSpot.</span>
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => void reload()}
+          aria-label="Actualizar tareas"
+        >
+          <RefreshCw size={13} className={loading ? "is-spinning" : undefined} />
+        </button>
+      </footer>
+    </>
   );
 }

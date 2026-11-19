@@ -1,3 +1,4 @@
+import { WON_STAGES, LOST_STAGES } from "./commercial-outcomes";
 import { readCustomerEvidence } from "./customer-directory.server";
 import { reconcileCustomerAccounts } from "./customer-accounts";
 import { segmentOf, acquisitionWarning } from "./deal-segment";
@@ -104,15 +105,7 @@ const JOURNEY_STAGES: { key: string; id: string }[] = [
 ];
 export const STAGE_KEY = new Map(MANAGED_STAGES.map((s) => [s.id, s.key]));
 const LATE_STAGES = new Set(["171385867", "1245768029"]);
-export const WON_STAGES = new Set([
-  "174677684",
-  "1278792585",
-  "1086544542",
-  "213244763",
-  "171385868",
-  "173990327",
-]);
-export const LOST_STAGES = new Set(["171385869", "1372234925", "213417520", "178228041"]);
+export { WON_STAGES, LOST_STAGES };
 const STAGE_LABELS: Record<string, string> = {
   "1144383754": "E0",
   "174677684": "E6 Ganado",

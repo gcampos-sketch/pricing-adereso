@@ -11,7 +11,7 @@ import { wonByStage6Entry, withWonDeals, stage6AttributionDates } from "@/lib/wo
 import { dealExposure } from "@/lib/deal-exposure";
 import { useOverdueTasks } from "@/hooks/use-overdue-tasks";
 import { OverdueTasks } from "./OverdueTasks";
-import { TASK_OPEN_STAGES, overdueTaskExposure } from "@/lib/overdue-tasks";
+import { taskDealOutcome, type TaskOutcome, type TaskScope } from "@/lib/overdue-tasks";
 import { ArrowUpRight } from 'lucide-react';
 import { PULSE_FOCUS_PAGES, type PulseFocusView, type PulseSection } from '@/lib/report-navigation';
 import { Button } from "@/components/ui/button";
@@ -865,9 +865,26 @@ export function PulseDashboard({
       no: report.drilldowns[report.tracking?.find(t => t.id === "team")?.onTrackNoModal ?? ""]?.deals ?? [],
     }, Date.parse(report.generatedAt), { owner: ownerFilter, role, matchesType }, performanceNow), [report, ownerFilter, role, matchesType, executiveDay]);
   const operationalTasks = useMemo(() => dashboardActionGroups(report, { owner: ownerFilter, role, stages: stageFilter, matchesType }, performanceNow), [report, ownerFilter, role, stageFilter, matchesType, executiveDay]);
-  const overdueDealIds = useMemo(() => [...new Set((report.stageJourneys ?? []).map(row => row.deal).filter(deal => TASK_OPEN_STAGES[deal.stageId] && (ownerFilter === 'team' || deal.ownerId === ownerFilter) && (role === 'all' || roleOfOwner(deal.ownerId) === role) && matchesType(deal) && (!stageFilter.length || stageFilter.includes(deal.stage))).map(deal => deal.id))].sort(), [report.stageJourneys, ownerFilter, role, matchesType, stageFilter]);
-  const overdueTasks = useOverdueTasks(overdueDealIds, {owner:ownerFilter,role,type:dealType,stages:stageFilter}, report.generatedAt, executiveDay, section === 'general' || section === 'forecast', onRefresh);
-  const overdueExposure = overdueTasks.data ? overdueTaskExposure(overdueTasks.data) : null;
+  const taskScope: TaskScope = { owner: ownerFilter, role, type: dealType, stages: stageFilter };
+  const taskDealIds = useMemo(() => {
+    const ids: Record<TaskOutcome, Set<string>> = { active: new Set(), won: new Set(), lost: new Set() };
+    for (const { deal } of report.stageJourneys ?? []) {
+      const outcome = taskDealOutcome(deal.stageId);
+      if (!outcome || (!isTeam && deal.ownerId !== ownerFilter) ||
+        (role !== 'all' && roleOfOwner(deal.ownerId) !== role) || !matchesType(deal)) continue;
+      if (outcome === 'active' && stageFilter.length && !stageFilter.includes(deal.stage)) continue;
+      ids[outcome].add(deal.id);
+    }
+    return { active: [...ids.active].sort(), won: [...ids.won].sort(), lost: [...ids.lost].sort() };
+  }, [report.stageJourneys, isTeam, ownerFilter, role, matchesType, stageFilter]);
+  const overdueTasks = useOverdueTasks(
+    taskDealIds.active, taskScope, report.generatedAt, executiveDay,
+    section === 'general' || section === 'forecast', onRefresh,
+  );
+  const overduePanelProps = {
+    controller: overdueTasks, scope: taskScope, dealIds: taskDealIds,
+    readAt: report.generatedAt, businessDay: executiveDay, onChanged: onRefresh,
+  };
   const { openPipe, wonJourney } = executive;
   const executiveRange = shortPeriod(executive.period);
   const wonComparison = useMemo(() => {
@@ -1301,7 +1318,7 @@ export function PulseDashboard({
           </small>
         </div>
         </div>
-        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0} data-tasks={Boolean(overdueExposure?.tasks || overdueTasks.error)}>
+        <div className="exec-pipeline-health" data-overdue={openPipe.overdue.length > 0} data-tasks="true">
           {(() => {
             const yes = executive.onTrack.yes.length;
             const no = executive.onTrack.no.length;
@@ -1332,7 +1349,7 @@ export function PulseDashboard({
             <strong>{openPipe.overdue.length}<ArrowUpRight aria-hidden="true" /></strong>
             <small>{money(openPipe.overdue.reduce((sum, d) => sum + d.amountValue, 0))} MRR · revisar fechas</small>
           </button>}
-          <OverdueTasks controller={overdueTasks} />
+          <OverdueTasks key={overdueTasks.scopeKey} {...overduePanelProps} />
                 <div className="exec-won exec-contract-widget exec-health-widget">
           <span>Contratos por firmar</span>
           <strong>
@@ -1604,12 +1621,12 @@ export function PulseDashboard({
           })}
           {!operationalTasks.length ? <p className="forecast-clear-state">Sin pendientes en estos grupos para el alcance seleccionado.</p> : null}
         </div>
-        {((taskData && (taskData.todayTaskCount > 0 || taskData.noActivityCount > 0)) || overdueExposure?.tasks || overdueTasks.error) ? <div className="forecast-task-shortcuts" aria-label="Agenda y tareas registradas">
+        <div className="forecast-task-shortcuts" aria-label="Agenda y tareas registradas">
           <span>Tu agenda</span>
-          <OverdueTasks controller={overdueTasks} compact />
+          <OverdueTasks key={overdueTasks.scopeKey} {...overduePanelProps} compact />
           {taskData && taskData.todayTaskCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.todayTaskModal)}>Tareas para hoy <b>{taskData.todayTaskCount} deals</b><small>{modalExposure(taskData.todayTaskModal)}</small></button> : null}
           {taskData && taskData.noActivityCount > 0 ? <button type="button" onClick={() => setModalKey(taskData.noActivityModal)}>Sin próxima actividad <b>{taskData.noActivityCount} deals</b><small>{modalExposure(taskData.noActivityModal)}</small></button> : null}
-        </div> : null}
+        </div>
         <p className="forecast-scope-note">Un deal puede necesitar más de una acción; los grupos no se suman.</p>
       </section>
       {forecastSignals.length ? <section className="forecast-signals" aria-labelledby="forecast-signals-title">

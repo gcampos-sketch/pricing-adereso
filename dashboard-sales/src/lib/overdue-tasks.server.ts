@@ -11,6 +11,9 @@ import { roleOfOwner } from "./owner-roles";
 import { segmentOf } from "./deal-segment";
 import {
   TASK_OPEN_STAGES,
+  TASK_OUTCOMES,
+  taskDealOutcome,
+  type TaskOutcome,
   isOverduePendingTask,
   taskBusinessDay,
   taskDueTime,
@@ -100,11 +103,14 @@ export function validateTaskScope(input: {
   role?: unknown;
   type?: unknown;
   stages?: unknown;
+  outcome?: unknown;
 }) {
+  const outcome = input?.outcome ?? "active";
+  if (!TASK_OUTCOMES.includes(outcome as TaskOutcome)) throw Error("Estado de deal inválido.");
   if (
     !input ||
     !Array.isArray(input.dealIds) ||
-    input.dealIds.length > 2000 ||
+    input.dealIds.length > (outcome === "active" ? 2000 : 8000) ||
     input.dealIds.some((id) => typeof id !== "string" || !/^\d+$/.test(id))
   )
     throw Error("Alcance de deals inválido.");
@@ -118,8 +124,21 @@ export function validateTaskScope(input: {
   const stages = [...new Set(Array.isArray(input.stages) ? input.stages.map(String) : [])].sort();
   if (stages.some((stage) => !Object.values(TASK_OPEN_STAGES).includes(stage)))
     throw Error("Etapas inválidas.");
-  return { dealIds: [...new Set(input.dealIds as string[])].sort(), owner, role, type, stages };
+  return {
+    dealIds: [...new Set(input.dealIds as string[])].sort(),
+    owner,
+    role,
+    type,
+    stages: outcome === "active" ? stages : [],
+    outcome: outcome as TaskOutcome,
+  };
 }
+function matchesTaskAssignee(task: NativeTask, scope: TaskScope) {
+  const assignee = task.properties["hubspot_owner_id"] ?? "";
+  return (scope.owner === "team" || assignee === scope.owner) &&
+    (scope.role === "all" || roleOfOwner(assignee) === scope.role);
+}
+
 export function createOverdueTaskService(io: TaskIO) {
   const assocPage = async (from: string, id: string, to: string, after?: string) =>
     io.request<Page>(
@@ -159,7 +178,7 @@ export function createOverdueTaskService(io: TaskIO) {
     return list.filter(
       (deal) =>
         deal.properties["pipeline"] === COMMERCIAL_PIPELINE &&
-        TASK_OPEN_STAGES[deal.properties["dealstage"] ?? ""] &&
+        taskDealOutcome(deal.properties["dealstage"] ?? "") === scope.outcome &&
         (scope.owner === "team" || deal.properties["hubspot_owner_id"] === scope.owner) &&
         (scope.role === "all" ||
           roleOfOwner(deal.properties["hubspot_owner_id"] ?? "") === scope.role) &&
@@ -216,6 +235,7 @@ export function createOverdueTaskService(io: TaskIO) {
       .filter(
         (task) =>
           !task.archived &&
+          matchesTaskAssignee(task, input) &&
           isOverduePendingTask(
             task.properties["hs_task_status"],
             task.properties["hs_timestamp"],
@@ -255,6 +275,8 @@ export function createOverdueTaskService(io: TaskIO) {
       `/crm/v3/objects/tasks/${taskId}?properties=${taskProps.join(",")}`,
     );
     if (task.archived) throw Error("La tarea está archivada; actualiza la lista.");
+    if (!matchesTaskAssignee(task, input))
+      throw Error("La tarea está asignada a otro comercial. Actualiza la lista.");
     const first = await assocPage("tasks", taskId, "deals");
     if (!Array.isArray(first.results)) throw Error("No se pudo verificar el deal asociado.");
     const linked = new Set([
@@ -266,7 +288,7 @@ export function createOverdueTaskService(io: TaskIO) {
       input,
     );
     if (!allowed.length)
-      throw Error("La tarea ya no pertenece a un deal activo de este filtro. Actualiza la lista.");
+      throw Error("La tarea ya no pertenece a un deal de este filtro. Actualiza la lista.");
     if (task.properties["hs_task_status"] === "COMPLETED") {
       io.invalidate();
       return { taskId, status: "COMPLETED" as const };

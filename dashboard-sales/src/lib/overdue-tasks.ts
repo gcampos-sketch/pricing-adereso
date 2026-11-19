@@ -1,3 +1,4 @@
+import { LOST_STAGES, WON_STAGES } from "./commercial-outcomes";
 import type { RoleFilter } from "./owner-roles";
 export const TASK_OPEN_STAGES: Record<string, string> = {
   "1144383754": "E0",
@@ -9,7 +10,21 @@ export const TASK_OPEN_STAGES: Record<string, string> = {
   "171385867": "E5",
   "1245768029": "E5.1",
 };
-export type TaskScope = { owner: string; role: RoleFilter; type: string; stages: string[] };
+export const TASK_OUTCOMES = ["active", "won", "lost"] as const;
+export type TaskOutcome = (typeof TASK_OUTCOMES)[number];
+export type TaskScope = {
+  owner: string;
+  role: RoleFilter;
+  type: string;
+  stages: string[];
+  outcome?: TaskOutcome;
+};
+export function taskDealOutcome(stageId: string): TaskOutcome | undefined {
+  if (Object.hasOwn(TASK_OPEN_STAGES, stageId)) return "active";
+  if (WON_STAGES.has(stageId)) return "won";
+  if (LOST_STAGES.has(stageId)) return "lost";
+  return undefined;
+}
 export type TaskDeal = { id: string; name: string; url: string; owner: string; amount: number };
 export type OverdueTask = {
   id: string;
@@ -36,6 +51,10 @@ export const taskBusinessDay = (value: number | string) =>
 export function taskDueTime(value: string | null | undefined) {
   const stamp = value && /^\d+$/.test(value) ? Number(value) : Date.parse(value ?? "");
   return Number.isFinite(stamp) ? stamp : null;
+}
+export function taskDaysOverdue(dueAt: string, businessDay: string) {
+  // Compare calendar dates in Coyhaique, independent of the length of a day during DST.
+  return (Date.parse(businessDay) - Date.parse(taskBusinessDay(dueAt))) / 86_400_000;
 }
 export function isOverduePendingTask(
   status: string | undefined | null,
@@ -65,6 +84,6 @@ export function overdueTaskExposure(report: OverdueTaskReport) {
       (sum, deal) => sum + Math.max(0, Number.isFinite(deal.amount) ? deal.amount : 0),
       0,
     ),
-    unvalued: deals.filter((deal) => deal.amount <= 0).length,
+    unvalued: deals.filter((deal) => !Number.isFinite(deal.amount) || deal.amount <= 0).length,
   };
 }
