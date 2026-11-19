@@ -6661,3 +6661,28 @@ button.won-exec-stat:hover { color:var(--brand); }
   font-weight: 700;
 }
 @media (max-width: 640px) { .results-date-toggle button { padding: 7px 9px; } }
+
+.adereso-global-metrics .service-overview > .service-growth-cell {
+  position:relative;min-width:0;display:flex;flex-direction:column;gap:3px;
+}
+.service-growth-cell > .service-overview-metric {
+  width:100%;padding:0 18px;border:0;background:transparent;text-align:left;
+}
+.service-growth-cell > .service-overview-metric:hover { background:var(--glass-track-hover); }
+.service-churn-trigger {
+  display:flex;align-items:center;flex-wrap:wrap;gap:3px 8px;margin:0 14px;padding:4px;
+  align-self:flex-start;border:0;border-radius:5px;background:none;color:var(--muted);
+  font:inherit;font-size:10px;line-height:1.4;text-align:left;cursor:pointer;
+}
+.service-churn-trigger b {color:var(--body);font-weight:550;white-space:nowrap;}
+.service-churn-trigger:hover,.service-churn-trigger[data-state="open"] {background:var(--glass-track-hover);}
+.service-churn-trigger:focus-visible {outline:2px solid var(--brand);}
+.service-churn-popup {width:min(340px,calc(100vw - 26px));}
+.service-churn-detail {max-height:min(55vh,390px);overflow:auto;font-size:11px;color:var(--muted);}
+.service-churn-detail section,.service-churn-detail details {border-top:1px solid var(--glass-stroke);margin-top:8px;padding-top:8px;}
+.service-churn-detail h5,.service-churn-detail summary {color:var(--foreground);font-size:11px;font-weight:600;}
+.service-churn-detail summary {cursor:pointer;}
+.service-churn-detail h5 strong,.service-churn-detail summary b {float:right;}
+.service-churn-detail ul {list-style:none;margin:5px 0 0;padding:0;}
+.service-churn-detail li {display:flex;justify-content:space-between;gap:10px;padding:2px 0;}
+.service-churn-detail li span {white-space:nowrap;}

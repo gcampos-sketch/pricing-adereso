@@ -483,9 +483,17 @@ export function ActiveMrrCard({ data, year, quarter, snapshotKey }: { data: Acti
   const comparison = data.entries.length ? lastQuarterSummary(data.entries) : null;
   const changePct = comparison ? comparison.changePct : data.changePct;
   const tone = changePct === null ? "neutral" : changePct >= 0 ? "ok" : "bad";
+  const snapshotDate = snapshotKey ? new Date(snapshotKey) : null;
+  const serviceSnapshot = snapshotDate && Number.isFinite(+snapshotDate)
+    ? {
+        month: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Coyhaique" }).format(snapshotDate).slice(0, 7),
+        dealIds: data.entries.filter((entry) => entry.mrr > 0).map((entry) => entry.id),
+        count: data.count - data.entries.filter((entry) => entry.mrr === 0).length,
+      }
+    : null;
   return (
     <>
-      <ServiceOverview currentServiceMrr={data.value} refreshKey={snapshotKey ?? `${data.value}:${data.count}:${data.inDevelopment?.value}`}><button
+      <ServiceOverview currentServiceMrr={data.value} serviceSnapshot={serviceSnapshot} refreshKey={snapshotKey ?? `${data.value}:${data.count}:${data.inDevelopment?.value}`}><button
         type="button"
         className="filter-active-mrr mrr-pill"
         data-tone={tone}
