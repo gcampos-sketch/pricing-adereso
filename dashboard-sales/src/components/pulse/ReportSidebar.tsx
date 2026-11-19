@@ -32,6 +32,10 @@ const groups = [
   ] },
 ] satisfies { id: ReportView; label: string; icon: typeof Users; children?: { id: ReportView; label: string }[] }[];
 
+function groupForView(view: ReportView) {
+  return groups.find((group) => group.children?.some((child) => child.id === view))?.id ?? null;
+}
+
 export function ReportSidebar({ view, onView, collapsed, onCollapse, presentation = 'sidebar' }: {
   view: ReportView; onView: (view: ReportView) => void; collapsed: boolean; onCollapse: () => void;
   presentation?: 'sidebar' | 'toolbar' | 'panel';
@@ -69,12 +73,15 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
     document.addEventListener('keydown', escape);
     return () => document.removeEventListener('keydown', escape);
   }, [peekOpen]);
-  const [expanded, setExpanded] = useState<string[]>(["comercial"]);
+  const [expanded, setExpanded] = useState<ReportView | null>(() => groupForView(view));
 
   useEffect(() => {
-    const group = groups.find((item) => item.children?.some((child) => child.id === view));
-    if (group) setExpanded((current) => current.includes(group.id) ? current : [...current, group.id]);
+    setExpanded(groupForView(view));
   }, [view]);
+
+  const toggleGroup = (id: ReportView) => {
+    setExpanded((current) => current === id ? null : id);
+  };
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -122,13 +129,13 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
       <nav className="report-subnav-links" aria-label="Vistas del dashboard">
         {groups.map(group => {
           const active = group.children ? group.children.some(child => child.id === view) : group.id === view;
-          const open = expanded.includes(group.id);
+          const open = expanded === group.id;
           return <div className="report-subnav-group" key={group.id}>
             <button type="button" className="report-subnav-item" data-active={active}
               aria-current={!group.children && active ? 'page' : undefined}
               aria-expanded={group.children ? open : undefined}
               aria-controls={group.children ? `subnav-${group.id}` : undefined}
-              onClick={() => group.children ? setExpanded(current => current.includes(group.id) ? current.filter(id => id !== group.id) : [...current, group.id]) : select(group.id)}>
+              onClick={() => group.children ? toggleGroup(group.id) : select(group.id)}>
               <group.icon aria-hidden="true" /><span>{group.label}</span>
               {group.children && <ChevronDown className="report-subnav-chevron" data-open={open} aria-hidden="true" />}
             </button>
@@ -190,7 +197,7 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
         <span className="report-nav-caption">REPORTES</span>
         {groups.map((group) => {
           const active = group.children ? group.children.some((child) => child.id === view) : view === group.id;
-          const open = expanded.includes(group.id);
+          const open = expanded === group.id;
           return <div className="report-nav-group" key={group.id}>
             <Button variant="ghost" className="report-nav-item" data-active={active} title={collapsed ? undefined : group.label}
               aria-label={group.label} aria-current={!group.children && active ? "page" : undefined}
@@ -198,8 +205,8 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
               aria-controls={group.children ? `report-group-${group.id}` : undefined}
               onClick={() => {
                 if (!group.children) { select(group.id); return; }
-                if (collapsed) { onCollapse(); setExpanded((current) => current.includes(group.id) ? current : [...current, group.id]); return; }
-                setExpanded((current) => current.includes(group.id) ? current.filter((id) => id !== group.id) : [...current, group.id]);
+                if (collapsed) { onCollapse(); setExpanded(group.id); return; }
+                toggleGroup(group.id);
               }}>
               <group.icon aria-hidden="true" /><span>{group.label}</span>
               {group.children && <ChevronDown className="report-nav-chevron" data-open={open} aria-hidden="true" />}
