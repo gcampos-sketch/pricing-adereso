@@ -5,29 +5,6 @@ export type LossNarrative = {
   lostReasonNarrative?: string | null;
 };
 
-type LossAmount = { id: string; ownerId: string; owner: string; amountValue: number };
-
-export function summarizeLossReasons(input: readonly LossAmount[]) {
-  const deals = new Map(input.map(deal => [deal.id, deal]));
-  const owners = new Map<string, { id: string; name: string; count: number; mrr: number }>();
-  let mrr = 0;
-  for (const deal of deals.values()) {
-    const id = deal.ownerId || '';
-    const owner = owners.get(id) ?? { id, name: deal.owner || 'Sin comercial', count: 0, mrr: 0 };
-    const amount = Number.isFinite(deal.amountValue) ? deal.amountValue : 0;
-    owner.count++;
-    owner.mrr += amount;
-    owners.set(id, owner);
-    mrr += amount;
-  }
-  return {
-    count: deals.size,
-    mrr,
-    owners: [...owners.values()]
-      .sort((a, b) => b.count - a.count || b.mrr - a.mrr || a.name.localeCompare(b.name, 'es')),
-  };
-}
-
 const STOP = new Set(`a al algo algun alguna algunas alguno algunos ante antes asi aun aunque bajo bien cada casi como con contra cual cuando de del desde despues donde e el ella ellas ello ellos en entre era eran es esa esas ese eso esos esta estaba estaban estamos estan estar estas este esto estos fue fueron ha habia han hasta hay la las le les lo los mas me mi mis mientras mismo mucha mucho muy nada ni no nos nosotros nuestra nuestro o otra otro para pero por porque puede pueden que quien se sea segun ser si sido sin sobre solo son su sus tal tambien tanto te tener tiene tienen todo todos tras tu tus un una unas uno unos usted ustedes va vamos y ya the and for with this that cliente clientes empresa empresas deal deals perdido perdidos motivo motivos razon razones adereso cassper proyecto propuesta solucion necesita necesitan quiere quieren poder pudimos proceso producto insuficiente explicar otro`.split(/\s+/));
 // Editorial exclusions only: retain literal cause/product terms and their exact comments.
 // This runs for every cloud, not a cached or externally generated vocabulary.

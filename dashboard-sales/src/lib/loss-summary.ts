@@ -39,3 +39,26 @@ export function lossTicketComparison(selected: InsightDeal[], team: InsightDeal[
     ? (selectedTicket / teamTicket - 1) * 100 : null;
   return { teamTicket, differencePercent };
 }
+
+type LossAmount = { id: string; ownerId: string; owner: string; amountValue: number };
+
+export function summarizeLossByOwner(input: readonly LossAmount[]) {
+  const deals = new Map(input.map(deal => [deal.id, deal]));
+  const owners = new Map<string, { id: string; name: string; count: number; mrr: number }>();
+  let mrr = 0;
+  for (const deal of deals.values()) {
+    const id = deal.ownerId || '';
+    const owner = owners.get(id) ?? { id, name: deal.owner || 'Sin comercial', count: 0, mrr: 0 };
+    const amount = Number.isFinite(deal.amountValue) ? deal.amountValue : 0;
+    owner.count++;
+    owner.mrr += amount;
+    owners.set(id, owner);
+    mrr += amount;
+  }
+  return {
+    count: deals.size,
+    mrr,
+    owners: [...owners.values()]
+      .sort((a, b) => b.count - a.count || b.mrr - a.mrr || a.name.localeCompare(b.name, 'es')),
+  };
+}

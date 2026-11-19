@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
-import { buildLossReasonWords, lossNarrativeTerms, lossNarrativeText, summarizeLossReasons, type LossNarrative } from '../src/lib/loss-reason-words';
+import { buildLossReasonWords, lossNarrativeTerms, lossNarrativeText, type LossNarrative } from '../src/lib/loss-reason-words';
+import { summarizeLossByOwner } from '../src/lib/loss-summary';
 const deal = (id: string, text: string | null): LossNarrative => ({ id, name: `Example ${id}`, url: `https://example.test/${id}`, lostReasonNarrative: text });
 test('word size counts distinct deals rather than repetitions or duplicate rows', () => {
   const a = deal('a', 'Integración integración API API');
@@ -60,7 +61,7 @@ test('uses the exact deals in the reason or term, grouping by owner ID and retai
   const d = { ...deal('d', 'Presupuesto'), ownerId: '', owner: '', amountValue: 50 };
   const category = [a, b, c, d, a];
 
-  expect(summarizeLossReasons(category)).toEqual({
+  expect(summarizeLossByOwner(category)).toEqual({
     count: 4,
     mrr: 350,
     owners: [
@@ -70,5 +71,5 @@ test('uses the exact deals in the reason or term, grouping by owner ID and retai
     ],
   });
   const matching = buildLossReasonWords(category).words.find(word => word.term === 'whatsapp')!.comments;
-  expect(summarizeLossReasons(matching)).toMatchObject({ count: 2, mrr: 300 });
+  expect(summarizeLossByOwner(matching)).toMatchObject({ count: 2, mrr: 300 });
 });
