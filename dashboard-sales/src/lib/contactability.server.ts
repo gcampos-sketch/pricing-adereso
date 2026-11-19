@@ -177,7 +177,7 @@ async function commercialDeals(ids: string[]) {
       throw Error("No se confirmó el pipeline de todos los deals");
     for (const id of batch) {
       const p = found.get(id)!;
-      if (p.pipeline === COMMERCIAL_PIPELINE) deals.set(id, p.dealname || "Deal sin nombre");
+      if (p["pipeline"] === COMMERCIAL_PIPELINE) deals.set(id, p["dealname"] || "Deal sin nombre");
     }
   }
   return deals;
@@ -204,23 +204,23 @@ async function readChannel(channel: ContactChannel, now: number): Promise<Contac
       .get(id)!
       .flatMap((dealId) => (deals.has(dealId) ? [{ id: dealId, name: deals.get(dealId)! }] : []));
     if (!linked.length) continue;
-    const at = Date.parse(p.hs_timestamp ?? "");
-    const ownerId = p.hubspot_owner_id ?? "";
+    const at = Date.parse(p["hs_timestamp"] ?? "");
+    const ownerId = p["hubspot_owner_id"] ?? "";
     if (!Number.isFinite(at) || !OWNER_IDS.includes(ownerId))
       throw Error("Actividad sin fecha o comercial verificable");
     const outcome =
       channel === "whatsapp"
         ? whatsappOutcome(
             load(
-              (p.hs_communication_body ?? "").replace(/<(?:br\b[^>]*|\/p|\/div|\/li)>/gi, "\n"),
+              (p["hs_communication_body"] ?? "").replace(/<(?:br\b[^>]*|\/p|\/div|\/li)>/gi, "\n"),
               {},
               false,
             ).text(),
           )
         : channel === "emails"
           ? "Enviado"
-          : callOutcome(p.hs_call_status, connected.has(p.hs_call_disposition ?? ""));
-    const direction = channel === "calls" ? p.hs_call_direction : null;
+          : callOutcome(p["hs_call_status"], connected.has(p["hs_call_disposition"] ?? ""));
+    const direction = channel === "calls" ? p["hs_call_direction"] : null;
     if (outcome)
       activities.push({
         id,
@@ -229,7 +229,7 @@ async function readChannel(channel: ContactChannel, now: number): Promise<Contac
         outcome,
         deals: linked,
         direction:
-          direction === "OUTBOUND" ? "Saliente" : direction === "INBOUND" ? "Entrante" : undefined,
+          direction === "OUTBOUND" ? "Saliente" : direction === "INBOUND" ? "Entrante" : null,
       });
   }
   return activities.sort((a, b) => b.at.localeCompare(a.at));

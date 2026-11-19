@@ -6,7 +6,7 @@ export type ContactActivity = {
   ownerId: string;
   at: string;
   outcome: string;
-  direction?: "Saliente" | "Entrante";
+  direction: "Saliente" | "Entrante" | null;
   deals: { id: string; name: string }[];
 };
 
