@@ -44,7 +44,7 @@ export async function readCustomerCompanyLinks(
 }
 
 /** Complete bounded searches; fail closed on changed totals, missing pages or API ceiling. */
-async function searchAll(kind: string, filterGroups: unknown[], properties: string[]) {
+export async function searchAll(kind: string, filterGroups: unknown[], properties: string[]) {
   const rows: RawDeal[] = [];
   let after: string | undefined;
   let total: number | undefined;

@@ -15,6 +15,13 @@ export const getMeetingMetrics = createServerFn({ method: 'GET' })
     return readMeetingMetrics(data.role as import('./owner-roles').RoleFilter);
   });
 
+export const getChurnForecast = createServerFn({ method: 'GET' })
+  .middleware([requireMfa])
+  .handler(async () => {
+    const { readChurnForecast } = await import('./churn-forecast.server');
+    return readChurnForecast();
+  });
+
 /** Global operational customer/service directory, protected by the same corporate MFA. */
 export const getServiceOverview = createServerFn({ method: 'GET' })
   .middleware([requireMfa])
