@@ -1,7 +1,7 @@
 import { ExpandableCellText } from "./ExpandableCellText";
 import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useState } from "react";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
 import { LossReasonPopover } from "./LossReasonPopover";
 import { LossTicketByOwner } from "./LossTicketByOwner";
 import { LossReasonWords } from "./LossReasonWords";
@@ -225,6 +225,15 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       <p className="loss-intro">Mediana de tiempo en etapa: {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
     </details>
     <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope || drill?.reasonWords || drill?.coverageWarning)} showOwnerFilter={Boolean(drill?.coverageWarning)}
-      detailContent={drill?.ticketByOwner ? rows => <LossTicketByOwner deals={rows} /> : drill?.reasonWords ? rows => <LossReasonWords key={drill.title} deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} /> : undefined} />
+      detailContent={drill?.ticketByOwner ? rows => <LossTicketByOwner deals={rows} /> : drill?.reasonWords ? rows =>
+        <details key={JSON.stringify([drill.title, drill.subtitle])} className="loss-words-disclosure" open>
+          <summary>
+            <ChevronDown size={14} aria-hidden="true" />
+            <span className="loss-words-label-open">Ocultar nube de palabras</span>
+            <span className="loss-words-label-closed">Mostrar nube de palabras</span>
+          </summary>
+          <LossReasonWords deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)}
+            available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
+        </details> : undefined} />
   </main>;
 }
