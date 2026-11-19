@@ -1,3 +1,4 @@
+import { ExpandableCellText } from "./ExpandableCellText";
 import { reportTitlePeriod } from "@/lib/report-title-scope";
 import { ReportTitleScope } from "./ReportTitleScope";
 import { useEffect, useMemo, useState } from "react";
@@ -849,7 +850,7 @@ function RepSheet({
             <tbody>
               {rep.lostReasons.map((reason) => (
                 <tr key={reason.reason}>
-                  <th scope="row">{reason.reason}</th>
+                  <th scope="row"><ExpandableCellText text={reason.reason} label="Motivo de pérdida" /></th>
                   <td>{reason.count}</td>
                   <td>{money(reason.amount)}</td>
                 </tr>

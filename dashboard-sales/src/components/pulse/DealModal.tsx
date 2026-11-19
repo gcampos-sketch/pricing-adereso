@@ -1,3 +1,4 @@
+import { ExpandableCellText } from "./ExpandableCellText";
 import { dealOwnerOptions, filterDealsByOwner } from "@/lib/deal-owner-filter";
 import type {ScenarioScope} from '@/lib/quota-scenarios';
 import {ScenarioProjection} from './ScenarioProjection';
@@ -1626,9 +1627,7 @@ export function DealModal({
         width: 168, grow: 1.3,
         render: (deal) =>
           deal.lostReason ? (
-            <span className="chip" data-tone="bad">
-              {deal.lostReason}
-            </span>
+            <ExpandableCellText text={deal.lostReason} label="Motivo deal perdido" tone="danger" />
           ) : (
             <span style={{ color: "var(--label)" }}>sin motivo</span>
           ),
@@ -1689,22 +1688,22 @@ export function DealModal({
       });
     }
     if (hasAlerts) {
-      for (const [key, label, get] of [
-        ["financeAlert", "Alerta Finanzas", (d: DealDTO) => d.financeAlert],
-        ["ssppAlert", "Alerta SSPP", (d: DealDTO) => d.ssppAlert],
+      for (const [key, label] of [
+        ["financeAlert", "Alerta Finanzas"],
+        ["ssppAlert", "Alerta SSPP"],
       ] as const) {
         base.splice(key === "financeAlert" ? 1 : 2, 0, {
           key,
           label,
           width: isWonView && key === 'financeAlert' ? 150 : 132, grow: 1,
-          render: (deal) =>
-            get(deal) ? (
-              isWonView
-                ? <span className="deal-alert-text">{get(deal)}</span>
-                : <span className="chip" data-tone="warn">{get(deal)}</span>
+          render: (deal) => {
+            const alert = deal[key];
+            return alert ? (
+              <ExpandableCellText text={alert} label={label} />
             ) : (
               <span style={{ color: "var(--label)" }}>{isWonView ? '—' : 'sin alerta'}</span>
-            ),
+            );
+          },
           caption: () => "",
         });
       }

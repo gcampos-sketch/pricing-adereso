@@ -5730,7 +5730,6 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .deal-row :is(.deal-cell-amount, .deal-cell-setup, .deal-cell-age) { text-align:center; font-variant-numeric:tabular-nums; }
 .deal-modal-motion .deal-header .sort-button { line-height:18px; padding:2px 6px; }
 .deal-modal-motion[data-won-view="true"] .sort-button[data-active="true"] {border-color:transparent;background:transparent;}
-.deal-modal-motion[data-won-view="true"] .deal-alert-text {color:var(--body);font-size:12px;font-weight:400;line-height:1.45;white-space:normal;}
 .deal-modal-motion[data-won-view="true"] :is(.deal-cell-financeAlert,.deal-head-financeAlert) {padding-left:18px;}
 .deal-modal-motion .deal-month-summary { margin-top:calc(4px + 4px * var(--deal-open)); margin-bottom:calc(4px + 4px * var(--deal-open)); padding:calc(2px + 2px * var(--deal-open)); border-color:transparent; background:transparent; }
 .deal-modal-motion .deal-month-summary-row { gap:calc(10px + 2px * var(--deal-open)); }
@@ -6683,3 +6682,43 @@ button.won-exec-stat:hover { color:var(--brand); }
 .service-churn-detail ul {list-style:none;margin:5px 0 0;padding:0;}
 .service-churn-detail li {display:flex;justify-content:space-between;gap:10px;padding:2px 0;}
 .service-churn-detail li span {white-space:nowrap;}
+
+.expandable-cell {
+  max-inline-size: 36rem;
+  min-inline-size: 0;
+  text-align: start;
+}
+.expandable-cell-text {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.expandable-cell-text[data-collapsed="true"] {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.expandable-cell[data-tone="danger"] .expandable-cell-text {
+  color: var(--danger);
+}
+.deal-row .expandable-cell {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.expandable-cell .expandable-cell-toggle {
+  display: block;
+  margin-top: 2px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--brand);
+  font-size: 12px;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.expandable-cell-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
