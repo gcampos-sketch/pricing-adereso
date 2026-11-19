@@ -418,34 +418,15 @@ export function Fold({
   );
 }
 
-function SectionTitle({
-  children,
-  action,
-  compact = false,
-}: {
-  children: React.ReactNode;
-  action?: React.ReactNode;
-  compact?: boolean;
-}) {
+function SectionTitle({ children, context }: { children: React.ReactNode; context?: string }) {
   return (
-    <div
-      data-section-head
-      data-compact={compact || undefined}
-      style={{
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "space-between",
-        gap: 24,
-        margin: "64px 0 24px",
-        flexWrap: "wrap",
-      }}
-    >
-      <h2 className="pulse-h2">{children}</h2>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        {action}
-        <CopySectionButton />
+    <header className="pulse-section-head" data-section-head>
+      <div>
+        <h2 className="pulse-h2">{children}</h2>
+        {context ? <p className="pulse-section-context">{context}</p> : null}
       </div>
-    </div>
+      <CopySectionButton />
+    </header>
   );
 }
 
@@ -1193,7 +1174,7 @@ export function PulseDashboard({
         </>
       ) : section === "embudo" ? (
         <>
-          <SectionTitle>{`Generación de pipeline · escenarios · ${ownerName} · ${rangeLabel}`}</SectionTitle>
+          <SectionTitle context={`${ownerName} · ${rangeLabel}`}>Generación de pipeline · escenarios</SectionTitle>
           <PipelineFunnel
             report={report}
             ownerFilter={ownerFilter}
@@ -1209,15 +1190,15 @@ export function PulseDashboard({
         <>
       {headerMrr ? (
         <section className="adereso-global-metrics" hidden={section !== "general"} aria-label="Métricas generales Adereso">
-          <SectionTitle compact>Métricas generales Adereso</SectionTitle>
+          <SectionTitle>Métricas generales Adereso</SectionTitle>
           <ActiveMrrCard data={headerMrr} year={year} quarter={quarter} snapshotKey={report.generatedAt} />
         </section>
       ) : null}
 
       {section === "general" ? <>
       {/* ===================== RESUMEN EJECUTIVO ===================== */}
-      <SectionTitle compact>
-        {`Resumen ejecutivo · ${ownerName} · ${executiveRange} / histórico`}
+      <SectionTitle context={`${ownerName} · ${executiveRange} / histórico`}>
+        Resumen ejecutivo
       </SectionTitle>
 
       <section className="executive-story" aria-label="Lectura ejecutiva">
@@ -1366,16 +1347,16 @@ export function PulseDashboard({
         </div>
       </section>
 
-      <div className="story-divider results-period-header">
+      <header className="results-period-header">
         <div className="results-date-heading">
-          <strong>Resultados del período</strong>
+          <h2 className="pulse-h2">Resultados del período</h2>
           <div className="service-period-toggle results-date-toggle" role="group" aria-label="Fecha para calcular el cumplimiento">
             <button type="button" aria-pressed={resultDateBasis === "close"} title="Ganados con fecha de cierre dentro del año y trimestre del filtro principal." onClick={() => {closeModal();setResultDateBasis("close");}}>Fecha de cierre</button>
             <button type="button" aria-pressed={resultDateBasis === "stage6"} title="Ganados que entraron a E6 dentro del período del filtro principal, aunque su fecha de cierre se haya movido a otro Q. Sin entrada registrada a E6, no se incluyen." onClick={() => {closeModal();setResultDateBasis("stage6");}}>Entrada a etapa 6 (ganado)</button>
           </div>
         </div>
         <span className="results-period-label">{rangeLabel}</span>
-      </div>
+      </header>
 
       {/* Fila 1 — Cuota / Ganado (héroe) / Falta */}
       <section className="grid-hero commercial-results">
