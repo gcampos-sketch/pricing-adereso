@@ -1,3 +1,4 @@
+import { reportTitlePeriod } from "@/lib/report-title-scope";
 import { useEffect, useMemo, useState } from "react";
 import { CopySectionButton } from "./CopyControls";
 import type { InsightDeal, InsightsReport } from "@/lib/insights-types";
@@ -49,6 +50,8 @@ export type Filters = {
   periods: string[];
   quartersAvailable: string[];
   rangeLabel: string;
+  titlePeriod: string;
+  titleOwner: string | undefined;
   setYear: (value: string) => void;
   setQuarter: (value: string) => void;
   setOwnerId: (value: string) => void;
@@ -117,6 +120,8 @@ export function useInsightFilters(
     periods,
     quartersAvailable,
     rangeLabel: quarter === "all" ? `Año ${year}` : `Q${quarter} ${year}`,
+    titlePeriod: reportTitlePeriod(year, quarter, report.currentPeriod.split("-Q")[0]!),
+    titleOwner: ownerId === "team" ? undefined : ownerName,
     setYear,
     setQuarter,
     setOwnerId,

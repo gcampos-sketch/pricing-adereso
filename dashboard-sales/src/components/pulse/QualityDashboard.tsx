@@ -1,3 +1,5 @@
+import { reportTitlePeriod } from "@/lib/report-title-scope";
+import { ReportTitleScope } from "./ReportTitleScope";
 import { AdoboQuality } from "./AdoboQuality";
 import { qualityScope } from "@/lib/adobo-quality";
 import { useMemo, useState } from "react";
@@ -109,6 +111,9 @@ export function QualityDashboard({
     [report.owners, report.adoboDeals, role],
   );
 
+  const titlePeriod = reportTitlePeriod(year, quarter, report.years[0] ?? year);
+  const titleOwner = roleOwnerOptions.find(([id]) => id === ownerId)?.[1];
+
   const scoped = useMemo(() => {
     return (report.evidenceVersion === "coaching-evidence/v3" ? report.rows : []).filter((row) => {
       if (role !== "all" && roleOfOwner(row.ownerId) !== role) return false;
@@ -206,7 +211,10 @@ export function QualityDashboard({
       {tabs}
       <header className="team-header">
         <div>
-          <h1 className="pulse-h1">Calidad Comercial</h1>
+          <h1 className="pulse-h1">
+            Calidad Comercial
+            <ReportTitleScope period={titlePeriod} owner={titleOwner} />
+          </h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
             Adobo · salud comercial, reuniones y cobertura de evidencia
           </div>

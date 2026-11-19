@@ -1,3 +1,5 @@
+import { reportTitlePeriod } from "@/lib/report-title-scope";
+import { ReportTitleScope } from "./ReportTitleScope";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DealModal } from "./DealModal";
 import { Metric } from "./PulseDashboard";
@@ -62,6 +64,8 @@ export function SimulatorDashboard({
   const [stageFilter, setStageFilter] = useState<string[]>([]);
 
   const periodKey = filters.quarter === "all" ? report.currentPeriod : `${filters.year}-Q${filters.quarter}`;
+  const [quotaYear, quotaQuarter] = periodKey.split("-Q");
+  const titlePeriod = reportTitlePeriod(quotaYear!, quotaQuarter!, report.currentPeriod.split("-Q")[0]!);
   const quotaByOwner = report.quotas[periodKey] ?? {};
 
   const scopeOwners = useMemo(
@@ -189,7 +193,10 @@ export function SimulatorDashboard({
       {tabs}
       <header className="team-header">
         <div>
-          <h1 className="pulse-h1">Simulador de Estrategia</h1>
+          <h1 className="pulse-h1">
+            Simulador de Estrategia
+            <ReportTitleScope period={titlePeriod} owner={filters.titleOwner} />
+          </h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
             Qué falta para la cuota, cuántos deals hay que ganar y dónde conviene empujar
           </div>

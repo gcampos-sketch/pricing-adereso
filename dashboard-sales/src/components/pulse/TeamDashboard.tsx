@@ -1,3 +1,5 @@
+import { reportTitlePeriod } from "@/lib/report-title-scope";
+import { ReportTitleScope } from "./ReportTitleScope";
 import { useEffect, useMemo, useState } from "react";
 import { DealModal } from "./DealModal";
 import { CompactFilterBar } from "./FilterBar";
@@ -277,7 +279,13 @@ export function TeamDashboard({
       {tabs}
       <header className="team-header">
         <div>
-          <h1 className="pulse-h1">Rendimiento del Equipo</h1>
+          <h1 className="pulse-h1">
+            Rendimiento del Equipo
+            <ReportTitleScope
+              period={reportTitlePeriod(year, quarter, report.currentPeriod.split("-Q")[0]!)}
+              owner={selected?.rep.name}
+            />
+          </h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
             Hoja de vida de cada comercial · cuota, gestión, velocidad y actividad en vivo desde HubSpot
           </div>

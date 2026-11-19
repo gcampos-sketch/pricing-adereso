@@ -1,3 +1,4 @@
+import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useState } from "react";
 import { DealModal } from "./DealModal";
 import { Metric } from "./PulseDashboard";
@@ -232,7 +233,10 @@ export function GrowthDashboard({
       {tabs}
       <header className="team-header">
         <div>
-          <h1 className="pulse-h1">Expansión vs Venta Nueva</h1>
+          <h1 className="pulse-h1">
+            Expansión vs Venta Nueva
+            <ReportTitleScope period={filters.titlePeriod} owner={filters.titleOwner} />
+          </h1>
           <div className="eyebrow" style={{ marginTop: 16 }}>
             Composición del ingreso, pipeline activo, productos, fuentes y adquisición por tamaño de empresa
           </div>

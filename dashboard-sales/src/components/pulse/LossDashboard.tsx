@@ -1,3 +1,4 @@
+import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { LossReasonPopover } from "./LossReasonPopover";
@@ -116,7 +117,10 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   return <main className="pulse-main loss-dashboard">
     {tabs}
     <header className="team-header"><div>
-      <h1 className="pulse-h1">Deals perdidos</h1>
+      <h1 className="pulse-h1">
+        Deals perdidos
+        <ReportTitleScope period={filters.titlePeriod} owner={filters.titleOwner} />
+      </h1>
       <p className="loss-intro">Entiende cuánto se perdió y explora dónde se concentra.</p>
     </div></header>
     <CompactFilterBar years={report.years} quarters={filters.quartersAvailable} owners={roleOwnerOptions}
@@ -126,7 +130,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       creationSource={creationSource} creationSourceOptions={sourceOptions} onCreationSource={setCreationSource}
       ago={ago} isRefreshing={isRefreshing} onRefresh={onRefresh} label="Filtros de deals perdidos" />
 
-    <SectionTitle note={filters.rangeLabel}>Resumen de pérdidas</SectionTitle>
+    <SectionTitle>Resumen de pérdidas</SectionTitle>
     <section className="loss-summary">
       <Metric label="MRR perdido" value={money(lostAmount)} note="Monto mensual de los deals perdidos" tone="neutral"
         onClick={() => open("MRR perdido", lost)} tooltip="MRR de los deals perdidos con fecha de cierre dentro del período seleccionado. La curva muestra los últimos seis meses hasta el fin del período o el mes de lectura, con los mismos filtros."
