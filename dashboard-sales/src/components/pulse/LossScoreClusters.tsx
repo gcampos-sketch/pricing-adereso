@@ -8,8 +8,8 @@ import { LossClusterDetail } from './LossClusterDetail';
 import './LossScoreClusters.css';
 
 
-export function LossScoreClusters({ deals, scope, readAt, available, onOpen }: {
-  deals: InsightDeal[]; scope: string; readAt: string; available: boolean; onOpen: (title: string, deals: InsightDeal[]) => void;
+export function LossScoreClusters({ deals, scope, readAt, available }: {
+  deals: InsightDeal[]; scope: string; readAt: string; available: boolean;
 }) {
   const [metric,setMetric] = useState<PriorMetric>('adobo');
   const [visible,setVisible] = useState(false);
@@ -57,9 +57,12 @@ export function LossScoreClusters({ deals, scope, readAt, available, onOpen }: {
           <PopoverTrigger asChild><button type="button" className="loss-cluster-column" disabled={!bucket.deals.length} aria-label={`${label} ${bucket.label}: ${bucket.deals.length} deals; ver motivos`}>
             <span className="loss-cluster-count">{bucket.deals.length}</span><span className="loss-cluster-bar-space"><i className="loss-cluster-bar" data-unknown={bucket.key==='unknown'} style={{height:`${bucket.deals.length/max*100}%`}} /></span><span>{bucket.label}</span>
           </button></PopoverTrigger>
-          <PopoverContent className="loss-cluster-popover" aria-label={`${label} ${bucket.label}`} style={{width:'min(740px, calc(100vw - 32px))',maxHeight:'min(760px, calc(100dvh - 48px))'}} onEscapeKeyDown={event=>event.stopPropagation()}>
+          <PopoverContent className="loss-cluster-popover" aria-label={`${label} ${bucket.label}`} style={{width:'min(740px, calc(100vw - 32px))',maxHeight:'min(760px, calc(100dvh - 48px))'}} onEscapeKeyDown={event=>event.stopPropagation()}
+            onInteractOutside={event => {
+              if (event.target instanceof Element && event.target.closest('[data-loss-cluster-drawer]')) event.preventDefault();
+            }}>
             <header className="loss-reason-popup-heading"><div><h3>{label} · {bucket.label}</h3><p>{bucket.deals.length} deals · {scope}</p></div><button type="button" className="loss-reason-popup-close" aria-label="Cerrar grupo de score" onClick={()=>setOpened(null)}><X size={17}/></button></header>
-            <LossClusterDetail key={JSON.stringify(bucket.deals.map(deal=>[deal.id,deal.lostReason]))} deals={bucket.deals} available={available} onOpen={(reason,selected)=>{setOpened(null);onOpen(`${label} ${bucket.label} · ${reason}`,selected);}} />
+            <LossClusterDetail key={JSON.stringify(bucket.deals.map(deal=>[deal.id,deal.lostReason]))} deals={bucket.deals} available={available} drawerContext={`${label} ${bucket.label} · ${scope}`} />
           </PopoverContent>
         </Popover>)}
       </div>
