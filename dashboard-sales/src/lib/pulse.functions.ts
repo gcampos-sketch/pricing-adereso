@@ -1,3 +1,4 @@
+import { LOSS_CLUSTER_VERSION } from "./loss-monthly-clusters";
 import { createServerFn } from "@tanstack/react-start";
 import { requireMfa } from "@/lib/require-mfa";
 import type { PartnerReport, PulseReport } from "./pulse-types";
@@ -106,7 +107,7 @@ export const getInsightsReport = createServerFn({ method: "GET" })
       import("./insights.server"),
       import("./report-cache.server"),
     ]);
-    return withSnapshot("insights", data.fresh, buildInsightsReport, report => report.lossEntryDatesVersion === "native-loss-entry/v1", data.force);
+    return withSnapshot("insights", data.fresh, () => buildInsightsReport(data.force), report => report.lossEntryDatesVersion === "native-loss-entry/v1" && report.lossClusterVersion === LOSS_CLUSTER_VERSION, data.force);
   });
 
 export const getCoachingReport = createServerFn({ method: "GET" })

@@ -1,0 +1,23 @@
+.loss-monthly-clusters { margin: 18px 0; min-width: 0; }
+.loss-monthly-clusters-heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px 20px; }
+.loss-monthly-clusters-heading p, .loss-monthly-note { color: var(--muted); margin: 5px 0 0; font-size: 12px; }
+.loss-monthly-select { display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.loss-monthly-select select {
+  max-width: 100%; min-height: 36px; padding: 6px 12px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface); color: var(--foreground); font: inherit; font-size: 13px;
+}
+.loss-monthly-clusters .loss-monthly-date { align-self: flex-start; margin: 0; }
+.loss-monthly-date button { font-size: 12px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.loss-monthly-date button[data-active="true"] { background: var(--brand); color: var(--brand-foreground); }
+.loss-monthly-plot, .loss-monthly-table { overflow-x: auto; }
+.loss-monthly-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0 0 0 3px; margin: 8px 0 12px; font-size: 12px; }
+.loss-monthly-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.loss-monthly-legend li span { width: 10px; height: 10px; border-radius: 2px; }
+.loss-monthly-tooltip { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font-size: 12px; }
+.loss-monthly-tooltip ul { padding: 0; margin: 3px 0 0; list-style: none; }
+.loss-monthly-tooltip li { display: flex; justify-content: space-between; gap: 14px; }
+.loss-monthly-data { margin: 6px 0; font-size: 12px; }
+.loss-monthly-data summary { cursor: pointer; }
+.loss-monthly-table table { border-collapse: collapse; margin-top: 8px; }
+.loss-monthly-table th, .loss-monthly-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.loss-monthly-table th:first-child { text-align: left; }
