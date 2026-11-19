@@ -1,22 +1,19 @@
-import { ExpandableCellText } from "./ExpandableCellText";
 import { ReportTitleScope } from "./ReportTitleScope";
-import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, ArrowLeft } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { LossReasonPopover } from "./LossReasonPopover";
-import { LossTicketByOwner } from "./LossTicketByOwner";
-import { LossReasonWords } from "./LossReasonWords";
+import { LossDealDrawer, type LossDealSelection } from "./LossDealDrawer";
+import { LossExecutiveSummary, type LossMeasure } from "./LossExecutiveSummary";
 import { LossIcpTable } from "./LossIcpTable";
 import { LossScoreClusters } from "./LossScoreClusters";
 import { LossMonthlyClusters } from "./LossMonthlyClusters";
 import { LOSS_CLUSTER_VERSION } from "@/lib/loss-monthly-clusters";
 import { LossSankey } from "./LossSankey";
-import { DealModal } from "./DealModal";
 import { MetricTrend } from "./MetricTrend";
 import { lossMonthlyHistory, lossValuation, lossTicketComparison, type LossMonth } from "@/lib/loss-summary";
 import { Metric } from "./PulseDashboard";
 import { CompactFilterBar } from "./FilterBar";
 import { SectionTitle, median, money, pct, sum, useAgo, useInsightFilters } from "./insights-shared";
-import type { Drilldown } from "@/lib/pulse-types";
 import type { InsightDeal, InsightsReport } from "@/lib/insights-types";
 import { lossCreationSources, scopeLossCreationSource } from "@/lib/loss-creation-source";
 import { roleOfOwner } from "@/lib/owner-roles";
@@ -43,9 +40,14 @@ const keyOf = (deal: InsightDeal, dimension: Dimension): string => {
 };
 type Slice = { dimension: Dimension; key: string };
 
-function LossCurve({ data, measure, label }: { data: LossMonth[]; measure: "amount" | "count" | "ticket"; label: string }) {
+function LossCurve({ data, measure, label, onOpen }: {
+  data: LossMonth[]; measure: LossMeasure; label: string; onOpen: (title: string, deals: InsightDeal[]) => void;
+}) {
   return <MetricTrend data={data.map(point => ({ label: point.label, value: point[measure], partial: point.partial }))}
-    label={label} unit={measure === "count" ? "number" : "money"} />;
+    label={label} unit={measure === "count" ? "number" : "money"} onSelect={index => {
+      const point = data[index];
+      if (point) onOpen(`${label} · ${point.label}`, point.deals);
+    }} />;
 }
 
 export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "all", onRole }: {
@@ -54,7 +56,21 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 }) {
   const ago = useAgo(report.generatedAt);
   const filters = useInsightFilters(report, undefined, role, onRole);
-  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean; reasonWords?: boolean; coverageWarning?: boolean; ticketByOwner?: boolean }) | null>(null);
+  const [drill, setDrill] = useState<LossDealSelection | null>(null);
+  const [summary, setSummary] = useState<LossMeasure | null>(null);
+  const drillTrigger = useRef<Element | null>(null);
+  const summaryTrigger = useRef<Element | null>(null);
+  const focusTrigger = (target: Element | null) => {
+    if (target instanceof HTMLElement || target instanceof SVGElement) target.focus({ preventScroll: true });
+  };
+  const openDeals = (selection: LossDealSelection) => {
+    drillTrigger.current = document.activeElement;
+    setDrill(selection);
+  };
+  const openSummary = (measure: LossMeasure) => {
+    summaryTrigger.current = document.activeElement;
+    setSummary(measure);
+  };
   const [creationSource, setCreationSource] = useState("");
   const sourceOptions = useMemo(() => lossCreationSources(report.deals), [report.deals]);
   const sourceDeals = useMemo(() => scopeLossCreationSource(report.deals, creationSource), [report.deals, creationSource]);
@@ -107,7 +123,13 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
   const visibleRows = expandedRows === rowsKey ? rows : rows.slice(0, 5);
   const max = Math.max(1, ...rows.map(row => row[measure]));
   const total = measure === "amount" ? scopedAmount : scoped.length;
-  const open = (title: string, deals: InsightDeal[], reasonWords = false) => setDrill({ reasonWords: reasonWords || path.some(slice => slice.dimension === "reason"), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}${path.length ? ` · ${path.map(slice => slice.key).join(" → ")}` : ""}`, deals });
+  const scope = `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`;
+  const openTrend = (title: string, deals: InsightDeal[]) => openDeals({ title, deals, scope: `${filters.ownerName} · ${sourceScope} · Fecha de cierre` });
+  const narrativesAvailable = report.lossNarrativesVersion === "closed-lost-reason/v1";
+  const open = (title: string, deals: InsightDeal[], reasonWords = false, records = false) => openDeals({
+    title, deals, reasonWords: reasonWords || path.some(slice => slice.dimension === "reason"), records,
+    scope: path.length ? `${scope} · ${path.map(slice => slice.key).join(" → ")}` : scope,
+  });
   const updatePath = (next: Slice[]) => setExploration({ scope: scopeKey, path: next });
   const enter = (key: string) => {
     const next = [...path, { dimension, key }];
@@ -137,39 +159,38 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     <SectionTitle>Resumen de pérdidas</SectionTitle>
     <section className="loss-summary">
       <Metric label="MRR perdido" value={money(lostAmount)} note="Monto mensual de los deals perdidos" tone="neutral"
-        onClick={() => open("MRR perdido", lost)} tooltip="MRR de los deals perdidos con fecha de cierre dentro del período seleccionado. La curva muestra los últimos seis meses hasta el fin del período o el mes de lectura, con los mismos filtros."
-        footer={<LossCurve data={monthly} measure="amount" label="MRR perdido" />} />
+        onClick={() => openSummary("amount")} tooltip="MRR de los deals perdidos con fecha de cierre dentro del período seleccionado. La curva muestra los últimos seis meses hasta el fin del período o el mes de lectura, con los mismos filtros."
+        footer={<LossCurve data={monthly} measure="amount" label="MRR perdido" onOpen={openTrend} />} />
       <Metric label="Deals perdidos" value={String(lost.length)} note={`${valuation.valuedCount} valorizados · ${valuation.valuedPercent === null ? "—" : pct(valuation.valuedPercent)} del total`}
-        tone="neutral" onClick={() => open("Deals perdidos", lost)} tooltip="Cantidad de deals perdidos del período y alcance seleccionados. Valorizados: deals con MRR registrado mayor que $0; porcentaje sobre todos los deals perdidos de este alcance. La curva muestra cantidades mensuales."
-        footer={<LossCurve data={monthly} measure="count" label="Deals perdidos" />} />
+        tone="neutral" onClick={() => openSummary("count")} tooltip="Cantidad de deals perdidos del período y alcance seleccionados. Valorizados: deals con MRR registrado mayor que $0; porcentaje sobre todos los deals perdidos de este alcance. La curva muestra cantidades mensuales."
+        footer={<LossCurve data={monthly} measure="count" label="Deals perdidos" onOpen={openTrend} />} />
       <Metric label="Ticket medio perdido" value={ticket === null ? "—" : money(ticket)} note={ticketNote}
-        tone="neutral" onClick={() => setDrill({
-          title: "Ticket medio perdido",
-          subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`,
-          deals: lost,
-          ticketByOwner: filters.ownerId === "team",
-        })}
+        tone="neutral" onClick={() => openSummary("ticket")}
         tooltip="MRR perdido dividido por todos los deals perdidos, incluidos los de monto $0. Al seleccionar un comercial, la diferencia es (su ticket / ticket del equipo completo − 1) × 100. El equipo incluye todos los comerciales y roles con el mismo período, fuente y etapa; no es el promedio de promedios por comercial. Sin una base positiva comparable se muestra sin comparación. Cada mes de la curva usa su propio promedio."
-        footer={<LossCurve data={monthly} measure="ticket" label="Ticket medio perdido" />} />
+        footer={<LossCurve data={monthly} measure="ticket" label="Ticket medio perdido" onOpen={openTrend} />} />
     </section>
 
     <LossSankey deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
-      scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
-      onWarning={(deals, basis) => setDrill({
+      scope={scope} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}
+      onWarning={(deals, basis) => openDeals({
         title: basis === "close" ? "Deals sin fecha de cierre válida" : "Deals sin entrada a perdido verificable",
-        subtitle: `Perdidos disponibles · ${filters.ownerName} · ${sourceScope} · Rol ${role === "all" ? "Todos" : role} · Etapa ${stageFilter.join(", ") || "Todas"} · Sin período asignable; excluidos del Sankey`,
-        deals, coverageWarning: true,
+        scope: `${filters.ownerName} · ${sourceScope} · Rol ${role === "all" ? "Todos" : role} · Etapa ${stageFilter.join(", ") || "Todas"} · Sin período asignable; excluidos del Sankey`,
+        deals,
       })}
-      onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
+      onOpen={(title, deals, basis, reasonWords) => openDeals({
+        title, deals, reasonWords: Boolean(reasonWords), scope: `${scope} · ${basis === "entry" ? "Entrada a deal perdido" : "Fecha de cierre"}`,
+      })} />
 
     <LossMonthlyClusters deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
       available={report.lossClusterVersion === LOSS_CLUSTER_VERSION} companySizeAvailable={report.lossCompanySizeAvailable === true}
-      meetingCountsAvailable={report.lossMeetingCountsAvailable === true} />
+      meetingCountsAvailable={report.lossMeetingCountsAvailable === true}
+      onOpen={(title, deals, basis) => openDeals({ title, deals, scope: `${scope} · ${basis}` })} />
 
-    <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
+    <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={scope}
+      onOpen={(title, deals) => openDeals({ title, deals, reasonWords: true, filterReasons: true, scope: `${scope} · Score anterior a la pérdida` })} />
 
-    <LossIcpTable deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"}
-      onOpen={(title,deals)=>setDrill({title,deals,reasonWords:true,subtitle:`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ICP anterior a la pérdida; tabla con valores CRM actuales`})} />
+    <LossIcpTable deals={lost} readAt={report.generatedAt} scope={scope}
+      onOpen={(title, deals) => openDeals({ title, deals, reasonWords: true, filterReasons: true, scope: `${scope} · ICP anterior a la pérdida` })} />
 
     <section className="rep-chart loss-explorer" aria-label="Explorar pérdidas">
       <nav className="loss-breadcrumb" aria-label="Recorrido del análisis">
@@ -180,7 +201,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
           </button></span>)}
       </nav>
       <div className="loss-analysis-heading">
-        <div><h2 className="pulse-h2">{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa un motivo para ver sus palabras o el conteo para abrir sus deals." : "Elige una categoría para profundizar o abre sus deals."}</p></div>
+        <div><h2 className="pulse-h2">{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa una barra para ver sus deals, el motivo para ver sus palabras o la flecha para cruzar categorías." : "Pulsa una barra para ver sus deals o la flecha para cruzar categorías."}</p></div>
         <div className="tabs" aria-label="Medida del análisis">{(["amount", "count"] as const).map(value => <button type="button" key={value} data-active={measure === value} aria-pressed={measure === value} onClick={() => setMeasure(value)}>{value === "amount" ? "MRR" : "Deals"}</button>)}</div>
       </div>
       <div className="loss-dimensions" aria-label="Analizar pérdidas por">
@@ -193,20 +214,22 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       {path.some(slice => slice.dimension === "reason") && <LossReasonPopover label={path.find(slice => slice.dimension === "reason")!.key} triggerLabel="Ver palabras del motivo" deals={scoped} scope={wordScope} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />}
       <div className="loss-rows">
         {visibleRows.map(row => <div key={row.key} className="loss-row">
-          {dimension === "reason" ? <div className="loss-category loss-category--reason">
-            <LossReasonPopover label={row.key} deals={row.deals} scope={wordScope} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
-            <button type="button" className="loss-category-drill" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals, true)} aria-label={`Analizar ${row.key}`}>
+          <div className={`loss-category${dimension === "reason" ? " loss-category--reason" : ""}`}>
+            {dimension === "reason"
+              ? <LossReasonPopover label={row.key} deals={row.deals} scope={wordScope} available={narrativesAvailable} />
+              : <span className="loss-row-label">{row.key}</span>}
+            <button type="button" className="loss-category-drill" aria-haspopup="dialog"
+              onClick={() => open(row.key, row.deals, dimension === "reason")}
+              aria-label={`Ver ${row.count} deals de ${row.key}`}>
               <span className="loss-row-track"><span style={{ width: `${row[measure] / max * 100}%` }} /></span>
               <span className="loss-row-value">{measure === "amount" ? money(row.amount) : row.count}<small>{pct(total ? row[measure] / total * 100 : 0)}</small></span>
-              <ChevronRight size={15} aria-hidden="true" />
             </button>
-          </div> : <button type="button" className="loss-category" onClick={() => path.length < DIMENSIONS.length - 1 ? enter(row.key) : open(row.key, row.deals)} aria-label={`Analizar ${row.key}`}>
-            <span className="loss-row-label">{row.key}</span>
-            <span className="loss-row-track"><span style={{ width: `${row[measure] / max * 100}%` }} /></span>
-            <span className="loss-row-value">{measure === "amount" ? money(row.amount) : row.count}<small>{pct(total ? row[measure] / total * 100 : 0)}</small></span>
-            <ChevronRight size={15} aria-hidden="true" />
-          </button>}
-          <button type="button" className="loss-deals-link" onClick={() => open(row.key, row.deals, dimension === "reason")} aria-label={`Ver ${row.count} deals de ${row.key}`}>{row.count} deals</button>
+            <button type="button" className="loss-deals-link" onClick={() => open(row.key, row.deals, dimension === "reason")}>{row.count} deals</button>
+            {path.length < DIMENSIONS.length - 1 && <button type="button" className="loss-cross-category"
+              onClick={() => enter(row.key)} aria-label={`Cruzar ${row.key} con otra categoría`}>
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>}
+          </div>
         </div>)}
         {!rows.length && <div className="empty-state">Sin pérdidas en este alcance. Cambia los filtros o vuelve al resumen.</div>}
       </div>
@@ -214,32 +237,18 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       <div className="loss-analysis-total"><span>Total de este análisis</span><strong>{money(scopedAmount)} MRR · {scoped.length} deals</strong></div>
     </section>
 
-    <details className="rep-chart loss-details" key={scopeKey + JSON.stringify(path)}>
-      <summary>Profundizar en los registros <span>Comentarios, tiempo en etapa y actividad</span></summary>
+    <section className="rep-chart loss-details" aria-label="Evidencia de pérdidas">
+      <h2 className="pulse-h2">Registros de pérdida</h2>
+      <p className="loss-intro">Mediana de tiempo en etapa {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
       <div className="loss-record-tools">
-        <button type="button" className="cell-button" onClick={() => open("Registros disponibles de ghosting", ghost)}>Actividad de ghosting · {ghost.length} con registros</button>
+        <button type="button" className="cell-button" onClick={() => open("Registros de pérdida", scoped, false, true)}>Ver comentarios y actividad · {scoped.length} deals</button>
+        <button type="button" className="cell-button" onClick={() => open("Registros disponibles de ghosting", ghost, false, true)}>Actividad de ghosting · {ghost.length} con registros</button>
       </div>
-      <p className="loss-intro">La actividad disponible puede ser parcial; la ausencia de registros no confirma ausencia de seguimiento.</p>
-      <div className="table-wrap"><table className="pulse-table"><thead><tr><th>Deal</th><th>Etapa / días</th><th>Comentario de cierre</th><th>Actividad registrada</th></tr></thead>
-        <tbody>{scoped.map(deal => <tr key={deal.id}>
-          <td><button type="button" className="cell-button" onClick={() => open(deal.name, [deal])}>{deal.name}</button><div className="loss-record-owner">{deal.owner}</div></td>
-          <td>{deal.lostStage || "Sin recorrido"}<div className="loss-record-owner">{deal.lostStageDays > 0 ? `${deal.lostStageDays} d` : "Sin duración"}</div></td>
-          <td>{deal.lostReasonText ? <ExpandableCellText text={deal.lostReasonText} label="Comentario de cierre" /> : "Sin comentario registrado"}</td>
-          <td>{deal.ghost ? `${deal.ghost.emails} correos · ${deal.ghost.calls} llamadas · ${deal.ghost.whatsapp ?? "s/d"} WhatsApp` : "Sin cobertura de actividad"}</td>
-        </tr>)}</tbody>
-      </table></div>
-      <p className="loss-intro">Mediana de tiempo en etapa: {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
-    </details>
-    <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope || drill?.reasonWords || drill?.coverageWarning)} showOwnerFilter={Boolean(drill?.coverageWarning)}
-      detailContent={drill?.ticketByOwner ? rows => <LossTicketByOwner deals={rows} /> : drill?.reasonWords ? rows =>
-        <details key={JSON.stringify([drill.title, drill.subtitle])} className="loss-words-disclosure" open>
-          <summary>
-            <ChevronDown size={14} aria-hidden="true" />
-            <span className="loss-words-label-open">Ocultar nube de palabras</span>
-            <span className="loss-words-label-closed">Mostrar nube de palabras</span>
-          </summary>
-          <LossReasonWords deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)}
-            available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
-        </details> : undefined} />
+      <p className="loss-intro">La actividad disponible puede ser parcial.</p>
+    </section>
+    {summary && <LossExecutiveSummary deals={lost} scope={scope} measure={summary} onOpenDeals={openDeals}
+      onClose={() => setSummary(null)} restoreFocus={() => focusTrigger(summaryTrigger.current)} />}
+    {drill && <LossDealDrawer selection={drill} narrativesAvailable={narrativesAvailable}
+      onClose={() => setDrill(null)} restoreFocus={() => focusTrigger(drillTrigger.current)} />}
   </main>;
 }

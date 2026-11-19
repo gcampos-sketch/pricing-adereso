@@ -13,8 +13,11 @@
 .loss-scope-actions { display:flex; justify-content:space-between; gap:12px; margin:0 0 12px; }
 .loss-scope-actions button { display:flex; gap:6px; align-items:center; }
 .loss-row { display:flex; align-items:center; gap:16px; border-top:1px solid var(--border); }
-.loss-category { display:grid; grid-template-columns:minmax(110px,1fr) minmax(45px,1.2fr) 85px 15px; align-items:center; gap:16px; flex:1; min-width:0; text-align:left; border:0; background:none; color:var(--foreground); padding:13px 0; cursor:pointer; }
-.loss-category:hover .loss-row-label { text-decoration:underline; }
+.loss-category { display:grid; grid-template-columns:minmax(110px,1fr) minmax(90px,2fr) auto 28px; align-items:center; gap:12px; flex:1; min-width:0; text-align:left; border:0; background:none; color:var(--foreground); padding:9px 0; }
+.loss-category-drill { display:grid; grid-template-columns:minmax(28px,1fr) minmax(65px,85px); align-items:center; gap:16px; min-width:0; padding:4px; border:0; background:none; color:inherit; cursor:pointer; }
+.loss-category-drill:hover .loss-row-track > span,.loss-category-drill:focus-visible .loss-row-track > span { background:var(--brand); }
+.loss-cross-category { display:grid; place-items:center; width:28px; height:28px; border:1px solid var(--border); border-radius:8px; background:none; color:var(--muted); cursor:pointer; }
+.loss-cross-category:hover { color:var(--brand); }
 .loss-row-label { font-size:13px; overflow-wrap:anywhere; }
 .loss-row-track { height:6px; background:var(--border); border-radius:8px; overflow:hidden; }
 .loss-row-track > span { display:block; height:100%; border-radius:inherit; background:var(--muted); }
@@ -23,13 +26,9 @@
 .loss-deals-link { color:var(--muted); white-space:nowrap; background:none; border:0; cursor:pointer; font-size:11px; min-width:55px; text-decoration:underline; text-underline-offset:3px; }
 .loss-analysis-total { display:flex; justify-content:space-between; gap:12px; border-top:1px solid var(--border); padding-top:16px; font-size:12px; color:var(--muted); }
 .loss-analysis-total strong { color:var(--foreground); font-weight:500; }
-.loss-details summary { cursor:pointer; font-size:14px; }
-.loss-details summary span { color:var(--muted); font-size:12px; margin-left:12px; }
 .loss-record-tools { display:flex; gap:20px; flex-wrap:wrap; margin-top:20px; }
-.loss-record-owner { color:var(--muted); font-size:11px; margin-top:4px; }
-.loss-details .table-wrap { margin-top:16px; max-height:480px; overflow:auto; }
 .loss-dashboard button:focus-visible,.loss-dashboard summary:focus-visible { outline:2px solid var(--foreground); outline-offset:3px; }
-@media(max-width:640px) { .loss-summary { grid-template-columns:1fr; gap:8px; } .loss-analysis-heading { align-items:flex-start; flex-wrap:wrap; } .loss-category { grid-template-columns:minmax(90px,1fr) 65px 12px; gap:8px; } .loss-row-track { display:none; } .loss-row { gap:8px; } .loss-details summary span { display:block; margin:6px 0 0 16px; } }
+@media(max-width:640px) { .loss-summary { grid-template-columns:1fr; gap:8px; } .loss-analysis-heading { align-items:flex-start; flex-wrap:wrap; } .loss-category { grid-template-columns:minmax(72px,1fr) minmax(72px,1.4fr) auto 28px; gap:5px; } .loss-category-drill { grid-template-columns:minmax(14px,1fr) minmax(48px,auto); gap:5px; } .loss-row { gap:8px; } }
 .loss-show-more { margin:12px 0 18px; font-size:12px; }
 .loss-analysis-heading .tabs { flex-shrink:0; }
 .loss-analysis-heading .tabs button { min-width:54px; padding:7px 12px; font-size:12px; }
@@ -73,49 +72,91 @@
 .loss-sankey-warning-link:hover { text-decoration-thickness:2px; }
 .loss-sankey-warning-link:focus-visible { outline:2px solid var(--brand); outline-offset:4px; border-radius:3px; }
 
-.modal-owner-bars.loss-ticket-owners { min-width: 0; margin-top: 4px; margin-bottom: 12px; }
-.loss-ticket-owners header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; justify-content: space-between; }
-.loss-ticket-owners h3 { margin: 0; font-size: 15px; font-weight: 600; }
-.loss-ticket-owners p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
-.loss-ticket-team strong { color: var(--foreground); font-variant-numeric: tabular-nums; }
-.loss-ticket-owners .loss-ticket-bars {
-  display: grid;
-  min-width: 0;
-  max-height: min(168px, 24dvh);
-  overflow-y: auto;
-  scrollbar-width: thin;
-  list-style: none;
-  padding: 0 3px;
-  margin: 8px 0 0;
+.loss-executive-backdrop { position: fixed; inset: 0; z-index: 2098; background: rgb(5 7 12 / .58); }
+.loss-executive {
+  position: fixed;
+  z-index: 2099;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(960px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #1b1d22;
+  color: var(--foreground);
+  box-shadow: 0 22px 80px #0008;
+  overflow: hidden;
+  outline: none;
 }
-.loss-ticket-owners .owner-bar-row { grid-template-columns: minmax(84px, 1fr) minmax(24px, 4fr) minmax(56px, auto); }
+.loss-executive-body { display: grid; gap: 23px; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 20px 22px; }
+.loss-executive h3 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.loss-executive-top { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.loss-executive-top strong { font-family: Outfit, sans-serif; font-size: clamp(28px, 5vw, 42px); line-height: 1; }
+.loss-executive-top p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+.loss-executive-top button { display: inline-flex; align-items: center; gap: 5px; }
+.loss-executive-months { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 136px), 1fr)); }
+.loss-executive-months button {
+  display: grid;
+  justify-items: start;
+  gap: 3px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #ffffff05;
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+}
+.loss-executive-months button:hover { border-color: var(--brand); background: #ffffff09; }
+.loss-executive-months span,.loss-executive-months small { font-size: 11px; color: var(--muted); }
+.loss-executive-months strong { font-size: 17px; font-variant-numeric: tabular-nums; }
+.loss-ticket-bars { display: grid; gap: 3px; padding: 0; list-style: none; margin: 0; }
+.loss-ticket-owners .loss-owner-button {
+  grid-template-columns: minmax(82px, 1fr) minmax(22px, 3fr) minmax(52px, auto) 14px;
+  width: 100%;
+  min-height: 36px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+}
+.loss-ticket-owners .loss-owner-button:hover { background: #ffffff09; border-color: var(--border); }
+.loss-owner-button svg { color: var(--muted); }
 .loss-ticket-owner { font-size: 12px; overflow-wrap: anywhere; }
 .loss-ticket-owner small { display: block; color: var(--muted); font-size: 10px; }
-.loss-ticket-owners .owner-bar-track { position: relative; width: 100%; height: 10px; }
+.loss-ticket-owners .owner-bar-track { position: relative; width: 100%; height: 9px; }
 .loss-ticket-owners .owner-bar-track > span { position: absolute; inset-block: 0; border-radius: inherit; background: var(--brand); }
-@media (max-width: 540px) {
-  .loss-ticket-owners .owner-bar-row { grid-template-columns: minmax(70px, 1fr) minmax(24px, 2fr) minmax(48px, auto); }
-}
 
-.loss-words-disclosure {
-  min-height: 0;
-  margin: 8px 16px;
-  overflow: auto;
+.loss-deal-drawer .scenario-drawer-body { flex: 1; }
+.loss-deal-tools { display: grid; gap: 12px; margin-bottom: 14px; }
+.loss-deal-tools p { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin: 0; color: var(--muted); font-size: 12px; }
+.loss-deal-tools p strong { color: var(--foreground); }
+.loss-deal-search,.loss-deal-reasons { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; }
+.loss-deal-search { padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; }
+.loss-deal-search input,.loss-deal-reasons select { min-width: 0; width: 100%; padding: 8px; color: var(--foreground); font: inherit; }
+.loss-deal-search input { border: 0; background: none; }
+.loss-deal-reasons select { border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.loss-drawer-words { margin-bottom: 13px; }
+.loss-drawer-words > summary,.loss-deal-record > summary { cursor: pointer; color: var(--muted); font-size: 11px; }
+.loss-drawer-words > summary:hover,.loss-deal-record > summary:hover { color: var(--brand); }
+.loss-drawer-words .loss-reason-words { margin: 8px 0; }
+.loss-cluster-deals { list-style: none; margin: 0; padding: 0; }
+.loss-cluster-deals li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border); }
+.loss-cluster-deals a { color: inherit; overflow-wrap: anywhere; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.loss-cluster-deals a:hover { color: var(--brand); }
+.loss-cluster-deals a svg { display: inline; vertical-align: middle; margin-left: 5px; }
+.loss-cluster-deals small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.loss-cluster-deals li > span { text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+.loss-deal-record { margin-top: 8px; }
+.loss-deal-record p { margin: 5px 0; color: var(--body); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.loss-executive :focus-visible,.loss-deal-drawer :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 540px) {
+  .loss-executive-body { padding: 16px; }
+  .loss-ticket-owners .loss-owner-button { grid-template-columns: minmax(76px, 1fr) minmax(20px, 1.7fr) minmax(40px, auto) 14px; gap: 6px; }
+  .loss-executive-months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.loss-words-disclosure > summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  color: var(--body);
-  font-size: 12px;
-  cursor: pointer;
-  list-style: none;
-}
-.loss-words-disclosure > summary::-webkit-details-marker { display: none; }
-.loss-words-disclosure > summary:hover { color: var(--brand); }
-.loss-words-disclosure > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; border-radius: 8px; }
-.loss-words-disclosure:not([open]) > summary > svg { transform: rotate(-90deg); }
-.loss-words-disclosure[open] .loss-words-label-closed,
-.loss-words-disclosure:not([open]) .loss-words-label-open { display: none; }
-.loss-words-disclosure > .loss-reason-words { margin: 0; }

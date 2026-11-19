@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { getLossPriorScores } from '@/lib/loss-prior-score.functions';
 import { priorScoreBuckets, type LossPriorScore, type PriorMetric } from '@/lib/loss-prior-score';
 import type { InsightDeal } from '@/lib/insights-types';
-import { LossClusterDetail } from './LossClusterDetail';
 import './LossScoreClusters.css';
 
 
-export function LossScoreClusters({ deals, scope, readAt, available }: {
-  deals: InsightDeal[]; scope: string; readAt: string; available: boolean;
+export function LossScoreClusters({ deals, scope, readAt, onOpen }: {
+  deals: InsightDeal[]; scope: string; readAt: string; onOpen: (title: string, deals: InsightDeal[]) => void;
 }) {
   const [metric,setMetric] = useState<PriorMetric>('adobo');
   const [visible,setVisible] = useState(false);
@@ -20,7 +17,6 @@ export function LossScoreClusters({ deals, scope, readAt, available }: {
   const cohort = JSON.stringify([idsKey,scope]);
   const key = JSON.stringify([cohort,readAt,retry]);
   const [state,setState] = useState<{key:string; cohort?:string; rows?:Record<string,LossPriorScore>; error?:string; loaded?:number}>({key:''});
-  const [opened,setOpened] = useState<string|null>(null);
   useEffect(()=>{ const observer=new IntersectionObserver(entries=>setVisible(entries.some(e=>e.isIntersecting)),{rootMargin:'160px'}); if(root.current)observer.observe(root.current);return()=>observer.disconnect(); },[]);
   useEffect(()=>{
     if (!visible) return;
@@ -48,23 +44,18 @@ export function LossScoreClusters({ deals, scope, readAt, available }: {
   const label = metric==='adobo'?'Adobo Score':'Probabilidad de cierre';
   return <section ref={root} className="rep-chart loss-score-clusters" aria-label="Score antes de perderse">
     <div className="loss-analysis-heading"><div><h2 className="pulse-h2">¿Con qué score se perdieron?</h2><p>Último valor registrado antes de entrar a perdido · {scope}</p></div>
-      <div className="tabs" aria-label="Score del análisis">{(['adobo','probability'] as const).map(value=><button type="button" key={value} aria-pressed={metric===value} data-active={metric===value} onClick={()=>{setMetric(value);setOpened(null);}}>{value==='adobo'?'Adobo Score':'Probabilidad de cierre'}</button>)}</div>
+      <div className="tabs" aria-label="Score del análisis">{(['adobo','probability'] as const).map(value=><button type="button" key={value} aria-pressed={metric===value} data-active={metric===value} onClick={()=>{setMetric(value);}}>{value==='adobo'?'Adobo Score':'Probabilidad de cierre'}</button>)}</div>
     </div>
     {!rows ? <div className="loss-cluster-status" role="status">{state.key===key && state.error ? <>{state.error} <button type="button" className="cell-button" onClick={()=>setRetry(r=>r+1)}>Reintentar</button></> : `Leyendo historial${state.key===key && state.loaded ? ` · ${state.loaded} de ${ids.length}` : '…'}`}</div> : <>
-      <div className="loss-cluster-coverage">{total-missing} de {total} con valor previo verificable de {label.toLowerCase()}{ids.length!==total ? ` · ${ids.length-total} ya no están perdidos en Comercial` : ''}. Pulsa una barra para explorar motivos.</div>
+      <div className="loss-cluster-coverage">{total-missing} de {total} con valor previo verificable de {label.toLowerCase()}{ids.length!==total ? ` · ${ids.length-total} ya no están perdidos en Comercial` : ''}. Pulsa una barra para ver sus deals y motivos.</div>
       <div className="loss-cluster-chart" aria-label={`Distribución por ${label}`} key={metric+cohort}>
-        {buckets.map(bucket=><Popover key={bucket.key} open={opened===`${cohort}:${metric}:${bucket.key}`} onOpenChange={open=>setOpened(open?`${cohort}:${metric}:${bucket.key}`:null)}>
-          <PopoverTrigger asChild><button type="button" className="loss-cluster-column" disabled={!bucket.deals.length} aria-label={`${label} ${bucket.label}: ${bucket.deals.length} deals; ver motivos`}>
-            <span className="loss-cluster-count">{bucket.deals.length}</span><span className="loss-cluster-bar-space"><i className="loss-cluster-bar" data-unknown={bucket.key==='unknown'} style={{height:`${bucket.deals.length/max*100}%`}} /></span><span>{bucket.label}</span>
-          </button></PopoverTrigger>
-          <PopoverContent className="loss-cluster-popover" aria-label={`${label} ${bucket.label}`} style={{width:'min(740px, calc(100vw - 32px))',maxHeight:'min(760px, calc(100dvh - 48px))'}} onEscapeKeyDown={event=>event.stopPropagation()}
-            onInteractOutside={event => {
-              if (event.target instanceof Element && event.target.closest('[data-loss-cluster-drawer]')) event.preventDefault();
-            }}>
-            <header className="loss-reason-popup-heading"><div><h3>{label} · {bucket.label}</h3><p>{bucket.deals.length} deals · {scope}</p></div><button type="button" className="loss-reason-popup-close" aria-label="Cerrar grupo de score" onClick={()=>setOpened(null)}><X size={17}/></button></header>
-            <LossClusterDetail key={JSON.stringify(bucket.deals.map(deal=>[deal.id,deal.lostReason]))} deals={bucket.deals} available={available} drawerContext={`${label} ${bucket.label} · ${scope}`} />
-          </PopoverContent>
-        </Popover>)}
+        {buckets.map(bucket => <button key={bucket.key} type="button" className="loss-cluster-column"
+          disabled={!bucket.deals.length} aria-haspopup="dialog" aria-label={`${label} ${bucket.label}: ${bucket.deals.length} deals`}
+          onClick={() => onOpen(`${label} · ${bucket.label}`, bucket.deals)}>
+          <span className="loss-cluster-count">{bucket.deals.length}</span>
+          <span className="loss-cluster-bar-space"><i className="loss-cluster-bar" data-unknown={bucket.key === 'unknown'} style={{ height: `${bucket.deals.length / max * 100}%` }} /></span>
+          <span>{bucket.label}</span>
+        </button>)}
       </div>
       <p className="loss-cluster-footnote">Solo deals actualmente perdidos en Comercial. Los rangos incluyen el límite inferior y excluyen el superior, salvo 100. Sin historial o con valores ambiguos: sin dato previo. No usa el score actual ni infiere causas.</p>
     </>}

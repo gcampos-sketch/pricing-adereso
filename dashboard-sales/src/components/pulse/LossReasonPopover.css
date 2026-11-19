@@ -9,8 +9,3 @@
 .loss-reason-popup-close:hover { color:var(--foreground); background:var(--glass-track); }
 .loss-reason-popover > .loss-reason-words { padding:0; border:0; background:none; margin:14px 0 0; }
 .loss-reason-popover .loss-words-heading h3 { font-size:13px; }
-.loss-category--reason { cursor:default; }
-.loss-category-drill { grid-column:2/-1; display:grid; grid-template-columns:minmax(45px,1fr) 85px 15px; gap:16px; align-items:center; padding:0; border:0; background:none; color:inherit; cursor:pointer; min-width:0; }
-.loss-category-drill:focus-visible { outline:2px solid var(--brand); outline-offset:4px; border-radius:4px; }
-.loss-category-drill:hover > svg { color:var(--brand); }
-@media(max-width:640px) { .loss-category-drill { grid-template-columns:65px 12px; gap:8px; } }
