@@ -2,7 +2,7 @@ import { LOSS_ENTRY_DATES_VERSION, lossEntryDate } from "./loss-sankey-scope";
 import { LOSS_CLUSTER_VERSION } from "./loss-monthly-clusters";
 import { readLossCompanySizes } from "./loss-company-size.server";
 import { priceNumber } from "./price-conversion";
-import {countDealWhatsApp} from "./whatsapp-count";
+import { readDealActivityLinks } from "./deal-activity-associations.server";
 import {
   getCached,
   getCommercialDeals,
@@ -13,98 +13,12 @@ import {
   TTL_SLOW,
 } from "./hubspot.server";
 
-type GhostCounts = { emails: number; calls: number; whatsapp: number | null };
-
-/** IDs de objetos asociados por deal, vía batch read de asociaciones v4. */
-async function associationIds(
-  dealIds: string[], type: string, acceptVerifiedEmpty = false,
-): Promise<Map<string, string[]>> {
-  const out = new Map<string, string[]>();
-  for (let i = 0; i < dealIds.length; i += 100) {
-    const chunk = dealIds.slice(i, i + 100);
-    const res = await gateway<{
-      results: { from: { id: string }; to: { toObjectId: string | number }[]; paging?: {next?: {after?: string}} }[];
-      errors?: { subCategory?: string; context?: { fromObjectId?: string[] } }[];
-      numErrors?: number;
-    }>(`/crm/v4/associations/deals/${type}/batch/read`, {
-      method: "POST",
-      body: JSON.stringify({ inputs: chunk.map((id) => ({ id })) }),
-    });
-    const empty = new Set<string>();
-    for (const error of res.errors ?? []) {
-      if (!acceptVerifiedEmpty || error.subCategory !== "crm.associations.NO_ASSOCIATIONS_FOUND" ||
-          !error.context?.fromObjectId?.length) throw new Error("Lectura incompleta de asociaciones");
-      for (const id of error.context.fromObjectId) empty.add(id);
-    }
-    const found = new Set((res.results ?? []).map(row => row.from.id));
-    if ((res.numErrors ?? 0) > (res.errors?.length ?? 0) ||
-        chunk.some(id => found.has(id) === empty.has(id))) throw new Error("Lectura incompleta de asociaciones");
-    for (const id of empty) out.set(id, []);
-    for (const row of res.results ?? []) {
-      const ids=(row.to ?? []).map(t=>String(t.toObjectId));
-      let after=row.paging?.next?.after;
-      const seen=new Set<string>();
-      while(after) {
-        if(seen.has(after)) throw new Error('Paginación de asociaciones incompleta');
-        seen.add(after);
-        const page=await gateway<{results:{toObjectId:string|number}[];paging?:{next?:{after?:string}}}>(`/crm/v4/objects/deals/${row.from.id}/associations/${type}?limit=500&after=${encodeURIComponent(after)}`);
-        ids.push(...page.results.map(t=>String(t.toObjectId)));after=page.paging?.next?.after;
-      }
-      out.set(row.from.id,[...new Set(ids)]);
-    }
-  }
-  return out;
-}
-
-/**
- * Cuenta correos, llamadas y WhatsApp asociados a cada deal perdido por
- * ghosting. WhatsApp nativo usa el canal WHATS_APP; fallos se muestran sin dato.
- */
-function fetchGhostCounts(dealIds: string[]): Promise<Map<string, GhostCounts>> {
-  return getCached(`ghost-v2:${dealIds.join(",")}`, TTL_SLOW, async () => {
-    const [emails, calls, comms] = await Promise.all([
-      associationIds(dealIds, "emails"),
-      associationIds(dealIds, "calls"),
-      associationIds(dealIds, "communications"),
-    ]);
-
-    // Native HubSpot uses WHATS_APP; retain old WHATSAPP values without counting foreign records.
-    const commIds = [...new Set([...comms.values()].flat())];
-    const communicationRows: {id:string;properties:Record<string,string|null>}[]=[];
-    for (let i = 0; i < commIds.length; i += 100) {
-      const chunk = commIds.slice(i, i + 100);
-      if (!chunk.length) break;
-      const res = await gateway<{
-        results: { id: string; properties: Record<string, string | null> }[]; errors?:unknown[]; numErrors?:number;
-      }>("/crm/v3/objects/communications/batch/read", {
-        method: "POST",
-        body: JSON.stringify({
-          inputs: chunk.map((id) => ({ id })),
-          properties: ["hs_communication_channel_type"],
-        }),
-      });
-      if(res.errors?.length || res.numErrors || chunk.some(id=>!res.results?.some(r=>r.id===id))) throw new Error("Lectura incompleta de comunicaciones");
-      communicationRows.push(...res.results);
-    }
-
-    const out = new Map<string, GhostCounts>();
-    for (const id of dealIds) {
-      out.set(id, {
-        emails: emails.get(id)?.length ?? 0,
-        calls: calls.get(id)?.length ?? 0,
-        whatsapp: countDealWhatsApp(comms.get(id) ?? [],communicationRows),
-      });
-    }
-    return out;
-  });
-}
 import {
   LOST_STAGES,
   MANAGED_STAGES,
   NICKNAMES,
   WON_STAGES,
   buildPeriods,
-  gateway,
   periodOf,
   quarterBounds,
   toDTO,
@@ -309,7 +223,6 @@ export async function buildInsightsReport(force = false): Promise<InsightsReport
       onTrack: (p["on_track"] ?? "").trim() || null,
       createdAt: p["createdate"] ?? "",
       objection: (p["adobo_current_objecion"] ?? "").trim() || null,
-      ghost: null,
     });
   }
 
@@ -319,33 +232,13 @@ export async function buildInsightsReport(force = false): Promise<InsightsReport
   const meetingsCache = `loss-meeting-links:${lostIds.join(",")}`;
   if (force) invalidateCache(meetingsCache);
   const meetingCountsPending = getCached(meetingsCache, TTL_SLOW, async () => {
-    const links = await associationIds(lostIds, "meetings", true);
+    const links = await readDealActivityLinks(lostIds, "meetings");
     return new Map([...links].map(([id, activities]) => [id, activities.length]));
   }).catch(() => null);
   if (force) invalidateCache(companyCache);
   // A company lookup failure only affects its own cluster.
   const companySizesPending = getCached(companyCache, TTL_SLOW, () => readLossCompanySizes(lostIds))
     .catch(() => null);
-
-  // ---------- ghosting: actividades de cierre en deals perdidos ----------
-  const ghostDeals = out
-    .filter(
-      (deal) =>
-        deal.status === "lost" &&
-        (/ghost/i.test(deal.lostReason ?? "") || /ghost/i.test(deal.lostReasonText ?? "")),
-    )
-    .sort((a, b) => Date.parse(b.closeDateValue || "0") - Date.parse(a.closeDateValue || "0"))
-    .slice(0, 60);
-  if (ghostDeals.length) {
-    try {
-      const counts = await fetchGhostCounts(ghostDeals.map((deal) => deal.id));
-      for (const deal of ghostDeals) {
-        deal.ghost = counts.get(deal.id) ?? null;
-      }
-    } catch (error) {
-      console.warn("No se pudieron cargar actividades de ghosting", error);
-    }
-  }
 
   const [companySizes, meetingCounts] = await Promise.all([companySizesPending, meetingCountsPending]);
   for (const deal of lostDeals) {

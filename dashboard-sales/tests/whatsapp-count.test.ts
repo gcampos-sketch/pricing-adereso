@@ -1,11 +1,14 @@
-import {test,expect} from 'bun:test';
-import {countDealWhatsApp} from '../src/lib/whatsapp-count';
-const row=(id:string,channel:string)=>({id,properties:{hs_communication_channel_type:channel}});
-test('native WHATS_APP, legacy values and duplicates are counted per exact association',()=>{
-  expect(countDealWhatsApp(['1','1','2','3'],[row('1','WHATS_APP'),row('2','WHATSAPP'),row('3','SMS'),row('foreign','WHATS_APP')])).toBe(2);
-  expect(countDealWhatsApp([],[row('foreign','WHATS_APP')])).toBe(0);
+import { expect, test } from "bun:test";
+import { isRecordedWhatsApp } from "../src/lib/whatsapp-count";
+
+test("recognizes native WhatsApp logs, including manually registered messages without a direction", () => {
+  expect(isRecordedWhatsApp("WHATS_APP", () => "Seguimiento de propuesta")).toBe(true);
+  expect(isRecordedWhatsApp("WHATSAPP", () => "Dirección: Saliente\nEstado: Enviado")).toBe(true);
+  expect(isRecordedWhatsApp("SMS", () => "WhatsApp en el mensaje")).toBe(false);
+  expect(isRecordedWhatsApp("LINKEDIN_MESSAGE", () => "WhatsApp")).toBe(false);
+  expect(isRecordedWhatsApp(null, () => "WhatsApp")).toBeNull();
 });
-test('partial reads are unknown rather than false zero',()=>{
-  expect(countDealWhatsApp(['unread'],[])).toBeNull();
-  expect(countDealWhatsApp(['1'],[row('1','LINKEDIN_MESSAGE')])).toBe(0);
+
+test("a native WhatsApp activity for a prepared draft does not attest to a message", () => {
+  expect(isRecordedWhatsApp("WHATS_APP", () => "Estado: Borrador preparado en WhatsApp Web, pendiente de revisión; no enviado")).toBe(false);
 });

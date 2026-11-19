@@ -16,6 +16,7 @@ import { CompactFilterBar } from "./FilterBar";
 import { SectionTitle, median, money, pct, sum, useAgo, useInsightFilters } from "./insights-shared";
 import type { InsightDeal, InsightsReport } from "@/lib/insights-types";
 import { lossCreationSources, scopeLossCreationSource } from "@/lib/loss-creation-source";
+import { isGhostingLoss } from "@/lib/loss-ghosting";
 import { roleOfOwner } from "@/lib/owner-roles";
 import "./LossDashboard.css";
 
@@ -137,7 +138,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
     const unused = DIMENSIONS.find(item => !next.some(slice => slice.dimension === item.key));
     if (unused) setDimension(unused.key);
   };
-  const ghost = scoped.filter(deal => deal.ghost);
+  const ghost = scoped.filter(deal => isGhostingLoss(deal.lostReason));
   const question = DIMENSIONS.find(item => item.key === dimension)!.question;
 
   return <main className="pulse-main loss-dashboard">
@@ -242,7 +243,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       <p className="loss-intro">Mediana de tiempo en etapa {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
       <div className="loss-record-tools">
         <button type="button" className="cell-button" onClick={() => open("Registros de pérdida", scoped, false, true)}>Ver comentarios y actividad · {scoped.length} deals</button>
-        <button type="button" className="cell-button" onClick={() => open("Registros disponibles de ghosting", ghost, false, true)}>Actividad de ghosting · {ghost.length} con registros</button>
+        <button type="button" className="cell-button" onClick={() => open("Validación de ghosting", ghost, false, true)}>Actividad de ghosting · {ghost.length} deals</button>
       </div>
       <p className="loss-intro">La actividad disponible puede ser parcial.</p>
     </section>

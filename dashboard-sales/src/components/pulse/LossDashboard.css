@@ -160,3 +160,20 @@
   .loss-ticket-owners .loss-owner-button { grid-template-columns: minmax(76px, 1fr) minmax(20px, 1.7fr) minmax(40px, auto) 14px; gap: 6px; }
   .loss-executive-months { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+.loss-ghosting-caption { display:flex; align-items:start; flex-wrap:wrap; gap:6px 12px; margin-bottom:12px; color:var(--muted); font-size:11px; }
+.loss-ghosting-caption p { flex:1 1 220px; margin:0; line-height:1.5; }
+.loss-ghosting-caption button { white-space:nowrap; }
+.loss-ghosting-activity { grid-column:1/-1; display:grid; gap:8px; margin-top:-5px; padding:9px 11px; border:1px solid var(--border); border-radius:9px; background:#ffffff04; }
+.loss-ghosting-status { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; }
+.loss-ghosting-status[data-status="met"] { color:var(--success); }
+.loss-ghosting-status[data-status="short"],.loss-ghosting-counts [data-status="short"] strong { color:var(--warning); }
+.loss-ghosting-status[data-status="unknown"] { color:var(--muted); }
+.loss-ghosting-counts { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)) minmax(0, 1.55fr); gap:5px 8px; margin:0; }
+.loss-ghosting-counts dt,.loss-ghosting-activity p { color:var(--muted); font-size:10px; }
+.loss-ghosting-counts dd { margin:0; color:var(--foreground); font-size:12px; font-variant-numeric:tabular-nums; }
+.loss-ghosting-counts dd span { color:var(--muted); }
+.loss-ghosting-activity p { margin:0; }
+@media(max-width:375px) {
+  .loss-ghosting-counts { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}

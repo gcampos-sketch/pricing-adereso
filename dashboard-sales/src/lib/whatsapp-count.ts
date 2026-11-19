@@ -1,7 +1,11 @@
-/** Only exact deal associations; a contact/company association never proves deal attribution. */
-export function countDealWhatsApp(associatedIds:string[], records:{id:string;properties:Record<string,string|null>}[]):number|null {
-  const byId=new Map(records.map(r=>[r.id,r]));
-  const ids=[...new Set(associatedIds)];
-  if(ids.some(id=>!byId.has(id)))return null;
-  return ids.filter(id=>['WHATS_APP','WHATSAPP'].includes((byId.get(id)!.properties['hs_communication_channel_type']??'').trim().toUpperCase())).length;
+import { whatsappOutcome } from "./contactability";
+
+function isNativeWhatsAppChannel(channel: string) {
+  return ["WHATS_APP", "WHATSAPP"].includes(channel.trim().toUpperCase());
+}
+
+/** Only native timeline log entries count; preparation records do not attest to a message. */
+export function isRecordedWhatsApp(channel: string | null | undefined, bodyText: () => string): boolean | null {
+  if (!channel?.trim()) return null;
+  return isNativeWhatsAppChannel(channel) && whatsappOutcome(bodyText()) !== "Borrador";
 }
