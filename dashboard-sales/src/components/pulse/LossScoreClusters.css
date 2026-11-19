@@ -28,6 +28,8 @@
 
 .loss-cluster-column:disabled .loss-cluster-bar { min-height:0; }
 
+.scenario-drawer-backdrop[data-loss-cluster-drawer] { backdrop-filter:blur(4px); }
+
 .loss-cluster-deals { list-style:none; margin:0; padding:0; }
 .loss-cluster-deals li { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:16px; padding:12px 0; border-bottom:1px solid var(--border); }
 .loss-cluster-deals li:first-child { padding-top:0; }
