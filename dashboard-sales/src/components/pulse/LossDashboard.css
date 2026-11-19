@@ -72,3 +72,27 @@
 .loss-sankey-warning-link { display:inline; padding:0; border:0; background:none; color:var(--brand); font:inherit; text-align:left; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
 .loss-sankey-warning-link:hover { text-decoration-thickness:2px; }
 .loss-sankey-warning-link:focus-visible { outline:2px solid var(--brand); outline-offset:4px; border-radius:3px; }
+
+.modal-owner-bars.loss-ticket-owners { min-width: 0; margin-top: 4px; margin-bottom: 12px; }
+.loss-ticket-owners header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; justify-content: space-between; }
+.loss-ticket-owners h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.loss-ticket-owners p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.loss-ticket-team strong { color: var(--foreground); font-variant-numeric: tabular-nums; }
+.loss-ticket-owners .loss-ticket-bars {
+  display: grid;
+  min-width: 0;
+  max-height: min(168px, 24dvh);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  list-style: none;
+  padding: 0 3px;
+  margin: 8px 0 0;
+}
+.loss-ticket-owners .owner-bar-row { grid-template-columns: minmax(84px, 1fr) minmax(24px, 4fr) minmax(56px, auto); }
+.loss-ticket-owner { font-size: 12px; overflow-wrap: anywhere; }
+.loss-ticket-owner small { display: block; color: var(--muted); font-size: 10px; }
+.loss-ticket-owners .owner-bar-track { position: relative; width: 100%; height: 10px; }
+.loss-ticket-owners .owner-bar-track > span { position: absolute; inset-block: 0; border-radius: inherit; background: var(--brand); }
+@media (max-width: 540px) {
+  .loss-ticket-owners .owner-bar-row { grid-template-columns: minmax(70px, 1fr) minmax(24px, 2fr) minmax(48px, auto); }
+}
