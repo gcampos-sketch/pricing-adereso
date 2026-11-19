@@ -6,7 +6,7 @@ function deal(id: string, createdAt: string, fields: Partial<LossClusterFields>)
   return {
     id, createdAt, status: "lost", closeDateValue: "2026-12-15",
     lossClusters: {
-      conversations: null, companySize: null, monthlyRevenue: null, currency: null,
+      conversations: null, meetings: null, companySize: null, monthlyRevenue: null, currency: null,
       employees: null, industry: null, entry: null, ...fields,
     },
   } as InsightDeal;
@@ -44,4 +44,19 @@ test("aggregates native MRR, employee size, company size and industry as distinc
   expect(series("companySize").groups).toEqual(["T2", "T3", "Sin dato"]);
   expect(series("employees").groups).toEqual(["Grande: +300", "Sin dato"]);
   expect(series("industry").months.at(-1)?.counts).toEqual([2, 2]);
+});
+
+
+test("groups recorded meetings per deal and preserves zero separately from unknown", () => {
+  const input = [null, 0, 1, 2, 3, 4, 5, 14].map((meetings, index) =>
+    deal(String(index), "2026-06-10", { meetings, entry: "2026-06-14" }),
+  );
+  for (const basis of ["creation", "entry"] as const) {
+    const series = lossMonthlyClusters(input, ["2026-Q2"], readAt, basis, "meetings");
+    expect(series.groups).toEqual([
+      "0 reuniones", "1 reunión", "2 reuniones", "3 reuniones", "4 reuniones", "5 o más reuniones", "Sin dato",
+    ]);
+    expect(series.months.at(-1)?.counts).toEqual([1, 1, 1, 1, 1, 2, 1]);
+    expect(series.months.at(-1)?.total).toBe(8);
+  }
 });

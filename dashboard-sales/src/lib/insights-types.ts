@@ -43,6 +43,7 @@ export type InsightDeal = DealDTO & {
 export type InsightsReport = {
   lossClusterVersion?: typeof LOSS_CLUSTER_VERSION;
   lossCompanySizeAvailable?: boolean;
+  lossMeetingCountsAvailable?: boolean;
   lossNarrativesVersion?: "closed-lost-reason/v1";
   lossEntryDatesVersion?: "native-loss-entry/v1";
   generatedAt: string;
