@@ -1,4 +1,4 @@
-export const REPORT_VIEWS = ['comercial', 'proyectos', 'partners', 'equipo', 'crecimiento', 'simulador', 'embudo', 'perdidos', 'calidad', 'diagnostico', 'pipeline', 'forecast', 'conversion', 'scenarios'] as const;
+export const REPORT_VIEWS = ['comercial', 'proyectos', 'partners', 'equipo', 'crecimiento', 'simulador', 'embudo', 'perdidos', 'calidad', 'diagnostico', 'pipeline', 'contactabilidad', 'forecast', 'conversion', 'scenarios'] as const;
 export type ReportView = typeof REPORT_VIEWS[number];
 const KEY = 'adereso_report_view_v1';
 

@@ -14,6 +14,7 @@ const groups = [
     { id: "comercial", label: "Vista general" },
     { id: "forecast", label: "Forecast y prioridades" },
     { id: "pipeline", label: "Pipeline y reuniones" },
+    { id: "contactabilidad", label: "Contactabilidad" },
     { id: "proyectos", label: "Proyectos ganados" },
   ] },
   { id: "conversion", label: "Resultados", icon: BarChart3, children: [

@@ -11,7 +11,7 @@ test('new destinations and existing saved destinations survive a page refresh', 
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => { values.set(key, value); },
   }});
-  for (const view of ['pipeline', 'forecast', 'conversion', 'comercial', 'proyectos', 'diagnostico'] as const) {
+  for (const view of ['pipeline', 'contactabilidad', 'forecast', 'conversion', 'comercial', 'proyectos', 'diagnostico'] as const) {
     saveReportView(view);
     expect(readReportView()).toBe(view);
   }

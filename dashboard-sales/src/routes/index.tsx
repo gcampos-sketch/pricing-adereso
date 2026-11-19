@@ -4,6 +4,7 @@ import {
   keepPreviousData,
   queryOptions,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReportSidebar, type ReportView } from "@/components/pulse/ReportSidebar";
@@ -13,6 +14,8 @@ import { TeamDashboard } from "@/components/pulse/TeamDashboard";
 import { GrowthDashboard } from "@/components/pulse/GrowthDashboard";
 import { SimulatorDashboard } from "@/components/pulse/SimulatorDashboard";
 import { LossDashboard } from "@/components/pulse/LossDashboard";
+import { ContactabilityDashboard } from "@/components/pulse/ContactabilityDashboard";
+import { getContactability } from "@/lib/contactability.functions";
 import { QualityDashboard } from "@/components/pulse/QualityDashboard";
 import { CommercialDiagnostic } from '@/components/pulse/CommercialDiagnostic';
 import { getCommercialDiagnostic } from '@/lib/commercial-diagnostic.functions';
@@ -196,12 +199,28 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   const [roleFilter, setRoleFilter] = useState<"all" | "AE" | "KAM">("all");
 
   const insightsEnabled = view === "crecimiento" || view === "simulador" || view === "perdidos";
+  const queryClient = useQueryClient();
   const pulseDefs = useMemo(() => pulseQFor(roleFilter), [roleFilter]);
   const pulse = useReport(pulseDefs, isPulseReportView(view));
   const partner = useReport(partnerQ, view === "partners");
   const team = useReport(teamQ, view === "equipo");
   const insights = useReport(insightsQ, insightsEnabled);
   const coaching = useReport(coachingQ, view === "calidad");
+  const contactability = useQuery({
+    queryKey: ["contactability"],
+    queryFn: () => getContactability({ data: {} }),
+    enabled: view === "contactabilidad",
+    staleTime: 90_000,
+    refetchOnWindowFocus: false,
+    retry: false,
+  });
+  const refetchContactability = useCallback(() => {
+    void queryClient.fetchQuery({
+      queryKey: ["contactability"],
+      queryFn: () => getContactability({ data: { fresh: true } }),
+      staleTime: 0,
+    }).catch(() => { /* The query exposes the refresh error. */ });
+  }, [queryClient]);
   const diagnostic = useReport(diagnosticQ, view === 'diagnostico');
 
   useEffect(() => {
@@ -287,7 +306,9 @@ function Index({ embedded = false }: { embedded?: boolean }) {
   // Other reports are fetched only when selected, never competing with the home load.
 
   const active =
-    view === 'diagnostico'
+    view === "contactabilidad"
+      ? { ...contactability, isRefreshing: contactability.isFetching, refetch: refetchContactability }
+      : view === 'diagnostico'
       ? diagnostic
       : view === "calidad"
       ? coaching
@@ -344,6 +365,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
     comercial: 'Consultando pipeline comercial', proyectos: 'Consultando proyectos', embudo: 'Consultando el embudo comercial',
     partners: 'Consultando datos de Partners', equipo: 'Consultando resultados del equipo', crecimiento: 'Consultando crecimiento',
     simulador: 'Preparando datos del simulador', perdidos: 'Consultando negocios perdidos', calidad: 'Consultando calidad comercial',
+    contactabilidad: 'Consultando actividad comercial en HubSpot',
     diagnostico: 'Consultando las ediciones del diagnóstico comercial',
     scenarios: 'Preparando escenarios guardados', pipeline: 'Preparando pipeline y reuniones', forecast: 'Preparando forecast y prioridades', conversion: 'Preparando resultados y conversión',
   };
@@ -374,7 +396,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
           {tabs}
           <h1 className="pulse-h1">Sales Dashboard</h1>
           <div className="empty-state" style={{ marginTop: 24 }}>
-            {view === 'diagnostico' ? 'No pudimos leer las ediciones del diagnóstico.' : 'No pudimos leer el pipeline en vivo.'}{" "}
+            {view === 'contactabilidad' ? 'No pudimos leer la actividad comercial.' : view === 'diagnostico' ? 'No pudimos leer las ediciones del diagnóstico.' : 'No pudimos leer el pipeline en vivo.'}{" "}
             {active.error instanceof Error ? active.error.message : ""}
           </div>
           <button className="tab" type="button" style={{ marginTop: 16 }} onClick={active.refetch}>
@@ -390,6 +412,10 @@ function Index({ embedded = false }: { embedded?: boolean }) {
         title={loadingMessage}
       />
     );
+  }
+
+  if (view === "contactabilidad" && contactability.data) {
+    return <ContactabilityDashboard report={contactability.data} tabs={tabs} role={roleFilter} onRole={setRoleFilter} />;
   }
 
   if (view === 'diagnostico' && diagnostic.data) {
