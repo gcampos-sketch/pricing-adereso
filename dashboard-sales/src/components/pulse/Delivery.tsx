@@ -1,3 +1,4 @@
+import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo } from "react";
 import { Metric } from "./PulseDashboard";
 import { CopySectionButton } from "./CopyControls";
@@ -142,12 +143,12 @@ function RowTable({
 
 export function Delivery({
   scope,
-  rangeLabel,
+  titlePeriod,
   selectedPeriods,
   onModal,
 }: {
   scope: DeliveryScope;
-  rangeLabel: string;
+  titlePeriod: string;
   selectedPeriods: string[];
   onModal: (key: string) => void;
 }) {
@@ -207,10 +208,11 @@ export function Delivery({
     <>
       <header className="pulse-section-head" data-section-head="">
         <div>
-          <h2 className="pulse-h2">Proyectos ganados en curso</h2>
-          <p className="pulse-section-context">
-            {scope.name} · {rangeLabel} · desde la firma hasta el inicio de servicio
-          </p>
+          <h2 className="pulse-h2">
+            Proyectos ganados en curso
+            <ReportTitleScope period={titlePeriod} owner={scope.id === "team" ? undefined : scope.name} />
+          </h2>
+          <p className="pulse-section-context">Desde la firma hasta el inicio de servicio</p>
         </div>
         <CopySectionButton />
       </header>

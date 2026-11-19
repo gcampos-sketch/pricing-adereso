@@ -1,3 +1,4 @@
+import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, BookOpen, CalendarDays, ExternalLink, ShieldCheck } from 'lucide-react';
@@ -53,7 +54,7 @@ export function CommercialDiagnostic({ report, tabs }: { report: DiagnosticRepor
   const inScope = (row: DiagnosticRow) => owner === 'team' || row.ownerId === owner;
   return <main className="pulse-main diagnostic-main">
     {tabs}
-    <header className="team-header diagnostic-header"><div><div className="diagnostic-kicker"><ShieldCheck size={14} /> Uso interno · edición semanal</div><h1 className="pulse-h1">Diagnóstico comercial</h1><p className="eyebrow">Lo que sabemos del cliente, lo que falta y lo que cambió.</p></div><BookOpen className="diagnostic-header-icon" aria-hidden="true" /></header>
+    <header className="team-header diagnostic-header"><div><div className="diagnostic-kicker"><ShieldCheck size={14} /> Uso interno · edición semanal</div><h1 className="pulse-h1">Diagnóstico comercial<ReportTitleScope period={current ? dateLabel(current.date) : undefined} owner={owners[owner]} /></h1><p className="eyebrow">Lo que sabemos del cliente, lo que falta y lo que cambió.</p></div><BookOpen className="diagnostic-header-icon" aria-hidden="true" /></header>
     <div className="diagnostic-toolbar">
       <label><span><CalendarDays size={14} /> Edición</span><select value={edition || report.current?.date || ''} onChange={event => setEdition(event.target.value)} aria-label="Edición semanal">{report.editions.map(item => <option key={item.date} value={item.date}>{dateLabel(item.date)}</option>)}</select></label>
       <label><span>Comercial</span><select value={owner} onChange={event => setOwner(event.target.value)} aria-label="Comercial del diagnóstico"><option value="team">Equipo de la vista SPICED</option>{Object.entries(owners).map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>

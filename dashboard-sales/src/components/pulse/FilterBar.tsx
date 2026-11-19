@@ -8,17 +8,12 @@ import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ActiveMrr } from "@/contexts/RefreshContext";
 import { ROLE_OPTIONS, type RoleFilter } from "@/lib/owner-roles";
+import { commercialShortName } from "@/lib/report-title-scope";
 import { ActiveMrrDetail } from "./ActiveMrrDetail";
 import { lastQuarterSummary, shortDate } from "./activeMrrSeries";
 import { ServiceOverview } from './ServiceOverview';
 
 export const STAGE_OPTIONS = ["E1", "E2", "E3", "E3.1", "E4", "E5", "E5.1"];
-
-const firstName = (full: string) => {
-  const trimmed = (full || "").trim();
-  if (!trimmed || trimmed.toLowerCase() === "sin propietario") return trimmed || "S/N";
-  return trimmed.split(/\s+/)[0];
-};
 
 export function SingleFilterMenu({
   label,
@@ -89,7 +84,7 @@ export function OwnerFilterMenu({
 }) {
   const teamLabel = role === "AE" ? "Todos (AEs)" : role === "KAM" ? "Todos (KAMs)" : "Equipo";
   const selected =
-    value === "team" ? teamLabel : firstName(options.find(([id]) => id === value)?.[1] ?? "Comercial");
+    value === "team" ? teamLabel : commercialShortName(options.find(([id]) => id === value)?.[1] ?? "Comercial");
 
   return (
     <div className="compact-filter-field">
@@ -127,7 +122,7 @@ export function OwnerFilterMenu({
               data-active={value === id}
               onClick={() => (value === id ? onToggle() : onChange(id))}
             >
-              <span>{firstName(name)}</span>
+              <span>{commercialShortName(name)}</span>
             </Button>
           ))}
         </div>

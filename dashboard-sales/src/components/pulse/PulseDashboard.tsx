@@ -1,3 +1,5 @@
+import { reportTitlePeriod } from "@/lib/report-title-scope";
+import { ReportTitleScope } from "./ReportTitleScope";
 import { AdoboQuality } from "./AdoboQuality";
 import { MetricTrend } from "./MetricTrend";
 import { trendPoints, type TrendUnit } from "@/lib/chart-trend";
@@ -547,6 +549,7 @@ export function PulseDashboard({
   );
 
   const rangeLabel = isAllYear ? `Año ${year}` : shortPeriod(selectedPeriod);
+  const titlePeriod = reportTitlePeriod(year, quarter, report.currentPeriod.split("-Q")[0]!);
 
   // Filtro de tipo de deal (todo / inbound / outbound / upsell / cross sell) aplicado a los deals del periodo.
   const matchesType = useMemo(() => {
@@ -759,6 +762,7 @@ export function PulseDashboard({
   const ownerRow = isTeam ? null : report.ownerRows.find((r) => r.id === ownerFilter) ?? null;
   const quotaRow = isTeam ? null : report.quotaRows.find((r) => r.id === ownerFilter) ?? null;
   const ownerName = isTeam ? "Equipo" : report.periods.owners[ownerFilter] ?? "Comercial";
+  const titleOwner = isTeam ? undefined : ownerName;
   const scopeId = isTeam ? "team" : ownerFilter;
   const warningScope =
     (report.warnings ?? []).find((item) => item.id === (isTeam ? "team" : ownerFilter)) ?? null;
@@ -1141,7 +1145,7 @@ export function PulseDashboard({
           {deliveryScope ? (
             <Delivery
               scope={deliveryScope}
-              rangeLabel={rangeLabel}
+              titlePeriod={titlePeriod}
               selectedPeriods={selectedPeriods}
               onModal={setModalKey}
             />
@@ -1174,7 +1178,10 @@ export function PulseDashboard({
         </>
       ) : section === "embudo" ? (
         <>
-          <SectionTitle context={`${ownerName} · ${rangeLabel}`}>Generación de pipeline · escenarios</SectionTitle>
+          <SectionTitle>
+            Generación de pipeline · escenarios
+            <ReportTitleScope period={titlePeriod} owner={titleOwner} />
+          </SectionTitle>
           <PipelineFunnel
             report={report}
             ownerFilter={ownerFilter}
@@ -1197,8 +1204,9 @@ export function PulseDashboard({
 
       {section === "general" ? <>
       {/* ===================== RESUMEN EJECUTIVO ===================== */}
-      <SectionTitle context={`${ownerName} · ${executiveRange} / histórico`}>
+      <SectionTitle context={`${executiveRange} / histórico`}>
         Resumen ejecutivo
+        <ReportTitleScope owner={titleOwner} />
       </SectionTitle>
 
       <section className="executive-story" aria-label="Lectura ejecutiva">
@@ -1349,13 +1357,15 @@ export function PulseDashboard({
 
       <header className="results-period-header">
         <div className="results-date-heading">
-          <h2 className="pulse-h2">Resultados del período</h2>
+          <h2 className="pulse-h2">
+            Resultados del período
+            <ReportTitleScope period={titlePeriod} owner={titleOwner} />
+          </h2>
           <div className="service-period-toggle results-date-toggle" role="group" aria-label="Fecha para calcular el cumplimiento">
             <button type="button" aria-pressed={resultDateBasis === "close"} title="Ganados con fecha de cierre dentro del año y trimestre del filtro principal." onClick={() => {closeModal();setResultDateBasis("close");}}>Fecha de cierre</button>
             <button type="button" aria-pressed={resultDateBasis === "stage6"} title="Ganados que entraron a E6 dentro del período del filtro principal, aunque su fecha de cierre se haya movido a otro Q. Sin entrada registrada a E6, no se incluyen." onClick={() => {closeModal();setResultDateBasis("stage6");}}>Entrada a etapa 6 (ganado)</button>
           </div>
         </div>
-        <span className="results-period-label">{rangeLabel}</span>
       </header>
 
       {/* Fila 1 — Cuota / Ganado (héroe) / Falta */}
@@ -1416,8 +1426,12 @@ export function PulseDashboard({
         </button>)}
       </nav>
       </> : <header className="pulse-focus-heading" data-section-head>
-        <div><h2 className="pulse-h2" tabIndex={-1}>{PULSE_FOCUS_PAGES.find(page => page.id === section)?.title}</h2>
-          <p>{PULSE_FOCUS_PAGES.find(page => page.id === section)?.description} <span>{ownerName} · {rangeLabel}</span></p>
+        <div>
+          <h2 className="pulse-h2" tabIndex={-1}>
+            {PULSE_FOCUS_PAGES.find(page => page.id === section)?.title}
+            <ReportTitleScope period={titlePeriod} owner={titleOwner} />
+          </h2>
+          <p>{PULSE_FOCUS_PAGES.find(page => page.id === section)?.description}</p>
         </div><CopySectionButton />
       </header>}
 
