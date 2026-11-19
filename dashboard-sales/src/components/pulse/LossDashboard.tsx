@@ -3,6 +3,7 @@ import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
 import { LossReasonPopover } from "./LossReasonPopover";
+import { LossTicketByOwner } from "./LossTicketByOwner";
 import { LossReasonWords } from "./LossReasonWords";
 import { LossIcpTable } from "./LossIcpTable";
 import { LossScoreClusters } from "./LossScoreClusters";
@@ -51,7 +52,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
 }) {
   const ago = useAgo(report.generatedAt);
   const filters = useInsightFilters(report, undefined, role, onRole);
-  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean; reasonWords?: boolean; coverageWarning?: boolean }) | null>(null);
+  const [drill, setDrill] = useState<(Drilldown & { lossEntryScope?: boolean; reasonWords?: boolean; coverageWarning?: boolean; ticketByOwner?: boolean }) | null>(null);
   const [creationSource, setCreationSource] = useState("");
   const sourceOptions = useMemo(() => lossCreationSources(report.deals), [report.deals]);
   const sourceDeals = useMemo(() => scopeLossCreationSource(report.deals, creationSource), [report.deals, creationSource]);
@@ -140,7 +141,12 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         tone="neutral" onClick={() => open("Deals perdidos", lost)} tooltip="Cantidad de deals perdidos del período y alcance seleccionados. Valorizados: deals con MRR registrado mayor que $0; porcentaje sobre todos los deals perdidos de este alcance. La curva muestra cantidades mensuales."
         footer={<LossCurve data={monthly} measure="count" label="Deals perdidos" />} />
       <Metric label="Ticket medio perdido" value={ticket === null ? "—" : money(ticket)} note={ticketNote}
-        tone="neutral" onClick={() => open("Ticket medio perdido", lost)}
+        tone="neutral" onClick={() => setDrill({
+          title: "Ticket medio perdido",
+          subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`,
+          deals: lost,
+          ticketByOwner: filters.ownerId === "team",
+        })}
         tooltip="MRR perdido dividido por todos los deals perdidos, incluidos los de monto $0. Al seleccionar un comercial, la diferencia es (su ticket / ticket del equipo completo − 1) × 100. El equipo incluye todos los comerciales y roles con el mismo período, fuente y etapa; no es el promedio de promedios por comercial. Sin una base positiva comparable se muestra sin comparación. Cada mes de la curva usa su propio promedio."
         footer={<LossCurve data={monthly} measure="ticket" label="Ticket medio perdido" />} />
     </section>
@@ -220,6 +226,6 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       <p className="loss-intro">Mediana de tiempo en etapa: {median(scoped.map(deal => deal.lostStageDays).filter(days => days > 0)) || "s/d"} días · solo duraciones registradas.</p>
     </details>
     <DealModal payload={drill} onClose={() => setDrill(null)} hideCloseSummary={Boolean(drill?.lossEntryScope || drill?.reasonWords || drill?.coverageWarning)} showOwnerFilter={Boolean(drill?.coverageWarning)}
-      detailContent={drill?.reasonWords ? rows => <LossReasonWords key={drill.title} deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} /> : undefined} />
+      detailContent={drill?.ticketByOwner ? rows => <LossTicketByOwner deals={rows} /> : drill?.reasonWords ? rows => <LossReasonWords key={drill.title} deals={rows.map(row => drill.deals.find(deal => deal.id === row.id) as InsightDeal).filter(Boolean)} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} /> : undefined} />
   </main>;
 }
