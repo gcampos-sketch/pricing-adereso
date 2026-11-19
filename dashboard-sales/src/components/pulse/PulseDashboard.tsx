@@ -1163,7 +1163,7 @@ export function PulseDashboard({
             key={JSON.stringify([year, quarter, ownerFilter, role, dealType, stageFilter])}
             deals={adoboProjects}
             period={titlePeriod}
-            owner={titleOwner}
+            {...(titleOwner ? { owner: titleOwner } : {})}
           />
           <WonOperations>
             <AdoboQuality deals={adoboProjects} readAt={report.generatedAt} year={year} quarter={quarter} delivery/>
@@ -1173,7 +1173,7 @@ export function PulseDashboard({
                 titlePeriod={titlePeriod}
                 selectedPeriods={selectedPeriods}
                 onModal={(keys, excludeStage) => {
-                  const payloads = keys.map(key => report.drilldowns[key]).filter(Boolean);
+                  const payloads = keys.map(key => report.drilldowns[key]).filter((payload): payload is Drilldown => !!payload);
                   const deals = [...new Map(payloads.flatMap(payload => payload.deals)
                     .filter(deal => deal.stageId !== excludeStage).map(deal => [deal.id, deal])).values()];
                   openList(payloads.length === 1 && !excludeStage ? payloads[0]!.title : "Seguimiento operativo · " + ownerName,
