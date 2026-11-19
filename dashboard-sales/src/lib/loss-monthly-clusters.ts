@@ -2,6 +2,7 @@ import type { InsightDeal } from "./insights-types";
 
 export const LOSS_CLUSTERS = [
   ["conversations", "Cantidad de conversaciones"],
+  ["meetings", "Cantidad de reuniones"],
   ["companySize", "Tamaño empresa"],
   ["mrr", "MRR"],
   ["employees", "Tamaño por empleados"],
@@ -12,6 +13,7 @@ export type LossClusterDate = "entry" | "creation";
 
 export type LossClusterFields = {
   conversations: number | null;
+  meetings: number | null;
   companySize: string | null;
   monthlyRevenue: number | null;
   currency: string | null;
@@ -20,9 +22,10 @@ export type LossClusterFields = {
   entry: string | null;
 };
 
-export const LOSS_CLUSTER_VERSION = "loss-clusters/v1";
+export const LOSS_CLUSTER_VERSION = "loss-clusters/v2";
 const missing = "Sin dato";
 const conversationBands = ["0", "1–999", "1.000–4.999", "5.000–9.999", "10.000 o más"];
+const meetingBands = ["0 reuniones", "1 reunión", "2 reuniones", "3 reuniones", "4 reuniones", "5 o más reuniones"];
 const revenueBands = ["USD 0", "Menos de USD 500", "USD 500 a <1.000", "USD 1.000 a <2.500", "USD 2.500 o más"];
 const bands = (value: number | null, limits: number[], labels: string[]) =>
   value === null ? missing : labels[limits.filter(limit => value >= limit).length]!;
@@ -32,6 +35,8 @@ function groupOf(fields: LossClusterFields, cluster: LossCluster): string {
   switch (cluster) {
     case "conversations":
       return bands(fields.conversations, [1, 1000, 5000, 10000], conversationBands);
+    case "meetings":
+      return bands(fields.meetings, [1, 2, 3, 4, 5], meetingBands);
     case "mrr":
       if (fields.monthlyRevenue === null) return missing;
       if (fields.currency !== "USD") return fields.currency ? "MRR en otra moneda" : "Moneda sin dato";
@@ -77,7 +82,9 @@ export function lossMonthlyClusters(
     month.total++;
   }
 
-  const ordered = cluster === "conversations" ? conversationBands : cluster === "mrr" ? revenueBands : [];
+  const clusterOrder = { conversations: conversationBands, meetings: meetingBands, mrr: revenueBands };
+  const ordered = cluster === "conversations" || cluster === "meetings" || cluster === "mrr"
+    ? clusterOrder[cluster] : [];
   const order = [...ordered, ...[...groups].filter(group => group !== missing && !ordered.includes(group)).sort((a, b) => a.localeCompare(b, "es")), missing]
     .filter(group => groups.has(group));
   return {

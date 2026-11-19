@@ -16,18 +16,30 @@ import {
 type GhostCounts = { emails: number; calls: number; whatsapp: number | null };
 
 /** IDs de objetos asociados por deal, vía batch read de asociaciones v4. */
-async function associationIds(dealIds: string[], type: string): Promise<Map<string, string[]>> {
+async function associationIds(
+  dealIds: string[], type: string, acceptVerifiedEmpty = false,
+): Promise<Map<string, string[]>> {
   const out = new Map<string, string[]>();
   for (let i = 0; i < dealIds.length; i += 100) {
     const chunk = dealIds.slice(i, i + 100);
     const res = await gateway<{
       results: { from: { id: string }; to: { toObjectId: string | number }[]; paging?: {next?: {after?: string}} }[];
-      errors?: unknown[]; numErrors?: number;
+      errors?: { subCategory?: string; context?: { fromObjectId?: string[] } }[];
+      numErrors?: number;
     }>(`/crm/v4/associations/deals/${type}/batch/read`, {
       method: "POST",
       body: JSON.stringify({ inputs: chunk.map((id) => ({ id })) }),
     });
-    if (res.errors?.length || res.numErrors || chunk.some(id=>!res.results?.some(r=>r.from.id===id))) throw new Error('Lectura incompleta de asociaciones');
+    const empty = new Set<string>();
+    for (const error of res.errors ?? []) {
+      if (!acceptVerifiedEmpty || error.subCategory !== "crm.associations.NO_ASSOCIATIONS_FOUND" ||
+          !error.context?.fromObjectId?.length) throw new Error("Lectura incompleta de asociaciones");
+      for (const id of error.context.fromObjectId) empty.add(id);
+    }
+    const found = new Set((res.results ?? []).map(row => row.from.id));
+    if ((res.numErrors ?? 0) > (res.errors?.length ?? 0) ||
+        chunk.some(id => found.has(id) === empty.has(id))) throw new Error("Lectura incompleta de asociaciones");
+    for (const id of empty) out.set(id, []);
     for (const row of res.results ?? []) {
       const ids=(row.to ?? []).map(t=>String(t.toObjectId));
       let after=row.paging?.next?.after;
@@ -284,6 +296,7 @@ export async function buildInsightsReport(force = false): Promise<InsightsReport
       lostEnteredAt,
       ...(isLost ? { lossClusters: {
         conversations: priceNumber(p["cantidad_de_tickets"]),
+        meetings: null,
         companySize: null,
         monthlyRevenue: priceNumber(p["hs_mrr"]),
         currency: p["deal_currency_code"]?.trim().toUpperCase() || null,
@@ -301,11 +314,17 @@ export async function buildInsightsReport(force = false): Promise<InsightsReport
   }
 
   const lostDeals = out.filter(deal => deal.lossClusters);
-  const companyScope = lostDeals.map(deal => deal.id).sort();
-  const companyCache = `loss-company-sizes:${companyScope.join(",")}`;
+  const lostIds = lostDeals.map(deal => deal.id).sort();
+  const companyCache = `loss-company-sizes:${lostIds.join(",")}`;
+  const meetingsCache = `loss-meeting-links:${lostIds.join(",")}`;
+  if (force) invalidateCache(meetingsCache);
+  const meetingCountsPending = getCached(meetingsCache, TTL_SLOW, async () => {
+    const links = await associationIds(lostIds, "meetings", true);
+    return new Map([...links].map(([id, activities]) => [id, activities.length]));
+  }).catch(() => null);
   if (force) invalidateCache(companyCache);
   // A company lookup failure only affects its own cluster.
-  const companySizesPending = getCached(companyCache, TTL_SLOW, () => readLossCompanySizes(companyScope))
+  const companySizesPending = getCached(companyCache, TTL_SLOW, () => readLossCompanySizes(lostIds))
     .catch(() => null);
 
   // ---------- ghosting: actividades de cierre en deals perdidos ----------
@@ -328,9 +347,10 @@ export async function buildInsightsReport(force = false): Promise<InsightsReport
     }
   }
 
-  const companySizes = await companySizesPending;
-  if (companySizes) {
-    for (const deal of lostDeals) deal.lossClusters!.companySize = companySizes.get(deal.id) ?? null;
+  const [companySizes, meetingCounts] = await Promise.all([companySizesPending, meetingCountsPending]);
+  for (const deal of lostDeals) {
+    deal.lossClusters!.companySize = companySizes?.get(deal.id) ?? null;
+    deal.lossClusters!.meetings = meetingCounts?.get(deal.id) ?? null;
   }
 
   const ownerIds = [...new Set(out.map((deal) => deal.ownerId))].filter(Boolean);
@@ -342,6 +362,7 @@ export async function buildInsightsReport(force = false): Promise<InsightsReport
   return {
     lossClusterVersion: LOSS_CLUSTER_VERSION,
     lossCompanySizeAvailable: companySizes !== null,
+    lossMeetingCountsAvailable: meetingCounts !== null,
     lossEntryDatesVersion: LOSS_ENTRY_DATES_VERSION,
     lossNarrativesVersion: "closed-lost-reason/v1",
     generatedAt: new Date(now).toISOString(),

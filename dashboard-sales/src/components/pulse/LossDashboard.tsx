@@ -163,7 +163,8 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
 
     <LossMonthlyClusters deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
-      available={report.lossClusterVersion === LOSS_CLUSTER_VERSION} companySizeAvailable={report.lossCompanySizeAvailable === true} />
+      available={report.lossClusterVersion === LOSS_CLUSTER_VERSION} companySizeAvailable={report.lossCompanySizeAvailable === true}
+      meetingCountsAvailable={report.lossMeetingCountsAvailable === true} />
 
     <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
 

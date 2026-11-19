@@ -15,25 +15,32 @@ const colors = [
 ];
 const colorOf = (group: string, index: number) => group === "Sin dato" ? "#909399" : colors[index % colors.length];
 
-export function LossMonthlyClusters({ deals, periods, readAt, available, companySizeAvailable }: {
+export function LossMonthlyClusters({ deals, periods, readAt, available, companySizeAvailable, meetingCountsAvailable }: {
   deals: InsightDeal[];
   periods: string[];
   readAt: string;
   available: boolean;
   companySizeAvailable: boolean;
+  meetingCountsAvailable: boolean;
 }) {
   const [basis, setBasis] = useState<LossClusterDate>("entry");
   const [cluster, setCluster] = useState<LossCluster>("conversations");
   const result = useMemo(() => lossMonthlyClusters(deals, periods, readAt, basis, cluster),
     [deals, periods, readAt, basis, cluster]);
-  const dataAvailable = available && (cluster !== "companySize" || companySizeAvailable);
+  const unavailableReason = !available ? "Esta lectura aún no incluye los datos del gráfico."
+    : cluster === "companySize" && !companySizeAvailable ? "No se pudo verificar la segmentación de las empresas."
+    : cluster === "meetings" && !meetingCountsAvailable ? "No se pudieron verificar las reuniones asociadas en HubSpot."
+    : null;
+  const scopeNote = cluster === "companySize" ? " · Segmentación de la empresa asociada"
+    : cluster === "meetings" ? " · Reuniones registradas y asociadas a cada deal en HubSpot"
+    : "";
   const hasDeals = result.groups.length > 0;
 
   return <section className="rep-chart loss-monthly-clusters" aria-labelledby="loss-monthly-clusters-title">
     <div className="loss-monthly-clusters-heading">
       <div>
         <h2 id="loss-monthly-clusters-title" className="pulse-h2">Tendencia mensual de pérdidas</h2>
-        <p>Deals perdidos por mes y clúster{cluster === "companySize" ? " · Segmentación de la empresa asociada" : ""}</p>
+        <p>Deals perdidos por mes y clúster{scopeNote}</p>
       </div>
       <label className="loss-monthly-select">
         Clúster
@@ -47,8 +54,8 @@ export function LossMonthlyClusters({ deals, periods, readAt, available, company
         aria-pressed={basis === value} onClick={() => setBasis(value)}>{label}</button>)}
     </div>
 
-    {!dataAvailable ? <p className="empty-state" role="status">
-      {available ? "No se pudo verificar la segmentación de las empresas." : "Esta lectura aún no incluye los datos del gráfico."} Actualiza el reporte para volver a cargar el clúster.
+    {unavailableReason ? <p className="empty-state" role="status">
+      {unavailableReason} Actualiza el reporte para volver a cargar el clúster.
     </p> : <>
       {result.months.length > 0 && <div className="loss-monthly-plot" tabIndex={0} role="region" aria-label="Gráfico mensual desplazable">
         <div style={{ minWidth: Math.max(280, result.months.length * 54) }}>
