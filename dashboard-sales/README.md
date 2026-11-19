@@ -30,6 +30,12 @@ El Hub completo se aloja en Render, con sus archivos privados fuera del director
 
 Las librerías MCP de Lovable se conservan como dependencia de código para mantener las herramientas existentes; no necesitan el editor. Las rutas MCP no confían por defecto en cabeceras de proxy suministradas por el cliente. Si el hosting usa un proxy, revisar su contrato antes de cambiar esa configuración.
 
+### Bajas programadas en el Home
+
+El Home consulta con la conexión existente de solo lectura de HubSpot. Usa el `MRR Neto` de empresa que se carga desde Finanzas y el mes de `Fecha Lost` tras verificar en su historial que la fecha de primer día de mes fue registrada por una persona. Una fecha enviada solo por formulario queda por validar. El cruce usa el ID de instancia y la asociación del negocio a su empresa. Las instancias de un mismo holding y mes se suman una sola vez por instancia.
+
+Las solicitudes se actualizan desde el formulario de baja. El riesgo sale de `Salud = Riesgo Fuga` y queda fuera del cálculo. La consulta se repite al abrir, refrescar o cada cinco minutos con el Home visible. No se requiere mantener un archivo local ni dar acceso a las hojas privadas de Finanzas.
+
 ## Validación y producción
 
 ```sh

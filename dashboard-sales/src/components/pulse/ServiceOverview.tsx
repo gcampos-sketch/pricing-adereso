@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ExternalLink, Info, Search, X } from "lucide-react";
+import { ChevronRight, ExternalLink, Info, Search, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getServiceOverview } from "@/lib/pulse.functions";
+import { getChurnForecast, getServiceOverview } from "@/lib/pulse.functions";
+import { plannedChurnMonths, type ChurnForecast } from "@/lib/churn-forecast";
 import {
   customerIndustryCluster,
   serviceClientProjection,
@@ -100,14 +101,116 @@ function DirectoryPopup({
   );
 }
 
+const shortMonth = new Intl.DateTimeFormat("es-CL", {
+  month: "short",
+  year: "2-digit",
+  timeZone: "UTC",
+});
+
+function ChurnLine({
+  refreshKey,
+  serviceSnapshot,
+}: {
+  refreshKey: string;
+  serviceSnapshot: Parameters<typeof plannedChurnMonths>[1];
+}) {
+  const [data, setData] = useState<ChurnForecast | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let active = true;
+    const refresh = () => getChurnForecast().then(
+      (result) => {
+        if (!active) return;
+        setData(result);
+        setFailed(false);
+      },
+      () => {
+        if (!active) return;
+        setData(null);
+        setFailed(true);
+      },
+    );
+    void refresh();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refresh();
+    }, 300_000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [refreshKey]);
+
+  if (!data && !failed) return null;
+  const months = plannedChurnMonths(data?.confirmed ?? [], serviceSnapshot);
+  const upcoming = months.filter(({ month }) => !data?.readOn || `${month}-01` >= data.readOn);
+  const past = months.filter((group) => !upcoming.includes(group));
+  const renderMonth = ({ month, total, rows }: (typeof months)[number]) => (
+    <section key={month}>
+      <h5>{monthLabel(month)} <strong>−{money(total)}</strong></h5>
+      <ul>
+        {rows.map((row) => <li key={row.dealIds[0]}>{row.name} <span>−{money(row.mrr)}</span></li>)}
+      </ul>
+    </section>
+  );
+  return (
+    <DirectoryPopup
+      compact
+      title="Bajas programadas"
+      className="service-churn-popup"
+      description="MRR Neto de empresa en HubSpot, agrupado por el mes de baja revisado."
+      information={<p>La línea muestra las bajas pendientes de reflejarse en el MRR en servicio.</p>}
+      trigger={
+        <button type="button" className="service-churn-trigger">
+          <span>Bajas programadas</span>
+          {upcoming.slice(0, 2).map(({ month, total }) => (
+            <b key={month}>{shortMonth.format(new Date(`${month}-01T12:00:00Z`))} −{money(total)}</b>
+          ))}
+          {upcoming.length > 2 ? <span>+{upcoming.length - 2}</span> : null}
+          {!upcoming.length ? <span>{!data?.confirmed ? "Sin datos confirmados" : past.length ? "Hay bajas por reflejar" : "Sin bajas futuras"}</span> : null}
+          <ChevronRight size={12} aria-hidden="true" />
+        </button>
+      }
+    >
+      <div className="service-churn-detail">
+        {data?.readOn ? <p>MRR Neto de HubSpot · {dateLabel(data.readOn)}</p> : <p>MRR Neto no disponible.</p>}
+        {upcoming.map(renderMonth)}
+        {past.length ? (
+          <details>
+            <summary>Bajas por reflejar <b>{money(past.reduce((sum, group) => sum + group.total, 0))}</b></summary>
+            {past.map(renderMonth)}
+          </details>
+        ) : null}
+        {data?.pending?.length ? (
+          <details>
+            <summary>Solicitudes por validar <b>{data.pending.length}</b></summary>
+            <ul>
+              {data.pending.map((row) => <li key={row.id}>{row.name} <span>{row.serviceEnd ? dateLabel(row.serviceEnd) : "Sin fecha"}</span></li>)}
+            </ul>
+          </details>
+        ) : data?.pending == null ? <p>Solicitudes por validar no disponibles.</p> : null}
+        {data?.risk.length ? (
+          <details>
+            <summary>MRR en riesgo · fuera del cálculo <b>{money(data.risk.reduce((sum, row) => sum + row.mrr, 0))}</b></summary>
+            <ul>
+              {data.risk.map((row) => <li key={row.name}>{row.name} <span>{money(row.mrr)}</span></li>)}
+            </ul>
+          </details>
+        ) : null}
+      </div>
+    </DirectoryPopup>
+  );
+}
+
 export function ServiceOverview({
   children,
   refreshKey,
   currentServiceMrr,
+  serviceSnapshot,
 }: {
   children: ReactNode;
   refreshKey: string;
   currentServiceMrr: number;
+  serviceSnapshot: Parameters<typeof plannedChurnMonths>[1];
 }) {
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState(false);
@@ -566,7 +669,10 @@ export function ServiceOverview({
         </div>
       </DirectoryPopup>
       {children}
-      {developmentPopup(false)}
+      <div className="service-growth-widget service-growth-cell">
+        {developmentPopup(false)}
+        <ChurnLine refreshKey={refreshKey} serviceSnapshot={serviceSnapshot} />
+      </div>
       {error ? (
         <button
           type="button"
