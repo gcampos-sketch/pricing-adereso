@@ -363,6 +363,13 @@ export function toDTO(deal: RawDeal, ownerNames: Map<string, string>, now: numbe
       : null,
     ssppAlert: p["alerta_sspp"]?.trim() || null,
     contractStatus: p["status_contrato"]?.trim() ? CONTRACT_LABELS.get(p["status_contrato"]!.trim()) ?? p["status_contrato"]!.trim() : null,
+    ...(WON_STAGES.has(stageId) ? {
+      commissionEvidence: {
+        projectType: p["tipo_proyecto"]?.trim() || null,
+        contract: p["status_contrato"]?.trim() || null,
+        firstMrr: p["status_cobranzofacturacion"]?.trim() || null,
+      },
+    } : {}),
     productToHire: p["productos_a_contratar"]?.trim() || null,
     dealType: p["dealtype"]?.trim() || null,
     lostReason: p["closed_lost_reason"]?.trim() ? p["closed_lost_reason"]!.trim() : null,
@@ -2010,6 +2017,7 @@ export async function buildPulseReport(previous?: PulseReport, role?: RoleFilter
     monthly,
     stageJourneys,
     generatedAt: new Date(now).toISOString(),
+    wonCommissionVersion: 1,
     adoboQualityVersion: "adobo-quality/v1",
     currentPeriod,
     currentLabel: `${shortPeriod(currentPeriod)} QTD`,

@@ -12,5 +12,5 @@ export async function readPulseReport(fresh: boolean, role?: 'AE' | 'KAM', phase
     const history = fresh ? await readActiveMrrHistory(key) : undefined;
     const previous = history ? ({ activeMrr: { calculation: SERVICE_MRR_CALCULATION, history } } as unknown as PulseReport) : undefined;
     return buildPulseReport(previous, role, phase);
-  }, report => report.activeMrr?.calculation === SERVICE_MRR_CALCULATION && report.adoboQualityVersion === "adobo-quality/v1", force);
+  }, report => report.activeMrr?.calculation === SERVICE_MRR_CALCULATION && report.adoboQualityVersion === "adobo-quality/v1" && report.wonCommissionVersion === 1, force);
 }

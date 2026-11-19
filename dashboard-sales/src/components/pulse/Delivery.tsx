@@ -14,19 +14,21 @@ const money = (value: number) =>
 const pct = (value: number) => `${Math.round(value)}%`;
 
 /** Une las filas de varios trimestres por etiqueta, sumando y promediando. */
-function mergeRows(groups: DeliveryRow[][]): DeliveryRow[] {
-  const map = new Map<string, DeliveryRow & { progressSum: number; progressBase: number }>();
+function mergeRows(groups: DeliveryRow[][]) {
+  const map = new Map<string, DeliveryRow & { modals: string[]; progressSum: number; progressBase: number }>();
   for (const rows of groups) {
     for (const row of rows) {
       const current = map.get(row.label);
       if (!current) {
         map.set(row.label, {
           ...row,
+          modals: [row.modal],
           progressSum: row.avgProgress >= 0 ? row.avgProgress * row.count : 0,
           progressBase: row.avgProgress >= 0 ? row.count : 0,
         });
         continue;
       }
+      current.modals.push(row.modal);
       current.count += row.count;
       current.amount += row.amount;
       if (row.avgProgress >= 0) {
@@ -89,8 +91,8 @@ function RowTable({
   toneOf,
   showProgress,
 }: {
-  rows: DeliveryRow[];
-  onModal: (key: string) => void;
+  rows: ReturnType<typeof mergeRows>;
+  onModal: (keys: string[], excludeStage?: string) => void;
   firstLabel: string;
   toneOf?: (label: string) => Tone;
   showProgress?: boolean;
@@ -124,7 +126,7 @@ function RowTable({
                 )}
               </th>
               <td>
-                <button className="cell-button" type="button" onClick={() => onModal(row.modal)}>
+                <button className="cell-button" type="button" onClick={() => onModal(row.modals)}>
                   {row.count}
                 </button>
               </td>
@@ -150,7 +152,7 @@ export function Delivery({
   scope: DeliveryScope;
   titlePeriod: string;
   selectedPeriods: string[];
-  onModal: (key: string) => void;
+  onModal: (keys: string[], excludeStage?: string) => void;
 }) {
   const rows = useMemo(
     () => scope.periods.filter((row) => selectedPeriods.includes(row.period)),
@@ -194,7 +196,8 @@ export function Delivery({
       ),
     [rows],
   );
-  const last = rows[rows.length - 1];
+  const modals = (pick: (row: (typeof rows)[number]) => string | undefined) =>
+    rows.map(pick).filter((key): key is string => !!key);
   const warningCount = sum((r) => r.warningCount ?? 0);
   const warningAmount = sum((r) => r.warningAmount ?? 0);
   const pilotCount = sum((r) => r.pilotCount ?? 0);
@@ -212,7 +215,7 @@ export function Delivery({
             Proyectos ganados en curso
             <ReportTitleScope period={titlePeriod} owner={scope.id === "team" ? undefined : scope.name} />
           </h2>
-          <p className="pulse-section-context">Desde la firma hasta el inicio de servicio</p>
+          <p className="pulse-section-context">Desde la firma hasta el inicio de servicio · corte por período y comercial</p>
         </div>
         <CopySectionButton />
       </header>
@@ -227,8 +230,8 @@ export function Delivery({
           label="Ganados en curso"
           value={String(wonCount - liveCount)}
           note={`${wonCount} ganados · ${liveCount} ya en producción`}
-          tone={wonCount ? "neutral" : "neutral"}
-          onClick={() => last && onModal(last.wonModal)}
+          tone="neutral"
+          onClick={() => onModal(modals(row => row.wonModal), "173990327")}
           tooltip="Deals ganados del periodo filtrado que todavía no tienen inicio de servicio registrado."
         />
         <Metric
@@ -236,7 +239,7 @@ export function Delivery({
           value={String(noKickoffCount)}
           note={noKickoffCount ? "requieren coordinación" : "todos agendados"}
           tone={noKickoffCount ? "bad" : "ok"}
-          onClick={() => last && onModal(last.noKickoffModal)}
+          onClick={() => onModal(modals(row => row.noKickoffModal))}
           tooltip="Ganados en curso sin Fecha Kickoff registrada."
         />
         <Metric
@@ -244,7 +247,7 @@ export function Delivery({
           value={String(stuckCount)}
           note={stuckCount ? money(stuckAmount) : "nadie estancado"}
           tone={stuckCount ? "bad" : "ok"}
-          onClick={() => last && onModal(last.stuckModal)}
+          onClick={() => onModal(modals(row => row.stuckModal))}
           tooltip="Ganados en curso que llevan más de 30 días en la misma etapa del portal cliente."
         />
       </section>
@@ -265,7 +268,7 @@ export function Delivery({
             count: signedCount,
             amount: signedAmount,
             tone: signedCount ? ("warn" as Tone) : ("ok" as Tone),
-            modal: last?.signedModal,
+            modals: modals(row => row.signedModal),
             hint: "Propuesta firmada que todavía no pasa a proyecto en desarrollo (6.2).",
           },
           {
@@ -274,7 +277,7 @@ export function Delivery({
             count: warningCount,
             amount: warningAmount,
             tone: "bad" as Tone,
-            modal: last?.warningModal,
+            modals: modals(row => row.warningModal),
             hint: "Deals actualmente en la etapa Deal Warning.",
           },
           {
@@ -283,7 +286,7 @@ export function Delivery({
             count: devCount,
             amount: devAmount,
             tone: "warn" as Tone,
-            modal: last?.devModal,
+            modals: modals(row => row.devModal),
             hint: "Proyecto en desarrollo.",
           },
           {
@@ -292,7 +295,7 @@ export function Delivery({
             count: pilotCount,
             amount: pilotAmount,
             tone: "warn" as Tone,
-            modal: last?.pilotModal,
+            modals: modals(row => row.pilotModal),
             hint: "Deals actualmente en etapa piloto.",
           },
           {
@@ -301,7 +304,7 @@ export function Delivery({
             count: onboardingCount,
             amount: onboardingAmount,
             tone: "neutral" as Tone,
-            modal: last?.onboardingModal,
+            modals: modals(row => row.onboardingModal),
             hint: "Deals actualmente en onboarding.",
           },
           {
@@ -310,7 +313,7 @@ export function Delivery({
             count: liveCount,
             amount: liveAmount,
             tone: "ok" as Tone,
-            modal: last?.liveModal,
+            modals: modals(row => row.liveModal),
             hint: "Ganados con inicio del servicio poblado (o etapa 8).",
           },
           {
@@ -319,7 +322,7 @@ export function Delivery({
             count: lostDevelopmentCount,
             amount: lostDevelopmentAmount,
             tone: "bad" as Tone,
-            modal: last?.lostDevelopmentModal,
+            modals: modals(row => row.lostDevelopmentModal),
             hint: "Deals actualmente en Perdido en desarrollo.",
           },
         ].map((step) => (
@@ -328,7 +331,7 @@ export function Delivery({
             className="race-step"
             type="button"
             title={step.hint}
-            onClick={() => step.modal && onModal(step.modal)}
+            onClick={() => step.modals.length && onModal(step.modals)}
           >
             <span className="race-step-label">{step.label}</span>
             <span className="race-bar" aria-hidden="true">
@@ -345,7 +348,7 @@ export function Delivery({
       </div>
       <header className="pulse-section-head">
         <div>
-          <h3 className="pulse-h3">Cobranza para comisión</h3>
+          <h3 className="pulse-h3">Cobranza operativa</h3>
           <p className="pulse-section-context">primero lo pendiente · lo pagado se muestra como conteo</p>
         </div>
       </header>
@@ -355,7 +358,7 @@ export function Delivery({
           value={money(setupPendingAmount)}
           note={`${Math.max(0, setupBase - setupPaid)} deals pendientes`}
           tone={setupPendingAmount ? "warn" : "ok"}
-          onClick={() => last && onModal(last.setupModal)}
+          onClick={() => onModal(modals(row => row.setupModal))}
           tooltip="Monto de deals ganados cuyo Status Cobranza Setup / OTF todavía no está en pago recibido."
         />
         <Metric
@@ -363,23 +366,23 @@ export function Delivery({
           value={money(mrrPendingAmount)}
           note={`${Math.max(0, mrrBase - mrrPaid)} deals pendientes`}
           tone={mrrPendingAmount ? "warn" : "ok"}
-          onClick={() => last && onModal(last.mrrModal)}
+          onClick={() => onModal(modals(row => row.mrrModal))}
           tooltip="Monto de deals ganados cuyo Status Cobranza MRR todavía no registra pago recibido."
         />
         <Metric
           label="Setup pagado"
           value={String(setupPaid)}
-          note="deals habilitados para comisión"
+          note="deals con pago registrado"
           tone={setupPaid ? "ok" : "neutral"}
-          onClick={() => last && onModal(last.setupPaidModal ?? last.setupModal)}
+          onClick={() => onModal(modals(row => row.setupPaidModal ?? row.setupModal))}
           tooltip="Cantidad de deals cuyo pago de setup/OTF ya fue recibido."
         />
         <Metric
           label="Primer MRR pagado"
           value={String(mrrPaid)}
-          note="deals habilitados para comisión"
+          note="deals con pago registrado"
           tone={mrrPaid ? "ok" : "neutral"}
-          onClick={() => last && onModal(last.mrrPaidModal ?? last.mrrModal)}
+          onClick={() => onModal(modals(row => row.mrrPaidModal ?? row.mrrModal))}
           tooltip="Cantidad de deals cuyo primer MRR ya fue pagado."
         />
       </section>

@@ -205,6 +205,7 @@ function commercialProps(managedStageIds: string[]): string[] {
     "fin_de_la_piloto",
     "productos_a_contratar",
     "tipo_de_proyecto",
+    "tipo_proyecto",
     "tamano_de_empresa_deal",
     "tamano_empresa_empleados",
     "hs_v2_time_in_current_stage",
@@ -287,13 +288,14 @@ async function paginate(body: Record<string, unknown>, maxPages: number): Promis
 
 /** Cache identical property sets together; a narrower prior read must never hide requested stage dates. */
 export function getCommercialDeals(managedStageIds: string[]): Promise<RawDeal[]> {
-  return getCached(`commercial-deals:${[...new Set(managedStageIds)].sort().join(",")}`, TTL_DEALS, () =>
+  const properties = commercialProps(managedStageIds);
+  return getCached(`commercial-deals:${[...new Set(properties)].sort().join(",")}`, TTL_DEALS, () =>
     paginate(
       {
         filterGroups: [
           { filters: [{ propertyName: "pipeline", operator: "EQ", value: COMMERCIAL_PIPELINE }] },
         ],
-        properties: commercialProps(managedStageIds),
+        properties,
         limit: 200,
       },
       40,

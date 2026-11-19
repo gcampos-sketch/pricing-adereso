@@ -1,3 +1,4 @@
+import type { CommissionEvidence } from "./won-commission";
 import type { RoleFilter } from "./owner-roles";
 import type { AdoboPropertyValues, AdoboVerifiedContextV1, PropertyHistoryV1 } from './adobo-intelligence';
 import type { ContactSnapshotV1, ContactAggregateEvidenceV1 } from './contact-aggregate';
@@ -45,6 +46,7 @@ export type DealDTO = {
   ssppAlert?: string | null;
   /** etiqueta de status_contrato (null = en blanco) */
   contractStatus?: string | null;
+  commissionEvidence?: CommissionEvidence;
   /** valor crudo de productos_a_contratar */
   productToHire?: string | null;
   /** valor crudo de dealtype (undefined en snapshots antiguos) */
@@ -578,6 +580,7 @@ export type ContactTempScope = {
 };
 
 export type PulseReport = {
+  wonCommissionVersion?: 1;
   adoboQualityVersion?: "adobo-quality/v1";
   /** Global executive cards, independent of the report's selected role. */
   executiveStrip?: import('./executive-strip').ExecutiveStrip;
