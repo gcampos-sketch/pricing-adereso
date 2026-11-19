@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { buildLossReasonWords, summarizeLossReasons, type LossNarrative } from '@/lib/loss-reason-words';
+import { buildLossReasonWords, type LossNarrative } from '@/lib/loss-reason-words';
+import { summarizeLossByOwner } from '@/lib/loss-summary';
 import type { InsightDeal } from '@/lib/insights-types';
 import { money } from './insights-shared';
 import './LossReasonWords.css';
@@ -8,7 +9,7 @@ type ReasonDeal = LossNarrative & Pick<InsightDeal, 'owner' | 'ownerId' | 'amoun
 const share = new Intl.NumberFormat('es-CL', { style: 'percent', maximumFractionDigits: 1 });
 
 function LossBreakdown({ deals }: { deals: readonly ReasonDeal[] }) {
-  const { count, mrr, owners } = useMemo(() => summarizeLossReasons(deals), [deals]);
+  const { count, mrr, owners } = useMemo(() => summarizeLossByOwner(deals), [deals]);
   if (!count) return null;
   return <details className="loss-words-breakdown">
     <summary>
