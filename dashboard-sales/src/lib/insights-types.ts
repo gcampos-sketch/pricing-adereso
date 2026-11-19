@@ -36,8 +36,6 @@ export type InsightDeal = DealDTO & {
   createdAt: string;
   /** objeción principal registrada por Adobo (adobo_current_objecion) */
   objection: string | null;
-  /** actividades del deal (solo deals perdidos por ghosting); null si no aplica */
-  ghost: { emails: number; calls: number; whatsapp: number | null } | null;
 };
 
 export type InsightsReport = {

@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Search, X } from "lucide-react";
+import { GHOSTING_BATCH_SIZE, isGhostingLoss, type GhostingActivity } from "@/lib/loss-ghosting";
+import { getLossGhostingActivity } from "@/lib/loss-ghosting.functions";
+import { LossGhostingActivity } from "./LossGhostingActivity";
 import type { InsightDeal } from "@/lib/insights-types";
 import { LossReasonWords } from "./LossReasonWords";
 import { money, sum } from "./insights-shared";
@@ -24,11 +28,36 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
   const [reason, setReason] = useState("");
   const deals = useMemo(() => [...new Map(selection.deals.map(deal => [deal.id, deal])).values()]
     .sort((a, b) => b.amountValue - a.amountValue || a.name.localeCompare(b.name, "es")), [selection.deals]);
+  const ghostIds = useMemo(() => deals.filter(deal => isGhostingLoss(deal.lostReason)).map(deal => deal.id).sort(), [deals]);
+  const ghosting = useQuery({
+    queryKey: ["loss-ghosting", ghostIds],
+    enabled: ghostIds.length > 0,
+    retry: false,
+    queryFn: async () => {
+      const evidence: Record<string, GhostingActivity> = {};
+      let incomplete = false;
+      for (let index = 0; index < ghostIds.length; index += GHOSTING_BATCH_SIZE) {
+        const ids = ghostIds.slice(index, index + GHOSTING_BATCH_SIZE);
+        try {
+          Object.assign(evidence, await getLossGhostingActivity({ data: { ids } }));
+        } catch {
+          incomplete = true;
+        }
+      }
+      return { evidence, incomplete };
+    },
+  });
   const reasons = [...new Set(deals.map(deal => deal.lostReason || "Sin motivo listado"))].sort((a, b) => a.localeCompare(b, "es"));
   const search = query.trim().toLocaleLowerCase("es");
   const rows = deals.filter(deal =>
     (!reason || (deal.lostReason || "Sin motivo listado") === reason) &&
     (!search || [deal.name, deal.owner, deal.lostReason].some(value => value?.toLocaleLowerCase("es").includes(search))));
+  const ghostRows = rows.filter(deal => isGhostingLoss(deal.lostReason));
+  const evidence = ghosting.data?.evidence;
+  const partialActivity = ghosting.data?.incomplete || ghostRows.some(({ id }) => {
+    const activity = evidence?.[id];
+    return !activity || Object.values(activity).some(count => count === null);
+  });
   const count = rows.length === deals.length ? String(deals.length) : `${rows.length} de ${deals.length}`;
 
   return <Dialog.Root open onOpenChange={open => { if (!open) onClose(); }}>
@@ -54,6 +83,10 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
             </label>}
             <p role="status"><strong>{count} {deals.length === 1 ? "deal" : "deals"}</strong><span>{money(sum(rows, deal => deal.amountValue))} USD de MRR</span></p>
           </div>
+          {ghostRows.length > 0 && <div className="loss-ghosting-caption">
+            <p>Mínimo por deal · 2 llamadas, 2 mensajes nativos de WhatsApp y 2 correos registrados en HubSpot. Las reuniones se muestran aparte.</p>
+            {partialActivity && !ghosting.isFetching && <button type="button" className="cell-button" onClick={() => void ghosting.refetch()}>Verificar de nuevo</button>}
+          </div>}
           {selection.reasonWords && rows.length > 0 && <details className="loss-drawer-words">
             <summary>Palabras en los motivos de pérdida</summary>
             <LossReasonWords deals={rows} available={narrativesAvailable} compact initialLimit={6} />
@@ -64,13 +97,14 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
                 <a href={deal.url} target="_blank" rel="noopener noreferrer">{deal.name}<ExternalLink size={12} aria-hidden="true" /></a>
                 <small>{[deal.owner || "Sin comercial", deal.lostReason || "Sin motivo listado"].join(" · ")}</small>
                 {selection.records && <details className="loss-deal-record">
-                  <summary>Comentario y actividad</summary>
+                  <summary>Comentario y etapa</summary>
                   <small>{deal.lostStage || "Sin recorrido"} · {deal.lostStageDays > 0 ? `${deal.lostStageDays} días` : "Sin duración registrada"}</small>
                   <p>{deal.lostReasonText || "Sin comentario registrado"}</p>
-                  <small>{deal.ghost ? `${deal.ghost.emails} correos · ${deal.ghost.calls} llamadas · ${deal.ghost.whatsapp ?? "s/d"} WhatsApp` : "Sin cobertura de actividad"}</small>
                 </details>}
               </div>
               <span><strong>{money(deal.amountValue)}</strong><small>MRR perdido</small></span>
+              {isGhostingLoss(deal.lostReason) &&
+                <LossGhostingActivity activity={evidence?.[deal.id]} loading={ghosting.isPending && ghosting.isFetching} />}
             </li>)}
           </ul> : <p className="empty-state">{deals.length ? "Ningún deal coincide con la búsqueda o el motivo." : "Sin deals en esta selección."}</p>}
         </div>
