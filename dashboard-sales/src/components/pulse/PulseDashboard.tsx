@@ -34,6 +34,7 @@ import { MiniBars, MiniLine } from "./MiniCharts";
 import { TimeToService } from "./TimeToService";
 import { PlanBotWon } from "./PlanBotWon";
 import { Delivery } from "./Delivery";
+import { WonCommission, WonOperations } from "./WonCommission";
 import { PipelineFunnel } from "./PipelineFunnel";
 import { StageVelocity } from "./StageVelocity";
 import { ActiveMrrCard, CompactFilterBar, STAGE_OPTIONS } from "./FilterBar";
@@ -1158,40 +1159,54 @@ export function PulseDashboard({
 
       {projectsOnly ? (
         <>
-          <AdoboQuality deals={adoboProjects} readAt={report.generatedAt} year={year} quarter={quarter} delivery/>
-          {deliveryScope ? (
-            <Delivery
-              scope={deliveryScope}
-              titlePeriod={titlePeriod}
-              selectedPeriods={selectedPeriods}
-              onModal={setModalKey}
-            />
-          ) : null}
+          <WonCommission
+            key={JSON.stringify([year, quarter, ownerFilter, role, dealType, stageFilter])}
+            deals={adoboProjects}
+            period={titlePeriod}
+            {...(titleOwner ? { owner: titleOwner } : {})}
+          />
+          <WonOperations>
+            <AdoboQuality deals={adoboProjects} readAt={report.generatedAt} year={year} quarter={quarter} delivery/>
+            {deliveryScope ? (
+              <Delivery
+                scope={deliveryScope}
+                titlePeriod={titlePeriod}
+                selectedPeriods={selectedPeriods}
+                onModal={(keys, excludeStage) => {
+                  const payloads = keys.map(key => report.drilldowns[key]).filter((payload): payload is Drilldown => !!payload);
+                  const deals = [...new Map(payloads.flatMap(payload => payload.deals)
+                    .filter(deal => deal.stageId !== excludeStage).map(deal => [deal.id, deal])).values()];
+                  openList(payloads.length === 1 && !excludeStage ? payloads[0]!.title : "Seguimiento operativo · " + ownerName,
+                    `${rangeLabel} · ${deals.length} deals`, deals);
+                }}
+              />
+            ) : null}
 
-          {rampDevScope ? (
-            <TimeToService
-              scope={rampDevScope}
-              rangeLabel={rangeLabel}
-              selectedPeriods={selectedPeriods}
-              yearPeriods={yearPeriods}
-              onModal={setModalKey}
-              title="De propuesta firmada a proyecto en desarrollo"
-              note={`${ownerName} · etapa 6 → 6.2`}
-              fromLabel="etapa 6"
-              toLabel="etapa 6.2"
-              thresholds={[15, 30]}
-            />
-          ) : null}
+            {rampDevScope ? (
+              <TimeToService
+                scope={rampDevScope}
+                rangeLabel={rangeLabel}
+                selectedPeriods={selectedPeriods}
+                yearPeriods={yearPeriods}
+                onModal={setModalKey}
+                title="De propuesta firmada a proyecto en desarrollo"
+                note={`${ownerName} · etapa 6 → 6.2`}
+                fromLabel="etapa 6"
+                toLabel="etapa 6.2"
+                thresholds={[15, 30]}
+              />
+            ) : null}
 
-          {planBotScope ? (
-            <PlanBotWon
-              scope={planBotScope}
-              rangeLabel={rangeLabel}
-              selectedPeriods={selectedPeriods}
-              yearPeriods={yearPeriods}
-              onModal={setModalKey}
-            />
-          ) : null}
+            {planBotScope ? (
+              <PlanBotWon
+                scope={planBotScope}
+                rangeLabel={rangeLabel}
+                selectedPeriods={selectedPeriods}
+                yearPeriods={yearPeriods}
+                onModal={setModalKey}
+              />
+            ) : null}
+          </WonOperations>
         </>
       ) : section === "embudo" ? (
         <>

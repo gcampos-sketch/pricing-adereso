@@ -1,0 +1,75 @@
+.won-commission-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(145px, 100%), 1fr));
+  gap: .6rem;
+  margin: .85rem 0 1.4rem;
+}
+
+.won-commission-overview button,
+.won-operations > summary {
+  display: flex;
+  align-items: flex-start;
+  gap: .3rem;
+  padding: .75rem 1rem;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: .65rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.won-commission-overview button {
+  flex-direction: column;
+}
+
+.won-commission-overview strong {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.won-commission-overview button[aria-pressed="true"],
+.won-commission .cell-button[aria-pressed="true"] {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+  outline: 1px solid currentColor;
+}
+
+.won-commission-overview button:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
+.won-commission .table-wrap {
+  margin-top: .6rem;
+}
+
+.won-commission-detail,
+.won-operations {
+  margin-top: 1.3rem;
+}
+
+.won-commission-detail small {
+  display: block;
+  margin-top: .25rem;
+  font-weight: 400;
+  white-space: normal;
+}
+
+.won-commission-detail a {
+  text-decoration: underline;
+  text-underline-offset: .15em;
+}
+
+.won-commission-detail a svg {
+  display: inline;
+}
+
+.won-operations > summary {
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .8rem;
+  font-weight: 650;
+}
+
+.won-operations[open] > summary svg {
+  transform: rotate(180deg);
+}
