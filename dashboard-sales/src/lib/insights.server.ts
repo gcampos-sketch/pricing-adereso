@@ -1,8 +1,13 @@
 import { LOSS_ENTRY_DATES_VERSION, lossEntryDate } from "./loss-sankey-scope";
+import { LOSS_CLUSTER_VERSION } from "./loss-monthly-clusters";
+import { readLossCompanySizes } from "./loss-company-size.server";
+import { priceNumber } from "./price-conversion";
 import {countDealWhatsApp} from "./whatsapp-count";
 import {
   getCached,
   getCommercialDeals,
+  getPropertyOptionLabels,
+  invalidateCache,
   getOwners as fetchOwners,
   getQuotas as fetchQuotasCached,
   TTL_SLOW,
@@ -102,49 +107,10 @@ import type {
   SizeBucket,
 } from "./insights-types";
 
-const PIPELINE_ID = "93085851";
 const HISTORY_FROM_YEAR = 2025;
+const DEAL_LOST_STAGE = "171385869";
 const SERVICE_STAGE = "173990327";
 const DAY_MS = 86_400_000;
-
-const BASE_PROPS = [
-  "dealname",
-  "amount",
-  "dealstage",
-  "closedate",
-  "createdate",
-  "hubspot_owner_id",
-  "hs_deal_stage_probability",
-  "hs_deal_score",
-  "adobo_closing_score",
-  "closed_lost_reason",
-  "razones_de_cierre_perdidos_especifico",
-  "deal_perdido_en_desarrollo",
-  "motivo_de_deal_perdido_en_desarrollo",
-  "dealtype",
-  "negocio_inbound",
-  "fuente_de_creacion",
-  "notes_next_activity_date",
-  "hs_next_step",
-  "on_track",
-  "seguimiento_con_pinzas",
-  "hs_mrr",
-  "fecha_kickoff",
-  "productos_a_contratar",
-  "tipo_de_proyecto",
-  "tamano_de_empresa_deal",
-  "tamano_empresa_empleados",
-  "hs_v2_time_in_current_stage",
-  `hs_v2_date_entered_${SERVICE_STAGE}`,
-];
-
-const DEAL_PROPS = [
-  ...BASE_PROPS,
-  ...MANAGED_STAGES.flatMap((stage) => [
-    `hs_v2_date_entered_${stage.id}`,
-    `hs_v2_cumulative_time_in_${stage.id}`,
-  ]),
-];
 
 function classify(p: Props): { family: DealFamily; motion: DealMotion } {
   const type = (p["dealtype"] ?? "").trim();
@@ -237,11 +203,12 @@ function daysBetween(from: string | null | undefined, to: string | null | undefi
   return days < 0 || days > 720 ? null : days;
 }
 
-export async function buildInsightsReport(): Promise<InsightsReport> {
-  const [deals, quotas, ownersRes] = await Promise.all([
+export async function buildInsightsReport(force = false): Promise<InsightsReport> {
+  const [deals, quotas, ownersRes, industries] = await Promise.all([
     getCommercialDeals([...new Set([...MANAGED_STAGES.map((stage) => stage.id), ...LOST_STAGES])]),
     fetchQuotasCached(),
     fetchOwners(),
+    getPropertyOptionLabels("industria_deal"),
   ]);
 
   const ownerNames = new Map<string, string>();
@@ -275,7 +242,12 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     const year = Number(period.split("-")[0]);
     const lostEnteredAt = isLost ? lossEntryDate(p, stageId, LOST_STAGES) : null;
     const entryYear = lostEnteredAt ? new Date(lostEnteredAt).getUTCFullYear() : NaN;
-    if ((!Number.isFinite(year) || year < HISTORY_FROM_YEAR) && !(isLost && entryYear >= HISTORY_FROM_YEAR)) continue;
+    const exactLossEntry = isLost ? lossEntryDate(p, DEAL_LOST_STAGE, LOST_STAGES) : null;
+    const clusterYear = Math.max(...[p["createdate"], exactLossEntry].map(date =>
+      date && Number.isFinite(Date.parse(date)) ? new Date(date).getUTCFullYear() : 0,
+    ));
+    if ((!Number.isFinite(year) || year < HISTORY_FROM_YEAR) &&
+        !(isLost && (entryYear >= HISTORY_FROM_YEAR || clusterYear >= HISTORY_FROM_YEAR))) continue;
 
     const dto = toDTO(deal, ownerNames, now, quarterEnd);
     const { family, motion } = classify(p);
@@ -285,6 +257,7 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     const stageMs = Number(p["hs_v2_time_in_current_stage"] ?? 0);
     const serviceStart = p[`hs_v2_date_entered_${SERVICE_STAGE}`] ?? null;
 
+    const industry = p["industria_deal"]?.trim();
     out.push({
       ...dto,
       ownerId: p["hubspot_owner_id"] ?? "",
@@ -309,6 +282,15 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
       lostStage,
       lostStageDays,
       lostEnteredAt,
+      ...(isLost ? { lossClusters: {
+        conversations: priceNumber(p["cantidad_de_tickets"]),
+        companySize: null,
+        monthlyRevenue: priceNumber(p["hs_mrr"]),
+        currency: p["deal_currency_code"]?.trim().toUpperCase() || null,
+        employees: p["tamano_empresa_empleados"]?.trim() || null,
+        industry: industry ? industries.get(industry) ?? industry : null,
+        entry: exactLossEntry,
+      } } : {}),
       daysToKickoff: isWon ? daysBetween(closeDate, p["fecha_kickoff"]) : null,
       daysToService: isWon ? daysBetween(closeDate, serviceStart) : null,
       onTrack: (p["on_track"] ?? "").trim() || null,
@@ -317,6 +299,14 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
       ghost: null,
     });
   }
+
+  const lostDeals = out.filter(deal => deal.lossClusters);
+  const companyScope = lostDeals.map(deal => deal.id).sort();
+  const companyCache = `loss-company-sizes:${companyScope.join(",")}`;
+  if (force) invalidateCache(companyCache);
+  // A company lookup failure only affects its own cluster.
+  const companySizesPending = getCached(companyCache, TTL_SLOW, () => readLossCompanySizes(companyScope))
+    .catch(() => null);
 
   // ---------- ghosting: actividades de cierre en deals perdidos ----------
   const ghostDeals = out
@@ -338,6 +328,11 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     }
   }
 
+  const companySizes = await companySizesPending;
+  if (companySizes) {
+    for (const deal of lostDeals) deal.lossClusters!.companySize = companySizes.get(deal.id) ?? null;
+  }
+
   const ownerIds = [...new Set(out.map((deal) => deal.ownerId))].filter(Boolean);
   const owners = ownerIds
     .map((id) => ({ id, name: ownerNames.get(id) ?? `Owner ${id}` }))
@@ -345,6 +340,8 @@ export async function buildInsightsReport(): Promise<InsightsReport> {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return {
+    lossClusterVersion: LOSS_CLUSTER_VERSION,
+    lossCompanySizeAvailable: companySizes !== null,
     lossEntryDatesVersion: LOSS_ENTRY_DATES_VERSION,
     lossNarrativesVersion: "closed-lost-reason/v1",
     generatedAt: new Date(now).toISOString(),

@@ -1,5 +1,7 @@
 import type { DealDTO } from "./pulse-types";
 
+import type { LossClusterFields, LOSS_CLUSTER_VERSION } from "./loss-monthly-clusters";
+
 export type DealFamily = "Expansión" | "Venta nueva" | "Renovación" | "Sin clasificar";
 export type DealMotion = "Upsell" | "Cross sell" | "Venta nueva" | "Renovación" | "Sin clasificar";
 export type SizeBucket = "SMB" | "Mid Market" | "Enterprise" | "Sin dato";
@@ -27,6 +29,7 @@ export type InsightDeal = DealDTO & {
   lostStageDays: number;
   /** Native entry to the current exact lost stage; never falls back to close/creation. Absent in older editions. */
   lostEnteredAt?: string | null;
+  lossClusters?: LossClusterFields;
   daysToKickoff: number | null;
   daysToService: number | null;
   onTrack: string | null;
@@ -38,6 +41,8 @@ export type InsightDeal = DealDTO & {
 };
 
 export type InsightsReport = {
+  lossClusterVersion?: typeof LOSS_CLUSTER_VERSION;
+  lossCompanySizeAvailable?: boolean;
   lossNarrativesVersion?: "closed-lost-reason/v1";
   lossEntryDatesVersion?: "native-loss-entry/v1";
   generatedAt: string;

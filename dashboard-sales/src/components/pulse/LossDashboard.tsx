@@ -7,6 +7,8 @@ import { LossTicketByOwner } from "./LossTicketByOwner";
 import { LossReasonWords } from "./LossReasonWords";
 import { LossIcpTable } from "./LossIcpTable";
 import { LossScoreClusters } from "./LossScoreClusters";
+import { LossMonthlyClusters } from "./LossMonthlyClusters";
+import { LOSS_CLUSTER_VERSION } from "@/lib/loss-monthly-clusters";
 import { LossSankey } from "./LossSankey";
 import { DealModal } from "./DealModal";
 import { MetricTrend } from "./MetricTrend";
@@ -159,6 +161,9 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         deals, coverageWarning: true,
       })}
       onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
+
+    <LossMonthlyClusters deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
+      available={report.lossClusterVersion === LOSS_CLUSTER_VERSION} companySizeAvailable={report.lossCompanySizeAvailable === true} />
 
     <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
 
