@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import { DashboardPopupContext } from "@/contexts/DashboardPopupContext";
 import { cn } from "@/lib/utils";
 import { popupOverTrigger } from "@/lib/popup-placement";
 
@@ -22,8 +23,10 @@ const PopoverAnchor = PopoverPrimitive.Anchor;
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
-  & { originMotion?: boolean }
->(({ className, align = "center", sideOffset = 4, style, originMotion = true, ...props }, ref) => {
+  & { originMotion?: boolean; focusBackdrop?: boolean }
+>(({ className, align = "center", sideOffset = 4, style, originMotion = true, focusBackdrop = true, ...props }, ref) => {
+  const dashboard = React.useContext(DashboardPopupContext);
+  const showBackdrop = dashboard && focusBackdrop;
   const origin = React.useContext(OriginContext);
   const content = React.useRef<HTMLDivElement | null>(null);
   const source = React.useRef<HTMLElement | null>(null);
@@ -46,31 +49,37 @@ const PopoverContent = React.forwardRef<
     node.style.setProperty('--popup-from-scale-x', `${Math.min(1,Math.max(.05,from.width/Math.max(target.width,1)))}`);
     node.style.setProperty('--popup-from-scale-y', `${Math.min(1,Math.max(.05,from.height/Math.max(target.height,1)))}`);
   };
-  return <PopoverPrimitive.Portal>
-    <PopoverPrimitive.Content
-      ref={node=>{
-        stopTracking.current?.();
-        content.current=node;
-        if(node && originMotion) {
-          positionOrigin(node);
-          const reposition = () => positionOrigin(node);
-          const observer = new ResizeObserver(reposition);
-          observer.observe(node);
-          window.addEventListener('resize',reposition);
-          const onScroll = (event: Event) => {if(!(event.target instanceof Node) || !node.contains(event.target))reposition();};
-          window.addEventListener('scroll',onScroll,true);
-          stopTracking.current=()=>{observer.disconnect();window.removeEventListener('resize',reposition);window.removeEventListener('scroll',onScroll,true);};
-        }
-        if(typeof ref==='function')ref(node);else if(ref)ref.current=node;
-      }}
-      align={align}
-      sideOffset={sideOffset}
-      className={cn("z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none", originMotion && "dashboard-origin-popover", className)}
-      style={style}
-      {...props}
-      data-trigger-detail={overTrigger ? "true" : undefined}
-    />
-  </PopoverPrimitive.Portal>;
+  return <>
+    {showBackdrop && <PopoverPrimitive.Portal>
+      <div className="dashboard-focus-backdrop dashboard-popover-backdrop" aria-hidden="true" />
+    </PopoverPrimitive.Portal>}
+    <PopoverPrimitive.Portal>
+      <PopoverPrimitive.Content
+        ref={node=>{
+          stopTracking.current?.();
+          content.current=node;
+          if(node && originMotion) {
+            positionOrigin(node);
+            const reposition = () => positionOrigin(node);
+            const observer = new ResizeObserver(reposition);
+            observer.observe(node);
+            window.addEventListener('resize',reposition);
+            const onScroll = (event: Event) => {if(!(event.target instanceof Node) || !node.contains(event.target))reposition();};
+            window.addEventListener('scroll',onScroll,true);
+            stopTracking.current=()=>{observer.disconnect();window.removeEventListener('resize',reposition);window.removeEventListener('scroll',onScroll,true);};
+          }
+          if(typeof ref==='function')ref(node);else if(ref)ref.current=node;
+        }}
+        align={align}
+        sideOffset={sideOffset}
+        className={cn("z-50 w-72 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none", originMotion && "dashboard-origin-popover", className)}
+        style={style}
+        {...props}
+        data-dashboard-focus-popup={showBackdrop || undefined}
+        data-trigger-detail={overTrigger ? "true" : undefined}
+      />
+    </PopoverPrimitive.Portal>
+  </>;
 });
 PopoverContent.displayName = "PopoverContent";
 export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor };

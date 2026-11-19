@@ -105,7 +105,7 @@ export function PriceConversionView({ report, onRefresh, refreshing, ...props }:
     <div className="price-filters">
       <div className="price-filter"><span id="price-types-label">Tipo de deal · selección múltiple</span>
         <Popover><PopoverTrigger asChild><Button variant="outline" className="price-type-trigger" aria-labelledby="price-types-label">{dealTypes === null ? 'Todos los tipos' : dealTypes.length === 0 ? 'Ningún tipo seleccionado' : typeOptions.filter(([key]) => dealTypes.includes(key)).map(([, label]) => label).join(' + ') || 'Sin casos en este alcance'}</Button></PopoverTrigger>
-          <PopoverContent className="price-type-menu" align="start"><button onClick={() => setDealTypes(null)}>Seleccionar todos</button><button onClick={() => setDealTypes([])}>Limpiar selección</button>
+          <PopoverContent focusBackdrop={false} className="price-type-menu" align="start"><button onClick={() => setDealTypes(null)}>Seleccionar todos</button><button onClick={() => setDealTypes([])}>Limpiar selección</button>
             {typeOptions.map(([key, label]) => <label key={key}><input type="checkbox" checked={dealTypes === null || dealTypes.includes(key)} onChange={() => setDealTypes(current => { const active = current ?? typeOptions.map(([value]) => value); return active.includes(key) ? active.filter(value => value !== key) : [...active, key]; })} />{label}</label>)}
             <small>Se combina con el filtro principal de tipo.</small>
           </PopoverContent>
