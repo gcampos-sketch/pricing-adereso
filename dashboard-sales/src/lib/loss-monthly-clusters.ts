@@ -51,14 +51,14 @@ export function lossMonthlyClusters(
   basis: LossClusterDate, cluster: LossCluster,
 ) {
   const readTime = Date.parse(readAt);
-  const months = new Map<string, { label: string; total: number; counts: Map<string, number> }>();
+  const months = new Map<string, { label: string; total: number; dealsByGroup: Map<string, InsightDeal[]> }>();
   for (const period of [...new Set(periods)].sort()) {
     const [year, quarter] = period.split("-Q").map(Number);
     if (!year || !quarter || quarter < 1 || quarter > 4) continue;
     for (let offset = 0; offset < 3; offset++) {
       const date = new Date(Date.UTC(year, (quarter - 1) * 3 + offset, 1));
       if (date.getTime() <= readTime) months.set(date.toISOString().slice(0, 7), {
-        label: formatMonth.format(date), total: 0, counts: new Map(),
+        label: formatMonth.format(date), total: 0, dealsByGroup: new Map(),
       });
     }
   }
@@ -78,7 +78,9 @@ export function lossMonthlyClusters(
     if (!month) continue;
     const group = groupOf(fields, cluster);
     groups.add(group);
-    month.counts.set(group, (month.counts.get(group) ?? 0) + 1);
+    const cohort = month.dealsByGroup.get(group) ?? [];
+    cohort.push(deal);
+    month.dealsByGroup.set(group, cohort);
     month.total++;
   }
 
@@ -92,7 +94,8 @@ export function lossMonthlyClusters(
     groups: order,
     months: [...months].map(([month, row]) => ({
       month, label: row.label, total: row.total,
-      counts: order.map(group => row.counts.get(group) ?? 0),
+      counts: order.map(group => row.dealsByGroup.get(group)?.length ?? 0),
+      cohorts: order.map(group => row.dealsByGroup.get(group) ?? []),
     })),
   };
 }

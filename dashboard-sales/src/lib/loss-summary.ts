@@ -1,6 +1,7 @@
+import { closeMonthKey } from './deal-month-summary';
 import type { InsightDeal } from './insights-types';
 
-export type LossMonth = { month: string; label: string; amount: number | null; count: number | null; ticket: number | null; partial: boolean };
+export type LossMonth = { month: string; label: string; amount: number | null; count: number | null; ticket: number | null; partial: boolean; deals: InsightDeal[] };
 
 /** Monthly close-date history, independent of the selected quarter's aggregate. */
 export function lossMonthlyHistory(deals: InsightDeal[], coveredPeriods: string[], year: string, quarter: string, generatedAt: string): LossMonth[] {
@@ -16,11 +17,11 @@ export function lossMonthlyHistory(deals: InsightDeal[], coveredPeriods: string[
     const month = date.toISOString().slice(0, 7);
     const period = `${date.getUTCFullYear()}-Q${Math.floor(date.getUTCMonth() / 3) + 1}`;
     const covered = coveredPeriods.includes(period);
-    const rows = unique.filter(deal => deal.closeDateValue?.slice(0, 7) === month);
+    const rows = unique.filter(deal => closeMonthKey(deal.closeDateValue) === month);
     const amount = rows.reduce((total, deal) => total + deal.amountValue, 0);
     return { month, label: date.toLocaleDateString('es-CL', { month: 'short', year: '2-digit', timeZone: 'UTC' }),
       amount: covered ? amount : null, count: covered ? rows.length : null,
-      ticket: covered && rows.length ? amount / rows.length : null, partial: end - 5 + index === readMonth };
+      ticket: covered && rows.length ? amount / rows.length : null, partial: end - 5 + index === readMonth, deals: covered ? rows : [] };
   });
 }
 

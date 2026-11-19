@@ -30,6 +30,9 @@ test("applies the selected period to the chosen date, keeps zero months and neve
   expect(byCreation.unassigned).toBe(0);
   expect(byCreation.groups).toEqual(["0", "Sin dato"]);
   expect(byCreation.months.map(row => row.counts)).toEqual([[1, 0], [0, 0], [0, 1]]);
+  expect(byEntry.months[1]?.cohorts.map(group => group.map(row => row.id))).toEqual([["one"]]);
+  expect(byCreation.months.map(row => row.cohorts.map(group => group.map(deal => deal.id))))
+    .toEqual([[["two"], []], [[], []], [[], ["three"]]]);
 });
 
 test("aggregates native MRR, employee size, company size and industry as distinct dimensions", () => {

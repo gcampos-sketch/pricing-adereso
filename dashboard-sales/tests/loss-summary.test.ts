@@ -9,10 +9,12 @@ test('monthly ticket uses its own exact close population including zero amounts,
   expect(result.map(row => row.month)).toEqual(['2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11']);
   expect(result[4]).toMatchObject({ amount: 900, count: 2, ticket: 450, partial: false });
   expect(result[5]).toMatchObject({ amount: 100, count: 1, ticket: 100, partial: true });
+  expect(result[4]?.deals.map(row => row.id)).toEqual(['a', 'b']);
+  expect(result[5]?.deals.map(row => row.id)).toEqual(['nov']);
 });
 test('missing history remains unknown and an empty covered month has no average', () => {
   const result = lossMonthlyHistory([], ['2026-Q4'], '2026', '4', '2026-11-18T12:00:00Z');
-  expect(result[0]).toMatchObject({ amount: null, count: null, ticket: null });
+  expect(result[0]).toMatchObject({ amount: null, count: null, ticket: null, deals: [] });
   expect(result[4]).toMatchObject({ amount: 0, count: 0, ticket: null });
 });
 test('past-period trends end at the selected quarter and cross years chronologically', () => {

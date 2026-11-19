@@ -15,13 +15,14 @@ const colors = [
 ];
 const colorOf = (group: string, index: number) => group === "Sin dato" ? "#909399" : colors[index % colors.length];
 
-export function LossMonthlyClusters({ deals, periods, readAt, available, companySizeAvailable, meetingCountsAvailable }: {
+export function LossMonthlyClusters({ deals, periods, readAt, available, companySizeAvailable, meetingCountsAvailable, onOpen }: {
   deals: InsightDeal[];
   periods: string[];
   readAt: string;
   available: boolean;
   companySizeAvailable: boolean;
   meetingCountsAvailable: boolean;
+  onOpen: (title: string, deals: InsightDeal[], basis: string) => void;
 }) {
   const [basis, setBasis] = useState<LossClusterDate>("entry");
   const [cluster, setCluster] = useState<LossCluster>("conversations");
@@ -35,6 +36,12 @@ export function LossMonthlyClusters({ deals, periods, readAt, available, company
     : cluster === "meetings" ? " · Reuniones registradas y asociadas a cada deal en HubSpot"
     : "";
   const hasDeals = result.groups.length > 0;
+  const basisLabel = dateChoices.find(([value]) => value === basis)![1];
+  const openCohort = (row: typeof result.months[number], index?: number) => {
+    const cohort = index === undefined ? row.cohorts.flat() : row.cohorts[index] ?? [];
+    const label = index === undefined ? row.label : `${row.label} · ${result.groups[index]}`;
+    if (cohort.length) onOpen(label, cohort, basisLabel);
+  };
 
   return <section className="rep-chart loss-monthly-clusters" aria-labelledby="loss-monthly-clusters-title">
     <div className="loss-monthly-clusters-heading">
@@ -75,7 +82,11 @@ export function LossMonthlyClusters({ deals, periods, readAt, available, company
                 </div>;
               }} />
               {result.groups.map((group, index) => <Bar key={group} name={group} dataKey={`counts.${index}`}
-                stackId="deals" fill={colorOf(group, index)} maxBarSize={56} isAnimationActive={false} />)}
+                stackId="deals" fill={colorOf(group, index)} maxBarSize={56} isAnimationActive={false} cursor="pointer"
+                onClick={(_data, monthIndex) => {
+                  const row = result.months[monthIndex];
+                  if (row) openCohort(row, index);
+                }} />)}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -85,14 +96,19 @@ export function LossMonthlyClusters({ deals, periods, readAt, available, company
           {result.groups.map((group, index) => <li key={group}><span aria-hidden="true" style={{ background: colorOf(group, index) }} />{group}</li>)}
         </ul>
         <details className="loss-monthly-data">
-          <summary>Ver datos por mes</summary>
+          <summary>Ver datos y deals por mes</summary>
           <div className="loss-monthly-table"><table>
             <caption className="sr-only">Cantidad de deals perdidos por clúster y mes</caption>
             <thead><tr><th scope="col">Mes</th><th scope="col">Total</th>
               {result.groups.map(group => <th key={group} scope="col">{group}</th>)}
             </tr></thead>
-            <tbody>{result.months.map(row => <tr key={row.month}><th scope="row">{row.label}</th><td>{row.total}</td>
-              {row.counts.map((count, index) => <td key={result.groups[index]}>{count}</td>)}
+            <tbody>{result.months.map(row => <tr key={row.month}><th scope="row">{row.label}</th>
+              <td>{row.total > 0 ? <button type="button" className="loss-deals-link" aria-haspopup="dialog"
+                aria-label={`Ver ${row.total} deals de ${row.label}`} onClick={() => openCohort(row)}>{row.total}</button> : 0}</td>
+              {row.counts.map((count, index) => <td key={result.groups[index]}>
+                {count > 0 ? <button type="button" className="loss-deals-link" aria-haspopup="dialog"
+                  aria-label={`Ver ${count} deals de ${row.label} · ${result.groups[index]}`} onClick={() => openCohort(row, index)}>{count}</button> : 0}
+              </td>)}
             </tr>)}</tbody>
           </table></div>
         </details>
