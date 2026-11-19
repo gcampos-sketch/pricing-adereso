@@ -1,3 +1,4 @@
+import { ExpandableCellText } from "./ExpandableCellText";
 import { ReportTitleScope } from "./ReportTitleScope";
 import { useMemo, useState } from "react";
 import { ChevronRight, ArrowLeft } from "lucide-react";
@@ -212,7 +213,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         <tbody>{scoped.map(deal => <tr key={deal.id}>
           <td><button type="button" className="cell-button" onClick={() => open(deal.name, [deal])}>{deal.name}</button><div className="loss-record-owner">{deal.owner}</div></td>
           <td>{deal.lostStage || "Sin recorrido"}<div className="loss-record-owner">{deal.lostStageDays > 0 ? `${deal.lostStageDays} d` : "Sin duración"}</div></td>
-          <td>{deal.lostReasonText || "Sin comentario registrado"}</td>
+          <td>{deal.lostReasonText ? <ExpandableCellText text={deal.lostReasonText} label="Comentario de cierre" /> : "Sin comentario registrado"}</td>
           <td>{deal.ghost ? `${deal.ghost.emails} correos · ${deal.ghost.calls} llamadas · ${deal.ghost.whatsapp ?? "s/d"} WhatsApp` : "Sin cobertura de actividad"}</td>
         </tr>)}</tbody>
       </table></div>

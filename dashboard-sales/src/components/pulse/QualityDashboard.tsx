@@ -1,3 +1,4 @@
+import { ExpandableCellText } from "./ExpandableCellText";
 import { reportTitlePeriod } from "@/lib/report-title-scope";
 import { ReportTitleScope } from "./ReportTitleScope";
 import { AdoboQuality } from "./AdoboQuality";
@@ -397,7 +398,9 @@ export function QualityDashboard({
                   </a>
                 </td>
                 <td>{row.categoryLabel}</td>
-                <td className="cq-evidence">{row.evidence ?? "Sin evidencia registrada"}</td>
+                <td className="cq-evidence">
+                  {row.evidence ? <ExpandableCellText text={row.evidence} label="Evidencia" /> : "Sin evidencia registrada"}
+                </td>
               </tr>
             ))}
             {!rows.length ? (
@@ -550,7 +553,11 @@ export function QualityDashboard({
                   </td>
                   <td className="cq-evidence">
                     <strong>{row.categoryLabel}</strong>
-                    <p>{row.evidence ?? "Sin evidencia registrada"}</p>
+                    {row.evidence ? (
+                      <ExpandableCellText text={row.evidence} label="Evidencia de mejora" />
+                    ) : (
+                      <p>Sin evidencia registrada</p>
+                    )}
                   </td>
                   <td>{row.informationQuality ?? "Sin dato"}</td>
                   <td>

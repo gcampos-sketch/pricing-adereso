@@ -1,3 +1,4 @@
+import { ExpandableCellText } from "./ExpandableCellText";
 import { useMemo } from 'react';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ export function DiagnosticWarnings({ current, previous, rows, owner, onSelect }:
     </section>
     <div className="diagnostic-warning-list">{groups.map(items => <details className="diagnostic-warning-group" key={items[0]!.rule}>
       <summary><div><strong>{items[0]!.title}</strong><span>{items[0]!.action}</span></div><b>{items.length}<small> negocios</small></b></summary>
-      <div className="table-wrap"><table className="pulse-table diagnostic-warning-table"><thead><tr><th>Negocio</th><th>Evidencia breve</th><th>Desde la edición anterior</th></tr></thead><tbody>{items.map(item => <tr key={item.id}><td><Button variant="ghost" onClick={() => onSelect(item.row)}>{item.row.name}<ArrowRight size={13} /></Button></td><td><span className="diagnostic-preview-text">{item.evidence}</span>{item.source ? <a className="diagnostic-source" href={item.source.url} target="_blank" rel="noreferrer">Fuente del {item.source.date.slice(0, 10)} <ExternalLink size={12} /></a> : <small className="diagnostic-caption">{item.field} · conservado en esta edición</small>}</td><td><span className="diagnostic-caption">{status(item)}</span></td></tr>)}</tbody></table></div>
+      <div className="table-wrap"><table className="pulse-table diagnostic-warning-table"><thead><tr><th>Negocio</th><th>Evidencia breve</th><th>Desde la edición anterior</th></tr></thead><tbody>{items.map(item => <tr key={item.id}><td><Button variant="ghost" onClick={() => onSelect(item.row)}>{item.row.name}<ArrowRight size={13} /></Button></td><td><ExpandableCellText text={item.evidence} label="Evidencia de la alerta" />{item.source ? <a className="diagnostic-source" href={item.source.url} target="_blank" rel="noreferrer">Fuente del {item.source.date.slice(0, 10)} <ExternalLink size={12} /></a> : <small className="diagnostic-caption">{item.field} · conservado en esta edición</small>}</td><td><span className="diagnostic-caption">{status(item)}</span></td></tr>)}</tbody></table></div>
     </details>)}{!groups.length && <div className="empty-state">Sin señales explícitas en los textos disponibles. Revisa la cobertura pendiente antes de concluir que no hay riesgos.</div>}</div>
     <SectionTitle note={diff ? 'Mismos negocios y alcance comparable' : 'La primera edición fija la base; no inventa una tendencia'}>Movimiento de las señales</SectionTitle>
     {diff ? <div className="diagnostic-warning-movement">{([
