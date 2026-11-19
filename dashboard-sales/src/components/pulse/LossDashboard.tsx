@@ -160,8 +160,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
       })}
       onOpen={(title, deals, basis, reasonWords) => setDrill({ reasonWords: Boolean(reasonWords), title, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ${basis === "entry" ? "Entrada a deal perdido (F. Cierre conserva la fecha CRM)" : "Fecha de cierre"}`, deals, lossEntryScope: basis === "entry" })} />
 
-    <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"}
-      onOpen={(title, deals) => setDrill({title, deals, reasonWords: true, subtitle: `${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · Grupo por historial anterior a la pérdida; tabla con valores CRM actuales`})} />
+    <LossScoreClusters deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />
 
     <LossIcpTable deals={lost} readAt={report.generatedAt} scope={`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope}`} available={report.lossNarrativesVersion === "closed-lost-reason/v1"}
       onOpen={(title,deals)=>setDrill({title,deals,reasonWords:true,subtitle:`${filters.rangeLabel} · ${filters.ownerName} · ${sourceScope} · ICP anterior a la pérdida; tabla con valores CRM actuales`})} />
