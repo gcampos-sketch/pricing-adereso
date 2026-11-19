@@ -1,6 +1,6 @@
 import {createServerFn} from '@tanstack/react-start';
 import {requireMfa} from './require-mfa';
-const views=new Set(['comercial','proyectos','embudo','partners','calidad','equipo','crecimiento','simulador','perdidas']);
+const views=new Set(['comercial','proyectos','embudo','partners','calidad','equipo','crecimiento','simulador','perdidas','contactabilidad']);
 export const submitDashboardFeedback=createServerFn({method:'POST'}).middleware([requireMfa]).inputValidator((input:{id:string;body:string;view:string})=>{
   if(!/^[0-9a-f-]{36}$/i.test(input.id)||typeof input.body!=='string'||!input.body.trim()||input.body.length>4000)throw new Error('Escribe un comentario de hasta 4000 caracteres.');
   return {id:input.id,body:input.body.trim(),view:views.has(input.view)?input.view:'comercial'};

@@ -1,0 +1,69 @@
+.contactability-filters,
+.contactability-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.contactability-filters label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+.contactability-filters select {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  background: var(--card);
+  color: var(--foreground);
+}
+.contactability-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.contactability-metric {
+  text-align: left;
+  cursor: pointer;
+}
+.contactability-metric[aria-pressed="true"] {
+  border-color: var(--primary);
+}
+.contactability-metric .metric-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.contactability h2 {
+  font-size: 1.15rem;
+  font-weight: 650;
+  margin: 1.5rem 0 0.75rem;
+}
+.contactability .table-wrap {
+  overflow-x: auto;
+}
+.contactability .pulse-table th[scope="row"] {
+  color: var(--foreground);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.contactability-deal {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.contactability-pagination {
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+@media (max-width: 640px) {
+  .contactability-metrics {
+    grid-template-columns: 1fr;
+  }
+}
