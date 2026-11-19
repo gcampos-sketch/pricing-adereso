@@ -43,7 +43,7 @@
   .report-subnav-item, .report-subnav-children button { min-height: 44px; }
   .report-subnav { width: min(192px, 85vw); transform: translateX(-100%); visibility: hidden; z-index: 75; }
   .report-subnav[data-mobile-open="true"] { transform: translateX(0); visibility: visible; }
-  .report-subnav-backdrop { display: block; position: fixed; inset: 0; z-index: 74; background: rgba(0,0,0,.55); }
+  .report-subnav-backdrop { display: block; position: fixed; inset: 0; z-index: 74; background: var(--dashboard-focus-scrim); -webkit-backdrop-filter: var(--dashboard-focus-blur); backdrop-filter: var(--dashboard-focus-blur); }
 }
 @media (prefers-reduced-motion: reduce) { .report-subnav, .report-subnav-chevron { transition: none; } }
 

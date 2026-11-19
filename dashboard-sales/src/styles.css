@@ -1666,8 +1666,9 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: oklch(0 0 0 / 88%);
-    backdrop-filter: blur(12px);
+    background: var(--dashboard-focus-scrim);
+    -webkit-backdrop-filter: var(--dashboard-focus-blur);
+    backdrop-filter: var(--dashboard-focus-blur);
     opacity: 1;
     transition: opacity 320ms var(--ease-out), backdrop-filter 320ms var(--ease-out);
   }
@@ -1675,6 +1676,7 @@
   .modal-backdrop[data-motion-state="opening"],
   .modal-backdrop[data-motion-state="closing"] {
     opacity: 0;
+    -webkit-backdrop-filter: blur(0);
     backdrop-filter: blur(0);
   }
 
@@ -4873,7 +4875,7 @@
 .scn-apply:hover { color: var(--brand); transform: translateY(-1px); }
 
 .scn-modal { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: 20px; }
-.scn-modal-backdrop { position: absolute; inset: 0; border: 0; background: oklch(0 0 0 / 62%); backdrop-filter: blur(6px); cursor: pointer; }
+.scn-modal-backdrop { position: absolute; inset: 0; border: 0; background: var(--dashboard-focus-scrim); -webkit-backdrop-filter: var(--dashboard-focus-blur); backdrop-filter: var(--dashboard-focus-blur); cursor: pointer; }
 .scn-modal-card {
   position: relative; width: min(420px, 100%); display: grid; gap: 14px;
   padding: 22px; border-radius: 20px;
@@ -5381,7 +5383,7 @@ body[data-report-navigation="collapsed"] { --report-sidebar-width: 52px; }
   .report-mobile-bar { display: flex; position: fixed; inset: 0 0 auto; height: 52px; gap: 10px; align-items: center; padding-inline: 12px; z-index: 44; background: var(--surface); border-bottom: 1px solid var(--border-default); color: var(--foreground); font-weight: 600; font-size: 13px; }
   .report-sidebar { width: min(280px, 85vw); transform: translateX(-100%); visibility: hidden; z-index: 70; }
   .report-sidebar[data-mobile-open="true"] { transform: translateX(0); visibility: visible; }
-  .report-sidebar-backdrop { display: block; position: fixed; inset: 0; background: color-mix(in oklab, var(--background) 75%, transparent); z-index: 69; }
+  .report-sidebar-backdrop { display: block; position: fixed; inset: 0; background: var(--dashboard-focus-scrim); -webkit-backdrop-filter: var(--dashboard-focus-blur); backdrop-filter: var(--dashboard-focus-blur); z-index: 69; }
   .report-sidebar .report-mobile-close { display: inline-flex; margin-left: auto; }
   .report-sidebar-footer { display: block; }
   .report-sidebar .report-nav-item, .report-sidebar .report-nav-child { min-height: 44px; }
@@ -6535,10 +6537,29 @@ button.won-exec-stat:hover { color:var(--brand); }
 @media(max-width:460px){.service-growth-label {min-height:28px;}.service-growth-column + .service-growth-column {margin-left:12px;padding-left:12px;}}
 @media(max-width:380px){.adereso-global-metrics .service-overview {grid-template-columns:minmax(0,1fr);}}
 
-/* Give grouped alerts focus without blurring their portal or changing alert state. */
-.notification-focus-backdrop {position:fixed;inset:0;z-index:1390;background:rgb(0 0 0 / .16);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);pointer-events:auto;animation:notification-focus-in 160ms ease-out;}
-@keyframes notification-focus-in {from {opacity:0;}to {opacity:1;}}
-@media(prefers-reduced-motion:reduce){.notification-focus-backdrop {animation:none;}}
+/* Backdrops share a surface treatment. Popover pairs paint in portal order at the same layer. */
+:root {
+  --dashboard-focus-scrim: rgb(5 7 12 / .32);
+  --dashboard-focus-blur: blur(8px);
+  --dashboard-popover-layer: 2300;
+}
+.dashboard-focus-backdrop {
+  background: var(--dashboard-focus-scrim);
+  -webkit-backdrop-filter: var(--dashboard-focus-blur);
+  backdrop-filter: var(--dashboard-focus-blur);
+}
+.dashboard-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--dashboard-popover-layer);
+  pointer-events: auto;
+  animation: dashboard-focus-in 140ms ease-out;
+}
+[data-radix-popper-content-wrapper]:has(> [data-dashboard-focus-popup]) {
+  z-index: var(--dashboard-popover-layer) !important;
+}
+@keyframes dashboard-focus-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dashboard-popover-backdrop { animation: none; } }
 
 .metric-exposure {font-size:12px;font-weight:550;line-height:1.5;color:var(--body);margin-top:4px;}
 .metric-exposure + .metric-note {margin-top:4px;}
@@ -6587,7 +6608,7 @@ button.won-exec-stat:hover { color:var(--brand); }
 
 .deal-selection-total .scenario-save{margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line)}.deal-selection-total .scenario-save button.pill{background:transparent;color:#ffda35;border:1px solid #ffda3566;font-size:11px;padding:7px 10px;min-height:30px;box-shadow:none}.deal-selection-total .scenario-save button.pill:hover{background:#ffda3510}.deal-selection-total .scenario-save button.pill:disabled{opacity:.65}.scenario-save [role=status]{font-size:11px}
 
-.scenario-drawer-backdrop{position:fixed;inset:0;z-index:2100;background:rgb(5 7 12 / .28);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.scenario-drawer-backdrop{position:fixed;inset:0;z-index:2100;background:var(--dashboard-focus-scrim);-webkit-backdrop-filter:var(--dashboard-focus-blur);backdrop-filter:var(--dashboard-focus-blur)}
 .scenario-drawer{position:fixed;z-index:2101;top:24px;right:24px;bottom:24px;width:min(460px,calc(100vw - 32px));max-width:none;display:flex;flex-direction:column;border:1px solid #ffffff20;border-radius:22px;background:#1b1d22;box-shadow:-20px 12px 70px #0006;overflow:hidden;color:#eee;outline:none}
 .scenario-drawer[data-state=open]{animation:scenario-slide-in 260ms cubic-bezier(.2,.8,.2,1)}.scenario-drawer[data-state=closed]{animation:scenario-slide-out 200ms ease-in}.scenario-drawer-backdrop[data-state=open]{animation:scenario-blur-in 200ms ease-out}.scenario-drawer-backdrop[data-state=closed]{animation:scenario-blur-out 200ms ease-in}
 .scenario-drawer-heading{display:flex;justify-content:space-between;gap:16px;padding:22px 22px 18px;border-bottom:1px solid #ffffff12;flex-shrink:0}.scenario-drawer-heading h2{font-size:21px;line-height:1.2;margin:0;font-weight:600}.scenario-drawer-heading p{font-size:11px;color:#a1a2ab;margin:7px 0 0;line-height:1.5}.scenario-drawer-heading>button{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid #ffffff1a;border-radius:50%;background:none;color:#a1a2ab;flex-shrink:0}.scenario-drawer-body{overflow-y:auto;overscroll-behavior:contain;padding:20px 22px;min-height:0}

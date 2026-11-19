@@ -1137,7 +1137,7 @@ function GlassSelect({
           <svg className="glass-select-chev" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={8} className="glass-select-panel deal-filter-popover" role="listbox" aria-label={label} id={`glass-menu-${id}`} onEscapeKeyDown={event=>event.stopPropagation()}>
+      <PopoverContent align="start" sideOffset={8} focusBackdrop={false} className="glass-select-panel deal-filter-popover" role="listbox" aria-label={label} id={`glass-menu-${id}`} onEscapeKeyDown={event=>event.stopPropagation()}>
         {options.map(option=><button key={option.value} type="button" role="option" aria-selected={activeValues.includes(option.value)} data-active={activeValues.includes(option.value)} onClick={()=>onSelect(option.value)}>{option.label}</button>)}
       </PopoverContent>
     </Popover>
@@ -1161,7 +1161,7 @@ function DealActionMenu({name,children}:{name:string;children:React.ReactNode}) 
   useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
   return <Popover open={open} onOpenChange={next=>{cancel();setOpen(next);}}>
     <PopoverTrigger asChild><button type="button" className="deal-action-trigger" aria-label={`Acciones de ${name}`} onPointerEnter={event=>{if(event.pointerType!=='mouse')return;cancel();hovering.current=true;timer.current=setTimeout(()=>setOpen(true),80);}} onPointerLeave={event=>{if(event.pointerType==='mouse')leave();}} onPointerDown={()=>{hovering.current=false;}} onKeyDown={()=>{hovering.current=false;}}><MoreHorizontal size={16} aria-hidden="true"/></button></PopoverTrigger>
-    <PopoverContent ref={content} originMotion={false} className="deal-action-popup" side="right" align="center" sideOffset={-28} collisionPadding={12} role="dialog" aria-label={`Herramientas de ${name}`} data-deal-action-popup="true" onPointerEnter={cancel} onPointerLeave={event=>{if(event.pointerType==='mouse')leave();}} onOpenAutoFocus={event=>{if(hovering.current)event.preventDefault();}} onCloseAutoFocus={event=>{if(hovering.current)event.preventDefault();}} onEscapeKeyDown={event=>{event.preventDefault();event.stopPropagation();close();}} onClick={close}>
+    <PopoverContent ref={content} originMotion={false} focusBackdrop={false} className="deal-action-popup" side="right" align="center" sideOffset={-28} collisionPadding={12} role="dialog" aria-label={`Herramientas de ${name}`} data-deal-action-popup="true" onPointerEnter={cancel} onPointerLeave={event=>{if(event.pointerType==='mouse')leave();}} onOpenAutoFocus={event=>{if(hovering.current)event.preventDefault();}} onCloseAutoFocus={event=>{if(hovering.current)event.preventDefault();}} onEscapeKeyDown={event=>{event.preventDefault();event.stopPropagation();close();}} onClick={close}>
       <button type="button" className="deal-action-collapse" aria-label="Contraer herramientas"><MoreHorizontal size={16} aria-hidden="true"/></button>
       {children}
     </PopoverContent>
@@ -1860,7 +1860,7 @@ export function DealModal({
                 open={openMenu === 'won-owner'} onToggle={() => setOpenMenu(openMenu === 'won-owner' ? null : 'won-owner')} /> : null}
               <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
                 <PopoverTrigger asChild><button type="button" className="deal-search-trigger" aria-label="Buscar deals" title={query ? `Buscar deals · filtro: ${query}` : 'Buscar deals'} data-active={!!query}><Search size={16} aria-hidden="true"/></button></PopoverTrigger>
-                <PopoverContent align="start" sideOffset={10} className="deal-search-popover" onEscapeKeyDown={event=>event.stopPropagation()}>
+                <PopoverContent align="start" sideOffset={10} focusBackdrop={false} className="deal-search-popover" onEscapeKeyDown={event=>event.stopPropagation()}>
                   <div className="deal-search-heading"><label htmlFor="deal-list-search">Buscar en el listado</label><button type="button" aria-label="Cerrar búsqueda" onClick={()=>setSearchOpen(false)}><X size={16} aria-hidden="true"/></button></div>
                   <input autoFocus id="deal-list-search" type="search" className="modal-search" placeholder="Deal, comercial, etapa o motivo…" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();setSearchOpen(false);}if(event.key==='Enter'){event.preventDefault();setSearchOpen(false);}}} aria-label="Buscar en la lista de deals"/>
                   <div className="deal-search-footer"><span>{deals.length} resultados</span>{query ? <button type="button" onClick={()=>setQuery('')}>Limpiar búsqueda</button> : <span>Enter para volver al listado</span>}</div>

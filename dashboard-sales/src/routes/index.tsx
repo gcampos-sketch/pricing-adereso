@@ -1,3 +1,4 @@
+import { DashboardPopupContext } from "@/contexts/DashboardPopupContext";
 import { HubEntryTracker } from "@/components/HubEntryTracker";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import {
@@ -170,7 +171,9 @@ function IndexRoute() {
     <RefreshProvider>
       <AuthGate>
         <HubEntryTracker />
-        {dashboard ? <Index embedded={embedded} /> : <HubPortal />}
+        {dashboard ? <DashboardPopupContext.Provider value={true}>
+          <Index embedded={embedded} />
+        </DashboardPopupContext.Provider> : <HubPortal />}
       </AuthGate>
     </RefreshProvider>
   );

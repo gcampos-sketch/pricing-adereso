@@ -1,6 +1,5 @@
 import { dealExposure } from '@/lib/deal-exposure';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Bell, RefreshCw, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
@@ -22,7 +21,6 @@ export function NotificationCenterView({ scope, groups = EMPTY_GROUPS, generated
   const entireTeam = scope.owner === 'team' && scope.role === 'all' && scope.type === 'all' && scope.stages.length === 0;
   const review = (group: ActionGroup) => { setOpen(false); onReview(group); };
   return <TooltipProvider><Popover modal open={open} onOpenChange={setOpen}>
-    {open && typeof document !== 'undefined' ? createPortal(<div className="notification-focus-backdrop" aria-hidden="true" onClick={() => setOpen(false)} />, document.body) : null}
     <Tooltip><TooltipTrigger asChild><PopoverTrigger asChild>
       <Button variant="outline" size="icon" aria-label={`Tareas comerciales: ${groups.length} grupos pendientes`} className="notification-bell">
         <Bell aria-hidden="true" className="size-5" />
