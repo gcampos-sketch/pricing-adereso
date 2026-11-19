@@ -96,3 +96,26 @@
 @media (max-width: 540px) {
   .loss-ticket-owners .owner-bar-row { grid-template-columns: minmax(70px, 1fr) minmax(24px, 2fr) minmax(48px, auto); }
 }
+
+.loss-words-disclosure {
+  min-height: 0;
+  margin: 8px 16px;
+  overflow: auto;
+}
+.loss-words-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  color: var(--body);
+  font-size: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.loss-words-disclosure > summary::-webkit-details-marker { display: none; }
+.loss-words-disclosure > summary:hover { color: var(--brand); }
+.loss-words-disclosure > summary:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; border-radius: 8px; }
+.loss-words-disclosure:not([open]) > summary > svg { transform: rotate(-90deg); }
+.loss-words-disclosure[open] .loss-words-label-closed,
+.loss-words-disclosure:not([open]) .loss-words-label-open { display: none; }
+.loss-words-disclosure > .loss-reason-words { margin: 0; }
