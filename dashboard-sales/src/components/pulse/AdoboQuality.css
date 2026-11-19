@@ -1,7 +1,7 @@
 .adobo-quality {
   display: grid;
   gap: 18px;
-  margin: 22px 0;
+  margin: var(--pulse-section-space) 0;
   min-width: 0;
 }
 .aq-heading {
@@ -11,9 +11,7 @@
   gap: 16px;
 }
 .aq-heading h2 {
-  font-size: 22px;
-  font-weight: 600;
-  margin: 6px 0;
+  margin-top: 6px;
 }
 .aq-heading small,
 .aq-note,

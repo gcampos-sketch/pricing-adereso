@@ -102,13 +102,15 @@ export function WinRateCross({
 
   return (
     <section className="wr-cross">
-      <div className="team-section-head">
-        <h2 className="pulse-h2">Win rate cruzado · {scope.name}</h2>
-        <span className="eyebrow">
-          {rangeLabel} · {totalClosed} deals cerrados
-          {scope.isAE ? " · perfil AE" : ""}
-        </span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h2 className="pulse-h2">Win rate cruzado · {scope.name}</h2>
+          <p className="pulse-section-context">
+            {rangeLabel} · {totalClosed} deals cerrados
+            {scope.isAE ? " · perfil AE" : ""}
+          </p>
+        </div>
+      </header>
 
       <div className="wr-dim-tabs">
         {scope.dimensions.map((dim) => (

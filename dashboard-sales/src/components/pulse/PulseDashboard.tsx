@@ -1575,7 +1575,7 @@ export function PulseDashboard({
       </>}
       {section === "forecast" && <>
       <section className="forecast-today" aria-labelledby="forecast-today-title">
-        <header><div><h3 id="forecast-today-title">Resolver hoy</h3><p>Situación actual · empieza por lo que requiere revisión.</p></div><span className="forecast-time-chip">Hoy</span></header>
+        <header><div><h2 className="pulse-h2" id="forecast-today-title">Resolver hoy</h2><p>Situación actual · empieza por lo que requiere revisión.</p></div><span className="forecast-time-chip">Hoy</span></header>
         <div className="forecast-action-list">
           {["overdue", "warning", "lost-candidate", "off-track", "kickoff", "drafts", "signature"].flatMap(id => operationalTasks.filter(group => group.id === id)).map((group, index) => {
             const titles: Record<string, string> = { overdue: "Corregir fechas vencidas", warning: "Resolver warnings", "lost-candidate": "Revisar candidatos a perdido", "off-track": "Contactar deals On Track No", kickoff: "Empujar kick off", drafts: "Enviar borradores de contrato", signature: "Conseguir firmas" };
@@ -1599,7 +1599,7 @@ export function PulseDashboard({
         <p className="forecast-scope-note">Un deal puede necesitar más de una acción; los grupos no se suman.</p>
       </section>
       {forecastSignals.length ? <section className="forecast-signals" aria-labelledby="forecast-signals-title">
-        <header><div><h3 id="forecast-signals-title">Señales para revisar</h3><p>Gestión reciente, estancamiento y fechas por completar.</p></div></header>
+        <header><div><h2 className="pulse-h2" id="forecast-signals-title">Señales para revisar</h2><p>Gestión reciente, estancamiento y fechas por completar.</p></div></header>
         <div className="forecast-signal-list">
           {forecastSignals.map(signal => <button type="button" key={signal.id} onClick={() => openList(signal.title, signal.note + (signal.id === "high-probability" ? " · período y filtros del informe" : " · foto actual, sin filtro de período"), signal.deals)}>
             <span><strong>{signal.title}</strong><small>{signal.note}</small></span>

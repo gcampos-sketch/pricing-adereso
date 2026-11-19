@@ -1,5 +1,4 @@
-.loss-score-clusters { margin-top:24px; }
-.loss-score-clusters h2 { font:500 20px Outfit,sans-serif; margin:0; }
+.loss-score-clusters { margin-top:var(--pulse-panel-space); }
 .loss-score-clusters .loss-analysis-heading p { max-width:600px; }
 .loss-cluster-coverage,.loss-cluster-footnote,.loss-cluster-status { color:var(--muted); font-size:11px; line-height:1.6; }
 .loss-cluster-status { min-height:160px; display:flex; align-items:center; gap:12px; }

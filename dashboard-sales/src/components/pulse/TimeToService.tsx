@@ -96,10 +96,12 @@ export function TimeToService({
 
   return (
     <>
-      <div className="team-section-head">
-        <h2 className="pulse-h2">{title}</h2>
-        <span className="eyebrow">{note}</span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h2 className="pulse-h2">{title}</h2>
+          <p className="pulse-section-context">{note}</p>
+        </div>
+      </header>
       <section className="grid-4">
         <Metric
           label={`Mediana ${fromLabel} → ${toLabel}`}

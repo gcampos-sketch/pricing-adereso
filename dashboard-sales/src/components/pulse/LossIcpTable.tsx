@@ -44,7 +44,7 @@ export function LossIcpTable({deals,scope,readAt,available,onOpen,basis='prior'}
   const amount=(rows:InsightDeal[])=>rows.reduce((n,d)=>n+d.amountValue,0);
   const label=metric==='score'?'ICP Score Adobo':'ICP fit Adobo';
   return <section ref={root} className="rep-chart loss-icp-table" aria-label="Deals perdidos por ICP">
-    <div className="loss-analysis-heading"><div><h2>¿Qué encaje ICP tenían?</h2><p>{basis==='prior'?'Último valor anterior a entrar a perdido':'Valor actual registrado en HubSpot'} · {scope}</p></div>
+    <div className="loss-analysis-heading"><div><h2 className="pulse-h2">¿Qué encaje ICP tenían?</h2><p>{basis==='prior'?'Último valor anterior a entrar a perdido':'Valor actual registrado en HubSpot'} · {scope}</p></div>
       <div className="tabs" aria-label="Propiedad ICP del análisis">{(['score','fit'] as const).map(value=><button type="button" key={value} data-active={metric===value} aria-pressed={metric===value} onClick={()=>{setMetric(value);setOpened(null);}}>{value==='score'?'ICP Score Adobo':'ICP fit Adobo'}</button>)}</div>
     </div>
     {!evidence?<div className="loss-cluster-status" role="status">{state.key===key && state.error?<>{state.error} <button type="button" className="cell-button" onClick={()=>setRetry(n=>n+1)}>Reintentar</button></>:'Leyendo datos ICP…'}</div>:<>

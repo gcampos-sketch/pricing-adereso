@@ -1,5 +1,4 @@
-.loss-icp-table { margin-top:24px; }
-.loss-icp-table h2 { margin:0; font:500 20px Outfit,sans-serif; }
+.loss-icp-table { margin-top:var(--pulse-panel-space); }
 .loss-icp-scroll { overflow-x:auto; }
 .loss-icp-grid { width:100%; border-collapse:collapse; font-size:12px; }
 .loss-icp-grid th,.loss-icp-grid td { padding:12px 10px; border-bottom:1px solid var(--border); text-align:right; font-variant-numeric:tabular-nums; }

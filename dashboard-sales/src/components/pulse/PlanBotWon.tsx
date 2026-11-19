@@ -66,12 +66,14 @@ export function PlanBotWon({
 
   return (
     <>
-      <div className="team-section-head">
-        <h2 className="pulse-h2">Ganados por Plan de Bot</h2>
-        <span className="eyebrow">
-          {scope.name} · {rangeLabel} · {total} deals ganados · {money(totalAmount)}
-        </span>
-      </div>
+      <header className="pulse-section-head">
+        <div>
+          <h2 className="pulse-h2">Ganados por Plan de Bot</h2>
+          <p className="pulse-section-context">
+            {scope.name} · {rangeLabel} · {total} deals ganados · {money(totalAmount)}
+          </p>
+        </div>
+      </header>
 
       {!total ? (
         <div className="empty-state">Sin deals ganados con plan de bot en el rango filtrado.</div>
