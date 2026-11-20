@@ -13,6 +13,7 @@ import { useOverdueTasks } from "@/hooks/use-overdue-tasks";
 import { OverdueTasks } from "./OverdueTasks";
 import { taskDealOutcome, type TaskOutcome, type TaskScope } from "@/lib/overdue-tasks";
 import { ArrowUpRight } from 'lucide-react';
+import { DealActivityAnalysis } from './DealActivityAnalysis';
 import { PULSE_FOCUS_PAGES, type PulseFocusView, type PulseSection } from '@/lib/report-navigation';
 import { Button } from "@/components/ui/button";
 import { CommissionRate } from "./CommissionRate";
@@ -1468,6 +1469,7 @@ export function PulseDashboard({
       </header>}
 
       {section !== "general" && <div className="pulse-focused-content"><FoldList key={section} storageKey={`pulse-fold-order-${section}-v2`}>
+      {section === "actividades" && <DealActivityAnalysis year={year} quarter={quarter} role={role ?? "all"} owner={ownerFilter} segment={dealType} readAt={report.generatedAt} />}
       {section === "scenarios" && <QuotaScenarios report={report} owner={ownerFilter} role={role} />}
       {section === "conversion" && <>
       <Fold defaultOpen title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>

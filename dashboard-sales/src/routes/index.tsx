@@ -370,7 +370,7 @@ function Index({ embedded = false }: { embedded?: boolean }) {
     simulador: 'Preparando datos del simulador', perdidos: 'Consultando negocios perdidos', calidad: 'Consultando calidad comercial',
     contactabilidad: 'Consultando actividad comercial en HubSpot',
     diagnostico: 'Consultando las ediciones del diagnóstico comercial',
-    scenarios: 'Preparando escenarios guardados', pipeline: 'Preparando pipeline y reuniones', forecast: 'Preparando forecast y prioridades', conversion: 'Preparando resultados y conversión',
+    actividades: 'Preparando actividades por deal', scenarios: 'Preparando escenarios guardados', pipeline: 'Preparando pipeline y reuniones', forecast: 'Preparando forecast y prioridades', conversion: 'Preparando resultados y conversión',
   };
   const reportPhase = useReportPhase(`pulse-report-${roleFilter.toLowerCase()}`);
   const pulseView = isPulseReportView(view);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./ReportSidebar.css";
-import { BarChart3, BriefcaseBusiness, ChevronDown, Handshake, PanelLeftClose, PanelLeftOpen, Users, Workflow, X } from "lucide-react";
+import { Activity, BarChart3, BriefcaseBusiness, ChevronDown, Handshake, PanelLeftClose, PanelLeftOpen, Users, Workflow, X } from "lucide-react";
 import { AccountMenu } from "@/components/AuthGate";
 import { DashboardMenu } from "./DashboardMenu";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ const groups = [
     { id: "contactabilidad", label: "Contactabilidad" },
     { id: "proyectos", label: "Proyectos ganados" },
   ] },
+  { id: "actividades", label: "Actividades por deal", icon: Activity },
   { id: "conversion", label: "Resultados", icon: BarChart3, children: [
     { id: "conversion", label: "Resultados y conversión" },
     { id: "crecimiento", label: "Expansión vs Venta Nueva" },
