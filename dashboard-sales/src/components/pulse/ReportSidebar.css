@@ -17,12 +17,21 @@
 .report-subnav-item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 32px; padding: 7px 6px; border-radius: 8px; color: var(--muted); font: 500 11px/1.5 var(--font-sans); text-align: left; cursor: pointer; }
 .report-subnav-item > svg { width: 16px; height: 16px; flex-shrink: 0; }
 .report-subnav-item > span { flex: 1; }
-.report-subnav-item .report-subnav-chevron { width: 12px; height: 12px; transition: transform .2s ease; }
+.report-subnav-item .report-subnav-chevron { width: 12px; height: 12px; transition: transform 320ms cubic-bezier(.4, 0, .2, 1); }
 .report-subnav-chevron[data-open="true"] { transform: rotate(180deg); }
 .report-subnav-item[data-active="true"] { color: var(--foreground); }
 .report-subnav-item[aria-current="page"] { color: #ffe59a; background: rgba(255,213,64,.07); }
 .report-subnav-item:hover, .report-subnav-children button:hover { background: rgba(255,255,255,.04); color: var(--foreground); }
+.report-subnav-accordion {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 320ms cubic-bezier(.4, 0, .2, 1), opacity 240ms ease;
+}
+.report-subnav-accordion[data-open="true"] { grid-template-rows: 1fr; opacity: 1; }
+.report-subnav-accordion-clip { min-height: 0; overflow: hidden; }
 .report-subnav-children { margin: 3px 0 4px 10px; padding-left: 6px; border-left: 1px solid var(--border-default); }
+.report-subnav-children button:focus-visible { outline-offset: -2px; }
 .report-subnav-children button { position: relative; display: block; width: 100%; min-height: 30px; margin: 1px 0; padding: 6px 7px; border-radius: 6px; color: var(--muted); font: 400 11px/1.45 var(--font-sans); text-align: left; cursor: pointer; }
 .report-subnav-children button[data-active="true"] { background: rgba(255,213,64,.07); color: #ffe59a; }
 .report-subnav-children button[data-active="true"]::before { content: ''; position: absolute; left: -12px; top: 11px; bottom: 11px; width: 2px; border-radius: 2px; background: var(--brand); }
@@ -45,7 +54,9 @@
   .report-subnav[data-mobile-open="true"] { transform: translateX(0); visibility: visible; }
   .report-subnav-backdrop { display: block; position: fixed; inset: 0; z-index: 74; background: var(--dashboard-focus-scrim); -webkit-backdrop-filter: var(--dashboard-focus-blur); backdrop-filter: var(--dashboard-focus-blur); }
 }
-@media (prefers-reduced-motion: reduce) { .report-subnav, .report-subnav-chevron { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .report-subnav, .report-subnav-item .report-subnav-chevron, .report-subnav-accordion { transition: none; }
+}
 
 /* A quiet edge keeps hidden reports discoverable; hover previews never shift data. */
 .report-subnav-hover-zone { pointer-events: none; }
