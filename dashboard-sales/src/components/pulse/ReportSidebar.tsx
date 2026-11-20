@@ -140,8 +140,12 @@ export function ReportSidebar({ view, onView, collapsed, onCollapse, presentatio
               <group.icon aria-hidden="true" /><span>{group.label}</span>
               {group.children && <ChevronDown className="report-subnav-chevron" data-open={open} aria-hidden="true" />}
             </button>
-            {group.children && <div className="report-subnav-children" id={`subnav-${group.id}`} hidden={!open}>
-              {group.children.map(child => <button type="button" key={child.id} aria-current={view === child.id ? 'page' : undefined} data-active={view === child.id} onClick={() => select(child.id)}>{child.label}</button>)}
+            {group.children && <div className="report-subnav-accordion" id={`subnav-${group.id}`} data-open={open} inert={!open}>
+              <div className="report-subnav-accordion-clip">
+                <div className="report-subnav-children">
+                  {group.children.map(child => <button type="button" key={child.id} aria-current={view === child.id ? 'page' : undefined} data-active={view === child.id} onClick={() => select(child.id)}>{child.label}</button>)}
+                </div>
+              </div>
             </div>}
           </div>;
         })}
