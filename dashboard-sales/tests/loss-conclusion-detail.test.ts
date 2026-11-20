@@ -29,3 +29,19 @@ test("tied channels are retained and owners are separated by ID and include zero
   const audit = summarizeGhosting(rows, { a: activity(1, 1, 2) });
   expect(audit.leadingChannels.map(channel => channel.channel)).toEqual(["calls", "whatsapp"]);
 });
+
+
+test("owner channel drilldowns keep the exact verified below-minimum cohort under active filters", () => {
+  const holly = deal("holly-wa", "1", "Holly", 50);
+  const otherRows = [deal("holly-calls", "1", "Holly", 100), deal("holly-unknown", "1", "Holly", 0),
+    deal("felipe-wa", "2", "Felipe", 0), deal("outside", "1", "Holly", 100)];
+  const rows = [holly, ...otherRows].filter(row => row.id !== "outside");
+  const evidence = {
+    "holly-wa": activity(2, 1, 2), "holly-calls": activity(0, 2, 2), "holly-unknown": activity(2, null, 2),
+    "felipe-wa": activity(2, 0, 1), outside: activity(2, 0, 0),
+  };
+  const hollyAudit = ghostingByOwner(rows, evidence).find(owner => owner.id === "1")!.audit;
+  expect(hollyAudit.channels.map(channel => [channel.channel, channel.missing.map(row => row.id)]))
+    .toEqual([["calls", ["holly-calls"]], ["whatsapp", ["holly-wa"]], ["emails", []]]);
+  expect(hollyAudit.groups.unknown.map(row => row.id)).toEqual(["holly-unknown"]);
+});
