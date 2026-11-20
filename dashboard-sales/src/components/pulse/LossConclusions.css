@@ -221,8 +221,12 @@
 .loss-conclusion-owners > li > button:focus-visible { outline-offset: -2px; }
 .loss-conclusion-owners > li > button:hover { color: var(--brand); background: rgb(255 255 255 / .035); }
 .loss-conclusion-owners > li > button strong { color: var(--foreground); overflow-wrap: anywhere; }
-.loss-conclusion-ghost-owners { max-height: 216px; }
-.loss-conclusion-ghost-owners .loss-conclusion-channel-list { margin: 0 3px 8px; }
+.loss-conclusion-ghost-owners { max-height: 248px; }
+.loss-conclusion-ghost-owners .loss-conclusion-channel-list { margin: 0 3px 5px; }
+.loss-conclusion-statuses[data-owner-statuses] { padding: 0 3px; margin-bottom: 5px; }
+.loss-conclusion-statuses[data-owner-statuses] li > * { min-height: 33px; padding: 3px 2px; }
+.loss-conclusion-statuses[data-owner-statuses] strong { font-size: 13px; }
+.loss-conclusion-owner-meetings { margin: 0 3px 8px; color: var(--muted); font-size: 10px; }
 .loss-conclusion-channel-list {
   display: flex;
   flex-wrap: wrap;

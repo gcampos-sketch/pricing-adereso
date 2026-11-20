@@ -2,7 +2,7 @@ import { load } from "cheerio";
 import { LOST_STAGES } from "./commercial-outcomes";
 import { readDealActivityLinks } from "./deal-activity-associations.server";
 import { COMMERCIAL_PIPELINE, gateway, type RawDeal } from "./hubspot.server";
-import { completedMeeting, isGhostingLoss, type GhostingActivity } from "./loss-ghosting";
+import { completedMeeting, ghostingMeetingWindow, isGhostingLoss, type GhostingActivity } from "./loss-ghosting";
 import { isRecordedWhatsApp } from "./whatsapp-count";
 
 const GHOSTING_REASON_PROPERTY = "razones_de_cierre_perdidos_especifico";
@@ -42,24 +42,44 @@ async function readRegisteredCounts(dealIds: string[], type: "calls" | "emails")
   return new Map([...links].map(([id, ids]) => [id, ids.length]));
 }
 
-async function readClassifiedCounts(
-  dealIds: string[], type: "communications" | "meetings",
-  properties: string[], qualifies: (row: ActivityProperties) => boolean | null,
-) {
-  const links = await readDealActivityLinks(dealIds, type);
-  const records = await readObjects(type, [...new Set([...links.values()].flat())], properties);
-  const outcomes = new Map([...records].map(([id, row]) => [id, qualifies(row)]));
+async function readWhatsAppCounts(dealIds: string[]) {
+  const links = await readDealActivityLinks(dealIds, "communications");
+  const records = await readObjects("communications", [...new Set([...links.values()].flat())],
+    ["hs_communication_channel_type", "hs_communication_body"]);
+  const outcomes = new Map([...records].map(([id, row]) => [id, loggedWhatsApp(row)]));
   return new Map([...links].map(([id, ids]) => {
     const included = ids.map(activityId => outcomes.get(activityId));
-    return [id, {
-      completed: included.filter(value => value === true).length,
-      unverified: included.filter(value => value === null || value === undefined).length,
-    }];
+    return [id, included.some(value => value == null) ? null : included.filter(value => value === true).length];
   }));
 }
 
+async function readGhostingMeetings(eligible: string[], deals: Map<string, ActivityProperties>, now: number) {
+  const windows = new Map(eligible.flatMap(id => {
+    const deal = deals.get(id)!;
+    const window = ghostingMeetingWindow(deal, deal["dealstage"]!, now);
+    return window ? [[id, window] as const] : [];
+  }));
+  const links = await readDealActivityLinks([...windows.keys()], "meetings");
+  const records = await readObjects("meetings", [...new Set([...links.values()].flat())],
+    ["hs_meeting_outcome", "hs_meeting_start_time", "hs_timestamp"]);
+
+  const result = new Map<string, NonNullable<GhostingActivity["meetings"]>>();
+  for (const [id, window] of windows) {
+    const completedIds: string[] = [];
+    let unverified = 0;
+    for (const meetingId of links.get(id)!) {
+      const qualifies = completedMeeting(records.get(meetingId)!, window);
+      if (qualifies === true) completedIds.push(meetingId);
+      else if (qualifies === null) unverified++;
+    }
+    result.set(id, { completedIds, unverified });
+  }
+  return result;
+}
+
 export async function readLossGhostingActivity(ids: string[]): Promise<Record<string, GhostingActivity>> {
-  const deals = await readObjects("deals", ids, ["pipeline", "dealstage", GHOSTING_REASON_PROPERTY]);
+  const deals = await readObjects("deals", ids, ["pipeline", "dealstage", GHOSTING_REASON_PROPERTY, "createdate",
+    ...[...LOST_STAGES].map(stage => `hs_v2_date_entered_${stage}`)]);
   const eligible = ids.filter(id => {
     const properties = deals.get(id)!;
     return properties["pipeline"] === COMMERCIAL_PIPELINE && LOST_STAGES.has(properties["dealstage"] ?? "") &&
@@ -70,20 +90,14 @@ export async function readLossGhostingActivity(ids: string[]): Promise<Record<st
   const now = Date.now();
   const [calls, whatsapp, emails, meetings] = await Promise.allSettled([
     readRegisteredCounts(eligible, "calls"),
-    readClassifiedCounts(eligible, "communications", ["hs_communication_channel_type", "hs_communication_body"], loggedWhatsApp),
+    readWhatsAppCounts(eligible),
     readRegisteredCounts(eligible, "emails"),
-    readClassifiedCounts(eligible, "meetings", ["hs_meeting_outcome", "hs_meeting_start_time", "hs_timestamp"],
-      properties => completedMeeting(properties, now)),
+    readGhostingMeetings(eligible, deals, now),
   ]);
 
   const count = <T,>(result: PromiseSettledResult<Map<string, T>>, id: string) =>
     result.status === "fulfilled" ? result.value.get(id) ?? null : null;
-  return Object.fromEntries(eligible.map(id => {
-    const messages = count(whatsapp, id);
-    return [id, {
-      calls: count(calls, id), emails: count(emails, id),
-      whatsapp: messages && !messages.unverified ? messages.completed : null,
-      meetings: count(meetings, id),
-    }];
-  }));
+  return Object.fromEntries(eligible.map(id => [id, {
+    calls: count(calls, id), emails: count(emails, id), whatsapp: count(whatsapp, id), meetings: count(meetings, id),
+  }]));
 }

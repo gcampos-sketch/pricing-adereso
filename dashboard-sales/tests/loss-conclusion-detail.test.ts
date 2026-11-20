@@ -45,3 +45,17 @@ test("owner channel drilldowns keep the exact verified below-minimum cohort unde
     .toEqual([["calls", ["holly-calls"]], ["whatsapp", ["holly-wa"]], ["emails", []]]);
   expect(hollyAudit.groups.unknown.map(row => row.id)).toEqual(["holly-unknown"]);
 });
+
+test("owner status cohorts stay independent and owner meeting totals deduplicate associated meetings", () => {
+  const rows = [deal("met", "1", "Holly", 10), deal("short", "1", "Holly", 10), deal("unknown", "1", "Holly", 0),
+    deal("other", "2", "Felipe", 2)];
+  const evidence = {
+    met: { ...activity(2, 2, 2), meetings: { completedIds: ["101"], unverified: 0 } },
+    short: { ...activity(0, 2, 2), meetings: { completedIds: ["101", "102"], unverified: 1 } },
+    other: { ...activity(2, 2, 2), meetings: { completedIds: ["103"], unverified: 0 } },
+  };
+  const [holly, felipe] = ghostingByOwner(rows, evidence);
+  expect(Object.values(holly!.audit.groups).map(group => group.map(row => row.id))).toEqual([["met"], ["short"], ["unknown"]]);
+  expect(holly!.meetings).toEqual({ completed: 2, windowsRead: 2, incomplete: 2 });
+  expect(felipe!.meetings).toEqual({ completed: 1, windowsRead: 1, incomplete: 0 });
+});

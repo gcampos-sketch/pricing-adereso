@@ -20,8 +20,8 @@ export function LossGhostingActivity({ activity, loading }: { activity?: Ghostin
         </div>;
       })}
       <div>
-        <dt>Reuniones completadas</dt>
-        <dd>{activity?.meetings ? <strong>{activity.meetings.completed}</strong> : <span aria-label="Sin verificar">—</span>}</dd>
+        <dt>Reuniones previas completadas</dt>
+        <dd>{activity?.meetings ? <strong>{activity.meetings.completedIds.length}</strong> : <span aria-label="Sin verificar">—</span>}</dd>
       </div>
     </dl>
     {!!activity?.meetings?.unverified && <p>{activity.meetings.unverified} {activity.meetings.unverified === 1 ? "reunión sin verificar" : "reuniones sin verificar"}</p>}

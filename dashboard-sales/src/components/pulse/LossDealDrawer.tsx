@@ -65,7 +65,7 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
             <p role="status"><strong>{count} {deals.length === 1 ? "deal" : "deals"}</strong><span>{money(sum(rows, deal => deal.amountValue))} USD de MRR</span></p>
           </div>
           {ghostRows.length > 0 && <div className="loss-ghosting-caption">
-            <p>Mínimo por deal · 2 llamadas, 2 mensajes nativos de WhatsApp y 2 correos registrados en HubSpot. Las reuniones se muestran aparte.</p>
+            <p>Mínimo por deal · 2 llamadas, 2 mensajes nativos de WhatsApp y 2 correos registrados en HubSpot. Reuniones completadas desde la creación del deal hasta antes de su entrada a perdido.</p>
             {partialActivity && !ghosting.isFetching && <button type="button" className="cell-button" onClick={() => void ghosting.refetch()}>Verificar de nuevo</button>}
           </div>}
           {selection.reasonWords && rows.length > 0 && <details className="loss-drawer-words">
