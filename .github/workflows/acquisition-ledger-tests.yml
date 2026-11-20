@@ -1,0 +1,58 @@
+name: Acquisition ledger isolated PostgreSQL
+
+on:
+  pull_request:
+    paths:
+      - 'dashboard-sales/scripts/acquisition-prospective/**'
+      - '.github/workflows/acquisition-ledger-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-ledger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: acquisition_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d acquisition_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: synthetic-ci-only
+      PGDATABASE: acquisition_test
+      PGCONNECT_TIMEOUT: '5'
+      ACQUISITION_TEST_ISOLATED: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify tools and ephemeral target
+        run: |
+          command -v psql
+          command -v python3
+          test "$PGHOST" = "127.0.0.1"
+          test "$PGDATABASE" = "acquisition_test"
+          psql -X -v ON_ERROR_STOP=1 -c 'SELECT version();'
+      - name: Create synthetic roles and install isolated proposal
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -c 'CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;'
+          psql -X -v ON_ERROR_STOP=1 -f dashboard-sales/scripts/acquisition-prospective/ledger/ledger-proposal.sql
+      - name: PostgreSQL constraints and real role enforcement
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f dashboard-sales/scripts/acquisition-prospective/ledger/staging-tests.sql
+          psql -X -v ON_ERROR_STOP=1 -f dashboard-sales/scripts/acquisition-prospective/ledger/role-tests.sql
+      - name: Concurrent ingestion and competing snapshot freeze
+        run: python3 dashboard-sales/scripts/acquisition-prospective/ledger/concurrency-tests.py
