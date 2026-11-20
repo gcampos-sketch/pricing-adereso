@@ -67,13 +67,21 @@ function GhostingChannels({ audit, pending, onOpen, owner }: {
   </ul>;
 }
 
-function GhostingStatuses({ audit, pending, onOpen }: { audit: GhostingAudit; pending: boolean; onOpen?: OpenEvidence }) {
-  return <ul className="loss-conclusion-statuses" aria-label="Cumplimiento del 2/2/2">
+function GhostingStatuses({ audit, pending, onOpen, owner }: {
+  audit: GhostingAudit;
+  pending: boolean;
+  onOpen?: OpenEvidence;
+  owner?: string;
+}) {
+  return <ul className="loss-conclusion-statuses" data-owner-statuses={owner ? "" : undefined}
+    aria-label={owner ? `Cumplimiento del 2/2/2 de ${owner}` : "Cumplimiento del 2/2/2"}>
     {GHOSTING_STATUSES.map(([key, label]) => {
       const deals = audit.groups[key];
       const value = <><strong>{pending ? "—" : deals.length}</strong><span>{label}</span></>;
       return <li key={key} data-audit-status={key}>{onOpen && !pending && deals.length
-        ? <button type="button" aria-haspopup="dialog" onClick={() => onOpen(deals, label)}>{value}</button>
+        ? <button type="button" aria-haspopup="dialog"
+          aria-label={owner ? `${label} · ${owner} · ${deals.length} ${deals.length === 1 ? "deal" : "deals"}` : undefined}
+          onClick={() => onOpen(deals, owner ? `${owner} · ${label}` : label)}>{value}</button>
         : <div>{value}</div>}</li>;
     })}
   </ul>;
@@ -122,12 +130,18 @@ export function GhostingConclusion({ label, deals, onOpen, front, recommendation
           <button type="button" aria-haspopup="dialog" aria-label={`Ver seguimiento de ${owner.label}`}
             onClick={() => onOpen(owner.deals, owner.label)}>
             <strong>{owner.label}</strong>
-            <span>{pending ? "—" : `${owner.audit.groups.short.length} bajo · ${owner.audit.groups.unknown.length} sin verificar`}</span>
+            <span>{owner.deals.length} {owner.deals.length === 1 ? "deal" : "deals"}</span>
             <ChevronRight size={13} aria-hidden="true" />
           </button>
+          <GhostingStatuses audit={owner.audit} pending={pending} onOpen={onOpen} owner={owner.label} />
           <GhostingChannels audit={owner.audit} pending={pending} onOpen={onOpen} owner={owner.label} />
+          <p className="loss-conclusion-owner-meetings">
+            <strong>{pending || !owner.meetings.windowsRead ? "—" : owner.meetings.completed}</strong> reuniones previas completadas
+            {!pending && owner.meetings.incomplete > 0 && <> · {owner.meetings.incomplete} {owner.meetings.incomplete === 1 ? "deal" : "deals"} con datos incompletos</>}
+          </p>
         </li>)}
       </ul>
+      <p className="loss-conclusion-stage">Reuniones registradas desde la creación de cada deal hasta antes de su entrada a perdido.</p>
       {!pending && partial && <div className="loss-conclusion-partial">
         <span>Los faltantes se calculan con la actividad verificable.</span>
         <button type="button" className="cell-button" onClick={() => void query.refetch()} disabled={query.isFetching}>

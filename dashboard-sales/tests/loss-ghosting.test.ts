@@ -1,11 +1,11 @@
 import { expect, test } from "bun:test";
-import { completedMeeting, ghostingMinimum, isGhostingLoss, type GhostingActivity } from "../src/lib/loss-ghosting";
+import { completedMeeting, ghostingMeetingWindow, ghostingMinimum, isGhostingLoss, type GhostingActivity } from "../src/lib/loss-ghosting";
 
 const baseline: GhostingActivity = { calls: 2, whatsapp: 2, emails: 2, meetings: null };
 
 test("each contact channel must individually meet two; meetings do not affect the result", () => {
   expect(ghostingMinimum(baseline)).toBe("met");
-  expect(ghostingMinimum({ ...baseline, calls: 8, whatsapp: 1, meetings: { completed: 12, unverified: 0 } })).toBe("short");
+  expect(ghostingMinimum({ ...baseline, calls: 8, whatsapp: 1, meetings: { completedIds: ["1"], unverified: 0 } })).toBe("short");
   expect(ghostingMinimum({ ...baseline, emails: 0 })).toBe("short");
 });
 
@@ -23,12 +23,31 @@ test("only current loss reason labels targeting ghosting activate this evidence"
   expect(isGhostingLoss(null)).toBe(false);
 });
 
-test("meetings count only with a completed outcome and a date at or before the read", () => {
-  const now = Date.parse("2026-11-19T12:00:00Z");
-  expect(completedMeeting({ hs_meeting_outcome: "COMPLETED", hs_meeting_start_time: "2026-11-18T12:00:00Z" }, now)).toBe(true);
-  expect(completedMeeting({ hs_meeting_outcome: "COMPLETED", hs_timestamp: String(now) }, now)).toBe(true);
-  expect(completedMeeting({ hs_meeting_outcome: "COMPLETED", hs_meeting_start_time: "2026-11-20T12:00:00Z" }, now)).toBe(false);
-  expect(completedMeeting({ hs_meeting_outcome: "SCHEDULED" }, now)).toBe(false);
-  expect(completedMeeting({ hs_meeting_outcome: "COMPLETED" }, now)).toBeNull();
-  expect(completedMeeting({ hs_meeting_start_time: "2026-11-18T12:00:00Z" }, now)).toBeNull();
+const created = "2026-10-10T09:00:00Z";
+const lost = "2026-11-18T12:00:00Z";
+const now = Date.parse("2026-11-19T12:00:00Z");
+const properties = { createdate: created, hs_v2_date_entered_lost: lost, closedate: "2026-12-31" };
+
+test("ghosting uses the native current loss-stage entry and creation, with no close-date fallback", () => {
+  expect(ghostingMeetingWindow(properties, "lost", now)).toEqual({ created: Date.parse(created), lost: Date.parse(lost) });
+  expect(ghostingMeetingWindow(properties, "lost-other", now)).toBeNull();
+  expect(ghostingMeetingWindow({ ...properties, createdate: null }, "lost", now)).toBeNull();
+  expect(ghostingMeetingWindow({ ...properties, createdate: "2026-09-31T12:00:00Z" }, "lost", now)).toBeNull();
+  expect(ghostingMeetingWindow({ ...properties, createdate: "2026-11-19T12:00:00Z" }, "lost", now)).toBeNull();
+  expect(ghostingMeetingWindow({ ...properties, hs_v2_date_entered_lost: "2026-11-20T12:00:00Z" }, "lost", now)).toBeNull();
+});
+
+test("only completed meetings from creation inclusive to loss entry exclusive count", () => {
+  const window = ghostingMeetingWindow(properties, "lost", now)!;
+  const completed = (date: string) => completedMeeting({ hs_meeting_outcome: "COMPLETED", hs_meeting_start_time: date }, window);
+  expect(completed("2026-10-10T08:59:59Z")).toBe(false);
+  expect(completed(created)).toBe(true);
+  expect(completed("2026-11-18T11:59:59Z")).toBe(true);
+  expect(completed(lost)).toBe(false);
+  expect(completed("2026-11-18T12:00:01Z")).toBe(false);
+  expect(completedMeeting({ hs_meeting_outcome: "COMPLETED", hs_timestamp: String(Date.parse(created)) }, window)).toBe(true);
+  expect(completedMeeting({ hs_meeting_outcome: "SCHEDULED", hs_meeting_start_time: created }, window)).toBe(false);
+  expect(completedMeeting({ hs_meeting_outcome: "COMPLETED" }, window)).toBeNull();
+  expect(completedMeeting({ hs_meeting_start_time: created }, window)).toBeNull();
+  expect(completedMeeting({ hs_meeting_start_time: lost }, window)).toBe(false);
 });

@@ -6,7 +6,7 @@ import { getLossGhostingActivity } from "@/lib/loss-ghosting.functions";
 export function useLossGhosting(deals: readonly InsightDeal[]) {
   const ghostIds = [...new Set(deals.filter(deal => isGhostingLoss(deal.lostReason)).map(deal => deal.id))].sort();
   return useQuery({
-    queryKey: ["loss-ghosting", ghostIds],
+    queryKey: ["loss-ghosting", "creation-to-loss", ghostIds],
     enabled: ghostIds.length > 0,
     retry: false,
     staleTime: 60_000,

@@ -35,7 +35,18 @@ export function summarizeGhosting(deals: readonly InsightDeal[], evidence: Reado
 }
 
 export function ghostingByOwner(deals: readonly InsightDeal[], evidence: Readonly<Record<string, GhostingActivity>>) {
-  return lossDealsByOwner(deals).map(owner => ({ ...owner, audit: summarizeGhosting(owner.deals, evidence) }))
+  return lossDealsByOwner(deals).map(owner => {
+    const meetings = owner.deals.map(deal => evidence[deal.id]?.meetings);
+    return {
+      ...owner,
+      audit: summarizeGhosting(owner.deals, evidence),
+      meetings: {
+        completed: new Set(meetings.flatMap(row => row?.completedIds ?? [])).size,
+        windowsRead: meetings.filter(Boolean).length,
+        incomplete: meetings.filter(row => !row || row.unverified > 0).length,
+      },
+    };
+  })
     .sort((a, b) => b.audit.groups.short.length - a.audit.groups.short.length ||
       b.audit.groups.unknown.length - a.audit.groups.unknown.length ||
       b.deals.length - a.deals.length || a.label.localeCompare(b.label, "es"));
