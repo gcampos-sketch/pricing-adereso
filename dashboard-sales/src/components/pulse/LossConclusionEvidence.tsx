@@ -45,6 +45,28 @@ function channelNames(audit: GhostingAudit) {
   return audit.leadingChannels.map(({ label }) => label).join(" / ");
 }
 
+function GhostingChannels({ audit, pending, onOpen, owner }: {
+  audit: GhostingAudit;
+  pending: boolean;
+  onOpen: OpenEvidence;
+  owner?: string;
+}) {
+  return <ul className="loss-conclusion-channel-list" aria-label={owner ? `Faltantes por canal de ${owner}` : "Deals bajo el mínimo por canal"}>
+    {audit.channels.map(channel => {
+      const count = channel.missing.length;
+      const content = <>{channel.label} <strong>{pending || !channel.verified ? "—" : count}</strong></>;
+      const detail = owner ? `${owner} · Falta ${channel.label}` : `Falta ${channel.label}`;
+      return <li key={channel.channel} data-leading={audit.leadingChannels.includes(channel) || undefined}>
+        {!pending && count > 0
+          ? <button type="button" aria-haspopup="dialog"
+            aria-label={owner ? `Ver ${count} ${count === 1 ? "deal" : "deals"} de ${owner} con ${channel.label} bajo el mínimo` : undefined}
+            onClick={() => onOpen(channel.missing, detail)}>{content}</button>
+          : <span>{content}</span>}
+      </li>;
+    })}
+  </ul>;
+}
+
 function GhostingStatuses({ audit, pending, onOpen }: { audit: GhostingAudit; pending: boolean; onOpen?: OpenEvidence }) {
   return <ul className="loss-conclusion-statuses" aria-label="Cumplimiento del 2/2/2">
     {GHOSTING_STATUSES.map(([key, label]) => {
@@ -88,30 +110,22 @@ export function GhostingConclusion({ label, deals, onOpen, front, recommendation
       <GhostingStatuses audit={audit} pending={pending} onOpen={onOpen} />
       <div className="loss-conclusion-channels">
         <h4 className="loss-conclusion-list-heading">Deals bajo el mínimo por canal</h4>
-        <ul aria-label="Deals bajo el mínimo por canal">
-          {audit.channels.map(channel => {
-            const content = <>{channel.label} <strong>{pending || !channel.verified ? "—" : channel.missing.length}</strong></>;
-            return <li key={channel.channel} data-leading={audit.leadingChannels.includes(channel) || undefined}>
-              {channel.missing.length
-                ? <button type="button" aria-haspopup="dialog" onClick={() => onOpen(channel.missing, `Falta ${channel.label}`)}>{content}</button>
-                : <span>{content}</span>}
-            </li>;
-          })}
-        </ul>
+        <GhostingChannels audit={audit} pending={pending} onOpen={onOpen} />
       </div>
       {!pending && influential && <p className="loss-conclusion-focus">
         <strong>Reforzar con {top.label}</strong>
         <span>{channelNames(top.audit) || "Seguimiento 2/2/2"} · {top.audit.groups.short.length} bajo el mínimo.</span>
       </p>}
       <h4 className="loss-conclusion-list-heading">Cumplimiento por comercial</h4>
-      <ul className="loss-conclusion-owners" aria-label="Cumplimiento por comercial">
+      <ul className="loss-conclusion-owners loss-conclusion-ghost-owners" aria-label="Cumplimiento por comercial">
         {owners.map(owner => <li key={owner.id}>
           <button type="button" aria-haspopup="dialog" aria-label={`Ver seguimiento de ${owner.label}`}
             onClick={() => onOpen(owner.deals, owner.label)}>
-            <span><strong>{owner.label}</strong><small>{pending ? "Consultando HubSpot…" : channelNames(owner.audit) || `${owner.audit.groups.met.length} de ${owner.deals.length} cumplen`}</small></span>
+            <strong>{owner.label}</strong>
             <span>{pending ? "—" : `${owner.audit.groups.short.length} bajo · ${owner.audit.groups.unknown.length} sin verificar`}</span>
             <ChevronRight size={13} aria-hidden="true" />
           </button>
+          <GhostingChannels audit={owner.audit} pending={pending} onOpen={onOpen} owner={owner.label} />
         </li>)}
       </ul>
       {!pending && partial && <div className="loss-conclusion-partial">
