@@ -306,6 +306,32 @@ export function getCommercialDeals(managedStageIds: string[]): Promise<RawDeal[]
   );
 }
 
+/** Read a complete, unique commercial population or fail explicitly. */
+export async function readCompleteCommercialRecords(properties: string[], request = gateway): Promise<RawDeal[]> {
+  const rows: RawDeal[] = [];
+  let after: string | undefined, total: number | undefined;
+  const seen = new Set<string>();
+  do {
+    const page = await request<{ total: number; results: RawDeal[]; paging?: { next?: { after: string } } }>(
+      '/crm/v3/objects/deals/search', {
+        method: 'POST', body: JSON.stringify({
+          filterGroups: [{ filters: [{ propertyName: 'pipeline', operator: 'EQ', value: COMMERCIAL_PIPELINE }] }],
+          properties, limit: 200, sorts: ['hs_object_id'], ...(after ? { after } : {}),
+        }),
+      });
+    if (!Number.isInteger(page.total) || (total !== undefined && total !== page.total))
+      throw Error('La población comercial cambió durante la lectura. Vuelve a cargar el análisis.');
+    total = page.total;
+    rows.push(...page.results);
+    after = page.paging?.next?.after;
+    if (after && (seen.has(after) || Number(after) >= 10000)) throw Error('Lectura del pipeline incompleta.');
+    if (after) seen.add(after);
+  } while (after);
+  if (rows.length !== total || new Set(rows.map(row => row.id)).size !== total)
+    throw Error('Faltan negocios para completar la lectura del pipeline.');
+  return rows;
+}
+
 /** Búsqueda de deals cacheada por clave (usada por el pipeline de partners). */
 export function searchDealsCached(
   key: string,

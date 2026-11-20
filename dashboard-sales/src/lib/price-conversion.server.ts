@@ -1,4 +1,4 @@
-import { gateway, getCached, getOwners, invalidateCache, COMMERCIAL_PIPELINE, getPropertyOptionLabels, type RawDeal } from './hubspot.server';
+import { gateway, getCached, getOwners, invalidateCache, readCompleteCommercialRecords, getPropertyOptionLabels, type RawDeal } from './hubspot.server';
 import { readCustomerCompanyLinks } from './customer-directory.server';
 import { toDTO } from './pulse.server';
 import {
@@ -15,30 +15,8 @@ const PROPERTIES = [
   'closed_lost_reason', 'hs_v2_date_entered_171385867', 'hs_v2_date_entered_1245768029', ...PRICE_WIN_DATES,
 ];
 
-/** No capped/sampled search may masquerade as a complete demand population. */
-export async function readPriceRecords(request = gateway): Promise<RawDeal[]> {
-  const rows: RawDeal[] = [];
-  let after: string | undefined, total: number | undefined;
-  const seen = new Set<string>();
-  do {
-    const page = await request<{ total: number; results: RawDeal[]; paging?: { next?: { after: string } } }>(
-      '/crm/v3/objects/deals/search', {
-        method: 'POST', body: JSON.stringify({
-          filterGroups: [{ filters: [{ propertyName: 'pipeline', operator: 'EQ', value: COMMERCIAL_PIPELINE }] }],
-          properties: PROPERTIES, limit: 200, sorts: ['hs_object_id'], ...(after ? { after } : {}),
-        }),
-      });
-    if (!Number.isInteger(page.total) || (total !== undefined && total !== page.total))
-      throw Error('La población comercial cambió durante la lectura. Vuelve a cargar el análisis.');
-    total = page.total;
-    rows.push(...page.results);
-    after = page.paging?.next?.after;
-    if (after && (seen.has(after) || Number(after) >= 10000)) throw Error('Lectura de precios incompleta.');
-    if (after) seen.add(after);
-  } while (after);
-  if (rows.length !== total || new Set(rows.map(row => row.id)).size !== total)
-    throw Error('Faltan negocios para completar el análisis de precios.');
-  return rows;
+export function readPriceRecords(request = gateway): Promise<RawDeal[]> {
+  return readCompleteCommercialRecords(PROPERTIES, request);
 }
 
 async function priceCompanyLinks(records: RawDeal[]) {
