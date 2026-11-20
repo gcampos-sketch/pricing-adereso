@@ -171,7 +171,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         footer={<LossCurve data={monthly} measure="ticket" label="Ticket medio perdido" onOpen={openTrend} />} />
     </section>
 
-    <LossConclusions deals={lost} scope={[scope, ...stageFilter].join(" · ")} onOpen={openDeals} />
+    <LossConclusions key={scopeKey} deals={lost} scope={[scope, ...stageFilter].join(" · ")} onOpen={openDeals} />
 
     <LossSankey deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}
       scope={scope} entryDatesAvailable={report.lossEntryDatesVersion === "native-loss-entry/v1"}

@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Search, X } from "lucide-react";
-import { GHOSTING_BATCH_SIZE, isGhostingLoss, type GhostingActivity } from "@/lib/loss-ghosting";
-import { getLossGhostingActivity } from "@/lib/loss-ghosting.functions";
+import { isGhostingLoss } from "@/lib/loss-ghosting";
+import { useLossGhosting } from "@/hooks/use-loss-ghosting";
 import { LossGhostingActivity } from "./LossGhostingActivity";
 import type { InsightDeal } from "@/lib/insights-types";
 import { LossReasonWords } from "./LossReasonWords";
@@ -28,25 +27,7 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
   const [reason, setReason] = useState("");
   const deals = useMemo(() => [...new Map(selection.deals.map(deal => [deal.id, deal])).values()]
     .sort((a, b) => b.amountValue - a.amountValue || a.name.localeCompare(b.name, "es")), [selection.deals]);
-  const ghostIds = useMemo(() => deals.filter(deal => isGhostingLoss(deal.lostReason)).map(deal => deal.id).sort(), [deals]);
-  const ghosting = useQuery({
-    queryKey: ["loss-ghosting", ghostIds],
-    enabled: ghostIds.length > 0,
-    retry: false,
-    queryFn: async () => {
-      const evidence: Record<string, GhostingActivity> = {};
-      let incomplete = false;
-      for (let index = 0; index < ghostIds.length; index += GHOSTING_BATCH_SIZE) {
-        const ids = ghostIds.slice(index, index + GHOSTING_BATCH_SIZE);
-        try {
-          Object.assign(evidence, await getLossGhostingActivity({ data: { ids } }));
-        } catch {
-          incomplete = true;
-        }
-      }
-      return { evidence, incomplete };
-    },
-  });
+  const ghosting = useLossGhosting(deals);
   const reasons = [...new Set(deals.map(deal => deal.lostReason || "Sin motivo listado"))].sort((a, b) => a.localeCompare(b, "es"));
   const search = query.trim().toLocaleLowerCase("es");
   const rows = deals.filter(deal =>

@@ -44,3 +44,9 @@ test("a common stage requires concentration across multiple reasons and shows on
   expect(sharedStage?.deals.map(deal => deal.id)).toEqual(["d", "e", "a", "b"]);
   expect(buildLossConclusions(rows.filter(deal => deal.lostStage === "E5")).sharedStage).toBeNull();
 });
+
+test("ghosting remains visible for audit outside the top three without changing the common-stage cohort", () => {
+  const rows = [loss("a", "Presupuesto", 200), loss("b", "Timing", 100), loss("c", "Competidor", 70), loss("d", "Ghosting", 0)];
+  expect(buildLossConclusions(rows).priorities.map(row => row.reason)).toEqual(["Presupuesto", "Timing", "Competidor", "Ghosting"]);
+  expect(buildLossConclusions(rows).sharedStage).toBeNull();
+});
