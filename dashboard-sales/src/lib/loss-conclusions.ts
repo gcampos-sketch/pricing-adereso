@@ -106,7 +106,9 @@ export function buildLossConclusions(input: readonly InsightDeal[]) {
   const priorities = [...new Set([impact, frequency, ...(impact ? byMrr : byCount)])]
     .filter(row => row !== undefined).slice(0, 3);
 
-  const ranked = priorities.map(group => ({
+  const ghosting = byCount.find(group => isGhostingLoss(group.reason));
+  const cards = ghosting && !priorities.includes(ghosting) ? [...priorities, ghosting] : priorities;
+  const ranked = cards.map(group => ({
     ...group,
     dealShare: group.count / deals.length * 100,
     mrrShare: comparableMrr && totalMrr > 0 ? group.mrr / totalMrr * 100 : null,
@@ -115,11 +117,12 @@ export function buildLossConclusions(input: readonly InsightDeal[]) {
     stage: leadingStage(group.deals),
     recommendation: recommendationFor(group.reason),
   }));
-  const priorityDeals = ranked.flatMap(group => group.deals);
+  const rankedPriorities = ranked.slice(0, priorities.length);
+  const priorityDeals = rankedPriorities.flatMap(group => group.deals);
   const shared = leadingStage(priorityDeals);
   const stageDeals = shared ? priorityDeals.filter(deal => deal.lostStage?.trim() === shared.label) : [];
   const sharedStage = shared && stageDeals.length > priorityDeals.length / 2 &&
-    ranked.filter(group => group.stage?.label === shared.label).length > 1 &&
+    rankedPriorities.filter(group => group.stage?.label === shared.label).length > 1 &&
     priorityDeals.some(deal => deal.lostStage && !["Sin recorrido", shared.label].includes(deal.lostStage.trim()))
     ? { label: shared.label, deals: stageDeals, total: priorityDeals.length }
     : null;
