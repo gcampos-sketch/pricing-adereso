@@ -241,7 +241,8 @@
   .hg-tag{position:absolute;top:14px;right:14px}
   /* One synchronized 12s cycle: scoop, load, reverse, tip, return. */
   .hg-group:has(.construction)>.hg-label{margin-bottom:58px}
-  .hg-card.construction{cursor:default;padding-bottom:53px;border-color:rgba(255,213,64,.3);overflow:visible}
+  .hg-card.construction{cursor:default;padding-bottom:28px;border-color:rgba(255,213,64,.3);overflow:visible}
+  .hg-card.construction .hg-txt{padding-right:0}
   .hg-card.construction:not([aria-disabled="true"]){cursor:pointer}
   .hg-card.construction:hover{transform:none;background:linear-gradient(180deg,#24262D,#1B1D22);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 18px 40px -18px rgba(0,0,0,.75);border-color:rgba(255,213,64,.4)}
   .hg-worksite{position:absolute;left:50%;right:12px;top:-30px;height:30px;pointer-events:none;--work-cycle:12s;transform:scaleX(-1)}
@@ -274,9 +275,8 @@
   .construction>.hg-ico:before{content:"";position:absolute;width:1px;height:54px;background:#b7c1ce;left:calc(50% - .5px);top:-54px;animation:hgCableHoist 2.4s ease-out both}
   .construction>.hg-ico:after{content:"";position:absolute;width:7px;height:6px;border:2px solid #ffd540;border-top:0;border-radius:0 0 5px 5px;left:calc(50% - 3.5px);top:-5px}
   .hg-construction-clip{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
-  .hg-caution{position:absolute;left:-12px;bottom:13px;width:calc(100% + 24px);height:22px;display:flex;align-items:center;justify-content:center;transform:rotate(-7deg);background:#ffd540;color:#242019;border-block:3px solid transparent;border-image:repeating-linear-gradient(125deg,#25221c 0 7px,#ffd540 7px 14px) 3;box-shadow:0 3px 9px #0007;font-size:9px;font-weight:800;letter-spacing:.11em;white-space:nowrap}
+  .hg-caution{position:absolute;left:-12px;bottom:6px;width:calc(100% + 24px);height:16px;display:flex;align-items:center;justify-content:center;transform:rotate(-3deg);background:#ffd540;color:#242019;border-block:2px solid transparent;border-image:repeating-linear-gradient(125deg,#25221c 0 7px,#ffd540 7px 14px) 3;box-shadow:0 3px 9px #0007;font-size:8px;font-weight:800;letter-spacing:.11em;white-space:nowrap}
   .hg-caution span{padding:0 10px}
-  .hg-build-label{display:block;color:var(--brand);font-size:10px;font-weight:600;letter-spacing:.04em;margin-top:3px}
   @keyframes hgTruckTravel{0%,32%,100%{left:calc(100% - 82px)}48%,74%{left:18px}}
   @keyframes hgScoop{0%,4%,38%,100%{transform:rotate(-18deg)}16%,30%{transform:rotate(12deg)}}
   @keyframes hgBucketSoil{0%,7%,28%,100%{opacity:0}10%,22%{opacity:1}}
@@ -11079,7 +11079,7 @@ function homeConstruction(){return `<span class="hg-crane" aria-hidden="true"><s
 </span><span class="hg-construction-clip" aria-hidden="true"><span class="hg-caution"><span>PELIGRO · NO PASAR · EN CONSTRUCCIÓN</span></span></span>`;}
 function homeCard(t,i){
   const attrs=`class="hg-card ${t.soon?'soon':''} ${t.construction?'construction':''}" data-tool="${t.k}" style="--d:${i*60}ms"`;
-  const content=`<span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small>${t.construction?'<span class="hg-build-label">En construcción</span>':''}</span>`;
+  const content=`<span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small></span>`;
   if(t.copyLink){
     const label=`Copiar enlace de ${t.name}`;
     return `<div ${attrs}><a class="hg-card-link" href="${t.url}" target="_blank" rel="noopener noreferrer">${content}</a><button type="button" class="hg-copy" title="${label}" aria-label="${label}"><span data-i="copy" data-sz="16" aria-hidden="true"></span></button><span class="hg-copy-status" role="status"></span></div>`;
@@ -11197,7 +11197,7 @@ function aiBgStart(){
   const canvas=document.getElementById('aiBg');if(!canvas)return;
   aiLoading=(async()=>{try{
     const {mountStarfield}=await import('./starfield.js');
-    if(curView==='home'&&!document.hidden)aiCleanup=mountStarfield(canvas);
+    if(curView==='home'&&!document.hidden)aiCleanup=mountStarfield(canvas,{interactiveGlow:true});
   }finally{aiLoading=null;}})();
   return aiLoading;
 }
