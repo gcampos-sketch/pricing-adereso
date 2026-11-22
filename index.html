@@ -10960,6 +10960,8 @@ const TI={
  partners:'<rect x="9" y="2.5" width="6" height="5" rx="1.2"/><rect x="2.5" y="16.5" width="6" height="5" rx="1.2"/><rect x="15.5" y="16.5" width="6" height="5" rx="1.2"/><path d="M12 7.5V12M5.5 16.5V12h13v4.5"/>',
  datahub:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
  gieppeto:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m12 12 8-8M16 4h4v4"/>',
+ billing:'<path d="M5 3h14v18l-3.5-2L12 21l-3.5-2L5 21zM8 8h8M8 12h8M8 16h4"/>',
+ comisiones:'<circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9H11a1.5 1.5 0 0 0 0 3h2a1.5 1.5 0 0 1 0 3H9"/>',
  academy:'<path d="M2 9.5 12 5l10 4.5-10 4.5z"/><path d="M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5"/><path d="M22 9.5V15"/>',
  todas:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/>'
 };
@@ -10987,7 +10989,9 @@ const TOOLS=[
   {k:'clientes',name:'Portal Clientes',desc:'Acceso de clientes a su cuenta.',url:'https://adereso-sp-clientes.web.app/clientes/login'},
   {k:'partners',name:'Portal Partners',desc:'Acceso de partners Adereso.',url:'https://adereso-sp-partners.web.app/partner/login'},
   {k:'datahub',name:'Data Hub (CS)',desc:'Acceso al Data Hub de Customer Success.',url:'https://datahub.adere.so/'},
-  {k:'gieppeto',name:'Gieppeto',desc:'OKRs por equipos.',url:'https://okrs.adere.so/#/dashboard'}]}
+  {k:'gieppeto',name:'Gieppeto',desc:'OKRs por equipos.',url:'https://okrs.adere.so/#/dashboard'},
+  {k:'billing',name:'Billing',desc:'Facturación y cobros de Adereso.',url:'https://adereso-billing-prod.web.app/login'},
+  {k:'comisiones',name:'Comisiones',desc:'Consulta tus comisiones comerciales.',url:'https://finanzas-web-prod-824406304953.us-central1.run.app/login'}]}
 ];
 const tIco=(k,s)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${TI[k]}</svg>`;
 const ALL_TOOLS=TOOLS.flatMap(g=>g.items);
