@@ -230,6 +230,7 @@
   .hg-go{position:absolute;top:16px;right:16px;color:var(--z500);font-size:14px;transition:color .2s}
   .hg-card:hover .hg-go{color:var(--brand)}
   .hg-card-link{display:flex;align-items:flex-start;gap:inherit;border-radius:inherit;color:inherit;text-decoration:none}
+  button.hg-card-link{padding:0;border:0;background:none;font:inherit;text-align:inherit;cursor:pointer}
   .hg-card-link::after{content:"";position:absolute;inset:0;border-radius:inherit}
   .hg-card-link:focus-visible{outline:none}
   .hg-card-link:focus-visible::after,.hg-copy:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
@@ -243,6 +244,7 @@
   .hg-group:has(.construction)>.hg-label{margin-bottom:58px}
   .hg-card.construction{cursor:default;padding-bottom:28px;border-color:rgba(255,213,64,.3);overflow:visible}
   .hg-card.construction .hg-txt{padding-right:0}
+  .hg-card.construction .hg-card-link b{margin-right:28px}
   .hg-card.construction:not([aria-disabled="true"]){cursor:pointer}
   .hg-card.construction:hover{transform:none;background:linear-gradient(180deg,#24262D,#1B1D22);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 18px 40px -18px rgba(0,0,0,.75);border-color:rgba(255,213,64,.4)}
   .hg-worksite{position:absolute;left:50%;right:12px;top:-30px;height:30px;pointer-events:none;--work-cycle:12s;transform:scaleX(-1)}
@@ -10967,9 +10969,9 @@ const DASHBOARD_SALES_URL=window.ADERESO_DASHBOARD_URL || (['localhost','127.0.0
   : 'dashboard/');
 const TOOLS=[
  {g:'Para reunión',items:[
-  {k:'brochure',name:'Brochure',desc:'Una plataforma para conectar y mejorar tu operación.',view:'brochure',construction:true,openWhileBuilding:true},
+  {k:'brochure',name:'Brochure',desc:'Una plataforma para conectar y mejorar tu operación.',view:'brochure',construction:true,openWhileBuilding:true,shareDeal:true},
   {k:'pricing',name:'Pricing a tu medida',desc:'Cotiza servicios, canales, implementación y ROI.',view:'pricing'},
-  {k:'progpartners',name:'Prog. Partners',desc:'Explicación del funcionamiento y fee asociado.',view:'progpartners'},
+  {k:'progpartners',name:'Prog. Partners',desc:'Explicación del funcionamiento y fee asociado.',view:'progpartners',url:'https://adereso-partners.onrender.com/partners/',copyLink:true},
   {k:'seguridad',name:'Seguridad',desc:'Certificaciones, auditorías y políticas de privacidad.',url:'https://adereso.ai/trust',copyLink:true}]},
  {g:'Entrenamiento',items:[
   {k:'playbook',name:'Playbook',desc:'Primera reunión: etapas, guiones y objeciones.',view:'playbook'},
@@ -11080,11 +11082,15 @@ function homeConstruction(){return `<span class="hg-crane" aria-hidden="true"><s
 function homeCard(t,i){
   const attrs=`class="hg-card ${t.soon?'soon':''} ${t.construction?'construction':''}" data-tool="${t.k}" style="--d:${i*60}ms"`;
   const content=`<span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small></span>`;
-  if(t.copyLink){
-    const label=`Copiar enlace de ${t.name}`;
-    return `<div ${attrs}><a class="hg-card-link" href="${t.url}" target="_blank" rel="noopener noreferrer">${content}</a><button type="button" class="hg-copy" title="${label}" aria-label="${label}"><span data-i="copy" data-sz="16" aria-hidden="true"></span></button><span class="hg-copy-status" role="status"></span></div>`;
+  const accessibility=t.construction?` aria-label="${t.name} · En construcción"${t.openWhileBuilding?'':' aria-disabled="true"'}`:'';
+  if(t.copyLink||t.shareDeal){
+    const main=t.view
+      ? `<button type="button" class="hg-card-link" data-tool="${t.k}"${accessibility}>${content}</button>`
+      : `<a class="hg-card-link" href="${t.url}" target="_blank" rel="noopener noreferrer">${content}</a>`;
+    const label=t.shareDeal?`Compartir ${t.name} vinculado a un deal`:`Copiar enlace de ${t.name}`;
+    return `<div ${attrs}>${main}<button type="button" class="hg-copy" title="${label}" aria-label="${label}"${t.shareDeal?' aria-haspopup="dialog"':''}><span data-i="copy" data-sz="16" aria-hidden="true"></span></button>${t.copyLink?'<span class="hg-copy-status" role="status"></span>':''}${t.construction?homeConstruction():''}</div>`;
   }
-  return `<button type="button" ${attrs}${t.construction?` aria-label="${t.name} · En construcción"${t.openWhileBuilding?'':' aria-disabled="true"'}`:''}>${content}${t.construction?homeConstruction():t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`;
+  return `<button type="button" ${attrs}${accessibility}>${content}${t.construction?homeConstruction():t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`;
 }
 function renderHome(){const g=document.getElementById('homeGrid');if(!g)return;
   g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map(homeCard).join('')}</div></div>`).join('');
@@ -11094,13 +11100,19 @@ document.getElementById('homeGrid').addEventListener('click',async e=>{
   const button=e.target.closest('.hg-copy');
   if(!button)return;
   const card=button.closest('.hg-card');
+  const tool=ALL_TOOLS.find(t=>t.k===card.dataset.tool);
+  if(tool.shareDeal){
+    button.focus({preventScroll:true});
+    window.openBrochureShare('create');
+    return;
+  }
   const status=card.querySelector('.hg-copy-status');
   const icon=button.querySelector('[data-i]');
   const label=button.getAttribute('aria-label');
   clearTimeout(button.copyTimer);
   status.textContent='';
   try{
-    await navigator.clipboard.writeText(card.querySelector('.hg-card-link').href);
+    await navigator.clipboard.writeText(tool.url);
     status.textContent='Enlace copiado';
     button.dataset.copied='';
     icon.dataset.i='check';
