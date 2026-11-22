@@ -57,17 +57,18 @@ test('Brochure stays visibly under construction while its published content rema
   const brochure = runInNewContext('(' + toolSource + ')');
   expect(brochure.construction).toBe(true);
   expect(brochure.openWhileBuilding).toBe(true);
-  const grid = { innerHTML: '' };
-  const render = html.slice(html.indexOf('function renderHome(){'), html.indexOf('function setView(', html.indexOf('function renderHome(){')));
+  const grid = { innerHTML: '', addEventListener() {} };
+  const renderStart = html.indexOf('function homeCard(');
+  const render = html.slice(renderStart, html.indexOf('function setView(', renderStart));
   runInNewContext(render + ';renderHome();', {
     document: { getElementById: () => grid }, TOOLS: [{g:'Para reunión',items:[brochure]}],
-    hgClosed: () => [], tIco: () => '', homeConstruction: () => '<span>worksite</span>'
+    hgClosed: () => [], tIco: () => '', paintIcons: () => {}, homeConstruction: () => '<span>worksite</span>'
   });
   expect(grid.innerHTML).toContain('hg-card  construction');
   expect(grid.innerHTML).toContain('worksite');
   expect(grid.innerHTML).toContain('En construcción');
   expect(grid.innerHTML).not.toContain('aria-disabled');
-  const start = html.indexOf("document.addEventListener('click',e=>{const b=e.target.closest('[data-tool]')");
+  const start = html.indexOf("document.addEventListener('click',e=>{const b=e.target.closest('button[data-tool]')");
   const listener = html.slice(start, html.indexOf('});', start)+3);
   let click: any; const opened: string[] = [];
   runInNewContext(listener, {

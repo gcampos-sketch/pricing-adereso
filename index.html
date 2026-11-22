@@ -229,6 +229,15 @@
   .hg-txt small{font-size:12.5px;color:var(--z400);line-height:1.4}
   .hg-go{position:absolute;top:16px;right:16px;color:var(--z500);font-size:14px;transition:color .2s}
   .hg-card:hover .hg-go{color:var(--brand)}
+  .hg-card-link{display:flex;align-items:flex-start;gap:inherit;border-radius:inherit;color:inherit;text-decoration:none}
+  .hg-card-link::after{content:"";position:absolute;inset:0;border-radius:inherit}
+  .hg-card-link:focus-visible{outline:none}
+  .hg-card-link:focus-visible::after,.hg-copy:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .hg-copy{position:absolute;z-index:1;top:12px;right:12px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:1px solid var(--b-default);border-radius:8px;background:var(--surface);color:var(--z400);cursor:pointer}
+  .hg-copy:hover,.hg-copy[data-copied]{color:var(--brand)}
+  .hg-copy span{display:grid}
+  .hg-card-link .hg-txt{padding-right:28px}
+  .hg-copy-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
   .hg-tag{position:absolute;top:14px;right:14px}
   /* One synchronized 12s cycle: scoop, load, reverse, tip, return. */
   .hg-group:has(.construction)>.hg-label{margin-bottom:58px}
@@ -10945,6 +10954,7 @@ const TI={
  operativa:'<path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a2 2 0 0 0-2.8 0l-.9.9a1 1 0 1 1-3-3l2.8-2.8a3.3 3.3 0 0 1 4.3-.3l.5.4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/>',
  clientes:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.6a3.2 3.2 0 0 1 0 6.3"/><path d="M18 14.4c1.8.7 3 2.4 3 4.6"/>',
  progpartners:'<circle cx="6.5" cy="6" r="2.5"/><circle cx="17.5" cy="6" r="2.5"/><path d="M2.5 14.5a4 4 0 0 1 8 0"/><path d="M13.5 14.5a4 4 0 0 1 8 0"/><path d="M7 19h10"/><path d="m14.5 16.5 2.5 2.5-2.5 2.5"/><path d="m9.5 16.5-2.5 2.5 2.5 2.5"/>',
+ seguridad:'<path d="M12 22s7-3 7-9V5l-7-3-7 3v8c0 6 7 9 7 9z"/><path d="m9 12 2 2 4-4"/>',
  partners:'<rect x="9" y="2.5" width="6" height="5" rx="1.2"/><rect x="2.5" y="16.5" width="6" height="5" rx="1.2"/><rect x="15.5" y="16.5" width="6" height="5" rx="1.2"/><path d="M12 7.5V12M5.5 16.5V12h13v4.5"/>',
  datahub:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
  gieppeto:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m12 12 8-8M16 4h4v4"/>',
@@ -10959,7 +10969,8 @@ const TOOLS=[
  {g:'Para reunión',items:[
   {k:'brochure',name:'Brochure',desc:'Una plataforma para conectar y mejorar tu operación.',view:'brochure',construction:true,openWhileBuilding:true},
   {k:'pricing',name:'Pricing a tu medida',desc:'Cotiza servicios, canales, implementación y ROI.',view:'pricing'},
-  {k:'progpartners',name:'Prog. Partners',desc:'Explicación del funcionamiento y fee asociado.',view:'progpartners'}]},
+  {k:'progpartners',name:'Prog. Partners',desc:'Explicación del funcionamiento y fee asociado.',view:'progpartners'},
+  {k:'seguridad',name:'Seguridad',desc:'Certificaciones, auditorías y políticas de privacidad.',url:'https://adereso.ai/trust',copyLink:true}]},
  {g:'Entrenamiento',items:[
   {k:'playbook',name:'Playbook',desc:'Primera reunión: etapas, guiones y objeciones.',view:'playbook'},
   {k:'argumentos',name:'Argumentaciones',desc:'Objeciones y comentarios en reunión: qué decir y cómo avanzar.',view:'argumentos'},
@@ -11066,8 +11077,49 @@ function homeConstruction(){return `<span class="hg-crane" aria-hidden="true"><s
     <circle cx="11" cy="27" r="4" fill="#252d39"/><circle cx="33" cy="27" r="4" fill="#252d39"/><circle cx="11" cy="27" r="1.7" fill="#a5afbd"/><circle cx="33" cy="27" r="1.7" fill="#a5afbd"/>
   </svg><span><i class="hg-dirt hg-dump-dirt"></i><i class="hg-dirt hg-dump-dirt"></i><i class="hg-dirt hg-dump-dirt"></i></span></span>
 </span><span class="hg-construction-clip" aria-hidden="true"><span class="hg-caution"><span>PELIGRO · NO PASAR · EN CONSTRUCCIÓN</span></span></span>`;}
+function homeCard(t,i){
+  const attrs=`class="hg-card ${t.soon?'soon':''} ${t.construction?'construction':''}" data-tool="${t.k}" style="--d:${i*60}ms"`;
+  const content=`<span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small>${t.construction?'<span class="hg-build-label">En construcción</span>':''}</span>`;
+  if(t.copyLink){
+    const label=`Copiar enlace de ${t.name}`;
+    return `<div ${attrs}><a class="hg-card-link" href="${t.url}" target="_blank" rel="noopener noreferrer">${content}</a><button type="button" class="hg-copy" title="${label}" aria-label="${label}"><span data-i="copy" data-sz="16" aria-hidden="true"></span></button><span class="hg-copy-status" role="status"></span></div>`;
+  }
+  return `<button type="button" ${attrs}${t.construction?` aria-label="${t.name} · En construcción"${t.openWhileBuilding?'':' aria-disabled="true"'}`:''}>${content}${t.construction?homeConstruction():t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`;
+}
 function renderHome(){const g=document.getElementById('homeGrid');if(!g)return;
-  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map((t,i)=>`<button type="button" class="hg-card ${t.soon?'soon':''} ${t.construction?'construction':''}" data-tool="${t.k}"${t.construction?` aria-label="${t.name} · En construcción"${t.openWhileBuilding?'':' aria-disabled="true"'}`:''} style="--d:${i*60}ms"><span class="hg-ico">${tIco(t.k,22)}</span><span class="hg-txt"><b>${t.name}</b><small>${t.desc}</small>${t.construction?'<span class="hg-build-label">En construcción</span>':''}</span>${t.construction?homeConstruction():t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`).join('')}</div></div>`).join('');}
+  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map(homeCard).join('')}</div></div>`).join('');
+  paintIcons(g);
+}
+document.getElementById('homeGrid').addEventListener('click',async e=>{
+  const button=e.target.closest('.hg-copy');
+  if(!button)return;
+  const card=button.closest('.hg-card');
+  const status=card.querySelector('.hg-copy-status');
+  const icon=button.querySelector('[data-i]');
+  const label=button.getAttribute('aria-label');
+  clearTimeout(button.copyTimer);
+  status.textContent='';
+  try{
+    await navigator.clipboard.writeText(card.querySelector('.hg-card-link').href);
+    status.textContent='Enlace copiado';
+    button.dataset.copied='';
+    icon.dataset.i='check';
+  }catch{
+    status.textContent='No se pudo copiar el enlace';
+    delete button.dataset.copied;
+    icon.dataset.i='info';
+  }
+  button.title=status.textContent;
+  delete icon.dataset.painted;
+  paintIcons(button);
+  button.copyTimer=setTimeout(()=>{
+    delete button.dataset.copied;
+    button.title=label;
+    icon.dataset.i='copy';
+    delete icon.dataset.painted;
+    paintIcons(button);
+  },1800);
+});
 function setView(v,k){if(PARTNERS_SHARED_VIEW)v='progpartners';curView=v;curTool=k||'';
   document.body.classList.toggle('v-brochure',v==='brochure');
   document.body.classList.toggle('v-home',v==='home');document.body.classList.toggle('v-embed',v==='embed');document.body.classList.toggle('v-desc',v==='descuentos');if(v==='descuentos')renderDisc();
@@ -11104,7 +11156,7 @@ function cardsToRail(cards,pick){if(!Element.prototype.animate)return;
     /* la tarjeta original se esconde: así se ve un solo objeto viajando */
     const src=document.querySelector(`#homeGrid .hg-card[data-tool="${c.k}"]`);if(src){src.style.visibility='hidden';setTimeout(()=>{src.style.visibility='';},900);}
     /* copia de la tarjeta: el texto se apaga temprano y queda solo su ícono, que llega al ícono de la barra */
-    const g=document.createElement('div');g.className='vx-card'+(c.soon?' soon':'')+(main?' main':' dim');
+    const g=document.createElement('div');g.className='vx-card'+(c.soon?' soon':'')+(main?' main':' dim');g.inert=true;
     g.innerHTML=`<span class="vxc-txt">${c.html}</span><span class="vxc-ico">${tIco(c.k,18)}</span>`;
     Object.assign(g.style,{left:c.r.left+'px',top:c.r.top+'px',width:c.r.width+'px',height:c.r.height+'px'});document.body.appendChild(g);
     /* la elegida sale primero; el resto la sigue apenas después y más tenue */
@@ -11134,7 +11186,7 @@ function goView(v,el){if(v===curView&&v!=='embed')return;
     requestAnimationFrame(()=>cardsToRail(cards,el&&el.dataset.tool));
     requestAnimationFrame(()=>{home.classList.add('vx-run','vx-from');wrap&&(wrap.classList.add('vx-run'),wrap.classList.remove('vx-rise-from'));});}
   _vxT=setTimeout(()=>{b.classList.remove('vx-both');home.classList.remove('vx-run','vx-from');wrap&&wrap.classList.remove('vx-run','vx-dim','vx-rise-from');},560);}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-tool]');if(!b)return;const k=b.dataset.tool;
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-tool]');if(!b)return;const k=b.dataset.tool;
   if(k==='home')return goView('home',b);const t=ALL_TOOLS.find(x=>x.k===k);if(!t||t.soon||(t.construction&&!t.openWhileBuilding))return;
   if(t.view)goView(t.view,b);else window.open(t.url,'_blank','noopener');});
 /* The login screen and home share one visual sky. */
