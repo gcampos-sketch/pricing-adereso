@@ -442,12 +442,16 @@
   .out-block{margin-top:20px;padding-top:18px;border-top:1px solid var(--b-subtle)}
   .channel-heading{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin:0 0 5px}
   .channel-heading + .in-grid{margin-top:10px}
-  .out-attention,.out-packs{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
-  .out-attention{margin-top:12px}.out-attention>span{font-size:13px;color:var(--z400);margin-right:4px}
-  .out-attention .pill,.out-packs .pill{border:1px solid var(--b-default);border-radius:var(--r3);padding:6px 10px;font:inherit;font-size:12px;color:var(--z300);cursor:pointer}
-  .out-attention .pill:hover,.out-packs .pill:hover{border-color:var(--z400)}
-  .out-attention .pill.on,.out-packs .pill.on{border-color:var(--brand);color:var(--brand);background:rgba(255,213,64,.08)}
-  .out-attention .pill:disabled{opacity:.45;cursor:not-allowed}
+  .chan-grid.out-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));max-width:600px;align-items:start}
+  .out-grid>.chan{align-self:stretch}
+  .call-channel-toggle{display:flex;flex-direction:column;align-items:center;gap:inherit;width:100%;padding:0;border:0;background:none;cursor:pointer}
+  .call-channel label{display:grid;width:100%;gap:5px;text-align:left;color:var(--z300);font-size:12px}
+  .call-channel select{width:100%;min-width:0;padding:6px;border:1px solid var(--b-default);border-radius:var(--r3);background:var(--surface);color:#fff;font:inherit;color-scheme:dark}
+  .call-channel select:focus-visible,.call-channel-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .out-packs{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .out-packs .pill{border:1px solid var(--b-default);border-radius:var(--r3);padding:6px 10px;font:inherit;font-size:12px;color:var(--z300);cursor:pointer}
+  .out-packs .pill:hover{border-color:var(--z400)}
+  .out-packs .pill.on{border-color:var(--brand);color:var(--brand);background:rgba(255,213,64,.08)}
   .pl-grid.out-volume{grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));margin-top:18px}
   .out-volume .pl-card{padding:16px;gap:10px}.out-volume .pl-desc{line-height:1.55}
   .out-volume .pl-card input[type=number]{width:100%;margin-top:5px}
@@ -9367,16 +9371,23 @@ function renderOpts(){
       {k:'wacall',label:'Llamadas por WhatsApp',color:'#25D366',paid:true},
       {k:'voip',label:'Llamada VoIP',color:'#52CE5E',paid:true,soon:true}
     ];
-    const outChip=(c)=>{if(c.soon)return inChip(c);const on=state.out[c.k];
-      return `<button type="button" class="chan ${on?'on':''} ${c.paid?'paid':''}" data-out="${c.k}" aria-pressed="${!!on}">
-        ${c.tag?`<span class="chan-free">${c.tag}</span>`:'<span class="chan-pago">pago</span>'}${logo(c)}</button>`;};
     const attention=voiceCallAttention(),human=state.desk||hasExistingDesk(),ai=state.studio||(state.existing&&state.scope!=='bolsa');
     const choices=[['human','Humano',human],['ai','IA',ai],['both','Humano + IA',human&&ai]];
+    const outChip=(c)=>{
+      const on=!!state.out[c.k],badge=c.tag?`<span class="chan-free">${c.tag}</span>`:'<span class="chan-pago">pago</span>';
+      if(c.k==='wacall'&&on){
+        return `<div class="chan on paid call-channel">
+          ${badge}<button type="button" class="call-channel-toggle" data-out="wacall" aria-pressed="true">${logo(c)}</button>
+          <label>¿Quién llama?<select data-call-attention>${choices.map(([key,label,available])=>`<option value="${key}" ${attention===key?'selected':''} ${available?'':'disabled'}>${label}</option>`).join('')}</select></label>
+        </div>`;
+      }
+      return `<button type="button" class="chan ${on?'on':''} paid" data-out="${c.k}" aria-pressed="${on}">${badge}${logo(c)}</button>`;
+    };
     html+=`<div class="out-block">
       <h3 class="channel-heading">Canales de salida</h3>
       <div class="out-note">Las plantillas de WhatsApp se cotizan con Meta.</div>
       <div class="chan-grid out-grid">${outChans.filter(c=>!c.soon).map(outChip).join('')}</div>
-      ${state.out.wacall?`<div class="out-attention" role="group" aria-label="Quién realiza las llamadas"><span>¿Quién realiza las llamadas?</span>${choices.map(([key,label,available])=>`<button type="button" class="pill ${attention===key?'on':''}" data-call-attention="${key}" aria-pressed="${attention===key}" ${available?'':'disabled'}>${label}</button>`).join('')}</div><div class="out-note" style="margin-top:8px">Humano requiere Desk y se cobra en la billetera Meta. IA requiere Studio y suma una bolsa de minutos. Ambos consumen minutos de Meta.</div>`:''}
+      ${state.out.wacall?`<div class="out-note" style="margin-top:8px">Humano requiere Desk y se cobra en la billetera Meta. IA requiere Studio y suma una bolsa de minutos. Ambos consumen minutos de Meta.</div>`:''}
       ${soonBox(outChans,'out')}
     </div>`;
   }
@@ -10467,8 +10478,6 @@ document.getElementById('modgrid').addEventListener('click',e=>{
 });
 document.getElementById('optWa').addEventListener('click',e=>{
   const cm=e.target.closest('[data-chanmode]');if(cm){state.chanNew=cm.dataset.chanmode==='new';renderAll();refreshFlow();return;}
-  const mode=e.target.closest('[data-call-attention]');
-  if(mode){state.callAttention=mode.dataset.callAttention;renderAll();refreshFlow();document.querySelector('[data-call-attention="'+state.callAttention+'"]')?.focus({preventScroll:true});return;}
   const o=e.target.closest('[data-out]');
   if(o){
     const key=o.dataset.out;state.out[key]=!state.out[key];
@@ -10480,6 +10489,11 @@ document.getElementById('optWa').addEventListener('click',e=>{
   if(k==='whatsapp'){state.whatsapp=!state.whatsapp;}
   else{state.chan[k]=!state.chan[k];}
   renderMods();renderAll();refreshFlow();
+});
+document.getElementById('optWa').addEventListener('change',e=>{
+  const select=e.target.closest('select[data-call-attention]');if(!select)return;
+  state.callAttention=select.value;renderAll();refreshFlow();
+  document.querySelector('select[data-call-attention]')?.focus({preventScroll:true});
 });
 function finishCustomVolume(inp){
   const raw=Number(inp.value);
