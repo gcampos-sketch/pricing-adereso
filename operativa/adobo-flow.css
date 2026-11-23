@@ -1,0 +1,153 @@
+.adobo-flow-trigger[hidden] { display: none; }
+
+.adobo-flow-trigger {
+  position: fixed;
+  inset: auto max(1.125rem, env(safe-area-inset-right)) max(1.125rem, env(safe-area-inset-bottom)) auto;
+  z-index: 60;
+  min-height: 44px;
+  padding: .55rem 1rem;
+  border: 1px solid var(--brand, #ffd540);
+  border-radius: 12px;
+  background: #24231e;
+  color: var(--brand, #ffd540);
+  box-shadow: 0 4px 18px #0008;
+  font: 500 1rem var(--head, system-ui);
+}
+.adobo-flow-trigger:hover { background: var(--brand, #ffd540); color: #181610; }
+.adobo-flow :focus-visible, .adobo-flow-trigger:focus-visible {
+  outline: 2px solid var(--brand, #ffd540);
+  outline-offset: 3px;
+}
+
+.adobo-flow {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(1050px, calc(100% - 36px));
+  max-width: none;
+  max-height: calc(100dvh - 36px);
+  padding: 0;
+  border: 1px solid #4b4943;
+  border-radius: 22px;
+  background: #191b20;
+  color: #dfdfe5;
+  box-shadow: 0 24px 96px #0009;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.adobo-flow[open] { display: flex; flex-direction: column; }
+.adobo-flow::backdrop { background: #090b12bf; backdrop-filter: blur(5px); }
+body:has(.adobo-flow[open]) { overflow: hidden; }
+
+.adobo-flow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 21px 24px;
+  border-bottom: 1px solid #34353c;
+}
+.adobo-flow-header h2 { font-size: clamp(1.4rem, 3.3vw, 2.1rem); }
+.adobo-flow-close {
+  flex: 0 0 44px;
+  height: 44px;
+  border: 1px solid #42444c;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+.adobo-flow-close:hover, .adobo-flow-step:hover { background: #2c2e35; }
+
+.adobo-flow-layout {
+  display: grid;
+  grid-template-columns: clamp(210px, 27%, 270px) minmax(0, 1fr);
+  min-height: 0;
+}
+.adobo-flow-steps, .adobo-flow-body {
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #575862 #191b20;
+}
+.adobo-flow-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 14px 12px;
+  border-right: 1px solid #34353c;
+  background: #15171c;
+}
+.adobo-flow-step {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  padding: 8px 10px 8px 30px;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+}
+.adobo-flow-step::before, .adobo-flow-step::after {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 19px;
+}
+.adobo-flow-step::before {
+  margin-left: 3px;
+  height: calc(100% + 5px);
+  border-left: 1px solid #555760;
+  z-index: -1;
+}
+.adobo-flow-step:last-child::before { display: none; }
+.adobo-flow-step::after {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #737681;
+}
+.adobo-flow-step[aria-current] { background: #302c20; border-color: #66582d; }
+.adobo-flow-step[aria-current]::after { background: var(--brand, #ffd540); }
+.adobo-flow-code { color: #b3b4bf; font-size: .75rem; }
+.adobo-flow-step[aria-current] .adobo-flow-code { color: var(--brand, #ffd540); }
+.adobo-flow-label { color: #eeeef2; font-size: .91rem; line-height: 1.3; }
+
+.adobo-flow-body { padding: 22px 24px 24px; }
+.adobo-flow-stage { margin: 0 0 16px; font-size: clamp(1.25rem, 3vw, 1.8rem); }
+.adobo-flow-cards { display: grid; gap: 10px; }
+.adobo-flow-card {
+  padding: 14px 16px;
+  border: 1px solid #373942;
+  border-left: 2px solid #a78c49;
+  border-radius: 12px;
+  background: #202229;
+}
+.adobo-flow-card > h4 { margin: 0 0 10px; font-size: 1.04rem; }
+.adobo-flow :is(.guide-line, .guide-line-body) { color: #d7d7e0; font-size: .9rem; line-height: 1.62; }
+.adobo-flow .guide-line { margin: 7px 0 0; }
+.adobo-flow a { color: var(--brand, #ffd540); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.adobo-flow-info { border-top: 1px solid #34353c; padding: 10px 24px; font-size: .83rem; }
+.adobo-flow-info > summary { cursor: pointer; }
+.adobo-flow-info > a { display: inline-block; margin: .55rem 0 .25rem; }
+.adobo-flow-intro { max-width: 68ch; }
+
+@media (max-width: 720px), (max-height: 450px) {
+  .adobo-flow { width: calc(100% - 16px); max-height: calc(100dvh - 16px); border-radius: 15px; }
+  .adobo-flow[open] { display: block; }
+  .adobo-flow-header { padding: 13px; }
+  .adobo-flow-layout { display: block; }
+  .adobo-flow-steps {
+    flex-direction: row;
+    gap: 6px;
+    padding: 8px 13px;
+    border-right: 0;
+    border-bottom: 1px solid #34353c;
+  }
+  .adobo-flow-step { width: 147px; padding: 7px 9px; }
+  .adobo-flow-step::before, .adobo-flow-step::after { display: none; }
+  .adobo-flow-body { padding: 16px 13px; overflow: visible; }
+  .adobo-flow-info { padding-inline: 13px; }
+}

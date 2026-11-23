@@ -17,7 +17,7 @@ COPY assets/brochure-credentials/ ./private-hub/assets/brochure-credentials/
 COPY brochure.css brochure.js brochure-pdf.js brochure-share.js brochure-activity.js brochure-releases.js brochure-releases.json ./private-hub/
 COPY academy/index.html ./private-hub/academy/index.html
 COPY argumentaciones/index.html ./private-hub/argumentaciones/index.html
-COPY operativa/index.html ./private-hub/operativa/index.html
+COPY operativa/index.html operativa/adobo-flow.css ./private-hub/operativa/
 COPY playbook/index.html ./private-hub/playbook/index.html
 COPY dashboard/index.html ./private-hub/dashboard/index.html
 
