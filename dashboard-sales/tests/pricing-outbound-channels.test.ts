@@ -6,6 +6,9 @@ import { walletSources } from '../src/lib/wallet-public';
 const hub = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 const source = hub.slice(hub.indexOf('const EMAIL_FREE_QUANTITY='), hub.indexOf('function waService()'));
 
+const channelCatalog = hub.slice(hub.indexOf('const CHANNELS='), hub.indexOf('const SECTIONS='));
+const channelRenderer = hub.slice(hub.indexOf('function renderOpts()'), hub.indexOf("document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]')"));
+
 function calculator() {
   const state = {
     existing: false,
@@ -13,18 +16,23 @@ function calculator() {
     studio: true,
     scope: 'bolsa',
     engage: false,
+    chan: {},
     out: { correo: false, wacall: false },
     callAttention: '',
     emailPlan: 'free',
     emailQuantity: 35000,
     voiceMinutes: 12350,
   };
-  const pricing = runInNewContext(source + ';({ emailOutboundPack, studioVoicePack, selectedEmailPack, selectedVoicePack, outboundMonthly })', {
+  const channels = { innerHTML: '' };
+  const pricing = runInNewContext(source + walletSources(hub).formulas + channelCatalog + channelRenderer
+    + ';({ emailOutboundPack, studioVoicePack, selectedEmailPack, selectedVoicePack, outboundMonthly, waCalls, renderOpts })', {
     state,
+    document: { getElementById: () => channels },
+    paintIcons: () => {},
     hasExistingDesk: () => false,
     hasService: () => state.desk || state.studio,
   });
-  return { state, pricing };
+  return { state, pricing, channels };
 }
 
 test('outbound email switches from Free to the published paid tiers', () => {
@@ -60,10 +68,32 @@ test('only selected compatible channels contribute to the monthly outbound price
   expect(pricing.outboundMonthly()).toBe(85.75);
   state.callAttention = 'both';
   expect(pricing.outboundMonthly()).toBe(2061.75);
+  expect(pricing.waCalls()).toBe(true);
+  state.engage = false;
+  expect(pricing.waCalls()).toBe(false);
+  expect(pricing.outboundMonthly()).toBe(0);
+  state.engage = true;
+  expect(pricing.outboundMonthly()).toBe(2061.75);
   state.studio = false;
   expect(pricing.outboundMonthly()).toBe(85.75);
   state.engage = false;
   expect(pricing.outboundMonthly()).toBe(0);
+});
+
+test('the whole outbound section appears only while Engage is active', () => {
+  const { state, pricing, channels } = calculator();
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('data-chan="correo"');
+  expect(channels.innerHTML).not.toContain('Canales de salida');
+  state.engage = true;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('Canales de salida');
+  expect(channels.innerHTML).toContain('data-out="correo"');
+  expect(channels.innerHTML).toContain('data-out="wacall"');
+  state.engage = false;
+  pricing.renderOpts();
+  expect(channels.innerHTML).not.toContain('Canales de salida');
+  expect(channels.innerHTML).not.toContain('data-out=');
 });
 
 test('private email and Studio price tables stay outside the public Meta wallet', () => {

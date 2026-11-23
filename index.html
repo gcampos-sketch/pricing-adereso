@@ -9185,7 +9185,7 @@ function outboundPackSuggestion(pack,tiers,priceAt){
     .sort((a,b)=>a.monthly-b.monthly||a.quantity-b.quantity)[0]||null;
 }
 function voiceCallAttention(){
-  if(!hasService()||!state.out.wacall)return '';
+  if(!state.engage||!hasService()||!state.out.wacall)return '';
   const human=state.desk||hasExistingDesk(),ai=state.studio||(state.existing&&state.scope!=='bolsa');
   if(state.callAttention==='both'&&human&&ai)return 'both';
   if(state.callAttention==='ai'&&ai)return 'ai';
@@ -9201,7 +9201,7 @@ function selectedEmailPack(){
 function selectedVoicePack(){return voiceOutboundActive()?studioVoicePack(state.voiceMinutes):null;}
 function outboundMonthly(){return (selectedEmailPack()?.monthly||0)+(selectedVoicePack()?.monthly||0);}
 function waService(){return state.whatsapp||state.walletOnly;}function waTemplates(){return (state.engage&&state.out.whatsapp)||state.walletOnly;}
-function waCalls(){return state.walletOnly||(state.out.wacall&&(state.callAttention===undefined?state.engage:!!voiceCallAttention()));}
+function waCalls(){return state.walletOnly||(state.engage&&state.out.wacall&&(state.callAttention===undefined||!!voiceCallAttention()));}
 function waActive(){return waService()||waTemplates()||waCalls();}
 /* fee de la billetera: estándar por tipo (spot 12%, recurrente 10%); el cliente vigente puede tener uno propio */
 function walFeeStd(){return state.wa.wallet==='recurrente'?10:12;}
@@ -9358,9 +9358,10 @@ function renderOpts(){
   if(showGrid)html+=`<div class="chan-grid in-grid${ex?' chan-grid-ex':''}">${CHANNELS.filter(c=>!c.soon).map(inChip).join('')}</div>
     <p class="out-note" style="margin:10px 0 0"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>
     ${soonBox(CHANNELS,'in')}`;
-  {
+  if(state.engage){
     const outChans=[
-      ...(state.engage?[{k:'whatsapp',label:'Plantillas WhatsApp',color:'#25D366',paid:true},{k:'correo',label:'Correo masivo',color:'#FFD540',paid:true,tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'}]:[]),
+      {k:'whatsapp',label:'Plantillas WhatsApp',color:'#25D366',paid:true},
+      {k:'correo',label:'Correo masivo',color:'#FFD540',paid:true,tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'},
       {k:'wacall',label:'Llamadas por WhatsApp',color:'#25D366',paid:true},
       {k:'voip',label:'Llamada VoIP',color:'#52CE5E',paid:true,soon:true}
     ];
@@ -9371,7 +9372,7 @@ function renderOpts(){
     const choices=[['human','Humano',human],['ai','IA',ai],['both','Humano + IA',human&&ai]];
     html+=`<div class="out-block">
       <div class="out-head">Canales de salida</div>
-      <div class="out-note">${state.engage?'Las plantillas de WhatsApp se cotizan con Meta.':'Activa Engage en Servicios para sumar plantillas de WhatsApp y correo masivo.'}</div>
+      <div class="out-note">Las plantillas de WhatsApp se cotizan con Meta.</div>
       <div class="chan-grid out-grid">${outChans.filter(c=>!c.soon).map(outChip).join('')}</div>
       ${state.out.wacall?`<div class="out-attention" role="group" aria-label="Quién realiza las llamadas"><span>¿Quién realiza las llamadas?</span>${choices.map(([key,label,available])=>`<button type="button" class="pill ${attention===key?'on':''}" data-call-attention="${key}" aria-pressed="${attention===key}" ${available?'':'disabled'}>${label}</button>`).join('')}</div><div class="out-note" style="margin-top:8px">Humano requiere Desk y se cobra en la billetera Meta. IA requiere Studio y suma una bolsa de minutos. Ambos consumen minutos de Meta.</div>`:''}
       ${soonBox(outChans,'out')}
@@ -9648,7 +9649,7 @@ function renderWa(){
   /* Engage (saliente): plantillas y llamadas viven juntas en el mismo bloque */
   const callLbl=callConfirmed()?((state.wa.country==='CL'?'tramo inicial ':'')+usd3(waP().call))+'<small>/min</small>':'por confirmar';
   const callCard=waCalls()?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas · consumo Meta</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas salientes por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}. Ingresa los minutos de uso al mes${state.callAttention!==undefined&&voiceOutboundActive()?' (IA y humano, si aplica)':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" aria-label="Minutos de llamadas" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div>`:'';
-  const callOff=(state.callAttention!==undefined&&!waCalls())?`<div class="note" style="margin-top:10px"><span data-i="info"></span><div><b>Llamadas salientes:</b> activa llamadas por WhatsApp en <button class="linkbtn" data-goto="sc">Canales →</button>.</div></div>`:'';
+  const callOff=(state.engage&&state.callAttention!==undefined&&!waCalls())?`<div class="note" style="margin-top:10px"><span data-i="info"></span><div><b>Llamadas salientes:</b> activa llamadas por WhatsApp en <button class="linkbtn" data-goto="sc">Canales →</button>.</div></div>`:'';
   if(waTemplates()){
     const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
     calc+=`<div><label class="wa-block-lbl">Engage · WhatsApp saliente <span class="u">— plantillas y llamadas, precio Meta</span></label><div class="pl-grid">
@@ -9658,7 +9659,7 @@ function renderWa(){
   }else if(state.engage){
     calc+=`<div class="note warn"><span data-i="info"></span><div>Para cotizar plantillas de <b>WhatsApp saliente</b>, activa ese canal. <button class="linkbtn" data-act="out-wa">Activar WhatsApp saliente →</button></div></div>`;
   }else{
-    calc+=`<div class="note warn"><span data-i="info"></span><div><b>Plantillas y llamadas desactivadas:</b> el envío de plantillas (marketing, utilidad, autenticación) y las llamadas salientes requieren <b>Engage</b>. <button class="linkbtn" data-act="engage">Activar Engage →</button></div></div>`;
+    calc+=`<div class="note warn"><span data-i="info"></span><div><b>Plantillas y llamadas desactivadas:</b> el envío de plantillas (marketing, utilidad, autenticación) y las llamadas salientes requieren <b>Engage</b>. <button class="linkbtn" data-goto="s1">Ir a Servicios →</button></div></div>`;
   }
   /* sin plantillas pero con WhatsApp Call: las llamadas igual van dentro del bloque Engage */
   if(!waTemplates()&&callCard){
@@ -10005,7 +10006,7 @@ document.getElementById('termArea').addEventListener('click',e=>{
   else return;
   renderTerm();renderRail();renderSummary();renderRoi();
 });
-function renderAll(){renderCust();renderOpts();renderVol();renderSetup();renderWa();renderTerm();renderRail();renderSummary();renderRoi();}
+function renderAll(){renderCust();renderOpts();renderVol();renderSetup();if(state.wa.amountSource==='estimate')state.wa.amount=Math.round((metaEst()||0)*100)/100;renderWa();renderTerm();renderRail();renderSummary();renderRoi();}
 
 /* ===== ROI · caso de negocio (reciclado del cotizador) ===== */
 const ROI_DIAS=22, ROI_HORAS=8, ROI_CASSPER_FEE=5;
@@ -10605,8 +10606,7 @@ document.getElementById('waArea').addEventListener('click',e=>{
   if(e.target.closest('[data-wa-reset]')){state.wa.service=0;state.wa.marketing=0;state.wa.utility=0;state.wa.authentication=0;state.wa.minutes=0;waLoad();renderWa();renderRail();renderSummary();return;}
   const act=e.target.closest('[data-act]');
   if(act){const a=act.dataset.act;
-    if(a==='engage'){state.engage=true;state.out.whatsapp=true;}
-    else if(a==='out-wa'){state.out.whatsapp=true;}
+    if(a==='out-wa'&&state.engage)state.out.whatsapp=true;
     renderMods();renderOpts();renderWa();renderRail();renderSummary();refreshFlow();return;}
   const cty=e.target.closest('[data-cty]');
   if(cty){state.wa.country=cty.dataset.cty;if(!walletManual())waLoad();renderWa();renderRail();renderSummary();calcRoiNumbers();return;}
