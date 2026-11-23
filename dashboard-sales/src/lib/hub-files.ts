@@ -35,6 +35,7 @@ export const HUB_FILES: Record<string, string> = {
   'assets/brochure-logos/chilquinta.svg': 'image/svg+xml',
   'academy/index.html': 'text/html; charset=utf-8',
   'argumentaciones/index.html': 'text/html; charset=utf-8',
+  'operativa/adobo-flow.css': 'text/css; charset=utf-8',
   'operativa/index.html': 'text/html; charset=utf-8',
   'playbook/index.html': 'text/html; charset=utf-8',
   'dashboard/index.html': 'text/html; charset=utf-8',

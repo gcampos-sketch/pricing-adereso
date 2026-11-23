@@ -1,6 +1,7 @@
 /* Live commercial content: source prose only; no remote HTML or executable markup. */
 (()=>{'use strict';
  const guide=document.currentScript?.dataset.guide;
+ const flowPageId='4219c274-7df5-81d4-b9c8-f940f928eb50';
  if(!['playbook','operativa'].includes(guide))return;
  function init(){
   const host=document.getElementById(guide==='playbook'?'secs':'tree');if(!host)return;
@@ -46,6 +47,87 @@
   host.replaceChildren();const loading=el('p','guide-notice','Cargando contenido…');host.append(loading);
   document.querySelectorAll('.hero .tl,.hero .legend').forEach(x=>x.hidden=true);
   const sidebarDate=document.querySelector('.side-box .dt,.chapter-resource-panel .dt');if(sidebarDate)sidebarDate.textContent='Conectando con Notion';
+  const flow=guide==='operativa'?createFlow():null;
+
+  function createFlow(){
+   const stylesheet=el('link');stylesheet.rel='stylesheet';stylesheet.href='/hub-content/operativa/adobo-flow.css';document.head.append(stylesheet);
+   const trigger=el('button','adobo-flow-trigger','Adobo y Codex');
+   trigger.type='button';trigger.hidden=true;
+   trigger.setAttribute('aria-haspopup','dialog');
+   trigger.setAttribute('aria-controls','adobo-flow');
+   const dialog=el('dialog','adobo-flow');dialog.id='adobo-flow';
+   dialog.setAttribute('aria-labelledby','adobo-flow-title');
+   const header=el('header','adobo-flow-header');
+   const title=el('h2');title.id='adobo-flow-title';
+   const close=el('button','adobo-flow-close','×');
+   close.type='button';close.setAttribute('aria-label','Cerrar flujo');close.autofocus=true;
+   header.append(title,close);
+   const layout=el('div','adobo-flow-layout');
+   const steps=el('nav','adobo-flow-steps');steps.setAttribute('aria-label','Etapas del pipeline');
+   const body=el('section','adobo-flow-body');body.setAttribute('aria-labelledby','adobo-flow-stage');
+   const stageTitle=el('h3','adobo-flow-stage');stageTitle.id='adobo-flow-stage';
+   const cards=el('div','adobo-flow-cards');
+   body.append(stageTitle,cards);layout.append(steps,body);
+   const info=el('details','adobo-flow-info');
+   info.append(el('summary','','Alcance y fuente'));
+   const intro=el('div','adobo-flow-intro');
+   const source=el('a','','Ver fuente en Notion');source.target='_blank';source.rel='noopener noreferrer';
+   info.append(intro,source);
+   dialog.append(header,layout,info);
+   document.body.append(trigger,dialog);
+   let phases=[],selected='',opener=null;
+   function select(phase){
+    selected=phase.heading.id;
+    stageTitle.replaceChildren();rich(stageTitle,phase.heading.text);
+    cards.replaceChildren();
+    let target=cards;
+    for(const block of phase.blocks){
+     if(block.type==='heading_3'){
+      target=el('div','adobo-flow-card');cards.append(target);
+     }
+     target.append(node(block));
+    }
+    for(const button of steps.querySelectorAll('button')){
+     if(button.dataset.phase===selected)button.setAttribute('aria-current','step');
+     else button.removeAttribute('aria-current');
+    }
+    body.scrollTop=0;
+   }
+   function open(origin){
+    if(!phases.length||dialog.open)return;
+    opener=origin;dialog.showModal();
+   }
+   trigger.addEventListener('click',()=>open(trigger));
+   close.addEventListener('click',()=>dialog.close());
+   dialog.addEventListener('close',()=>{(opener?.isConnected?opener:trigger).focus({preventScroll:true});opener=null;});
+   return {open,render(doc){
+    const groups=[],preface=[];
+    for(const block of doc?.blocks||[]){
+     if(block.type==='heading_2')groups.push({heading:block,blocks:[]});
+     else (groups.at(-1)?.blocks??preface).push(block);
+    }
+    phases=groups;
+    trigger.hidden=!phases.length;
+    if(!phases.length){if(dialog.open)dialog.close();return false;}
+    title.textContent=doc.title;
+    intro.replaceChildren(...preface.map(node));
+    source.href=safe(doc.url)||'https://www.notion.so/'+flowPageId.replaceAll('-','');
+    const focused=steps.contains(document.activeElement);
+    steps.replaceChildren();
+    for(const phase of phases){
+     const label=plain(phase.heading);
+     const split=label.indexOf(' · ');
+     const button=el('button','adobo-flow-step');
+     button.type='button';button.dataset.phase=phase.heading.id;
+     if(split>0)button.append(el('span','adobo-flow-code',label.slice(0,split)));
+     button.append(el('span','adobo-flow-label',split>0?label.slice(split+3):label));
+     button.addEventListener('click',()=>select(phase));steps.append(button);
+    }
+    select(phases.find(phase=>phase.heading.id===selected)||phases[0]);
+    if(focused)steps.querySelector('[aria-current="step"]')?.focus({preventScroll:true});
+    return true;
+   }};
+  }
   function mount(data){
    const anchor=Array.from(host.querySelectorAll('[id]')).find(x=>x.getBoundingClientRect().top>=0);const offset=anchor?.getBoundingClientRect().top;
    const open=new Set(Array.from(host.querySelectorAll('details[open]')).map(x=>x.id));
@@ -53,7 +135,10 @@
    documentIds.clear();for(const doc of data.snapshot.documents)documentIds.add(doc.id);
    const hero=document.querySelector('.hero');if(hero?.querySelector('h1'))hero.querySelector('h1').textContent=data.title;
    if(hero?.querySelector('p'))hero.querySelector('p').textContent='La guía del equipo comercial, con sus procesos, criterios y recursos.';
-   for(const [i,doc] of data.snapshot.documents.entries()){
+   const flowDoc=data.snapshot.documents.find(doc=>doc.id===flowPageId);
+   const flowReady=flow?.render(flowDoc);
+   const documents=flowReady?data.snapshot.documents.filter(doc=>doc!==flowDoc):data.snapshot.documents;
+   for(const [i,doc] of documents.entries()){
     const section=el(i===0?'section':'details','guide-doc'+(i?' guide-related':''));section.id='guide-document-'+doc.id;
     const title=el(i===0?'h2':'summary','',doc.title);section.append(title);const content=el('div');for(const b of doc.blocks)content.append(node(b));section.append(content);fragment.append(section);
     const targets=i===0?[{id:section.id,label:'Inicio'}]:i===1?[{id:section.id,label:'Documentos relacionados'}]:[];
@@ -79,7 +164,7 @@
    finally{busy=false;refresh.disabled=false;}
   }
   refresh.onclick=()=>{if(pending)mount(pending);else load(true);refresh.textContent='Actualizar';};
-  document.addEventListener('click',event=>{const a=event.target.closest('a[href^="#guide-"]');if(!a)return;event.preventDefault();event.stopImmediatePropagation();const target=document.getElementById(a.getAttribute('href').slice(1));if(target){let p=target;while(p){if(p.tagName==='DETAILS')p.open=true;p=p.parentElement;}if(target.tagName==='DETAILS')target.open=true;target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}},true);
+  document.addEventListener('click',event=>{const a=event.target.closest('a[href^="#guide-"]');if(!a)return;event.preventDefault();event.stopImmediatePropagation();if(flow&&!document.getElementById('guide-document-'+flowPageId)&&a.hash==='#guide-document-'+flowPageId){flow.open(a);return;}const target=document.getElementById(a.getAttribute('href').slice(1));if(target){let p=target;while(p){if(p.tagName==='DETAILS')p.open=true;p=p.parentElement;}if(target.tagName==='DETAILS')target.open=true;target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});}},true);
   function search(value){const q=value.trim().toLocaleLowerCase();let count=0;for(const doc of host.querySelectorAll('.guide-doc')){const hit=!q||doc.textContent.toLocaleLowerCase().includes(q);doc.hidden=!hit;if(hit)count++;if(q&&hit)doc.querySelectorAll('details').forEach(x=>x.open=x.textContent.toLocaleLowerCase().includes(q));}const cnt=document.getElementById('cnt');if(cnt)cnt.textContent=q?count+' secciones':'';const empty=document.getElementById('empty');if(empty)empty.style.display=q&&!count?'block':'none';}
   document.getElementById('q')?.addEventListener('input',event=>{event.stopImmediatePropagation();search(event.target.value);},true);
   for(const id of ['openAll','closeAll'])document.getElementById(id)?.addEventListener('click',event=>{event.stopImmediatePropagation();host.querySelectorAll('details').forEach(x=>x.open=id==='openAll');},true);
