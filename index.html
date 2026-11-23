@@ -8950,7 +8950,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{},out:{correo:false,whatsapp:false,wacall:false},callAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,hasStudioContracted:false,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{},out:{correo:false,whatsapp:false,wacall:false},callAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* Cada carga inicia una cotización nueva; retirar la antigua copia del navegador. */
 try{localStorage.removeItem('adereso_pricing_v1');}catch(e){}
@@ -9044,7 +9044,8 @@ function renderCust(){const el=document.getElementById('custSeg');if(!el)return;
       <div class="ex-f"><label for="exPay">Mensualidad actual <small>Pago completo mensual del servicio Adereso, en USD. No considera billetera Adereso–Meta, setups ni bolsas spot.</small></label>
         <div class="ex-money"><span>$</span><input type="number" id="exPay" min="0" step="0.01" data-ex="pay" value="${state.currentPay||''}" placeholder="Ej: 398"></div></div>
     </div>
-    <label class="tpre" style="margin-top:12px"><input type="checkbox" data-has-desk ${state.hasDeskContracted!==false?'checked':''}> Ya tiene Desk contratado <small>Si no cotizas Desk, evita el recargo de Studio sin Desk.</small></label>`;
+    <label class="tpre" style="margin-top:12px"><input type="checkbox" data-has-desk ${state.hasDeskContracted!==false?'checked':''}> Ya tiene Desk contratado <small>Si no cotizas Desk, evita el recargo de Studio sin Desk.</small></label>
+    <label class="tpre" style="margin-top:8px"><input type="checkbox" data-has-studio ${state.hasStudioContracted?'checked':''}> Ya tiene Studio contratado <small>Habilita la bolsa de llamadas con IA.</small></label>`;
   /* agentes nuevos + «también amplía su bolsa»: viven en Servicios, junto a la tarjeta Agente IA extra */
   const xaFocus=xa&&document.activeElement&&xa.contains(document.activeElement)?document.activeElement.dataset.ex:null;
   if(xa)xa.innerHTML="";if(false)xa.innerHTML=`
@@ -9055,7 +9056,21 @@ function renderCust(){const el=document.getElementById('custSeg');if(!el)return;
   paintIcons(ep);if(xa){paintIcons(xa);if(xaFocus){const f=xa.querySelector(`[data-ex="${xaFocus}"]`);if(f){f.focus();const v=f.value;f.value="";f.value=v;}}}
   if(focus){const f=ep.querySelector(`[data-ex="${focus}"]`);if(f){f.focus();const v=f.value;f.value='';f.value=v;}}
 }
-document.addEventListener('change',e=>{if(!e.target.matches('[data-has-desk]'))return;state.hasDeskContracted=e.target.checked;renderMods();renderAll();refreshFlow();});
+document.addEventListener('change',e=>{
+  const input=e.target;
+  let selector;
+  if(input.matches('[data-has-desk]')){
+    selector='[data-has-desk]';
+    state.hasDeskContracted=input.checked;
+    if(!state.desk&&!hasExistingDesk())state.engage=false;
+  }else if(input.matches('[data-has-studio]')){
+    selector='[data-has-studio]';
+    state.hasStudioContracted=input.checked;
+  }else return;
+  const restoreFocus=document.activeElement===input;
+  renderMods();renderAll();refreshFlow();
+  if(restoreFocus)document.querySelector(selector)?.focus({preventScroll:true});
+});
 /* Plazo de contrato: ajusta el mensual del servicio Adereso (recargo o descuento) */
 const TERMS={m3:{lbl:'3 meses',adj:0.40,pre:null,txt:'40% de recargo'},y1:{lbl:'1 año',adj:0,pre:0.06,txt:'Sin descuento'},y2:{lbl:'2 años',adj:-0.03,pre:0.11,txt:'3% de descuento'},y3:{lbl:'3 años',adj:-0.05,pre:0.16,txt:'5% de descuento'}};
 /* 3 meses ya no se ofrece (se deja en TERMS solo por compatibilidad) */
@@ -9194,16 +9209,23 @@ function outboundPackSuggestion(pack,tiers,priceAt){
     .filter(candidate=>candidate.monthly<pack.monthly-.005)
     .sort((a,b)=>a.monthly-b.monthly||a.quantity-b.quantity)[0]||null;
 }
+function channelsAvailable(){return hasService()||(state.existing&&state.engage);}
+function voiceAttentionAvailability(){
+  return {
+    human:state.desk||hasExistingDesk(),
+    ai:state.studio||(state.existing&&(state.hasStudioContracted||state.scope!=='bolsa'))
+  };
+}
 function voiceCallAttention(){
-  if(!state.engage||!hasService()||!state.out.wacall)return '';
-  const human=state.desk||hasExistingDesk(),ai=state.studio||(state.existing&&state.scope!=='bolsa');
+  if(!state.engage||!channelsAvailable()||!state.out.wacall)return '';
+  const {human,ai}=voiceAttentionAvailability();
   if(state.callAttention==='both'&&human&&ai)return 'both';
   if(state.callAttention==='ai'&&ai)return 'ai';
   if(state.callAttention==='human'&&human)return 'human';
   return ai?'ai':human?'human':'';
 }
 function voiceOutboundActive(){return !!voiceCallAttention();}
-function emailOutboundActive(){return hasService()&&state.engage&&state.out.correo;}
+function emailOutboundActive(){return channelsAvailable()&&state.engage&&state.out.correo;}
 function selectedEmailPack(){
   if(!emailOutboundActive())return null;
   return emailOutboundPack(state.emailPlan==='free'?EMAIL_FREE_QUANTITY:state.emailQuantity>EMAIL_FREE_QUANTITY?state.emailQuantity:null);
@@ -9254,7 +9276,7 @@ function renderMods(){/* «Desarrollo agente IA»: en cliente nuevo va encendido
     return `<button class="${cls}" data-mod="${m.k}" ${m.soon||m.locked?'aria-disabled="true"':''}>
       ${tag}${tick}
       <span class="mod-ico"><span data-i="${m.icon}" data-sz="26" style="color:${m.color}"></span></span>
-      <span class="mod-txt"><span class="mod-label">${m.label}</span><span class="mod-desc">${m.k==='botOnly'?`${studioType()==='flow'?'Flow':'Agente'} nuevo · USD ${BOT_MANT*studioMultiplier()}/mes + setup`:((!state.existing&&m.descNew)?m.descNew:m.desc)}</span>${m.bag?'<span class="mod-bag" title="'+m.bagTip+'">'+((!state.existing&&m.bagNew)?m.bagNew:m.bag)+'</span>':''}</span>${m.k==='desk'?'<span class="mod-users" title="Usuarios ilimitados">Usuarios <b>∞</b></span>':''}${m.k==='studio'&&state.studio?(state.existing?modStudioType():modAgents()):''}${state.existing&&state[m.k]&&(m.k==='botOnly'||m.k==='improve')?modStudioType():''}${(m.k==='botOnly'&&state.existing&&state.botOnly)?modBots():''}
+      <span class="mod-txt"><span class="mod-label">${m.label}</span><span class="mod-desc">${m.k==='botOnly'?`${studioType()==='flow'?'Flow':'Agente'} nuevo · USD ${BOT_MANT*studioMultiplier()}/mes + setup`:(state.existing&&m.k==='engage'?'Agrega bolsas de llamadas y correo masivo':(!state.existing&&m.descNew)?m.descNew:m.desc)}</span>${m.bag?'<span class="mod-bag" title="'+m.bagTip+'">'+((!state.existing&&m.bagNew)?m.bagNew:m.bag)+'</span>':''}</span>${m.k==='desk'?'<span class="mod-users" title="Usuarios ilimitados">Usuarios <b>∞</b></span>':''}${m.k==='studio'&&state.studio?(state.existing?modStudioType():modAgents()):''}${state.existing&&state[m.k]&&(m.k==='botOnly'||m.k==='improve')?modStudioType():''}${(m.k==='botOnly'&&state.existing&&state.botOnly)?modBots():''}
     </button>`;
   }).join('');
   paintIcons(document.getElementById('modgrid'));
@@ -9355,15 +9377,15 @@ document.getElementById('setupArea').addEventListener('change',e=>{const s=e.tar
 document.getElementById('agentBox')?.addEventListener('input',e=>{const f=e.target.closest('[data-ag]');if(!f)return;state.extraAgents=Math.max(0,Math.round(+f.value||0));agRefresh();});
 function renderOpts(){
   const el=document.getElementById('optWa');if(!el)return;
-  if(!hasService()){el.innerHTML='';return;}
+  if(!channelsAvailable()){el.innerHTML='';return;}
   const logo=(c)=>`<span class="chan-logo" style="color:${c.color}"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" fill-rule="evenodd">${CHAN_ART[c.k]||`<path d="${CHAN_SVG[c.k]}"/>`}</svg></span><span class="chan-lbl">${c.label}</span>`;
   const inChip=(c)=>{if(c.soon)return `<div class="chan soon" aria-disabled="true" title="${c.label} · próximamente${c.paid?'':', sin costo'}"><span class="chan-ribbon">Próximamente</span>${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</div>`;
     const on=c.k==='whatsapp'?state.whatsapp:!!state.chan[c.k];
     return `<button class="chan ${on?'on':''} ${c.paid?'paid':''}" data-chan="${c.k}" aria-pressed="${on}">
       ${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</button>`;};
   /* cliente vigente: primero se pregunta si mantiene sus canales o conecta nuevos; el selector aparece solo si conecta nuevos */
-  const ex=state.existing,showGrid=!ex||state.chanNew;
-  let html=ex?`<div class="seg chan-mode ${state.chanNew?'right':''}">
+  const ex=state.existing,showGrid=hasService()&&(!ex||state.chanNew);
+  let html=ex&&hasService()?`<div class="seg chan-mode ${state.chanNew?'right':''}">
       <button class="seg-opt ${!state.chanNew?'on':''}" data-chanmode="keep"><span class="seg-ico" data-i="wa" data-sz="16"></span><span class="seg-txt"><b>Ya tengo WhatsApp conectado</b><small>Mantengo mis canales actuales</small></span></button>
       <button class="seg-opt ${state.chanNew?'on':''}" data-chanmode="new"><span class="seg-ico" data-i="bolt" data-sz="16"></span><span class="seg-txt"><b>Conectar nuevos canales</b><small>Elijo qué canales sumar</small></span></button>
     </div>`:'';
@@ -9378,11 +9400,11 @@ function renderOpts(){
   if(state.engage){
     const outChans=[
       {k:'whatsapp',label:'Plantillas WhatsApp',color:'#25D366',paid:true},
-      {k:'correo',label:'Correo masivo',color:'#FFD540',paid:true,tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'},
-      {k:'wacall',label:'Llamadas por WhatsApp',color:'#25D366',paid:true},
+      {k:'correo',label:ex?'Bolsa de correo masivo':'Correo masivo',color:'#FFD540',paid:true,tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'},
+      {k:'wacall',label:ex?'Bolsa de llamadas por WhatsApp':'Llamadas por WhatsApp',color:'#25D366',paid:true},
       {k:'voip',label:'Llamada VoIP',color:'#52CE5E',paid:true,soon:true}
     ];
-    const attention=voiceCallAttention(),human=state.desk||hasExistingDesk(),ai=state.studio||(state.existing&&state.scope!=='bolsa');
+    const attention=voiceCallAttention(),{human,ai}=voiceAttentionAvailability();
     const choices=[['human','Humano',human],['ai','IA',ai],['both','Humano + IA',human&&ai]];
     const outChip=(c)=>{
       const on=!!state.out[c.k],badge=c.tag?`<span class="chan-free">${c.tag}</span>`:'<span class="chan-pago">pago</span>';
@@ -9783,7 +9805,7 @@ function convDeskOnly(){
   if(rows[0]){const d=rows[0].querySelector('.md');if(d)d.textContent='Todos los mensajes del ejecutivo dentro del ticket. (WhatsApp puede considerar cargos adicionales.)';}
   if(rows[1]){const t=rows[1].querySelector('.mt'),d=rows[1].querySelector('.md');if(t)t.textContent='Traspaso entre ejecutivos';if(d)d.textContent='Si el caso pasa a otra persona o área, sigue siendo la misma conversación.';}
 }
-function selService(){const extra=state.existing?[state.improve?'Mejora agente actual':'',state.walletOnly?'Billetera':'',state.hhCustom?'HH custom':''].filter(Boolean).join(' + '):'';if(!hasService())return extra||'—';if(improveOnly())return extra;if(state.existing&&state.scope==='bot')return 'Desarrollo agente IA'+(extra?' + '+extra:'');return (state.existing?'Ampliación · ':'')+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk')+(extra?' + '+extra:'');}
+function selService(){const extra=state.existing?[state.improve?'Mejora agente actual':'',state.walletOnly?'Billetera':'',state.hhCustom?'HH custom':''].filter(Boolean).join(' + '):'';if(!hasService())return [state.engage?'Engage':'',extra].filter(Boolean).join(' + ')||'—';if(improveOnly())return extra;if(state.existing&&state.scope==='bot')return 'Desarrollo agente IA'+(extra?' + '+extra:'');return (state.existing?'Ampliación · ':'')+(state.studio?(state.desk?'Desk + Studio':'Studio (sin Desk)'):'Desk')+(extra?' + '+extra:'');}
 function selVol(){if(state.existing&&!scopeBag())return 'Mantiene su bolsa';return !hasService()?'—':curVol().toLocaleString('es-CL')+' conv';}
 function selImpl(){if(state.existing&&!scopeBot())return 'No aplica (solo bolsa)';if(!iaSetup())return deskInteg()?'Onboarding sin costo + integraciones · '+SETUP[state.setup].name:'Onboarding Desk · sin costo';if(allRapid())return 'Rápida · paquetizado';const n=agentsN();if(n>1){const f=Array.from({length:n},(_,i)=>agentType(i)).filter(t=>t==='flow').length;return n+' ('+(n-f)+' agent'+(n-f===1?'':'s')+' · '+f+' flow'+(f===1?'':'s')+')';}return (agentType(0)==='flow'?'Flow · ':'Agent · ')+'Acompañada · '+SETUP[state.setup].name;}
 function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)parts.push('service');if(waTemplates())parts.push('plantillas');if(waCalls())parts.push('llamadas');return 'Sí · '+(state.wa.wallet==='recurrente'?'recurrente ':'spot ')+walFee()+'% · '+parts.join(' + ');}
@@ -9802,7 +9824,7 @@ function renderRail(){
   if(rc){rc.innerHTML=`<h4>Tu selección</h4>${rec}
     <div class="rail-actions"><button class="btn btn-primary btn-block" data-next="s5">Ver resultado <span data-i="down"></span></button></div>
     <p class="rail-hint">El precio se revela en el resultado final.</p>`;paintIcons(rc);}
-  document.getElementById('mMonthly').innerHTML=hasService()?`${selService()} <span>· ${selVol()}</span>`:(state.cassper?`Cassper <span>· ${casspPlan().name}</span>`:'Sin servicios');
+  document.getElementById('mMonthly').innerHTML=hasService()?`${selService()} <span>· ${selVol()}</span>`:(state.cassper?`Cassper <span>· ${casspPlan().name}</span>`:state.engage?'Engage':'Sin servicios');
   document.getElementById('mDetail').innerHTML=rec;
 }
 
@@ -9995,7 +10017,7 @@ function renderSummary(){renderTerm();
     </div>`;
   }
 
-  if(!hasService()&&!state.cassper&&!waActive()&&!(state.existing&&state.hhCustom)){
+  if(!hasService()&&!state.cassper&&!waActive()&&!emailOutboundActive()&&!(state.existing&&state.hhCustom)){
     document.getElementById('sumCard').innerHTML=`<div class="rcard" style="text-align:center;padding:40px 24px"><div class="rtitle" style="color:var(--z400)">Sin servicios seleccionados</div><div class="rdesc" style="margin:10px auto 0">Vuelve al Nivel 1 y activa al menos un servicio (Desk, Studio o Cassper) para ver la cotización.</div></div>`;
     return;
   }
@@ -10415,13 +10437,13 @@ document.getElementById('roiArea').addEventListener('input',e=>{
 const KICK={s0:'Lo que paga hoy',s1:'Servicios',sc:'Canales',s2:'Volumen',s3:'Implementación',s4:'Billetera Adereso–Meta',sp:'Plazo de contrato'};
 const NEXTLABEL={s1:'Continuar a servicios',sc:'Continuar a canales',s2:'Continuar al volumen',s3:'Continuar a implementación',s4:'Continuar a la billetera',sp:'Continuar al plazo del contrato',s5:'Ver resumen',s6:'Ver el retorno de la inversión',s7:'Ver el proceso comercial',s8:'Conocer el portal cliente'};
 function volumeVisible(){return (hasService()&&scopeBag())||voiceOutboundActive()||emailOutboundActive();}
-function activeSections(){return SECTIONS.filter(id=>id!=='sp'&&(id!=='s0'||state.existing)&&(id!=='sc'||hasService())&&(id!=='s2'||volumeVisible())&&(id!=='s3'||implVisible())&&(id!=='s4'||waActive())&&(id!=='sp'||hasService()));}
+function activeSections(){return SECTIONS.filter(id=>id!=='sp'&&(id!=='s0'||state.existing)&&(id!=='sc'||channelsAvailable())&&(id!=='s2'||volumeVisible())&&(id!=='s3'||implVisible())&&(id!=='s4'||waActive())&&(id!=='sp'||hasService()));}
 function buildNav(){
   const secs=activeSections();
   document.getElementById('secnav').innerHTML=secs.map((id,i)=>{const t=document.getElementById(id).dataset.title;return `<button class="snav" data-goto="${id}" title="${t}"><span class="num">${i+(state.existing?0:1)}</span><span class="snav-t">${t}</span></button>`;}).join('');
 }
 function refreshFlow(){
-  document.getElementById('sc').classList.toggle('hidden',!hasService());
+  document.getElementById('sc').classList.toggle('hidden',!channelsAvailable());
   document.getElementById('s2').classList.toggle('hidden',!volumeVisible());
   document.getElementById('s3').classList.toggle('hidden',!implVisible());
   document.getElementById('s0').classList.toggle('hidden',!state.existing);

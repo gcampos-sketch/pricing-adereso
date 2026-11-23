@@ -24,8 +24,12 @@ test('changing channel mode refreshes wallet and navigation with the whole quote
  ui.fire({chanmode:'new'},'[data-chanmode]');expect(state.chanNew).toBe(true);expect(ui.calls).toEqual(['renderAll','refreshFlow']);
 });
 test('existing Desk status refreshes service prices, setup cards and all quote surfaces',()=>{
- const state=initial(),ui=events("document.addEventListener('change',e=>{if(!e.target.matches('[data-has-desk]'))", '/* Plazo de contrato:',state);
- ui.fire({},'[data-has-desk]','change');expect(state.hasDeskContracted).toBe(false);expect(ui.calls).toEqual(['renderMods','renderAll','refreshFlow']);
+ const state={...initial(),engage:true,hasStudioContracted:true},ui=events("document.addEventListener('change',e=>{\n  const input=e.target;\n  let selector;", '/* Plazo de contrato:',state);
+ ui.fire({},'[data-has-desk]','change');
+ expect(state.hasDeskContracted).toBe(false);expect(state.engage).toBe(false);
+ ui.fire({},'[data-has-studio]','change');
+ expect(state.hasStudioContracted).toBe(false);
+ expect(ui.calls).toEqual(['renderMods','renderAll','refreshFlow','renderMods','renderAll','refreshFlow']);
 });
 test('existing Desk integrations use the same setup, support and upsell basis as new customers',()=>{
  const run=setup({existing:true,studio:false,deskInteg:true,currentPay:199,vol:30000});

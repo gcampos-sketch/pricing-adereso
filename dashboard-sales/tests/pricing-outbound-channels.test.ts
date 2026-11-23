@@ -32,7 +32,7 @@ function calculator() {
     state,
     document: { getElementById: () => channels },
     paintIcons: () => {},
-    hasExistingDesk: () => false,
+    hasExistingDesk: () => state.existing && state.hasDeskContracted,
     hasService: () => state.desk || state.studio,
   });
   return { state, pricing, channels };
@@ -140,6 +140,38 @@ test('WhatsApp calls put an independent attention selector inside the selected c
   pricing.renderOpts();
   expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
   expect(channels.innerHTML).toContain('<option value="human" selected');
+});
+
+test('existing customers can add outbound packs using contracted Desk and Studio', () => {
+  const { state, pricing, channels } = calculator();
+  Object.assign(state, { existing: true, desk: false, studio: false, engage: true });
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('Bolsa de llamadas por WhatsApp');
+  expect(channels.innerHTML).toContain('Bolsa de correo masivo');
+  expect(channels.innerHTML).toContain('1.000 gratis/mes');
+  expect(channels.innerHTML).not.toContain('Canales de entrada');
+
+  state.out.correo = true;
+  expect(pricing.selectedEmailPack()).toMatchObject({ quantity: 1000, monthly: 0 });
+  state.emailPlan = 'paid';
+  expect(pricing.outboundMonthly()).toBe(85.75);
+
+  state.out.wacall = true;
+  state.callAttention = 'both';
+  expect(pricing.waCalls()).toBe(true);
+  pricing.renderOpts();
+  expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
+  expect(pricing.selectedVoicePools()).toHaveLength(1);
+  state.hasStudioContracted = true;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('<option value="both" selected');
+  expect(pricing.selectedVoicePools()).toHaveLength(2);
+  expect(pricing.outboundMonthly()).toBe(2271.75);
+
+  state.engage = false;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toBe('');
+  expect(pricing.outboundMonthly()).toBe(0);
 });
 
 test('private email and Studio price tables stay outside the public Meta wallet', () => {
