@@ -8950,7 +8950,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{},out:{correo:false,whatsapp:false,wacall:false},callAttention:'',voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',currentPay:0,hasDeskContracted:true,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{},out:{correo:false,whatsapp:false,wacall:false},callAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* Cada carga inicia una cotización nueva; retirar la antigua copia del navegador. */
 try{localStorage.removeItem('adereso_pricing_v1');}catch(e){}
@@ -9166,7 +9166,12 @@ function extraTicket(){
 const usd3=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:4,maximumFractionDigits:4});
 const EMAIL_FREE_QUANTITY=1000;
 const EMAIL_PACKS=[[10000,29],[20000,49],[50000,89],[100000,139],[250000,279],[500000,499],[1000000,990]];
-const VOICE_PACKS=[[2000,.18],[5000,.17],[10000,.16],[20000,.15],[35000,.14],[50000,.13],[100000,.12]];
+const VOICE_POOLS=[
+  {key:'voice-human',kind:'human',field:'humanVoiceMinutes',label:'Voz humana',product:'Desk',
+    tiers:[[2000,.030],[5000,.028],[10000,.026],[20000,.024],[35000,.023],[50000,.022],[100000,.020]]},
+  {key:'voice',kind:'ai',field:'voiceMinutes',label:'Voz IA',product:'Studio',
+    tiers:[[2000,.18],[5000,.17],[10000,.16],[20000,.15],[35000,.14],[50000,.13],[100000,.12]]}
+];
 const outboundCount=n=>n.toLocaleString('es-CL');
 const outboundRate=n=>n.toLocaleString('es-CL',{minimumFractionDigits:3,maximumFractionDigits:5});
 const outboundMoney=n=>n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -9177,9 +9182,9 @@ function emailOutboundPack(quantity){
   const rate=baseTier?base/baseTier:EMAIL_PACKS[0][1]/EMAIL_PACKS[0][0];
   return {quantity,baseTier,rate,monthly:Math.round((base+(quantity-baseTier)*rate)*100)/100};
 }
-function studioVoicePack(quantity){
-  if(!Number.isSafeInteger(quantity)||quantity<VOICE_PACKS[0][0])return null;
-  const [baseTier,rate]=VOICE_PACKS.findLast(([threshold])=>threshold<=quantity);
+function voicePack(quantity,tiers){
+  if(!Number.isSafeInteger(quantity)||quantity<tiers[0][0])return null;
+  const [baseTier,rate]=tiers.findLast(([threshold])=>threshold<=quantity);
   const total=Math.round((baseTier*rate+(quantity-baseTier)*rate)*1000)/1000;
   return {quantity,baseTier,rate,monthly:Math.round(total*100)/100,overage:Math.round(rate*1.15*10000)/10000};
 }
@@ -9197,14 +9202,20 @@ function voiceCallAttention(){
   if(state.callAttention==='human'&&human)return 'human';
   return ai?'ai':human?'human':'';
 }
-function voiceOutboundActive(){return ['ai','both'].includes(voiceCallAttention());}
+function voiceOutboundActive(){return !!voiceCallAttention();}
 function emailOutboundActive(){return hasService()&&state.engage&&state.out.correo;}
 function selectedEmailPack(){
   if(!emailOutboundActive())return null;
   return emailOutboundPack(state.emailPlan==='free'?EMAIL_FREE_QUANTITY:state.emailQuantity>EMAIL_FREE_QUANTITY?state.emailQuantity:null);
 }
-function selectedVoicePack(){return voiceOutboundActive()?studioVoicePack(state.voiceMinutes):null;}
-function outboundMonthly(){return (selectedEmailPack()?.monthly||0)+(selectedVoicePack()?.monthly||0);}
+function selectedVoicePools(){
+  const attention=voiceCallAttention();
+  return VOICE_POOLS.filter(pool=>attention===pool.kind||attention==='both')
+    .map(pool=>({...pool,quantity:state[pool.field],pack:voicePack(state[pool.field],pool.tiers)}));
+}
+function outboundMonthly(){
+  return selectedVoicePools().reduce((total,{pack})=>total+(pack?.monthly||0),selectedEmailPack()?.monthly||0);
+}
 function waService(){return state.whatsapp||state.walletOnly;}function waTemplates(){return (state.engage&&state.out.whatsapp)||state.walletOnly;}
 function waCalls(){return state.walletOnly||(state.engage&&state.out.wacall&&(state.callAttention===undefined||!!voiceCallAttention()));}
 function waActive(){return waService()||waTemplates()||waCalls();}
@@ -9387,7 +9398,7 @@ function renderOpts(){
       <h3 class="channel-heading">Canales de salida</h3>
       <div class="out-note">Las plantillas de WhatsApp se cotizan con Meta.</div>
       <div class="chan-grid out-grid">${outChans.filter(c=>!c.soon).map(outChip).join('')}</div>
-      ${state.out.wacall?`<div class="out-note" style="margin-top:8px">Humano requiere Desk y se cobra en la billetera Meta. IA requiere Studio y suma una bolsa de minutos. Ambos consumen minutos de Meta.</div>`:''}
+      ${state.out.wacall?`<div class="out-note" style="margin-top:8px">Cada tipo de llamada requiere su propia bolsa de minutos. Voz humana requiere Desk e IA requiere Studio. La billetera cubre el consumo de Meta y el fee Adereso por separado.</div>`:''}
       ${soonBox(outChans,'out')}
     </div>`;
   }
@@ -9423,7 +9434,7 @@ function renderVol(){
 function renderOutboundQuote(key){
   const target=document.querySelector('[data-out-quote="'+key+'"]');
   if(!target)return;
-  const voice=key==='voice',pack=voice?selectedVoicePack():selectedEmailPack();
+  const voice=selectedVoicePools().find(pool=>pool.key===key),pack=voice?voice.pack:selectedEmailPack();
   document.querySelectorAll('#outVolume .out-packs [data-out-pack="'+key+'"]').forEach(button=>{
     const selected=Number(button.dataset.qty)===pack?.quantity;
     button.classList.toggle('on',selected);
@@ -9432,36 +9443,37 @@ function renderOutboundQuote(key){
   if(!pack){target.textContent=voice?'Ingresa al menos 2.000 minutos enteros.':'Ingresa más de 1.000 envíos enteros.';return;}
   const unit=voice?'min':'envío';
   const detail=pack.rate?` · USD ${outboundRate(pack.rate)}/${unit}${voice?` · Excedente USD ${outboundRate(pack.overage)}/min`:''}`:'';
-  const better=outboundPackSuggestion(pack,voice?VOICE_PACKS:EMAIL_PACKS,voice?studioVoicePack:emailOutboundPack);
+  const better=outboundPackSuggestion(pack,voice?voice.tiers:EMAIL_PACKS,voice?q=>voicePack(q,voice.tiers):emailOutboundPack);
   target.innerHTML=`<strong>USD ${outboundMoney(pack.monthly)} / mes</strong>${detail}${better?`<div>Con ${outboundCount(better.quantity)} ${voice?'minutos':'envíos'} pagas USD ${outboundMoney(better.monthly)}/mes. <button class="linkbtn" type="button" data-out-pack="${key}" data-qty="${better.quantity}">Usar esa bolsa</button></div>`:''}`;
 }
 function renderOutboundVolume(){
   const area=document.getElementById('outVolume');
-  const email=emailOutboundActive(),voice=voiceOutboundActive(),paid=state.emailPlan==='paid';
-  const picks=(key,tiers)=>`<div class="out-packs" role="group" aria-label="Bolsas de ${key==='voice'?'voz IA':'correo masivo'}">${tiers.map(([qty,value])=>`<button class="pill" type="button" data-out-pack="${key}" data-qty="${qty}" title="USD ${outboundMoney(key==='voice'?qty*value:value)}/mes">${outboundCount(qty)}</button>`).join('')}</div>`;
-  area.innerHTML=(!email&&!voice)?'':`<div class="pl-grid out-volume">
-    ${voice?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Voz IA · WhatsApp saliente</span></div>
-      <div class="pl-desc">Bolsa de Studio con compromiso de 12 meses y facturación mensual. La billetera cubre el consumo Meta por separado.</div>
-      <label>Minutos de voz IA al mes<input data-out-qty="voice" type="number" min="2000" step="1" inputmode="numeric" value="${state.voiceMinutes??''}" placeholder="Ej. 7500"></label>
-      ${picks('voice',VOICE_PACKS)}
-      <div class="out-quote" data-out-quote="voice" aria-live="polite"></div>
-    </div>`:''}
+  const email=emailOutboundActive(),pools=selectedVoicePools(),paid=state.emailPlan==='paid';
+  const picks=(key,label,tiers,minutes=false)=>`<div class="out-packs" role="group" aria-label="Bolsas de ${label}">${tiers.map(([qty,value])=>`<button class="pill" type="button" data-out-pack="${key}" data-qty="${qty}" title="USD ${outboundMoney(minutes?qty*value:value)}/mes">${outboundCount(qty)}</button>`).join('')}</div>`;
+  area.innerHTML=(!email&&!pools.length)?'':`<div class="pl-grid out-volume">
+    ${pools.map(({key,label,product,quantity,tiers})=>`<div class="pl-card">
+      <div class="pl-head"><span class="pl-name">${label} · WhatsApp saliente</span></div>
+      <div class="pl-desc">Bolsa mensual de ${product} con compromiso de 12 meses.</div>
+      <label>Minutos de ${label.toLowerCase()} al mes<input data-out-qty="${key}" type="number" min="${tiers[0][0]}" step="1" inputmode="numeric" value="${quantity??''}" placeholder="Ej. 7500" required></label>
+      ${picks(key,label.toLowerCase(),tiers,true)}
+      <div class="out-quote" data-out-quote="${key}" aria-live="polite"></div>
+    </div>`).join('')}
     ${email?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Correo masivo saliente</span></div>
       <div class="pl-desc">Hasta 1.000 envíos al mes incluidos. Sobre ese límite se cotiza el volumen completo de la bolsa, sin cobro por ticket.</div>
       <div class="out-packs" role="group" aria-label="Plan de correo masivo">
         <button class="pill ${paid?'':'on'}" type="button" data-email-plan="free" aria-pressed="${!paid}">Free · hasta 1.000</button>
         <button class="pill ${paid?'on':''}" type="button" data-email-plan="paid" aria-pressed="${paid}">Agregar bolsa</button>
       </div>
-      ${paid?`<label>Envíos al mes<input data-out-qty="email" type="number" min="1001" step="1" inputmode="numeric" value="${state.emailQuantity??''}" placeholder="Ej. 35000"></label>${picks('email',EMAIL_PACKS)}`:''}
+      ${paid?`<label>Envíos al mes<input data-out-qty="email" type="number" min="1001" step="1" inputmode="numeric" value="${state.emailQuantity??''}" placeholder="Ej. 35000"></label>${picks('email','correo masivo',EMAIL_PACKS)}`:''}
       <div class="out-quote" data-out-quote="email" aria-live="polite"></div>
     </div>`:''}
-  </div>`;
-  if(voice)renderOutboundQuote('voice');
+  </div>${pools.length?'<p class="out-note" style="margin-top:10px">La billetera Adereso–Meta cubre el consumo de llamadas y el fee por separado.</p>':''}`;
+  pools.forEach(pool=>renderOutboundQuote(pool.key));
   if(email)renderOutboundQuote('email');
 }
 function updateOutboundQuantity(key,value){
-  if(key==='voice')state.voiceMinutes=value;
-  else state.emailQuantity=value;
+  const voice=VOICE_POOLS.find(pool=>pool.key===key);
+  state[voice?.field||'emailQuantity']=value;
   renderOutboundQuote(key);renderRail();renderSummary();renderRoi();
 }
 document.getElementById('outVolume').addEventListener('input',e=>{
@@ -9661,7 +9673,7 @@ function renderWa(){
   }
   /* Engage (saliente): plantillas y llamadas viven juntas en el mismo bloque */
   const callLbl=callConfirmed()?((state.wa.country==='CL'?'tramo inicial ':'')+usd3(waP().call))+'<small>/min</small>':'por confirmar';
-  const callCard=waCalls()?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas · consumo Meta</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas salientes por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}. Ingresa los minutos de uso al mes${state.callAttention!==undefined&&voiceOutboundActive()?' (IA y humano, si aplica)':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" aria-label="Minutos de llamadas" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div>`:'';
+  const callCard=waCalls()?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Llamadas · consumo Meta</span><span class="pl-price">${callLbl}${callConfirmed()?fee:""}</span></div><div class="pl-desc">Llamadas salientes por WhatsApp${state.wa.country==='CL'?' · tarifa por tramos de volumen':''}. Ingresa los minutos de uso al mes${state.callAttention!==undefined&&voiceCallAttention()==='both'?' (suma los minutos de humano y de IA)':''}.</div><input type="number" min="0" step="100" data-wa-in="minutes" aria-label="Minutos de llamadas" value="${state.wa.minutes||''}" placeholder="0" ${callConfirmed()?'':'disabled'}></div>`:'';
   const callOff=(state.engage&&state.callAttention!==undefined&&!waCalls())?`<div class="note" style="margin-top:10px"><span data-i="info"></span><div><b>Llamadas salientes:</b> activa llamadas por WhatsApp en <button class="linkbtn" data-goto="sc">Canales →</button>.</div></div>`:'';
   if(waTemplates()){
     const PL_DESC={marketing:'Nuevos productos, ofertas, recordatorios de carrito, retomar conversaciones.',utility:'Actualizaciones de pedido, alertas de cuenta, encuestas de feedback.',authentication:'Códigos de acceso de un solo uso (verificación de cuenta).'};
@@ -9783,7 +9795,7 @@ function renderRail(){
     <div class="rstat"><div class="rl">Volumen</div><div class="rv rtxt">${selVol()}</div></div>
     <div class="rstat"><div class="rl">Implementación</div><div class="rv rtxt">${selImpl()}</div></div>
     <div class="rstat"><div class="rl">WhatsApp</div><div class="rv rtxt">${selWa()}</div></div>
-    ${voiceOutboundActive()?`<div class="rstat"><div class="rl">Voz IA</div><div class="rv rtxt">${selectedVoicePack()?outboundCount(state.voiceMinutes)+' min/mes':'Por definir'}</div></div>`:''}
+    ${selectedVoicePools().map(({label,pack})=>`<div class="rstat"><div class="rl">${label}</div><div class="rv rtxt">${pack?outboundCount(pack.quantity)+' min/mes':'Por definir'}</div></div>`).join('')}
     ${emailOutboundActive()?`<div class="rstat"><div class="rl">Correo masivo</div><div class="rv rtxt">${state.emailPlan==='free'?'Free · 1.000/mes':selectedEmailPack()?outboundCount(state.emailQuantity)+' envíos/mes':'Bolsa por definir'}</div></div>`:''}
     <div class="rstat"><div class="rl">Cassper</div><div class="rv rtxt">${selCassper()}</div></div>`;
   const rc=document.getElementById('railCard');
@@ -9807,8 +9819,8 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.rdet.on').forEach(d=>d.classList.remove('on'));});
 
-function outboundResultCard(key,pack){
-  const voice=key==='voice',title=voice?'Voz IA · WhatsApp saliente':'Correo masivo saliente';
+function outboundResultCard(key,pack,voice){
+  const title=voice?voice.label+' · WhatsApp saliente':'Correo masivo saliente';
   const free=!voice&&state.emailPlan==='free';
   const quantity=pack?`${free?'Hasta ':''}${outboundCount(pack.quantity)} ${voice?'minutos':'envíos'}/mes`:'Volumen por definir';
   const detail=pack?.rate?`<div class="rr"><span class="k">Tarifa del tramo</span><span class="v">USD ${outboundRate(pack.rate)}/${voice?'min':'envío'}</span></div>${voice?`<div class="rr"><span class="k">Minuto excedente</span><span class="v">USD ${outboundRate(pack.overage)}/min</span></div>`:''}`:'';
@@ -9816,11 +9828,14 @@ function outboundResultCard(key,pack){
     <div class="rtitle">${title}</div>
     <div class="rbig"><span class="n">${pack?outboundMoney(pack.monthly):'Por definir'}</span>${pack?'<span class="u">USD/mes</span>':''}</div>
     <div class="rr"><span class="k">${quantity}</span></div>${detail}
-    <div class="pl-desc">${voice?'12 meses · Studio. Consumo Meta en la billetera.':'Envíos masivos sin cobro por ticket.'}</div>
+    <div class="pl-desc">${voice?'12 meses · '+voice.product+'. Consumo Meta en la billetera.':'Envíos masivos sin cobro por ticket.'}</div>
     <button type="button" class="pop-link" data-goto="s2">Editar volumen</button>
   </div>`;
 }
 function renderSummary(){renderTerm();
+  const voicePools=selectedVoicePools(),voiceIncomplete=voicePools.some(({pack})=>!pack);
+  const copyButton=document.getElementById('copyBtn');
+  if(copyButton)copyButton.disabled=voiceIncomplete;
   const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
   const cM=casspM(),cSucc=casspSuccessEst();
   const withIA=iaSetup();
@@ -9985,7 +10000,8 @@ function renderSummary(){renderTerm();
     return;
   }
   document.getElementById('sumCard').innerHTML=`
-    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${voiceOutboundActive()?outboundResultCard('voice',selectedVoicePack()):''}${emailOutboundActive()?outboundResultCard('email',selectedEmailPack()):''}${spotCard}${cassperCard}${prepagoCard}${implVisible()?pagoCard:''}${hhCard}</div>`;
+    ${voiceIncomplete?`<div class="note warn" style="margin-bottom:12px" role="status"><span data-i="info"></span><div>Completa las bolsas de minutos en <button type="button" class="linkbtn" data-goto="s2">Volumen</button> para completar la cotización de llamadas.</div></div>`:''}
+    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${voicePools.map(pool=>outboundResultCard(pool.key,pool.pack,pool)).join('')}${emailOutboundActive()?outboundResultCard('email',selectedEmailPack()):''}${spotCard}${cassperCard}${voiceIncomplete?'':prepagoCard}${implVisible()?pagoCard:''}${hhCard}</div>`;
   paintIcons(document.getElementById('sumCard'));
   alignCards();
   applyReveal(document.getElementById('sumCard'),'.rcard');
@@ -10673,20 +10689,22 @@ function glideTo(y){
 document.body.addEventListener('click',e=>{const b=e.target.closest('[data-next],[data-goto]');if(!b)return;const id=nextVisibleFrom(b.dataset.next||b.dataset.goto);const el=document.getElementById(id);if(el)glideTo(el.getBoundingClientRect().top+window.scrollY-(parseFloat(getComputedStyle(el).scrollMarginTop)||0));});
 
 document.getElementById('copyBtn')?.addEventListener('click',()=>{
+  const voicePools=selectedVoicePools();
+  if(voicePools.some(({pack})=>!pack))return;
   const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
   const cM=casspM(),cSucc=casspSuccessEst();
   const impl=iaSetup()?(allRapid()?'Rápida · paquetizado con mejores prácticas (Shopify/VTEX/Magento) — Gratis':(agentsN()>1?Array.from({length:agentsN()},(_,i)=>(agentType(i)==='flow'?'Flow ':'Agent ')+(i+1)+': '+(agentMode(i)==='paquetizado'?'Rápida':SETUP[agentPlan(i)].name+' (acompañada)')).join(' · ')+' — '+usd(s):(agentType(0)==='flow'?'Flow · ':'')+SETUP[state.setup].name+' (acompañada) — '+usd(s))):(deskInteg()?'Onboarding Desk sin costo + integraciones · '+SETUP[state.setup].name+' — '+usd(s):'Onboarding Desk (capacitación por rol, conexión de canales; sin integraciones) — Gratis');
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
   if(hasService()){L.push('Servicio: '+selService());L.push('Volumen: '+selVol());L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+((+state.currentPay||0)>0?' · hoy paga '+usd(+state.currentPay)+' → nuevo total '+usd((+state.currentPay)+m):'')+(state.scope!=='bolsa'?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+(BOT_MANT*studioMultiplier()):'')+(state.improve?' · mejora del agente actual: solo setup':'')):('Mensual (contrato a '+term().lbl+(state.prepay&&term().pre!=null?', pago anticipado':'')+'): '+usd(m)+'/mes'+(termAdj()?' · '+termTxt():'')));if(xCost()>0){L.push('Canal X — mensualidad: USD '+xMoney(xCost())+'/mes · bolsa propia de '+xVolume().toLocaleString('es-CL')+' conversaciones/mes');L.push('Canal X — bolsa base: USD '+X_PRICE+'/mes por '+X_MSGS.toLocaleString('es-CL')+' conversaciones');if(xBagAdded()>0)L.push('Canal X — ampliación contratada: '+xBagAdded().toLocaleString('es-CL')+' × USD '+X_BAG_RATE.toFixed(3)+' = USD '+xMoney(xBagAddedCost())+'/mes');L.push('Canal X — ticket extra fuera de su bolsa contratada: USD '+X_EXTRA.toFixed(4)+' c/u, según consumo');}if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
     const xt=extraTicket();if(xt)L.push('Conversación extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
-  const voice=selectedVoicePack(),email=selectedEmailPack();
-  if(voiceOutboundActive())L.push('Voz IA por WhatsApp: '+(voice?outboundCount(voice.quantity)+' min/mes · USD '+outboundMoney(voice.monthly)+'/mes · 12 meses · Meta aparte':'minutos por definir'));
+  const email=selectedEmailPack();
+  voicePools.forEach(({label,pack})=>L.push(label+' por WhatsApp: '+outboundCount(pack.quantity)+' min/mes · USD '+outboundMoney(pack.monthly)+'/mes · 12 meses · Meta aparte'));
   if(emailOutboundActive())L.push('Correo masivo: '+(email?(state.emailPlan==='free'?'Free · hasta ':'')+outboundCount(email.quantity)+' envíos/mes · USD '+outboundMoney(email.monthly)+'/mes':'volumen por definir')+' · sin cobro por ticket');
   if(iaSetup())L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
   if(waActive()){const ws=walletSplit();L.push('Billetera Adereso–Meta ('+waP().name+', '+(state.wa.wallet==='recurrente'?'recurrente ':'spot ')+walFee()+'%'+'): '+(ws.total>0?'recarga '+usd(ws.total)+' (saldo Meta '+usd(ws.meta)+' + fee '+usd(ws.fee)+')'+(walletIsEstimate()?' · estimado':''):'monto a definir'));}
   L.push('─────────────────────');
-  if((voiceOutboundActive()&&!voice)||(emailOutboundActive()&&!email))L.push('Totales pendientes: completa las bolsas seleccionadas.');
+  if(emailOutboundActive()&&!email)L.push('Totales pendientes: completa las bolsas seleccionadas.');
   else{
     const recurring=m+xCost()+cM+outboundMonthly();
     L.push('Inversión primer mes: '+usd(s+recurring+(meta||0)+cSucc)+(meta==null?' (+ Meta por confirmar)':''),'Valor contrato 12 meses: '+usd(recurring*12+s));
@@ -11094,7 +11112,7 @@ document.getElementById('custSeg')?.addEventListener('click',e=>{const b=e.targe
   const sg=document.getElementById('custSeg');if(sg&&!prefersReduced){sg.classList.remove('go-r','go-l');void sg.offsetWidth;sg.classList.add(ex?'go-r':'go-l');sg.classList.toggle('right',ex);}
   /* cliente nuevo parte con Desk + Studio; cliente vigente parte de cero para que el KAM elija */
   state.desk=!ex;state.studio=!ex;state.engage=false;state.cassper=false;state.whatsapp=false;state.walletOnly=false;state.hhCustom=false;state.scope='bolsa';state.bots=1;state.improve=false;state.chanNew=false;state.extraAgents=0;state.deskInteg=false;state.wa.fee=null;
-  state.chan={...INITIAL_STATE.chan};state.out={...INITIAL_STATE.out};state.callAttention=INITIAL_STATE.callAttention;state.voiceMinutes=INITIAL_STATE.voiceMinutes;state.emailPlan=INITIAL_STATE.emailPlan;state.emailQuantity=INITIAL_STATE.emailQuantity;
+  state.chan={...INITIAL_STATE.chan};state.out={...INITIAL_STATE.out};state.callAttention=INITIAL_STATE.callAttention;state.humanVoiceMinutes=INITIAL_STATE.humanVoiceMinutes;state.voiceMinutes=INITIAL_STATE.voiceMinutes;state.emailPlan=INITIAL_STATE.emailPlan;state.emailQuantity=INITIAL_STATE.emailQuantity;
   if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();
   /* cliente vigente: el foco parte en «¿Cuánto paga hoy?» */
   if(ex){setActive('s0');requestAnimationFrame(()=>{setActive('s0');document.getElementById('exPay')?.focus({preventScroll:true});});}
