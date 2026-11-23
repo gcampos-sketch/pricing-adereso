@@ -207,15 +207,18 @@
   .home-in{z-index:1}
   .home-in{position:relative;max-width:920px;margin:0 auto;padding:72px 24px 60px}
   .home-brand .logo-word{font-size:26px}
-  .home-title{font-family:var(--font-head);font-weight:500;font-size:40px;letter-spacing:-0.03em;color:#fff;margin:22px 0 8px}
-  .home-sub{color:var(--z400);font-size:15px;margin:0 0 36px}
-  .hg-group{margin-bottom:28px}
+  .home-title{font-family:var(--font-head);font-weight:500;font-size:40px;letter-spacing:-0.03em;color:#fff;margin:22px 0 28px}
+  .hg-group{margin-bottom:20px;transition:margin-bottom .48s cubic-bezier(.26,.72,.25,1)}
   .hg-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brand);margin-bottom:12px;display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:0;font-family:inherit;cursor:pointer}
   .hg-label:hover{opacity:.8}
-  .hg-chev{transition:transform .25s ease}
+  .hg-chev{transition:transform .36s cubic-bezier(.26,.72,.25,1)}
   .hg-group.closed .hg-chev{transform:rotate(-90deg)}
-  .hg-group.closed .hg-grid{display:none}
   .hg-group.closed{margin-bottom:16px}
+  .hg-panel{display:grid;grid-template-rows:1fr;margin-inline:-12px;opacity:1;visibility:visible;transition:grid-template-rows .48s cubic-bezier(.26,.72,.25,1),opacity .32s ease,visibility 0s}
+  .hg-group.closed .hg-panel{grid-template-rows:0fr;opacity:0;visibility:hidden;transition-delay:0s,0s,.48s}
+  .hg-panel-clip{min-height:0;overflow:hidden}
+  .hg-panel-clip>.hg-grid{margin-inline:12px;padding-bottom:8px}
+  @media(prefers-reduced-motion:reduce){.hg-group,.hg-panel,.hg-chev{transition:none}.hg-group.closed .hg-panel{transition-delay:0s}}
   .hg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
   .hg-card{position:relative;display:flex;align-items:flex-start;gap:14px;text-align:left;padding:18px;border-radius:18px;border:1px solid rgba(255,255,255,0.12);background:linear-gradient(180deg,#24262D,#1B1D22);box-shadow:0 1px 0 rgba(255,255,255,0.06) inset,0 18px 40px -18px rgba(0,0,0,0.75);color:inherit;font:inherit;cursor:pointer;opacity:0;transform:translateY(10px);animation:hgIn .55s cubic-bezier(.22,1,.36,1) forwards;animation-delay:var(--d,0ms);transition:border-color .2s var(--ease),background .2s var(--ease),transform .25s var(--ease)}
   @keyframes hgIn{to{opacity:1;transform:none}}
@@ -241,7 +244,7 @@
   .hg-copy-status{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
   .hg-tag{position:absolute;top:14px;right:14px}
   /* One synchronized 12s cycle: scoop, load, reverse, tip, return. */
-  .hg-group:has(.construction)>.hg-label{margin-bottom:58px}
+  .hg-group:has(.construction) .hg-grid{padding-top:46px}
   .hg-card.construction{cursor:default;padding-bottom:28px;border-color:rgba(255,213,64,.3);overflow:visible}
   .hg-card.construction .hg-txt{padding-right:0}
   .hg-card.construction .hg-card-link b{margin-right:28px}
@@ -1850,7 +1853,6 @@
     <div class="home-in">
       <div class="home-brand"><img class="adereso-wordmark" src="logoadereso.webp" width="566" height="113" alt="Adereso"></div>
       <h1 class="home-title">Hub comercial</h1>
-      <p class="home-sub">Todo lo que necesitas para cotizar, vender y acompañar a tus clientes.</p>
       <div id="homeGrid"></div>
     </div>
   </section>
@@ -11045,9 +11047,10 @@ document.addEventListener('pointerover',positionRailTooltip);
 document.addEventListener('focusin',positionRailTooltip);
 /* secciones del home plegables: se recuerda cuáles cerraste */
 const HG_KEY='adereso_home_closed';
-function hgClosed(){try{return JSON.parse(localStorage.getItem(HG_KEY)||'[]');}catch(e){return [];}}
+function hgClosed(){try{const saved=JSON.parse(localStorage.getItem(HG_KEY)||'[]');return Array.isArray(saved)?saved:[];}catch(e){return [];}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-hg-toggle]');if(!b)return;const g=b.closest('.hg-group');
-  const off=g.classList.toggle('closed');b.setAttribute('aria-expanded',!off);
+  const panel=document.getElementById(b.getAttribute('aria-controls'));
+  const off=g.classList.toggle('closed');b.setAttribute('aria-expanded',!off);panel.inert=off;
   let c=hgClosed().filter(x=>x!==g.dataset.g);if(off)c.push(g.dataset.g);try{localStorage.setItem(HG_KEY,JSON.stringify(c));}catch(e){}});
 /* A single pointer listener paints only the card currently under the cursor. */
 let cardLightFrame=0,cardLightPointer=null;
@@ -11097,7 +11100,8 @@ function homeCard(t,i){
   return `<button type="button" ${attrs}${accessibility}>${content}${t.construction?homeConstruction():t.soon?'<span class="ar-soon hg-tag">Próximamente</span>':t.url&&!t.view?'<span class="hg-go">↗</span>':'<span class="hg-go">→</span>'}</button>`;
 }
 function renderHome(){const g=document.getElementById('homeGrid');if(!g)return;
-  g.innerHTML=TOOLS.map(gr=>`<div class="hg-group${hgClosed().includes(gr.g)?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-expanded="${!hgClosed().includes(gr.g)}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-grid">${gr.items.map(homeCard).join('')}</div></div>`).join('');
+  const closed=hgClosed();
+  g.innerHTML=TOOLS.map((gr,groupIndex)=>{const off=closed.includes(gr.g),panelId=`hg-panel-${groupIndex}`;return `<div class="hg-group${off?' closed':''}" data-g="${gr.g}"><button type="button" class="hg-label" data-hg-toggle aria-controls="${panelId}" aria-expanded="${!off}">${gr.g}<svg class="hg-chev" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="hg-panel" id="${panelId}"${off?' inert':''}><div class="hg-panel-clip"><div class="hg-grid">${gr.items.map(homeCard).join('')}</div></div></div></div>`;}).join('');
   paintIcons(g);
 }
 document.getElementById('homeGrid').addEventListener('click',async e=>{
