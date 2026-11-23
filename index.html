@@ -440,7 +440,8 @@
   /* En escritorio, Entrada usa dos filas de cinco. Salida y Próximamente conservan tarjetas compactas. */
   @media(min-width:900px){.chan-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}.chan-grid.in-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chan-grid .chan{padding:34px 8px 18px;gap:12px}.chan-grid .chan-lbl{font-size:13px}.chan-grid .chan-logo svg{width:32px;height:32px}.chan-grid .chan-pago,.chan-grid .chan-free{top:8px;right:8px;font-size:9px;padding:2px 6px}}
   .out-block{margin-top:20px;padding-top:18px;border-top:1px solid var(--b-subtle)}
-  .out-head{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin-bottom:5px}
+  .channel-heading{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin:0 0 5px}
+  .channel-heading + .in-grid{margin-top:10px}
   .out-attention,.out-packs{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
   .out-attention{margin-top:12px}.out-attention>span{font-size:13px;color:var(--z400);margin-right:4px}
   .out-attention .pill,.out-packs .pill{border:1px solid var(--b-default);border-radius:var(--r3);padding:6px 10px;font:inherit;font-size:12px;color:var(--z300);cursor:pointer}
@@ -9355,7 +9356,8 @@ function renderOpts(){
   const soonBox=(list,id)=>{const s=list.filter(c=>c.soon);if(!s.length)return '';const open=!!(state.soonOpen||{})[id];
     return `<div class="soon-box ${open?'open':''}"><button type="button" class="soon-tg" data-soon-tg="${id}" aria-expanded="${open}"><span class="soon-badge">Próximamente</span><span class="soon-txt">${s.length} canal${s.length>1?'es':''} en camino · ${s.map(c=>c.label).join(', ')}</span><span class="soon-chev"><span data-i="down" data-sz="15"></span></span></button>
       <div class="soon-b"><div class="soon-in"><div class="chan-grid soon-grid">${s.map(inChip).join('')}</div></div></div></div>`;};
-  if(showGrid)html+=`<div class="chan-grid in-grid${ex?' chan-grid-ex':''}">${CHANNELS.filter(c=>!c.soon).map(inChip).join('')}</div>
+  if(showGrid)html+=`<h3 class="channel-heading">Canales de entrada</h3>
+    <div class="chan-grid in-grid${ex?' chan-grid-ex':''}">${CHANNELS.filter(c=>!c.soon).map(inChip).join('')}</div>
     <p class="out-note" style="margin:10px 0 0"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>
     ${soonBox(CHANNELS,'in')}`;
   if(state.engage){
@@ -9371,7 +9373,7 @@ function renderOpts(){
     const attention=voiceCallAttention(),human=state.desk||hasExistingDesk(),ai=state.studio||(state.existing&&state.scope!=='bolsa');
     const choices=[['human','Humano',human],['ai','IA',ai],['both','Humano + IA',human&&ai]];
     html+=`<div class="out-block">
-      <div class="out-head">Canales de salida</div>
+      <h3 class="channel-heading">Canales de salida</h3>
       <div class="out-note">Las plantillas de WhatsApp se cotizan con Meta.</div>
       <div class="chan-grid out-grid">${outChans.filter(c=>!c.soon).map(outChip).join('')}</div>
       ${state.out.wacall?`<div class="out-attention" role="group" aria-label="Quién realiza las llamadas"><span>¿Quién realiza las llamadas?</span>${choices.map(([key,label,available])=>`<button type="button" class="pill ${attention===key?'on':''}" data-call-attention="${key}" aria-pressed="${attention===key}" ${available?'':'disabled'}>${label}</button>`).join('')}</div><div class="out-note" style="margin-top:8px">Humano requiere Desk y se cobra en la billetera Meta. IA requiere Studio y suma una bolsa de minutos. Ambos consumen minutos de Meta.</div>`:''}
