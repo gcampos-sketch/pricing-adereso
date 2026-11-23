@@ -108,6 +108,23 @@ test('the whole outbound section appears only while Engage is active', () => {
   expect(channels.innerHTML).not.toContain('data-out=');
 });
 
+test('WhatsApp calls put an independent attention selector inside the selected card', () => {
+  const { state, pricing, channels } = calculator();
+  state.engage = true;
+  pricing.renderOpts();
+  expect(channels.innerHTML).not.toContain('data-call-attention');
+  state.out.wacall = true;
+  state.callAttention = 'both';
+  pricing.renderOpts();
+  const card = channels.innerHTML.match(/<div class="chan on paid call-channel">([\s\S]+?)<\/div>/)?.[1] ?? '';
+  expect(card).toMatch(/data-out="wacall"[\s\S]+?<\/button>[\s\S]+?<select data-call-attention>/);
+  expect(card).toContain('<option value="both" selected');
+  state.studio = false;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
+  expect(channels.innerHTML).toContain('<option value="human" selected');
+});
+
 test('private email and Studio price tables stay outside the public Meta wallet', () => {
   const { formulas, calculator } = walletSources(hub);
   expect(formulas + calculator).not.toMatch(/EMAIL_PACKS|VOICE_PACKS|function studioVoicePack/);
