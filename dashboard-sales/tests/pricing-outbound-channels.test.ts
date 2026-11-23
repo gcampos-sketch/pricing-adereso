@@ -23,11 +23,12 @@ function calculator() {
     callAttention: '',
     emailPlan: 'free',
     emailQuantity: 35000,
+    humanVoiceMinutes: 7500,
     voiceMinutes: 12350,
   };
   const channels = { innerHTML: '' };
   const pricing = runInNewContext(source + walletSources(hub).formulas + channelCatalog + channelRenderer
-    + ';({ emailOutboundPack, studioVoicePack, selectedEmailPack, selectedVoicePack, outboundMonthly, waCalls, renderOpts })', {
+    + ';({ emailOutboundPack, voicePack, VOICE_POOLS, selectedEmailPack, selectedVoicePools, outboundMonthly, waCalls, renderOpts })', {
     state,
     document: { getElementById: () => channels },
     paintIcons: () => {},
@@ -47,36 +48,52 @@ test('outbound email switches from Free to the published paid tiers', () => {
   expect(pricing.emailOutboundPack(35000)).toMatchObject({ baseTier: 20000, monthly: 85.75 });
 });
 
-test('voice IA uses the Studio volume tier and publishes the separate overage rate', () => {
+test('human and IA voice use independent volume tiers and overage rates', () => {
   const { pricing } = calculator();
-  expect(pricing.studioVoicePack(1999)).toBeNull();
-  for (const [quantity, monthly] of [[2000, 360], [5000, 850], [10000, 1600], [20000, 3000], [35000, 4900], [50000, 6500], [100000, 12000]]) {
-    expect(pricing.studioVoicePack(quantity).monthly).toBe(monthly);
+  const [human, ai] = pricing.VOICE_POOLS;
+  expect(pricing.voicePack(1999, human.tiers)).toBeNull();
+  expect(pricing.voicePack(1999, ai.tiers)).toBeNull();
+  for (const [quantity, humanMonthly, aiMonthly] of [
+    [2000, 60, 360], [5000, 140, 850], [10000, 260, 1600], [20000, 480, 3000],
+    [35000, 805, 4900], [50000, 1100, 6500], [100000, 2000, 12000],
+  ]) {
+    expect(pricing.voicePack(quantity, human.tiers).monthly).toBe(humanMonthly);
+    expect(pricing.voicePack(quantity, ai.tiers).monthly).toBe(aiMonthly);
   }
-  expect(pricing.studioVoicePack(12350)).toMatchObject({ baseTier: 10000, rate: .16, monthly: 1976, overage: .184 });
+  expect(pricing.voicePack(7500, human.tiers)).toMatchObject({ baseTier: 5000, rate: .028, monthly: 210, overage: .0322 });
+  expect(pricing.voicePack(12350, ai.tiers)).toMatchObject({ baseTier: 10000, rate: .16, monthly: 1976, overage: .184 });
 });
 
-test('only selected compatible channels contribute to the monthly outbound price', () => {
+test('each selected call mode requires the corresponding pack in addition to Meta', () => {
   const { state, pricing } = calculator();
+  expect(pricing.selectedVoicePools()).toHaveLength(0);
+  state.engage = true;
+  state.out.wacall = true;
+  state.callAttention = 'human';
+  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human']);
+  expect(pricing.outboundMonthly()).toBe(210);
+  expect(pricing.waCalls()).toBe(true);
+  state.callAttention = 'ai';
+  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['ai']);
+  expect(pricing.outboundMonthly()).toBe(1976);
+  state.callAttention = 'both';
+  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human','ai']);
+  expect(pricing.outboundMonthly()).toBe(2186);
+  state.humanVoiceMinutes = 1000;
+  expect(pricing.selectedVoicePools()[0].pack).toBeNull();
+  state.engage = false;
+  expect(pricing.selectedVoicePools()).toHaveLength(0);
   expect(pricing.outboundMonthly()).toBe(0);
+  expect(pricing.waCalls()).toBe(false);
+});
+
+test('mass email is priced only when explicitly selected under Engage', () => {
+  const { state, pricing } = calculator();
   state.engage = true;
   expect(pricing.selectedEmailPack()).toBeNull();
   state.out.correo = true;
   expect(pricing.selectedEmailPack()).toMatchObject({ quantity: 1000, monthly: 0 });
   state.emailPlan = 'paid';
-  state.out.wacall = true;
-  state.callAttention = 'human';
-  expect(pricing.selectedVoicePack()).toBeNull();
-  expect(pricing.outboundMonthly()).toBe(85.75);
-  state.callAttention = 'both';
-  expect(pricing.outboundMonthly()).toBe(2061.75);
-  expect(pricing.waCalls()).toBe(true);
-  state.engage = false;
-  expect(pricing.waCalls()).toBe(false);
-  expect(pricing.outboundMonthly()).toBe(0);
-  state.engage = true;
-  expect(pricing.outboundMonthly()).toBe(2061.75);
-  state.studio = false;
   expect(pricing.outboundMonthly()).toBe(85.75);
   state.engage = false;
   expect(pricing.outboundMonthly()).toBe(0);
@@ -127,5 +144,5 @@ test('WhatsApp calls put an independent attention selector inside the selected c
 
 test('private email and Studio price tables stay outside the public Meta wallet', () => {
   const { formulas, calculator } = walletSources(hub);
-  expect(formulas + calculator).not.toMatch(/EMAIL_PACKS|VOICE_PACKS|function studioVoicePack/);
+  expect(formulas + calculator).not.toMatch(/EMAIL_PACKS|VOICE_POOLS|function voicePack/);
 });
