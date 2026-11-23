@@ -6,17 +6,19 @@ import { walletSources } from '../src/lib/wallet-public';
 const hub = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 const source = hub.slice(hub.indexOf('const EMAIL_FREE_QUANTITY='), hub.indexOf('function waService()'));
 
+const initialPricingState = hub.slice(hub.indexOf('const state={'), hub.indexOf('/* Hub navigation persistence:'));
 const channelCatalog = hub.slice(hub.indexOf('const CHANNELS='), hub.indexOf('const SECTIONS='));
 const channelRenderer = hub.slice(hub.indexOf('function renderOpts()'), hub.indexOf("document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]')"));
 
 function calculator() {
+  const initial = runInNewContext(initialPricingState + ';INITIAL_STATE');
   const state = {
+    ...initial,
     existing: false,
     desk: true,
     studio: true,
     scope: 'bolsa',
     engage: false,
-    chan: {},
     out: { correo: false, wacall: false },
     callAttention: '',
     emailPlan: 'free',
@@ -78,6 +80,16 @@ test('only selected compatible channels contribute to the monthly outbound price
   expect(pricing.outboundMonthly()).toBe(85.75);
   state.engage = false;
   expect(pricing.outboundMonthly()).toBe(0);
+});
+
+test('a new quote starts with every available inbound channel unselected', () => {
+  const { pricing, channels } = calculator();
+  pricing.renderOpts();
+  const inbound = [...channels.innerHTML.matchAll(/data-chan="([^"]+)" aria-pressed="([^"]+)"/g)];
+  expect(inbound.map(match => match[1])).toEqual([
+    'whatsapp', 'x', 'webchat', 'correo', 'instagram', 'facebook', 'linkedin', 'tiktok', 'app_store', 'google_play',
+  ]);
+  expect(inbound.every(match => match[2] === 'false')).toBe(true);
 });
 
 test('the whole outbound section appears only while Engage is active', () => {
