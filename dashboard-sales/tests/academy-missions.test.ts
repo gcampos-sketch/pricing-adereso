@@ -1,5 +1,6 @@
 import { expect,test } from 'bun:test';
-import { MISSIONS,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews } from '../../academy-curriculum.js';
+import { MISSIONS,DEMO_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
+  missionRevision,currentMissionEntry,currentMissionReview } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
 const payload={role:'AE',mode:'onboarding',attempts:{},reviews:{},tasks:{},legacy:{},resume:null};
@@ -28,6 +29,29 @@ test('review scheduling is concept-specific, never prematurely due, and resets a
   record=nextReview(record,true,now);expect(record.due).toBe(now+3*86400000);
   record=nextReview(record,true,now);expect(record.due).toBe(now+7*86400000);
   expect(nextReview(record,false,now).due).toBe(now+86400000);
+});
+test('legacy progress loads and a revised mission leaves other progress current',()=>{
+  const existing=MISSIONS.find(m=>m.id==='demo')!;
+  const legacy={edition:LEGACY_MISSION_REVISION,passed:true,answers:[1,2]};
+  expect(currentMissionEntry(existing,legacy)).toEqual(legacy);
+  expect(currentMissionReview(existing,{due:0})).toEqual({due:0});
+  const [updated,unchanged]=DEMO_MISSIONS;
+  const attempt={edition:missionRevision(updated),passed:true};
+  const newer={...updated,revision:'next'};
+  expect(currentMissionEntry(updated,attempt)).toEqual(attempt);
+  expect(currentMissionEntry(newer,attempt)).toBeNull();
+  expect(currentMissionEntry(unchanged,{edition:missionRevision(unchanged),passed:true})?.passed).toBe(true);
+  expect(currentMissionReview(newer,{due:0,edition:attempt.edition})).toBeNull();
+  expect(currentMissionReview(updated,{due:0})).toBeNull();
+});
+test('demo challenges include a source, screen-by-screen rehearsal and peer feedback criteria',()=>{
+  expect(DEMO_MISSIONS).toHaveLength(4);
+  for(const m of DEMO_MISSIONS){
+    expect(new URL(m.reference.url).protocol).toBe('https:');
+    expect(m.reference.query.length).toBeGreaterThan(8);
+    expect(m.demo.steps).toHaveLength(3);
+    expect(m.demo.rubric).toHaveLength(3);
+  }
 });
 test('account comes exclusively from verified identity and reads stay isolated',async()=>{
   const f=fixture();const response=await f.gateway(f.request('alice',{revision:0,payload,userId:'bob'}));expect(response?.status).toBe(200);expect(f.writes).toEqual(['alice']);
