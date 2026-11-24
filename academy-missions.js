@@ -1,4 +1,4 @@
-import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, PLAYBOOK_MISSIONS, CONSEQUENCES, skillResult,
+import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, PLAYBOOK_MISSIONS, HYPOTHESIS_MISSION, CONSEQUENCES, skillResult,
   dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
@@ -180,8 +180,14 @@ function scrollToCaseSection(section){
 function advisoryChallenges(){
   return `<section aria-label="Escenarios de asesoría"><div class="academy-section-head"><h3 tabindex="-1">Escenarios de asesoría</h3></div><p class="academy-muted">El cliente trae un flujo. Elige qué ajustar, prepara dos alternativas y practica cómo se las explicarías.</p><div class="academy-mission-grid" style="margin-top:14px">${ADVISORY_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
+function hypothesisCard(){
+  const {title,story,skill,minutes}=HYPOTHESIS_MISSION;
+  const practice=progress.hypothesis;
+  const status=practice?.submittedAt?'Respuesta registrada':Object.values(practice?.answers||{}).some(text=>text.trim())?'Borrador':'Por descubrir';
+  return `<button class="mission-card" type="button" data-hypothesis ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(skill)}</span><span>${minutes} min</span></div><h4>${escape(title)}</h4><p>${escape(story)}</p><div class="academy-actions"><span class="academy-pill">${status}</span><span class="academy-muted">${practice?.submittedAt?'Revisar →':'Practicar →'}</span></div></button>`;
+}
 function playbookChallenges(){
-  return `<section aria-label="Simulaciones del Playbook"><div class="academy-section-head"><h3 tabindex="-1">Simulaciones del Playbook</h3></div><p class="academy-muted">Practica qué preguntar, cómo demostrar valor y cómo acordar el siguiente paso en cada etapa de una reunión comercial.</p><div class="academy-mission-grid" style="margin-top:14px">${PLAYBOOK_MISSIONS.map(missionCard).join('')}</div></section>`;
+  return `<section aria-label="Simulaciones del Playbook"><div class="academy-section-head"><h3 tabindex="-1">Simulaciones del Playbook</h3></div><p class="academy-muted">Practica qué preguntar, cómo demostrar valor y cómo acordar el siguiente paso en cada etapa de una reunión comercial.</p><div class="academy-mission-grid" style="margin-top:14px">${hypothesisCard()}${PLAYBOOK_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
 function demoChallenges(){
   return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3>¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
@@ -237,15 +243,72 @@ function hasLegacy(){try{return ready&&!progress.legacyImported&&!progress.legac
 function openMission(id, reviewQuestions) {
   const m=mission(id);
   if(!ready||!m)return;
-  originTab=$('tab-games').style.display!=='none'?'games':'home';
   const saved=!reviewQuestions&&resume()?.id===id?resume():null;
   active={id,edition:missionRevision(m),review:Boolean(reviewQuestions),questions:reviewQuestions||m.questions,
     answers:saved?.answers||[],index:saved?.index||0};
   if(!reviewQuestions&&!saved)saveResume();
-  document.querySelectorAll('.tab-content,.lesson-view,.quiz-view').forEach(el=>el.style.display='none');
-  $('academy-mission-view').style.display='block';$('academy-mission-view').classList.add('active');
+  activateMissionView();
   showStep();
 }
+function activateMissionView() {
+  originTab=$('tab-games').style.display!=='none'?'games':'home';
+  document.querySelectorAll('.tab-content,.lesson-view,.quiz-view').forEach(el=>el.style.display='none');
+  const view=$('academy-mission-view');
+  view.style.display='block';
+  view.classList.add('active');
+}
+function openHypothesis() {
+  if(!ready)return;
+  activateMissionView();
+  showHypothesis();
+}
+
+function showHypothesis() {
+  const mission=HYPOTHESIS_MISSION;
+  const view=$('academy-mission-view');
+  const practice=progress.hypothesis;
+  const answers=practice?.answers||{};
+  const submitted=Boolean(practice?.submittedAt);
+  view.innerHTML=`<div class="lesson-header"><button class="back-btn" type="button" data-exit aria-label="Volver a desafíos">←</button><h2>${escape(mission.title)}</h2></div>
+    <div class="mission-layout"><aside class="academy-panel mission-story"><h3>El contexto</h3><p>${escape(mission.story)}</p>
+    <div class="mission-consequence"><p>${escape(mission.reply)}</p></div></aside>
+    <section class="mission-stage"><h3 id="mission-prompt" tabindex="-1">${submitted?'Revisa tu razonamiento':'Interpreta la respuesta del cliente'}</h3>
+    ${submitted?`<div class="academy-panel"><h3>Tu respuesta</h3><dl class="academy-hypothesis-summary">${mission.fields.map(({name,label})=>`<dt>${escape(label)}</dt><dd>${escape(answers[name]||'')}</dd>`).join('')}</dl></div>
+    <details class="academy-panel academy-hypothesis-review"><summary>Comparar con un ejemplo</summary><ul class="mission-review-list">${mission.example.map(point=>`<li>${escape(point)}</li>`).join('')}</ul></details>
+    <h3>Pauta de revisión</h3><ul class="mission-review-list">${mission.criteria.map(point=>`<li>${escape(point)}</li>`).join('')}</ul>
+    <p class="academy-muted">${escape(mission.reference.section)}</p><div class="academy-actions">${playbookLink(mission)}</div>`:`
+    <form data-hypothesis-form>${mission.fields.map(({name,label})=>`<label class="academy-reflection">${escape(label)}<textarea name="${name}" required maxlength="600" rows="2">${escape(answers[name]||'')}</textarea></label>`).join('')}
+    <div class="academy-actions"><button class="academy-btn primary" type="submit">Registrar mi respuesta →</button></div></form>`}
+    <div class="academy-sync-note" data-academy-save role="status"></div></section></div>`;
+  view.querySelector('[data-exit]').onclick=exit;
+  const form=view.querySelector('[data-hypothesis-form]');
+  if(form) {
+    form.oninput=event=>{
+      const field=event.target;
+      field.setCustomValidity('');
+      progress.hypothesis={answers:{...progress.hypothesis?.answers,[field.name]:field.value}};
+      void persist();
+    };
+    form.onsubmit=event=>{
+      event.preventDefault();
+      const draft=Object.fromEntries(Array.from(new FormData(form),([name,value])=>[name,String(value).trim()]));
+      const empty=mission.fields.find(({name})=>!draft[name]);
+      if(empty) {
+        const field=form.elements.namedItem(empty.name);
+        field.setCustomValidity('Escribe tu respuesta para continuar.');
+        field.reportValidity();
+        return;
+      }
+      progress.hypothesis={answers:draft,submittedAt:new Date().toISOString()};
+      showHypothesis();
+      void persist();
+    };
+  }
+  saveNote(lastStatus.text,lastStatus.error);
+  $('mission-prompt').focus({preventScroll:true});
+  window.scrollTo(0,0);
+}
+
 function saveResume(){
   progress.resume={id:active.id,edition:active.edition,index:active.index,answers:[...active.answers]};
   void persist();
@@ -346,6 +409,7 @@ function renderSkills() {
 }
 document.addEventListener('click',event=>{
   const start=event.target.closest('[data-start]');if(start)openMission(start.dataset.start);
+  if(event.target.closest('[data-hypothesis]'))openHypothesis();
   if(event.target.closest('[data-review]'))startReview();
   if(event.target.closest('[data-library]'))library();
   const section=event.target.closest('[data-case-section]');
