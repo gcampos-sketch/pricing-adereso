@@ -7,7 +7,7 @@ const deal = (id: string, ownerId: string, owner: string, amountValue: number) =
   ({ id, ownerId, owner, amountValue } as InsightDeal);
 
 const activity = (calls: number | null, whatsapp: number | null, emails: number | null): GhostingActivity =>
-  ({ calls, whatsapp, emails, meetings: null });
+  ({ calls, whatsapp, emails, meetings: null, originStage: null });
 
 test("each ghosting deal appears in one status and every verified shortfall appears in its exact channel", () => {
   const rows = [deal("a", "1", "Holly", 80), deal("b", "1", "Holly", 0), deal("c", "2", "Felipe", 350), deal("d", "2", "Felipe", 150)];

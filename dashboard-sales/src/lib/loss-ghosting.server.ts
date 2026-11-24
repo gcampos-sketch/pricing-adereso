@@ -1,8 +1,10 @@
 import { load } from "cheerio";
 import { LOST_STAGES } from "./commercial-outcomes";
 import { readDealActivityLinks } from "./deal-activity-associations.server";
-import { COMMERCIAL_PIPELINE, gateway, type RawDeal } from "./hubspot.server";
+import { COMMERCIAL_PIPELINE, gateway, getAdoboPropertyHistory, type RawDeal } from "./hubspot.server";
 import { completedMeeting, ghostingMeetingWindow, isGhostingLoss, type GhostingActivity } from "./loss-ghosting";
+import { corroboratedLossTransition } from "./loss-prior-score";
+import { STAGE_FULL_LABELS, STAGE_KEY } from "./pulse.server";
 import { isRecordedWhatsApp } from "./whatsapp-count";
 
 const GHOSTING_REASON_PROPERTY = "razones_de_cierre_perdidos_especifico";
@@ -88,16 +90,26 @@ export async function readLossGhostingActivity(ids: string[]): Promise<Record<st
   if (!eligible.length) return {};
 
   const now = Date.now();
-  const [calls, whatsapp, emails, meetings] = await Promise.allSettled([
+  const [calls, whatsapp, emails, meetings, history] = await Promise.allSettled([
     readRegisteredCounts(eligible, "calls"),
     readWhatsAppCounts(eligible),
     readRegisteredCounts(eligible, "emails"),
     readGhostingMeetings(eligible, deals, now),
+    getAdoboPropertyHistory(eligible, ["dealstage"]),
   ]);
 
   const count = <T,>(result: PromiseSettledResult<Map<string, T>>, id: string) =>
     result.status === "fulfilled" ? result.value.get(id) ?? null : null;
-  return Object.fromEntries(eligible.map(id => [id, {
-    calls: count(calls, id), emails: count(emails, id), whatsapp: count(whatsapp, id), meetings: count(meetings, id),
-  }]));
+  const stages = history.status === "fulfilled" ? history.value : null;
+  return Object.fromEntries(eligible.map(id => {
+    const properties = deals.get(id)!;
+    const lostStage = properties["dealstage"]!;
+    const previous = stages?.complete ? corroboratedLossTransition(
+      lostStage, properties[`hs_v2_date_entered_${lostStage}`], stages.byDeal.get(id)?.["dealstage"], Date.parse(stages.fetchedAt),
+    )?.previousStageId : null;
+    return [id, {
+      calls: count(calls, id), emails: count(emails, id), whatsapp: count(whatsapp, id), meetings: count(meetings, id),
+      originStage: previous ? STAGE_KEY.get(previous) ?? STAGE_FULL_LABELS[previous] ?? null : null,
+    }];
+  }));
 }

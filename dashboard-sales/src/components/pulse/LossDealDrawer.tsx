@@ -3,7 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { ExternalLink, Search, X } from "lucide-react";
 import { isGhostingLoss } from "@/lib/loss-ghosting";
 import { useLossGhosting } from "@/hooks/use-loss-ghosting";
-import { LossGhostingActivity } from "./LossGhostingActivity";
+import { LossGhostingActivity, LossGhostingOrigins } from "./LossGhostingActivity";
 import type { InsightDeal } from "@/lib/insights-types";
 import { LossReasonSummary } from "./LossReasonSummary";
 import { LossReasonWords } from "./LossReasonWords";
@@ -36,7 +36,8 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
     (!search || [deal.name, deal.owner, deal.lostReason].some(value => value?.toLocaleLowerCase("es").includes(search))));
   const ghostRows = rows.filter(deal => isGhostingLoss(deal.lostReason));
   const evidence = ghosting.data?.evidence;
-  const partialActivity = ghosting.data?.incomplete || ghostRows.some(({ id }) => {
+  const loadingGhosting = ghosting.isPending && ghosting.isFetching;
+  const incompleteEvidence = ghosting.data?.incomplete || ghostRows.some(({ id }) => {
     const activity = evidence?.[id];
     return !activity || Object.values(activity).some(count => count === null);
   });
@@ -65,10 +66,11 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
             </label>}
             <p role="status"><strong>{count} {deals.length === 1 ? "deal" : "deals"}</strong><span>{money(sum(rows, deal => deal.amountValue))} USD de MRR</span></p>
           </div>
+          {ghostRows.length > 0 && <LossGhostingOrigins deals={ghostRows} evidence={evidence} loading={loadingGhosting} />}
           {selection.reasonWords && <LossReasonSummary deals={rows} available={narrativesAvailable} />}
           {ghostRows.length > 0 && <div className="loss-ghosting-caption">
             <p>Mínimo por deal · 2 llamadas, 2 mensajes nativos de WhatsApp y 2 correos registrados en HubSpot. Reuniones completadas desde la creación del deal hasta antes de su entrada a perdido.</p>
-            {partialActivity && !ghosting.isFetching && <button type="button" className="cell-button" onClick={() => void ghosting.refetch()}>Verificar de nuevo</button>}
+            {incompleteEvidence && !ghosting.isFetching && <button type="button" className="cell-button" onClick={() => void ghosting.refetch()}>Verificar de nuevo</button>}
           </div>}
           {selection.reasonWords && rows.length > 0 && <details className="loss-drawer-words">
             <summary>Palabras en los motivos de pérdida</summary>
@@ -80,8 +82,8 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
                 <a href={deal.url} target="_blank" rel="noopener noreferrer">{deal.name}<ExternalLink size={12} aria-hidden="true" /></a>
                 <small>{[deal.owner || "Sin comercial", deal.lostReason || "Sin motivo listado"].join(" · ")}</small>
                 {(selection.records || selection.reasonWords) && <details className="loss-deal-record" open={rows.length === 1 ? true : undefined}>
-                  <summary>Comentario y etapa</summary>
-                  <small>{deal.lostStage || "Sin recorrido"} · {deal.lostStageDays > 0 ? `${deal.lostStageDays} días` : "Sin duración registrada"}</small>
+                  <summary>{isGhostingLoss(deal.lostReason) ? "Comentario de cierre" : "Comentario y etapa"}</summary>
+                  {!isGhostingLoss(deal.lostReason) && <small>{deal.lostStage || "Sin recorrido"} · {deal.lostStageDays > 0 ? `${deal.lostStageDays} días` : "Sin duración registrada"}</small>}
                   <p>{selection.reasonWords
                     ? (narrativesAvailable ? deal.lostReasonNarrative?.trim() || "Sin comentario de cierre registrado" : "Comentario de cierre pendiente de actualización")
                     : deal.lostReasonText || "Sin comentario registrado"}</p>
@@ -89,7 +91,7 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
               </div>
               <span><strong>{money(deal.amountValue)}</strong><small>MRR perdido</small></span>
               {isGhostingLoss(deal.lostReason) &&
-                <LossGhostingActivity activity={evidence?.[deal.id]} loading={ghosting.isPending && ghosting.isFetching} />}
+                <LossGhostingActivity activity={evidence?.[deal.id]} loading={loadingGhosting} />}
             </li>)}
           </ul> : <p className="empty-state">{deals.length ? "Ningún deal coincide con la búsqueda o el motivo." : "Sin deals en esta selección."}</p>}
         </div>
