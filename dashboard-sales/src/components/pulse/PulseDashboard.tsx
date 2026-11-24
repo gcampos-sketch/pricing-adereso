@@ -22,6 +22,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { dashboardActionGroups } from '@/lib/dashboard-action-groups';
 import { CopySectionButton } from "./CopyControls";
 import { DealModal } from "./DealModal";
+import { WarningDealsDialog } from "./WarningDealsDialog";
 import { WonExecutiveSummary } from "./WonExecutiveSummary";
 import { WonStageChip, type WonStageDetail } from "./WonStageChip";
 import { wonStageBreakdown } from "@/lib/won-stage-breakdown";
@@ -497,7 +498,7 @@ export function PulseDashboard({
   const [gapInitialMonth, setGapInitialMonth] = useState<string | null>(null);
   const [gapScenario, setGapScenario] = useState(false);
   const [resultDateBasis, setResultDateBasis] = useState<"close" | "stage6">("close");
-  const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" }) | null>(null);
+  const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" | "warning" }) | null>(null);
   const [dense, setDense] = useState(true);
   const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
   const [quarter, setQuarter] = useState<string>(report.currentPeriod.split("-Q")[1]!);
@@ -517,6 +518,7 @@ export function PulseDashboard({
 
 
   const payload = periodPayload ?? (modalKey ? report.drilldowns[modalKey] ?? null : null);
+  const warningPayload = periodPayload?.presentation === "warning" ? periodPayload : null;
   const closeModal = () => {
     setGapScenario(false);
     setGapInitialMonth(null);
@@ -656,6 +658,9 @@ export function PulseDashboard({
     /** orden inicial del popup; ej. { key: "closeDate", dir: "desc" } para ver lo más reciente primero */
     initialSort?: { key: string; dir: "asc" | "desc" },
   ) => setPeriodPayload({ title, subtitle, deals, notActivatedIds, initialSort } as Drilldown);
+
+  const openWarnings = (title: string, subtitle: string, deals: DealDTO[]) =>
+    setPeriodPayload({ title, subtitle, deals, presentation: "warning" });
 
   // Agrega los buckets de periodo (team + owners) para los periodos seleccionados.
   const closePeriodData = useMemo(() => {
@@ -1154,6 +1159,10 @@ export function PulseDashboard({
         label="Filtros del pipeline comercial"
         actions={<NotificationCenter scope={{owner:ownerFilter,role,type:dealType,stages:stageFilter}} groups={operationalTasks} onReview={(group) => {
           const reason = group.reasons.length ? group.reasons.map(r => `${r.label}: ${r.deals.length}`).join(" · ") : group.description;
+          if (group.id === "warning") {
+            openWarnings(group.title, "Foto actual · sin filtro de período", group.deals);
+            return;
+          }
           openList(group.title, reason + " · foto actual, sin filtro de período", group.deals, undefined, group.id === "overdue" ? { key: "closeDate", dir: "asc" } : undefined);
         }} generatedAt={report.generatedAt}/>}
       />
@@ -1318,7 +1327,7 @@ export function PulseDashboard({
               {wonJourney.stages.filter((st) => st.deals.length).map((st) => (
                 <button key={st.key} type="button" data-tone={st.tone} data-service={st.key === "e8"} style={{ flexGrow: st.key === "e8" ? 0 : st.deals.length }}
                   title={`${st.label}: ${st.deals.length} · ${st.hint}`}
-                  onClick={() => openList(`Ganados · ${st.label} · histórico`, st.key === "e8" ? "Todos los negocios con servicio iniciado (E8), incluidos los de monto cero · filtros del informe · sin filtro de fecha" : `Ganados históricos con monto > $0 · ${st.hint}`, st.deals, undefined, st.key === "e8" ? { key: "closeDate", dir: "desc" } : undefined)}>
+                  onClick={() => st.key === "e61" ? openWarnings("E6.1 · Warning", "Ganados por iniciar servicio · sin filtro de fecha", st.deals) : openList(`Ganados · ${st.label} · histórico`, st.key === "e8" ? "Todos los negocios con servicio iniciado (E8), incluidos los de monto cero · filtros del informe · sin filtro de fecha" : `Ganados históricos con monto > $0 · ${st.hint}`, st.deals, undefined, st.key === "e8" ? { key: "closeDate", dir: "desc" } : undefined)}>
                   {st.key === "e61" && <WarnMark label="Warning E6.1" />}
                   {st.deals.length}
                 </button>
@@ -1628,7 +1637,7 @@ export function PulseDashboard({
           {["overdue", "warning", "lost-candidate", "off-track", "kickoff", "drafts", "signature"].flatMap(id => operationalTasks.filter(group => group.id === id)).map((group, index) => {
             const titles: Record<string, string> = { overdue: "Corregir fechas vencidas", warning: "Resolver warnings", "lost-candidate": "Revisar candidatos a perdido", "off-track": "Contactar deals On Track No", kickoff: "Empujar kick off", drafts: "Enviar borradores de contrato", signature: "Conseguir firmas" };
             const reason = group.reasons.length ? group.reasons.map(item => `${item.label}: ${item.deals.length}`).join(" · ") : group.description;
-            return <button type="button" className="forecast-action-row" data-kind={group.id} key={group.id} onClick={() => openList(titles[group.id] ?? group.title, reason + " · foto actual, sin filtro de período", group.deals, undefined, group.id === "overdue" ? { key: "closeDate", dir: "asc" } : undefined)}>
+            return <button type="button" className="forecast-action-row" data-kind={group.id} key={group.id} onClick={() => group.id === "warning" ? openWarnings("Resolver warnings", "Foto actual · sin filtro de período", group.deals) : openList(titles[group.id] ?? group.title, reason + " · foto actual, sin filtro de período", group.deals, undefined, group.id === "overdue" ? { key: "closeDate", dir: "asc" } : undefined)}>
               <span className="forecast-action-order">{index + 1}</span>
               <span className="forecast-action-text"><strong>{titles[group.id] ?? group.title}</strong><small>{reason}</small></span>
               <span className="forecast-action-count">{group.deals.length}<small>{group.deals.length === 1 ? "deal" : "deals"}</small></span>
@@ -1869,8 +1878,9 @@ export function PulseDashboard({
         </>
       )}
 
+      {warningPayload && <WarningDealsDialog payload={warningPayload} readAt={report.generatedAt} onClose={closeModal} />}
       <DealModal
-        payload={payload}
+        payload={warningPayload ? null : payload}
         hideCloseSummary={periodPayload?.presentation === "stage-entry"}
         onClose={closeModal}
         initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}
