@@ -1005,7 +1005,17 @@ export function PulseDashboard({
   const wonAttainmentTone: Tone = periodQuota <= 0 ? "neutral" : totalAttainmentPct <= 40 ? "bad" : totalAttainmentPct <= 80 ? "warn" : "ok";
   const periodWonWithOtf = periodWonAmount + periodOtfWon / 12;
   const periodGap = Math.max(0, periodQuota - periodWonWithOtf);
-  const gapPreviewDeals = (report.drilldowns[qOpenModalKey]?.deals ?? []).filter(d => !stageFilter.length || stageFilter.includes(d.stage));
+  const gapDrilldown = report.drilldowns[qOpenModalKey];
+  const scopedGapDrilldown = useMemo(() => gapDrilldown ? {
+    ...gapDrilldown,
+    deals: gapDrilldown.deals.filter(deal =>
+      matchesType(deal) &&
+      (role === "all" || roleOfOwner(deal.ownerId) === role) &&
+      (!stageFilter.length || stageFilter.includes(deal.stage)),
+    ),
+  } : null, [gapDrilldown, matchesType, role, stageFilter]);
+  const gapPreviewDeals = scopedGapDrilldown?.deals ?? [];
+  const isGapDrilldown = gapScenario && modalKey === qOpenModalKey && !periodPayload;
   const gapMonthSummary = summarizeDealMonths(gapPreviewDeals, performanceNow);
   const gapMonths = Array.from({ length: 3 }, (_, index) => {
     const month = (gapMonthSummary.quarter - 1) * 3 + index;
@@ -1880,7 +1890,7 @@ export function PulseDashboard({
 
       {warningPayload && <WarningDealsDialog payload={warningPayload} readAt={report.generatedAt} onClose={closeModal} />}
       <DealModal
-        payload={warningPayload ? null : payload}
+        payload={warningPayload ? null : isGapDrilldown ? scopedGapDrilldown : payload}
         hideCloseSummary={periodPayload?.presentation === "stage-entry"}
         onClose={closeModal}
         initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}
@@ -1922,11 +1932,11 @@ export function PulseDashboard({
             ? { labels: monthly.months, values: pipelineTrend }
             : null
         }
-        scenarioScope={gapScenario && modalKey===qOpenModalKey && !periodPayload ? {owner:ownerFilter,role,type:dealType,periods:selectedPeriods,basis:useStage6Results?'stage6':'close'} : undefined}
+        scenarioScope={isGapDrilldown ? {owner:ownerFilter,role,type:dealType,periods:selectedPeriods,basis:useStage6Results?'stage6':'close'} : undefined}
         scenarioReport={report}
         onViewScenarios={()=>{closeModal();onNavigate?.("scenarios");}}
         selectionQuotaForOwner={selectionQuotaForOwner}
-        selectionQuota={gapScenario && modalKey === qOpenModalKey && !periodPayload ? selectionQuota : null}
+        selectionQuota={isGapDrilldown ? selectionQuota : null}
       />
     </main>
   );
