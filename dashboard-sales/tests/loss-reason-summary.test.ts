@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { buildLossReasonSummary } from "../src/lib/loss-reason-summary";
 
 const deal = (id: string, lostReasonNarrative: string | null, lostStage = "E4") => ({
-  id, name: id, url: "", owner: "AE", lostStage, lostReasonNarrative,
+  id, name: id, url: "", owner: "AE", lostStage, lostReasonNarrative, lostReason: "Presupuesto",
 });
 
 test("groups literal subjects across notes and keeps deal and stage counts exact", () => {
@@ -27,4 +27,27 @@ test("never treats an older edition or an empty native comment as evidence", () 
   expect(summary.total).toBe(1);
   const legacy = { ...deal("b", "<p>&nbsp;</p>"), lostReasonText: "Otro proveedor" };
   expect(buildLossReasonSummary([legacy], true).comments).toEqual([]);
+});
+
+test("the opening conclusion counts explicit explanations and pairs them with exact linked quotes", () => {
+  const first = { ...deal("a", "Pasamos el presupuesto estimado. No tenían presupuesto para este año."), url: "https://example.test/a" };
+  const summary = buildLossReasonSummary([first, first, deal("b", "La propuesta era costosa. Eligieron otro proveedor."),
+    deal("c", "Se conversó de presupuesto. Tal vez no tienen presupuesto."), deal("d", "Sin presupuesto.")], true);
+  expect(summary.opening.findings).toEqual([
+    { subject: "falta de presupuesto", count: 2 },
+    { subject: "una objeción al precio", count: 1 },
+  ]);
+  expect(summary.opening.examples.map(({ deal, text }) => [deal.id, text])).toEqual([
+    ["a", "No tenían presupuesto para este año."],
+    ["b", "La propuesta era costosa."],
+  ]);
+  expect(summary.opening.examples[0]?.deal.url).toBe(first.url);
+});
+
+test("the opening uses individual examples for uncategorized explanations and omits empty labels", () => {
+  const summary = buildLossReasonSummary([deal("a", "Presupuesto."), deal("b", "Sin detalle"),
+    deal("c", "El contrato regional obliga a usar la herramienta del grupo.")], true);
+  expect(summary.opening.findings).toEqual([]);
+  expect(summary.opening.examples.map(({ deal }) => deal.id)).toEqual(["c"]);
+  expect(buildLossReasonSummary([deal("a", "Sin presupuesto")], false).opening.examples).toEqual([]);
 });
