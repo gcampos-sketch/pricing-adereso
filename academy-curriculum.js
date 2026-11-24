@@ -236,6 +236,31 @@ export const HYPOTHESIS_MISSION = {
 };
 
 export const PLAYBOOK_MISSIONS = [
+  {id:'playbook-icebreaker', revision:'2026-11-24.1', title:'La sala todavía se está armando', skill:'Apertura y lectura del prospecto', minutes:5,
+    story:'Es tu primera reunión con una cadena regional. Una persona se conecta apurada desde una sucursal y no sabes si llegó quien lidera el proyecto. Tienes un minuto para abrir.',
+    reference:{section:'Etapa 0 · Romper el hielo',url:PLAYBOOK},
+    playbook:{
+      prompt:'Ensaya cómo saludarías, qué preguntarías y cómo pasarías a confirmar quiénes están y qué quieren revisar.',
+      model:'Gracias por conectarte desde la sucursal. ¿Cómo viene la mañana por allá? Tenemos 45 minutos reservados. ¿Esperamos a alguien más antes de ver qué les gustaría llevarse de esta reunión?'
+    },
+    questions:[
+      q('pb-ice-context','¿Con qué abres?',[
+        'Con un saludo breve y una pregunta sencilla que tenga sentido para quien acaba de llegar.',
+        'Con un listado de módulos para aprovechar el primer minuto.',
+        'Con una pregunta sobre presupuesto antes de que llegue el resto.'
+      ],0,'Una apertura breve y pertinente ayuda a leer el ánimo y deja espacio para que el prospecto conteste.','Rompehielo'),
+      q('pb-ice-pace','La persona avisa que solo puede quedarse 20 minutos. ¿Qué ajustas?',[
+        'Mantener la agenda original para cubrir todos los puntos.',
+        'Acordar qué conviene revisar en esos 20 minutos y cómo retomar lo pendiente.',
+        'Asumir que no le interesa y cerrar la reunión.'
+      ],1,'Ajustar el tiempo junto con la contraparte permite respetar su disponibilidad y orientar la conversación.','Escucha',true),
+      q('pb-ice-transition','Se suma alguien que no venía en la invitación. ¿Cómo pasas al trabajo?',[
+        'Dar por hecho que esa persona toma la decisión.',
+        'Repetir el rompehielo desde el principio.',
+        'Confirmar su rol y acordar el foco antes de retomar el contexto del SDR.'
+      ],2,'Identificar quién entró y acordar el foco prepara una introducción que aprovecha el contexto del SDR.','Transición')
+    ]},
+
   {id:'playbook-outbound', revision:'2026-11-24.1', title:'«Ustedes me contactaron»', skill:'Preparación e introducción', minutes:6,
     story:'Tienes 20 minutos antes de una primera reunión outbound. La invitación incluye dos dominios y el brief de Adobo todavía no llega. El contacto aceptó hablar de automatización, sin mencionar un proyecto.',
     reference:{section:'Preparación · Etapas 0 y 1',url:PLAYBOOK},
@@ -443,6 +468,9 @@ export const skillResult = (mission, answers) => {
 };
 // Fictional consequences make the practice about a conversation, not just recall.
 export const CONSEQUENCES = {
+  'pb-ice-context': ['La persona entra en confianza y tienes una primera señal de cómo viene a la reunión.', 'Arrancas con un discurso o una pregunta que la persona aún no tiene contexto para responder.'],
+  'pb-ice-pace': ['Ambas partes saben qué pueden resolver con el tiempo disponible.', 'La reunión se queda sin tiempo para el acuerdo que el cliente necesitaba.'],
+  'pb-ice-transition': ['Sabes quién se sumó y puedes usar el handoff con el foco correcto.', 'Empiezas a hablarle a un supuesto decisor sin confirmar su papel.'],
   'pb-outbound-prep': ["Llegas con hipótesis útiles y puedes confirmar lo que falta en pocos minutos.", "Llegas con el caso centrado en un supuesto o haces repetir información al contacto."],
   'pb-outbound-scope': ["El grupo confirma a qué operación corresponde la conversación.", "La demo puede terminar respondiendo a una empresa distinta de la que evalúa el proyecto."],
   'pb-outbound-handoff': ["El contacto puede decir qué le dio curiosidad sin comprometerse a un proyecto.", "El contacto tiene que corregir premisas antes de hablar de lo que le interesa."],
@@ -684,4 +712,15 @@ export const AE_ONBOARDING_EVIDENCE = [
   { id: 'shadowing', label: 'Shadowing y Diio', hint: 'Resume el acuerdo observado, tu follow-up propuesto y lo que revisarás con tu referente. Usa datos anonimizados.' },
   { id: 'review', label: 'Revisión de go-live con tu líder', hint: 'Fecha, resultado, feedback del roleplay y simulación, agenda y confirmación de cartera asignada. Anota los pendientes.' },
   { id: 'plan', label: 'Plan de 30/60 días', hint: 'Para cada hito, registra el objetivo de cartera, actividad, pipeline y la fecha de revisión de coaching.' },
+];
+
+// Milestones sit after the day's activities and follow the Playbook conversation.
+export const AE_ROLEPLAY_STAGES = [
+  {stage:0, day:'0-0', title:'Romper el hielo', mission:'playbook-icebreaker', check:'Adapta el tono y el tiempo al prospecto y abre espacio antes de pasar al contexto.'},
+  {stage:1, day:'0-0', title:'Introducción y handoff del SDR', mission:'playbook-outbound', check:'Practica una entrada inbound y una outbound. Confirma lo recibido del SDR sin exigir que el cliente lo repita.'},
+  {stage:2, day:'0-3', title:'Discovery y operativa', mission:'playbook-discovery-event', check:'Aclara dolor, impacto y resultado esperado. Confirma la consecuencia del hito o déjala pendiente.'},
+  {stage:3, day:'1-0', title:'Presentación y demo', mission:'playbook-demo-dialogue', check:'Muestra un recorrido útil, una excepción y qué depende de una validación técnica.'},
+  {stage:4, day:'1-1', title:'Presentación de pricing', mission:'playbook-pricing-roi', check:'Conecta el alcance y el volumen con el valor. Pide los datos faltantes y explica los supuestos del ROI.'},
+  {stage:5, day:'1-2', title:'Cierre y siguientes pasos', mission:'playbook-enterprise-decision', check:'Distingue decisor, validadores y fecha de decisión. Cierra con un hito que tenga responsable y plazo.'},
+  {stage:6, day:'1-2', title:'Seguimiento al dolor', mission:'playbook-followup-pain', check:'Retoma el dolor acordado, respeta canal y plazo, y deja una próxima actividad verificable.'},
 ];
