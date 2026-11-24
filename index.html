@@ -9228,9 +9228,9 @@ function emailOutboundPack(quantity){
   return {quantity,baseTier,rate,monthly:Math.round((base+(quantity-baseTier)*rate)*100)/100};
 }
 function voicePack(quantity,tiers){
-  if(!Number.isSafeInteger(quantity)||quantity<tiers[0][0])return null;
-  const [baseTier,rate]=tiers.findLast(([threshold])=>threshold<=quantity);
-  const total=Math.round((baseTier*rate+(quantity-baseTier)*rate)*1000)/1000;
+  if(!Number.isSafeInteger(quantity)||quantity<1)return null;
+  const [baseTier,rate]=tiers.findLast(([threshold])=>threshold<=quantity)??[1,tiers[0][1]];
+  const total=Math.round(quantity*rate*1000)/1000;
   return {quantity,baseTier,rate,monthly:Math.round(total*100)/100,overage:Math.round(rate*1.15*10000)/10000};
 }
 function outboundPackSuggestion(pack,tiers,priceAt){
@@ -9534,7 +9534,7 @@ function renderOutboundQuote(key){
     button.classList.toggle('on',selected);
     button.setAttribute('aria-pressed',String(selected));
   });
-  if(!pack){target.textContent=voice?'Ingresa al menos 2.000 minutos enteros.':'Ingresa más de 1.000 envíos enteros.';return;}
+  if(!pack){target.textContent=voice?'Ingresa una cantidad entera de minutos, desde 1.':'Ingresa más de 1.000 envíos enteros.';return;}
   const unit=voice?'min':'envío';
   const detail=pack.rate?` · USD ${outboundRate(pack.rate)}/${unit}${voice?` · Excedente USD ${outboundRate(pack.overage)}/min`:''}`:'';
   const better=outboundPackSuggestion(pack,voice?voice.tiers:EMAIL_PACKS,voice?q=>voicePack(q,voice.tiers):emailOutboundPack);
@@ -9551,13 +9551,13 @@ function renderOutboundVolume(){
   area.innerHTML=(!email&&!pools.length)?'':`<div class="pl-grid out-volume">
     ${pools.map(({key,label,product,quantity,tiers,upgrading,credit})=>`<div class="pl-card">
       <div class="pl-head"><span class="pl-name">${label} · WhatsApp saliente</span></div>
-      <div class="pl-desc">Bolsa mensual de ${product} con compromiso de 12 meses.</div>
+      <div class="pl-desc">Bolsa mensual de ${product} con compromiso de 12 meses. Escribe los minutos que necesites o elige un volumen de referencia.</div>
       ${state.existing?`<div class="out-packs" role="group" aria-label="Contratación de ${label}">
         <button type="button" class="pill ${upgrading?'':'on'}" data-voice-plan="${key}" data-mode="new" aria-pressed="${!upgrading}">Agregar bolsa nueva</button>
         <button type="button" class="pill ${upgrading?'on':''}" data-voice-plan="${key}" data-mode="upgrade" aria-pressed="${upgrading}">Ampliar bolsa actual</button>
       </div>
       ${upgrading?`<label>¿Cuánto pagas hoy al mes por esta bolsa? (USD)<input type="number" data-voice-pay="${key}" min="0" step="0.01" value="${credit??''}" required></label>`:''}`:''}
-      <label>Minutos de ${label.toLowerCase()} al mes<input data-out-qty="${key}" type="number" min="${tiers[0][0]}" step="1" inputmode="numeric" value="${quantity??''}" placeholder="Ej. 7500" required></label>
+      <label>Minutos de ${label.toLowerCase()} al mes<input data-out-qty="${key}" type="number" min="1" step="1" inputmode="numeric" value="${quantity??''}" placeholder="Ej. 7500" required></label>
       ${picks(key,label.toLowerCase(),tiers,true)}
       <div class="out-quote" data-out-quote="${key}" aria-live="polite"></div>
     </div>`).join('')}

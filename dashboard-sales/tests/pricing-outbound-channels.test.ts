@@ -51,11 +51,14 @@ test('outbound email switches from Free to the published paid tiers', () => {
 test('human and IA voice use independent volume tiers and overage rates', () => {
   const { pricing } = calculator();
   const [human, ai] = pricing.VOICE_POOLS;
-  expect(pricing.voicePack(1999, human.tiers)).toBeNull();
-  expect(pricing.voicePack(1999, ai.tiers)).toBeNull();
+  for (const quantity of [null, 0, -1, 1.5, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    expect(pricing.voicePack(quantity, human.tiers)).toBeNull();
+    expect(pricing.voicePack(quantity, ai.tiers)).toBeNull();
+  }
   for (const [quantity, humanMonthly, aiMonthly] of [
-    [2000, 60, 360], [5000, 140, 850], [10000, 260, 1600], [20000, 480, 3000],
-    [35000, 805, 4900], [50000, 1100, 6500], [100000, 2000, 12000],
+    [1, .03, .18], [1250, 37.5, 225], [1999, 59.97, 359.82], [2000, 60, 360],
+    [4999, 149.97, 899.82], [5000, 140, 850], [10000, 260, 1600], [20000, 480, 3000],
+    [35000, 805, 4900], [50000, 1100, 6500], [100000, 2000, 12000], [125000, 2500, 15000],
   ]) {
     expect(pricing.voicePack(quantity, human.tiers).monthly).toBe(humanMonthly);
     expect(pricing.voicePack(quantity, ai.tiers).monthly).toBe(aiMonthly);
@@ -80,6 +83,9 @@ test('each selected call mode requires the corresponding pack in addition to Met
   expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human','ai']);
   expect(pricing.outboundMonthly()).toBe(2186);
   state.humanVoiceMinutes = 1000;
+  expect(pricing.selectedVoicePools()[0].pack.monthly).toBe(30);
+  expect(pricing.outboundMonthly()).toBe(2006);
+  state.humanVoiceMinutes = 0;
   expect(pricing.selectedVoicePools()[0].pack).toBeNull();
   state.engage = false;
   expect(pricing.selectedVoicePools()).toHaveLength(0);
