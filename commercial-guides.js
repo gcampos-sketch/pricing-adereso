@@ -51,80 +51,157 @@
 
   function createFlow(){
    const stylesheet=el('link');stylesheet.rel='stylesheet';stylesheet.href='/hub-content/operativa/adobo-flow.css';document.head.append(stylesheet);
-   const trigger=el('button','adobo-flow-trigger','Adobo y Codex');
+   const trigger=el('button','adobo-flow-trigger','Ver flujo comercial');
    trigger.type='button';trigger.hidden=true;
    trigger.setAttribute('aria-haspopup','dialog');
    trigger.setAttribute('aria-controls','adobo-flow');
+   const heroIntro=document.querySelector('.hero p');
+   (heroIntro||status).after(trigger);
+
    const dialog=el('dialog','adobo-flow');dialog.id='adobo-flow';
    dialog.setAttribute('aria-labelledby','adobo-flow-title');
    const header=el('header','adobo-flow-header');
-   const title=el('h2');title.id='adobo-flow-title';
+   const title=el('h2','','Flujo comercial');title.id='adobo-flow-title';
    const close=el('button','adobo-flow-close','×');
    close.type='button';close.setAttribute('aria-label','Cerrar flujo');close.autofocus=true;
-   header.append(title,close);
-   const layout=el('div','adobo-flow-layout');
-   const steps=el('nav','adobo-flow-steps');steps.setAttribute('aria-label','Etapas del pipeline');
-   const body=el('section','adobo-flow-body');body.setAttribute('aria-labelledby','adobo-flow-stage');
-   const stageTitle=el('h3','adobo-flow-stage');stageTitle.id='adobo-flow-stage';
+   const actions=el('div','adobo-flow-actions');
+   const back=el('button','adobo-flow-back','Volver al mapa');
+   back.type='button';back.hidden=true;
+   actions.append(back,close);header.append(title,actions);
+
+   const overview=el('div','adobo-flow-overview');
+   const hint=el('p','adobo-flow-hint','Abre un nodo para ver qué ocurre y quién interviene.');
+   const route=el('ol','adobo-flow-route');route.setAttribute('aria-label','Recorrido principal');
+   const branches=el('ul','adobo-flow-branches');branches.setAttribute('aria-label','Entradas, salidas y controles');
+   overview.append(hint,route,branches);
+
+   const panel=el('section','adobo-flow-panel');panel.id='adobo-flow-panel';panel.hidden=true;
+   const panelTitle=el('h3','adobo-flow-panel-title');panelTitle.id='adobo-flow-panel-title';
+   panel.setAttribute('aria-labelledby',panelTitle.id);
+   const steps=el('nav','adobo-flow-steps');steps.setAttribute('aria-label','Etapas de este tramo');
+   const body=el('section','adobo-flow-body');body.id='adobo-flow-detail';body.hidden=true;
+   const stageTitle=el('h4','adobo-flow-stage');stageTitle.id='adobo-flow-stage';
+   body.setAttribute('aria-labelledby',stageTitle.id);
    const cards=el('div','adobo-flow-cards');
-   body.append(stageTitle,cards);layout.append(steps,body);
+   body.append(stageTitle,cards);panel.append(panelTitle,steps,body);
+
    const info=el('details','adobo-flow-info');
    info.append(el('summary','','Alcance y fuente'));
    const intro=el('div','adobo-flow-intro');
    const source=el('a','','Ver fuente en Notion');source.target='_blank';source.rel='noopener noreferrer';
    info.append(intro,source);
-   dialog.append(header,layout,info);
-   document.body.append(trigger,dialog);
-   let phases=[],selected='',opener=null;
-   function select(phase){
-    selected=phase.heading.id;
-    stageTitle.replaceChildren();rich(stageTitle,phase.heading.text);
+   dialog.append(header,overview,panel,info);
+   document.body.append(dialog);
+
+   const definitions=[
+    {id:'sdr',label:'Captación',detail:'SDR · Prospección y calificación',codes:['SDR'],main:true},
+    {id:'sale',label:'Venta',detail:'E1–E5.1 · Reunión a negociación',codes:['E1','E2','E3','E4','E5'],main:true},
+    {id:'delivery',label:'Firma y servicio',detail:'E6–E8 · Cierre a servicio iniciado',codes:['E6','E7','E8'],main:true},
+    {id:'expansion',label:'Expansión',detail:'E0 · Entrada a venta desde cartera',codes:['E0']},
+    {id:'loss',label:'Pérdidas y churn',detail:'Salidas de venta y servicio',codes:['Salidas']},
+    {id:'health',label:'Saneación y control',detail:'Apoyo a todo el pipeline',codes:['Todo el pipeline']},
+   ];
+   let groups=[],groupId='',stageId='',opener=null;
+   function reveal(heading){
+    const {top,bottom}=heading.getBoundingClientRect();
+    const frame=dialog.getBoundingClientRect();
+    const headerBottom=header.getBoundingClientRect().bottom;
+    if(top<headerBottom||bottom>frame.bottom-24)heading.scrollIntoView({block:'start',behavior:'instant'});
+   }
+   function selectStage(stage){
+    stageId=stage?.heading.id||'';
+    body.hidden=!stage;
     cards.replaceChildren();
+    for(const button of steps.querySelectorAll('button'))button.setAttribute('aria-expanded',String(button.dataset.stage===stageId));
+    if(!stage)return;
+    stageTitle.replaceChildren();rich(stageTitle,stage.heading.text);
     let target=cards;
-    for(const block of phase.blocks){
+    for(const block of stage.blocks){
      if(block.type==='heading_3'){
-      target=el('div','adobo-flow-card');cards.append(target);
+      target=el('section','adobo-flow-card');
+      const label=el('h5');rich(label,block.text);target.append(label);cards.append(target);
+     }else target.append(node(block));
+    }
+   }
+   function selectGroup(group,rememberedStage=''){
+    groupId=group?.id||'';
+    panel.hidden=!group;back.hidden=!group;
+    for(const button of overview.querySelectorAll('button'))button.setAttribute('aria-expanded',String(button.dataset.group===groupId));
+    steps.replaceChildren();
+    if(!group){selectStage(null);return;}
+    const single=group.stages.length===1;
+    panelTitle.textContent=group.label;
+    panelTitle.hidden=single;
+    steps.hidden=single;
+    if(!single){
+     for(const stage of group.stages){
+      const button=el('button','adobo-flow-step');
+      button.type='button';button.dataset.stage=stage.heading.id;button.setAttribute('aria-controls',body.id);
+      if(stage.code)button.append(el('span','adobo-flow-code',stage.code));
+      button.append(el('span','adobo-flow-label',stage.label));
+      button.addEventListener('click',()=>{
+       const expand=stageId!==stage.heading.id;
+       selectStage(expand?stage:null);
+       if(expand)reveal(stageTitle);
+      });
+      steps.append(button);
      }
-     target.append(node(block));
     }
-    for(const button of steps.querySelectorAll('button')){
-     if(button.dataset.phase===selected)button.setAttribute('aria-current','step');
-     else button.removeAttribute('aria-current');
-    }
-    body.scrollTop=0;
+    selectStage(single?group.stages[0]:group.stages.find(stage=>stage.heading.id===rememberedStage));
    }
    function open(origin){
-    if(!phases.length||dialog.open)return;
+    if(!groups.length||dialog.open)return;
     opener=origin;dialog.showModal();
    }
    trigger.addEventListener('click',()=>open(trigger));
    close.addEventListener('click',()=>dialog.close());
+   back.addEventListener('click',()=>{
+    dialog.scrollTop=0;
+    overview.querySelector('button[aria-expanded="true"]')?.focus({preventScroll:true});
+   });
    dialog.addEventListener('close',()=>{(opener?.isConnected?opener:trigger).focus({preventScroll:true});opener=null;});
    return {open,render(doc){
-    const groups=[],preface=[];
+    const stages=[],preface=[];
     for(const block of doc?.blocks||[]){
-     if(block.type==='heading_2')groups.push({heading:block,blocks:[]});
-     else (groups.at(-1)?.blocks??preface).push(block);
+     if(block.type==='heading_2'){
+      const heading=plain(block);
+      const split=heading.indexOf(' · ');
+      stages.push({heading:block,blocks:[],code:split<0?'':heading.slice(0,split),label:split<0?heading:heading.slice(split+3)});
+     }else (stages.at(-1)?.blocks??preface).push(block);
     }
-    phases=groups;
-    trigger.hidden=!phases.length;
-    if(!phases.length){if(dialog.open)dialog.close();return false;}
-    title.textContent=doc.title;
+    const assigned=new Set();
+    groups=definitions.map(group=>({...group,stages:stages.filter(stage=>{
+     const code=stage.code.match(/^(E\d+)/)?.[1]||stage.code;
+     if(!group.codes.includes(code))return false;
+     assigned.add(stage);return true;
+    })})).filter(group=>group.stages.length);
+    const other=stages.filter(stage=>!assigned.has(stage));
+    if(other.length)groups.push({id:'other',label:'Otras etapas',stages:other});
+    trigger.hidden=!groups.length;
+    if(!groups.length){if(dialog.open)dialog.close();return false;}
     intro.replaceChildren(...preface.map(node));
     source.href=safe(doc.url)||'https://www.notion.so/'+flowPageId.replaceAll('-','');
-    const focused=steps.contains(document.activeElement);
-    steps.replaceChildren();
-    for(const phase of phases){
-     const label=plain(phase.heading);
-     const split=label.indexOf(' · ');
-     const button=el('button','adobo-flow-step');
-     button.type='button';button.dataset.phase=phase.heading.id;
-     if(split>0)button.append(el('span','adobo-flow-code',label.slice(0,split)));
-     button.append(el('span','adobo-flow-label',split>0?label.slice(split+3):label));
-     button.addEventListener('click',()=>select(phase));steps.append(button);
+
+    const {group:focusedGroup,stage:focusedStage}=document.activeElement.dataset;
+    route.replaceChildren();branches.replaceChildren();
+    for(const group of groups){
+     const item=el('li','adobo-flow-item');
+     const button=el('button','adobo-flow-node');
+     button.type='button';button.dataset.group=group.id;button.setAttribute('aria-controls',panel.id);
+     button.append(el('span','adobo-flow-node-label',group.label));
+     if(group.detail)button.append(el('span','adobo-flow-node-detail',group.detail));
+     const chevron=el('span','adobo-flow-chevron');chevron.setAttribute('aria-hidden','true');button.append(chevron);
+     button.addEventListener('click',()=>{
+      const expand=groupId!==group.id;
+      selectGroup(expand?group:null);
+      if(expand)reveal(panelTitle.hidden?stageTitle:panelTitle);
+     });
+     item.append(button);(group.main?route:branches).append(item);
     }
-    select(phases.find(phase=>phase.heading.id===selected)||phases[0]);
-    if(focused)steps.querySelector('[aria-current="step"]')?.focus({preventScroll:true});
+    selectGroup(groups.find(group=>group.id===groupId),stageId);
+    const restored=[...dialog.querySelectorAll('button[data-stage],button[data-group]')].find(button=>
+     (focusedGroup&&button.dataset.group===focusedGroup)||(focusedStage&&button.dataset.stage===focusedStage));
+    if(restored)restored.focus({preventScroll:true});
     return true;
    }};
   }
