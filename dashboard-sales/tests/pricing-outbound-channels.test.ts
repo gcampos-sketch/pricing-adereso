@@ -180,6 +180,24 @@ test('existing customers can add outbound packs using contracted Desk and Studio
   expect(pricing.outboundMonthly()).toBe(0);
 });
 
+test('outbound packs reuse the volume tiles and support a selected custom amount per pack', () => {
+  const gridSource = hub.slice(hub.indexOf('function volumeTile('), hub.indexOf('function conversationNumber('));
+  const tiles = runInNewContext(source + gridSource + `;
+    ({
+      human: outboundVolumeGrid('voice-human', 'minutos', VOICE_POOLS[0].tiers, 3000),
+      ai: outboundVolumeGrid('voice', 'minutos', VOICE_POOLS[1].tiers, 5000),
+      email: outboundVolumeGrid('email', 'envíos', EMAIL_PACKS, null)
+    })
+  `);
+  expect(tiles.human).toContain('class="vtile vtile-in sel"');
+  expect(tiles.human).toContain('Bolsa personalizada: 3.000 minutos');
+  expect(tiles.human).toContain('data-out-qty="voice-human" min="1"');
+  expect(tiles.ai).toContain('data-out-pack="voice" data-qty="5000" aria-pressed="true"');
+  expect(tiles.ai).toContain('Otra cantidad');
+  expect(tiles.email).toContain('data-out-qty="email" min="1001"');
+  expect(tiles.email).toContain('customVolumeHint-email');
+});
+
 test('private email and Studio price tables stay outside the public Meta wallet', () => {
   const { formulas, calculator } = walletSources(hub);
   expect(formulas + calculator).not.toMatch(/EMAIL_PACKS|VOICE_POOLS|function voicePack/);
