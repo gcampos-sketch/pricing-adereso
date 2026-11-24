@@ -26,7 +26,7 @@ export function LossReasonSummary({ deals, available, showAllComments = false }:
     <h4>¿Por qué se perdieron?</h4>
     {available && comments.length > 0 && <div className="loss-reason-opening">
       <p>{opening.findings.length ? opening.findings.map(({ subject, count }) =>
-        `${count} de ${comments.length} ${count === 1 ? "comentario registra" : "comentarios registran"} ${subject}.`).join(" ")
+        `En ${count} de ${comments.length} ${comments.length === 1 ? "comentario" : "comentarios"} se registró ${subject}.`).join(" ")
         : opening.examples.length ? "Los comentarios describen situaciones particulares. Estos son los ejemplos registrados."
         : "Los comentarios disponibles dan poco detalle sobre qué llevó al cierre."}</p>
       {opening.examples.length > 0 && <ul aria-label="Deals que respaldan el resumen">
