@@ -121,7 +121,7 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 /** Etiqueta completa del pipeline Comercial: número + nombre tal como está en HubSpot. */
-const STAGE_FULL_LABELS: Record<string, string> = {
+export const STAGE_FULL_LABELS: Record<string, string> = {
   "1144383754": "0. Reunión Agendada",
   "171385863": "1. Reunión comercial Concretada",
   "171385864": "2. Bajada de requerimientos",

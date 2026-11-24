@@ -1,0 +1,50 @@
+.warning-deals-dialog {
+  width: min(1100px, calc(100vw - 24px));
+  max-width: none;
+  max-height: 90dvh;
+  grid-template-rows: auto minmax(0, 1fr);
+  padding: 20px 0 0;
+  border-radius: 16px;
+  color: var(--color-foreground);
+}
+.warning-deals-dialog > header { padding: 0 48px 0 22px; }
+.warning-deals-dialog > header p { margin-top: 8px; }
+.warning-deals-scroll { overflow: auto; padding: 0 22px 22px; }
+.warning-deals-filters { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; }
+.warning-deals-filters label { display: grid; min-width: 110px; max-width: 100%; flex: 1; gap: 4px; font-size: .75rem; }
+.warning-deals-filters select {
+  width: 100%;
+  height: 36px;
+  padding: 0 8px;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  color: var(--color-foreground);
+}
+.warning-deals-meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 14px 0; font-size: .8rem; color: var(--color-muted-foreground); }
+.warning-deals-meta summary { cursor: pointer; color: var(--color-foreground); }
+.warning-deals-meta details p { margin-top: 6px; max-width: 65ch; }
+.warning-deals-error, .warning-deals-empty { font-size: .875rem; padding: 10px 0; }
+.warning-deals-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 278px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.warning-deal { min-width: 0; border: 1px solid var(--color-border); border-radius: 10px; padding: 14px; }
+.warning-deal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.warning-deal-header a { font-weight: 650; overflow-wrap: anywhere; }
+.warning-deal-header a:hover { text-decoration: underline; }
+.warning-deal-header a svg { display: inline; vertical-align: -2px; }
+.warning-deal-header p, .warning-deal-note { color: var(--color-muted-foreground); font-size: .75rem; margin-top: 4px; }
+.warning-deal-health { flex: none; border-radius: 999px; padding: 3px 8px; background: var(--color-muted); font-size: .72rem; font-weight: 650; }
+.warning-deal-health[data-health="critical"] { background: #8a293f; color: #fff; }
+.warning-deal-health[data-health="priority"] { background: #ffd77f; color: #352403; }
+.warning-deal-health[data-health="watch"] { background: #bfe3fb; color: #173855; }
+.warning-deal dl { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--color-border); }
+.warning-deal-timeline { display: grid; grid-template-columns: .85fr 1.15fr; gap: 10px; }
+.warning-deal dt { color: var(--color-muted-foreground); font-size: .75rem; margin-bottom: 3px; }
+.warning-deal dd { overflow-wrap: anywhere; font-size: .84rem; }
+.warning-deal dd.warning-deal-note { font-size: .75rem; }
+.warning-deal-timeline dd:first-of-type { font-weight: 600; }
+.warning-deal-evidence { display: grid; gap: 8px; white-space: pre-wrap; }
+@media (max-width: 560px) {
+  .warning-deals-dialog > header { padding-left: 14px; }
+  .warning-deals-scroll { padding-inline: 14px; }
+  .warning-deals-filters label { flex: 1 1 42%; }
+}
