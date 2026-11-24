@@ -4,6 +4,7 @@ import { ghostingByOwner, GHOSTING_STATUSES, lossDealsByOwner, summarizeGhosting
 import { useLossGhosting } from "@/hooks/use-loss-ghosting";
 import { money } from "./insights-shared";
 import { LossConclusionFlip } from "./LossConclusionFlip";
+import { LossGhostingOrigins } from "./LossGhostingActivity";
 
 type OpenEvidence = (deals: InsightDeal[], detail?: string) => void;
 
@@ -101,6 +102,7 @@ export function GhostingConclusion({ label, deals, onOpen, front, recommendation
   const owners = ghostingByOwner(deals, evidence);
   const leading = audit.leadingChannels.length > 0;
   const partial = audit.channels.some(channel => channel.verified < deals.length);
+  const missingStages = deals.some(deal => !evidence[deal.id]?.originStage);
   const top = owners[0];
   const influential = top?.id && top.audit.groups.short.length > (owners[1]?.audit.groups.short.length ?? 0);
   const leadingText = leading ? `${channelNames(audit)} · ${audit.highest} ${audit.highest === 1 ? "deal" : "deals"}` : null;
@@ -115,6 +117,7 @@ export function GhostingConclusion({ label, deals, onOpen, front, recommendation
       {recommendation}
     </>}
     back={<>
+      <LossGhostingOrigins deals={deals} evidence={evidence} loading={pending} onOpen={onOpen} />
       <GhostingStatuses audit={audit} pending={pending} onOpen={onOpen} />
       <div className="loss-conclusion-channels">
         <h4 className="loss-conclusion-list-heading">Deals bajo el mínimo por canal</h4>
@@ -142,8 +145,8 @@ export function GhostingConclusion({ label, deals, onOpen, front, recommendation
         </li>)}
       </ul>
       <p className="loss-conclusion-stage">Reuniones registradas desde la creación de cada deal hasta antes de su entrada a perdido.</p>
-      {!pending && partial && <div className="loss-conclusion-partial">
-        <span>Los faltantes se calculan con la actividad verificable.</span>
+      {!pending && (partial || missingStages) && <div className="loss-conclusion-partial">
+        <span>{partial ? "Los faltantes se calculan con la actividad verificable." : "Hay etapas de origen sin verificar."}</span>
         <button type="button" className="cell-button" onClick={() => void query.refetch()} disabled={query.isFetching}>
           {query.isFetching ? "Verificando…" : "Reintentar"}
         </button>

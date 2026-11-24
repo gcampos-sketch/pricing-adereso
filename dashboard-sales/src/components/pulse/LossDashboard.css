@@ -164,6 +164,7 @@
 .loss-ghosting-caption { display:flex; align-items:start; flex-wrap:wrap; gap:6px 12px; margin-bottom:12px; color:var(--muted); font-size:11px; }
 .loss-ghosting-caption p { flex:1 1 220px; margin:0; line-height:1.5; }
 .loss-ghosting-caption button { white-space:nowrap; }
+.loss-deal-drawer .loss-ghosting-origins { margin-bottom:12px; }
 .loss-ghosting-activity { grid-column:1/-1; display:grid; gap:8px; margin-top:-5px; padding:9px 11px; border:1px solid var(--border); border-radius:9px; background:#ffffff04; }
 .loss-ghosting-status { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; }
 .loss-ghosting-status[data-status="met"] { color:var(--success); }

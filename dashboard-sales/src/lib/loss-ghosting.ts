@@ -3,6 +3,7 @@ export type GhostingActivity = {
   whatsapp: number | null;
   emails: number | null;
   meetings: { completedIds: string[]; unverified: number } | null;
+  originStage: string | null;
 };
 
 export const GHOSTING_CHANNELS = [

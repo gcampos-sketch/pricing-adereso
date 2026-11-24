@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test";
 import { completedMeeting, ghostingMeetingWindow, ghostingMinimum, isGhostingLoss, type GhostingActivity } from "../src/lib/loss-ghosting";
+import { corroboratedLossTransition } from "../src/lib/loss-prior-score";
 
-const baseline: GhostingActivity = { calls: 2, whatsapp: 2, emails: 2, meetings: null };
+const baseline: GhostingActivity = { calls: 2, whatsapp: 2, emails: 2, meetings: null, originStage: null };
 
 test("each contact channel must individually meet two; meetings do not affect the result", () => {
   expect(ghostingMinimum(baseline)).toBe("met");
@@ -27,6 +28,29 @@ const created = "2026-10-10T09:00:00Z";
 const lost = "2026-11-18T12:00:00Z";
 const now = Date.parse("2026-11-19T12:00:00Z");
 const properties = { createdate: created, hs_v2_date_entered_lost: lost, closedate: "2026-12-31" };
+
+test("ghosting origin is the immediate predecessor of the current loss run after reopening", () => {
+  const stages = [
+    { value: "E5", timestamp: "2026-10-19T12:00:00Z" },
+    { value: "lost", timestamp: lost },
+    { value: "lost", timestamp: "2026-10-20T12:00:00Z" },
+    { value: "E2", timestamp: "2026-11-16T12:00:00Z" },
+    { value: "lost", timestamp: "2026-11-18T13:00:00Z" },
+  ];
+  expect(corroboratedLossTransition("lost", lost, stages, now))
+    .toEqual({ cutoff: Date.parse(lost), previousStageId: "E2" });
+  expect(corroboratedLossTransition("lost", stages[2]!.timestamp, stages, now)).toBeNull();
+});
+
+test("ghosting origin stays unknown when a deal starts lost or transitions are ambiguous", () => {
+  const end = { value: "lost", timestamp: lost };
+  const prior = { value: "E5", timestamp: "2026-11-16T12:00:00Z" };
+  expect(corroboratedLossTransition("lost", lost, [end], now)?.previousStageId).toBeNull();
+  expect(corroboratedLossTransition("lost", lost, [end, prior, { ...prior, value: "E2" }], now)?.previousStageId).toBeNull();
+  expect(corroboratedLossTransition("lost", lost, [end, prior, { ...end, value: "E2" }], now)).toBeNull();
+  expect(corroboratedLossTransition("lost", lost, [end, { value: "E2" }], now)).toBeNull();
+  expect(corroboratedLossTransition("lost", lost, [end, prior, { ...end, timestamp: "2026-11-20T12:00:00Z" }], now)).toBeNull();
+});
 
 test("ghosting uses the native current loss-stage entry and creation, with no close-date fallback", () => {
   expect(ghostingMeetingWindow(properties, "lost", now)).toEqual({ created: Date.parse(created), lost: Date.parse(lost) });
