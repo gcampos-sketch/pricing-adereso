@@ -77,7 +77,7 @@ switchTab = function(tab) {
   $('academy-mission-view').style.display='none';
   oldSwitch(tab);
   active=null;
-  if(tab==='home') render();
+  if(tab==='home'||tab==='games') render();
   if(tab==='progress') renderSkills();
   accessible();
 };
@@ -167,8 +167,28 @@ function installAcademyNavigation(icons) {
   current();apply();
 }
 
+function hasOpenedCase(id) {
+  return Boolean(
+    progress.openedCases?.includes(id) ||
+    progress.attempts[id] ||
+    progress.resume?.id===id ||
+    Object.hasOwn(progress.reflections||{},id) ||
+    Object.keys(progress.reviews).some(key=>key.startsWith(id+':')) ||
+    (id===HYPOTHESIS_MISSION.id&&progress.hypothesis)
+  );
+}
+function markCaseOpened(id) {
+  if(hasOpenedCase(id))return false;
+  progress.openedCases=[...(progress.openedCases||[]),id];
+  return true;
+}
+const isNewCase = id => ready&&!hasOpenedCase(id);
+function newCaseDot(show, label='Nuevo') {
+  return show?`<span class="academy-new-dot" role="img" aria-label="${label}" title="${label}"></span>`:'';
+}
+
 function missionCard(m){
-  return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}</h4><p>${m.demo||m.advice||m.playbook?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
+  return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}${newCaseDot((m.advice||m.playbook)&&isNewCase(m.id))}</h4><p>${m.demo||m.advice||m.playbook?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
 }
 function scrollToCaseSection(section){
   const heading = $('academy-'+section).querySelector('h3');
@@ -181,10 +201,10 @@ function advisoryChallenges(){
   return `<section aria-label="Escenarios de asesoría"><div class="academy-section-head"><h3 tabindex="-1">Escenarios de asesoría</h3></div><p class="academy-muted">El cliente trae un flujo. Elige qué ajustar, prepara dos alternativas y practica cómo se las explicarías.</p><div class="academy-mission-grid" style="margin-top:14px">${ADVISORY_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
 function hypothesisCard(){
-  const {title,story,skill,minutes}=HYPOTHESIS_MISSION;
+  const {id,title,story,skill,minutes}=HYPOTHESIS_MISSION;
   const practice=progress.hypothesis;
   const status=practice?.submittedAt?'Respuesta registrada':Object.values(practice?.answers||{}).some(text=>text.trim())?'Borrador':'Por descubrir';
-  return `<button class="mission-card" type="button" data-hypothesis ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(skill)}</span><span>${minutes} min</span></div><h4>${escape(title)}</h4><p>${escape(story)}</p><div class="academy-actions"><span class="academy-pill">${status}</span><span class="academy-muted">${practice?.submittedAt?'Revisar →':'Practicar →'}</span></div></button>`;
+  return `<button class="mission-card" type="button" data-hypothesis ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(skill)}</span><span>${minutes} min</span></div><h4>${escape(title)}${newCaseDot(isNewCase(id))}</h4><p>${escape(story)}</p><div class="academy-actions"><span class="academy-pill">${status}</span><span class="academy-muted">${practice?.submittedAt?'Revisar →':'Practicar →'}</span></div></button>`;
 }
 function playbookChallenges(){
   return `<section aria-label="Simulaciones del Playbook"><div class="academy-section-head"><h3 tabindex="-1">Simulaciones del Playbook</h3></div><p class="academy-muted">Practica qué preguntar, cómo demostrar valor y cómo acordar el siguiente paso en cada etapa de una reunión comercial.</p><div class="academy-mission-grid" style="margin-top:14px">${hypothesisCard()}${PLAYBOOK_MISSIONS.map(missionCard).join('')}</div></section>`;
@@ -207,7 +227,7 @@ function render() {
       <div class="academy-kicker">${progress.mode==='onboarding'?'Tu ruta de onboarding':'Tu entrenamiento de hoy'} · ${escape(progress.role)}</div>
       <h2>${saved?'Retoma tu misión':completed===role().missions.length?'Sigue afinando tu criterio':'Tu próxima misión'}<br>${escape(next.title)}</h2>
       <p>${escape(next.story)}<br>${next.minutes} minutos · 3 decisiones · feedback en cada paso</p>
-      <div class="academy-actions"><button class="academy-btn primary" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button><button class="academy-btn" type="button" data-case-section="advisory">Escenarios de asesoría ↓</button><button class="academy-btn" type="button" data-case-section="playbook">Practicar Playbook ↓</button></div>
+      <div class="academy-actions"><button class="academy-btn primary" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button><button class="academy-btn" type="button" data-case-section="advisory">Escenarios de asesoría ↓${newCaseDot(ADVISORY_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button><button class="academy-btn" type="button" data-case-section="playbook">Practicar Playbook ↓${newCaseDot(isNewCase(HYPOTHESIS_MISSION.id)||PLAYBOOK_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button></div>
       <p class="academy-muted">${completed}/${role().missions.length} misiones aprobadas · ${escape(role().goal)}</p>
       <div class="academy-sync-note" data-academy-save role="status"></div>
       <p class="academy-muted academy-edition">${wikiChanged()?'La wiki tiene novedades posteriores a la edición de las misiones base. Revisa la fuente indicada en cada desafío.':'Misiones base edición '+LEGACY_MISSION_REVISION+' · consulta la fuente de cada desafío.'}</p>
@@ -246,7 +266,9 @@ function openMission(id, reviewQuestions) {
   const saved=!reviewQuestions&&resume()?.id===id?resume():null;
   active={id,edition:missionRevision(m),review:Boolean(reviewQuestions),questions:reviewQuestions||m.questions,
     answers:saved?.answers||[],index:saved?.index||0};
+  const opened=(m.advice||m.playbook)&&markCaseOpened(id);
   if(!reviewQuestions&&!saved)saveResume();
+  else if(opened)void persist();
   activateMissionView();
   showStep();
 }
@@ -259,6 +281,7 @@ function activateMissionView() {
 }
 function openHypothesis() {
   if(!ready)return;
+  if(markCaseOpened(HYPOTHESIS_MISSION.id))void persist();
   activateMissionView();
   showHypothesis();
 }

@@ -210,6 +210,7 @@ export const ADVISORY_MISSIONS = [
 const PLAYBOOK = '/?hubView=playbook';
 
 export const HYPOTHESIS_MISSION = {
+  id:'playbook-hypothesis',
   title:'Formula hipótesis a partir de una respuesta',
   skill:'Discovery · Respuesta libre',
   minutes:6,
