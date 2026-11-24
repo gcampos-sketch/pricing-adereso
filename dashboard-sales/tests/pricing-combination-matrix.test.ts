@@ -19,7 +19,8 @@ for(const combo of combos)test('matrix · '+combo.name,()=>{
   const current=existing?list*.6:0;
   const scopes=existing&&combo.studio?['bolsa','ambas','bot']:['bolsa'];
   for(const scope of scopes){
-   const state={desk:combo.desk,studio:combo.studio,studioType:combo.type,existing,hasDeskContracted:contractedDesk,volMode:'custom',volCustom:q,scope,currentPay:current,extraAgents:moreBots,bots:Math.max(1,moreBots)};
+   const profile=combo.desk?(combo.studio?'both':'desk'):'studio';
+   const state={desk:combo.desk,studio:combo.studio,studioType:combo.type,existing,hasDeskContracted:contractedDesk,volMode:'custom',volCustom:q,scope,conversationPlans:{[profile]:{profile,pay:current}},extraAgents:moreBots,bots:Math.max(1,moreBots)};
    run.setState(state);
    const expected=existing?(scope==='bot'?0:Math.max(0,list-current))+(scope!=='bolsa'?Math.max(1,moreBots)*160*multiplier:0):list+(combo.studio?moreBots*160*multiplier:0);
    expect(run('monthly()')).toBeCloseTo(expected,7);
@@ -33,8 +34,8 @@ for(const combo of combos)test('matrix · '+combo.name,()=>{
 },30000);
 test('Desk integration support, full-current-payment delta and improvement-only scope',()=>{
  expect(setup({studio:false,deskInteg:true,vol:30000})('monthly()')).toBe(2318);
- expect(setup({existing:true,currentPay:558,vol:2000})('monthly()')).toBe(0);
- expect(setup({existing:true,currentPay:558,vol:3000})('monthly()')).toBeCloseTo(193.7);
+ expect(setup({existing:true,conversationPlans:{both:{profile:'both',pay:558}},vol:2000})('monthly()')).toBe(0);
+ expect(setup({existing:true,conversationPlans:{both:{profile:'both',pay:558}},vol:3000})('monthly()')).toBeCloseTo(193.7);
  expect(setup({existing:true,desk:false,studio:false,scope:'bot',bots:2,hasDeskContracted:false})('monthly()')).toBe(432);
  expect(setup({existing:true,desk:false,studio:false,scope:'bolsa',improve:true})('monthly()')).toBe(0);
 });

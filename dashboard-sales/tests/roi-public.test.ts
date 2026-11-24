@@ -30,6 +30,12 @@ test('standalone ROI reuses the exact source formulas for revenue and variable c
  expect(JSON.parse(result)).toEqual({gain:5000,cost:100,lostFee:250});
  expect(source).toContain("const ROI_URL='https://adereso-partners.onrender.com/roi/'");
 });
+test('standalone ROI keeps its entered investment and conversation volume without Hub pricing functions',()=>{
+ const source=roiSources(hub).calculator;
+ const sandbox={URLSearchParams,location:{search:'?mensualidad=558&volumen=5000'},document:{getElementById:()=>({addEventListener(){}}),addEventListener(){}}};
+ const result=runInNewContext(context+'\n'+source+'\nJSON.stringify({cost:roiCostValue(),volume:roiVolume(),ready:roiQuoteReady()})',sandbox);
+ expect(JSON.parse(result)).toEqual({cost:558,volume:5000,ready:true});
+});
 test('external numeric parameters are bounded and cannot inject markup or private state',()=>{
  const state=JSON.parse(runInNewContext(context+'\nJSON.stringify(state)',{URLSearchParams,location:{search:'?mensualidad=<script>&volumen=-20&plantilla=Infinity&vista=pricing&access_token=forged'}}));
  expect(state.externalCost).toBe(0);expect(state.vol).toBe(0);expect(state.externalRate).toBeNull();expect(state.access_token).toBeUndefined();

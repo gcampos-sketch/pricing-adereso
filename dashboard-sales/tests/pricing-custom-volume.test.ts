@@ -14,7 +14,7 @@ function finish(value:string,previous={volMode:'tile',volCustom:0,vol:5000}){
  const fixed={...node(),dataset:{vol:'5000'}};
  const updated:string[]=[];
  const ctx:any={state,document:{querySelectorAll:()=>[box,fixed]}};
- for(const name of ['updateSpot','syncRoiVolume','renderRail','renderSummary'])ctx[name]=()=>updated.push(name);
+ for(const name of ['updateSpot','updateConversationStatus','syncRoiVolume','renderRail','renderSummary'])ctx[name]=()=>updated.push(name);
  runInNewContext(source+';finishCustomVolume(input);',{...ctx,input});
  return {state,input,button,number,label,check,updated};
 }
@@ -24,7 +24,7 @@ test('confirming a custom bag displays its formatted quantity and selected acces
  expect(r.number.textContent).toBe('32.500');expect(r.label.textContent).toBe('bolsa personalizada');
  expect(r.button.attributes['aria-pressed']).toBe('true');expect(r.button.attributes['aria-label']).toContain('32.500 conversaciones');
  expect(r.input.hidden).toBe(true);expect(r.button.hidden).toBe(false);expect(r.check.hidden).toBe(false);
- expect(r.updated).toEqual(['updateSpot','syncRoiVolume','renderRail','renderSummary']);
+ expect(r.updated).toEqual(['updateSpot','updateConversationStatus','syncRoiVolume','renderRail','renderSummary']);
 });
 test('clearing or cancelling preserves the previous confirmed bag',()=>{
  expect(finish('').state).toEqual({volMode:'tile',volCustom:0,vol:5000});

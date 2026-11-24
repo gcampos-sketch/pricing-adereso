@@ -178,3 +178,16 @@ test('private email and Studio price tables stay outside the public Meta wallet'
   const { formulas, calculator } = walletSources(hub);
   expect(formulas + calculator).not.toMatch(/EMAIL_PACKS|VOICE_POOLS|function voicePack/);
 });
+
+test('a voice upgrade credits only the selected voice pack, even when both are quoted', () => {
+  const { state, pricing } = calculator();
+  Object.assign(state, { existing: true, engage: true, callAttention: 'both' });
+  state.out.wacall = true;
+  state.voiceUpgrades['voice-human'] = { active: true, pay: null };
+  expect(pricing.selectedVoicePools()[0].additional).toBeNull();
+  state.voiceUpgrades['voice-human'].pay = 60;
+  expect(pricing.selectedVoicePools()[0]).toMatchObject({ additional: 150, credit: 60, upgrading: true });
+  expect(pricing.outboundMonthly()).toBe(2126);
+  state.voiceUpgrades['voice-human'].active = false;
+  expect(pricing.outboundMonthly()).toBe(2186);
+});
