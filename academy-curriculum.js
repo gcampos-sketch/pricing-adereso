@@ -520,3 +520,168 @@ export function nextReview(previous, correct, now = Date.now()) {
   const interval = correct ? Math.min((previous?.interval || 0) + 1, 3) : 0;
   return { interval, due: now + [1, 3, 7, 21][interval] * 86400000, correct };
 }
+
+export const AE_ONBOARDING_SOURCE = 'https://app.notion.com/p/2b49c2747df58072998cd0810516a166';
+
+// Academy activities link to their corresponding Gantt records for the source materials.
+const aeSourceIds = [
+  "3d09c2747df581fc80d2cac1493cc659",
+  "3d09c2747df581758225c8468b14d1a9",
+  "3d09c2747df581198639d1442f1e4f31",
+  "3d09c2747df5817b9357e1855ce7659f",
+  "3d09c2747df58136b1aaf97118161c20",
+  "3d09c2747df581c082aee183ff496d52",
+  "3d09c2747df581efbb86f6be359f7067",
+  "3d09c2747df581849d71e22905c8037b",
+  "3d09c2747df581ca8345ecdcb6da2254",
+  "3d09c2747df581d2ae02fe50bc71a004",
+  "3d09c2747df58198ba95cc0cab4461b0",
+  "3d09c2747df581d48776d600811c872b",
+  "3d09c2747df581ea926af238cdf2f24d",
+  "3d09c2747df581b59426edb4ec55049a",
+  "3d09c2747df581468933cb3f4dfe20bd",
+  "3d09c2747df581168c9fc24ed303ad2c",
+  "3d09c2747df5816ab960db3cd9008c28",
+  "3d09c2747df5810c814cf5ad06638243",
+  "3d09c2747df581bea24ee516eb93edd5",
+  "3d09c2747df58155a900f8e3d0664d30",
+  "3d09c2747df5813d938bef290d8928d0",
+  "3d09c2747df581c6ad08ff062863ac6c",
+  "3d09c2747df5810fb52be34c4e90e24c",
+  "3d09c2747df58147b320fba46d8f5d24",
+  "3d09c2747df58100a38cc56c91fc15cf",
+  "3d09c2747df581c09130fae93d3c684f",
+  "3d09c2747df581ccbd6ec4652a2e55fd",
+  "3d09c2747df581a280b7d950a6c6ed3e",
+  "3d09c2747df581e98b0fe1a61d56bc0f",
+  "3d09c2747df58139a9a9eadb1010f11e",
+  "3d09c2747df5815ea456c40354680545",
+  "3d09c2747df581e6a544e05c188fcea3",
+  "3d09c2747df581b58eb8dad87bdb7c7f",
+  "3d09c2747df581a38d9de5d7665b137e",
+  "3d09c2747df58104a01ec9e15e088c63",
+  "3d09c2747df581368f6fcd39845ec0cb",
+  "3d09c2747df581a28f30f4b954ba450f",
+  "3d09c2747df58182b457e60862e747c3",
+  "3d09c2747df5816cb912d523be9e9487",
+  "3d09c2747df581e785b6d8adef841244",
+  "3d09c2747df58166a75fe2fb13522462",
+  "3d09c2747df5813994d1d33ea3b89059",
+  "3d09c2747df58168b559d9191c196f79",
+  "3d09c2747df581c58cfacd83b5613c76",
+  "3d09c2747df58152b7c3df1d2fe22235",
+  "3d09c2747df581bc9d51ffe1dae9fb0e",
+  "3d09c2747df581fdb823e2f88c566021",
+  "3d09c2747df581668f3cc8d4edd33927",
+  "3d09c2747df581e79540cb028b530835",
+  "3d09c2747df5813dbfa1f13557892882",
+  "3d09c2747df5816293e4da6c8eceb1dc",
+  "3d09c2747df5812ea683fac0cab79f41",
+  "3d09c2747df581af921bd3558fafde80",
+  "3d09c2747df581129ccddc233d6d55ef"
+];
+
+const aeDay = (title, first, activities) => ({
+  title,
+  activities: activities.map(([title, actions = []], index) => {
+    const id = first + index;
+    return { id, title, actions, source: 'https://app.notion.com/p/' + aeSourceIds[id - 1] };
+  }),
+});
+
+export const AE_ONBOARDING_WEEKS = [
+  {
+    title: 'Semana 1 · Fundamentos y operación comercial',
+    days: [
+      aeDay('Conoce el rol y prepara el pitch', 1, [
+        ['Identifica el cliente ideal y sus dolores'],
+        ['Ensaya el pitch de Adereso en un minuto', [16]],
+        ['Ubica el Playbook y los materiales de Sales'],
+        ['Lee el Marco Mental antes de tu primera reunión'],
+        ['Ubica a quién acudir en SDR, Growth, KAM, CS, Producto y SSPP', [1]],
+        ['Acuerda con tu líder las expectativas, rituales y calendario'],
+      ]),
+      aeDay('Desk y WhatsApp oficial', 7, [
+        ['Mira el video de Desk para administradores'],
+        ['Mira el video de Desk para analistas'],
+        ['Mira el video de Desk para ejecutivos'],
+        ['Explica BSP, templates, opt-in y límites de Meta', [14, 10]],
+        ['Prueba roles, horarios, permisos y SLA en Desk', [8]],
+        ['Gestiona y deriva un ticket como ejecutivo', [8, 'demo-desk-routing']],
+        ['Sigue un ticket desde la entrada hasta su resolución', [8]],
+        ['Elige los módulos adecuados para un cliente de la suite', [16]],
+      ]),
+      aeDay('Explora el resto de la suite', 15, [
+        ['Explica cómo Cassper recupera ventas', [23]],
+        ['Distingue los usos de VoC y sus señales de calidad', [12]],
+        ['Elige una métrica de satisfacción y justifica su uso', [11, 'advice-surveys']],
+        ['Diseña un ejemplo de campaña en Engage', [10, 'advice-campaigns']],
+        ['Arma y prueba un agente en Studio', [9, 'demo-orders']],
+      ]),
+      aeDay('Prepara una reunión y su registro', 20, [
+        ['Elige un caso de éxito con evidencia para el segmento', [16]],
+        ['Prepara un brief y extrae acuerdos de una reunión en Diio', [3, 18]],
+        ['Practica BANT y valida el impacto y la urgencia', [2, 'discovery', 'playbook-discovery-event']],
+        ['Revisa en HubSpot las asociaciones, el owner y las tareas', [1, 'crm']],
+        ['Decide la etapa del deal según la evidencia', [1, 20, 'crm']],
+      ]),
+      aeDay('Cotiza, presenta y prepara el traspaso', 25, [
+        ['Consulta la guía de HubSpot y practica con un deal de prueba', ['crm']],
+        ['Encuentra la presentación y los videos vigentes'],
+        ['Prepara datos fiscales, firma y traspaso a SSPP', [7, 'handoff']],
+        ['Arma una cotización con line items y supuestos claros', [21, 'proposal']],
+        ['Explica MRR, OTF, tramos y condiciones comerciales', [4]],
+        ['Presenta el valor antes de defender el precio', [4, 'playbook-pricing-roi']],
+        ['Ensaya el pitch por producto y la historia de la demo', [22, 'demo']],
+      ]),
+    ],
+  },
+  {
+    title: 'Semana 2 · Práctica con el equipo y go-live',
+    days: [
+      aeDay('Ensaya discovery, demo y objeciones', 32, [
+        ['Responde objeciones de competencia, seguridad e implementación', [5, 'objection', 'scope']],
+        ['Ensaya una presentación comercial de Adereso'],
+        ['Haz un roleplay de Desk + Studio con derivación a una persona', ['demo-orders', 'playbook-demo-dialogue']],
+        ['Haz un roleplay inbound y acuerda el siguiente paso', ['discovery', 'playbook-discovery-event']],
+      ]),
+      aeDay('Evalúa Desk y actualiza el pipeline', 36, [
+        ['Rinde la evaluación externa de Desk Ejecutivo y corrige las brechas'],
+        ['Adapta una demo a la industria, volumen, canal e integración', [22, 'demo']],
+        ['Actualiza forecast, importe, fecha de cierre y próxima actividad', [1, 'crm']],
+        ['Registra el seguimiento en HubSpot y revisa la etapa', [6, 'playbook-followup-pain', 'crm']],
+      ]),
+      aeDay('Valida condiciones antes de prometer', 40, [
+        ['Identifica la filial, moneda, impuestos y datos fiscales', [7]],
+        ['Distingue una integración validada de una que necesita revisión', [9, 'scope', 'advice-checkout']],
+        ['Practica una respuesta de seguridad y cuándo escalar a TI', [17, 'scope']],
+        ['Adapta la gestión al segmento de la cuenta', [19]],
+      ]),
+      aeDay('Practica un caso de punta a punta', 44, [
+        ['Pide y revisa un brief comercial en Adobo', [18]],
+        ['Resuelve los desafíos interactivos en Sales Academy', ['discovery', 'demo', 'proposal']],
+        ['Haz el roleplay final con tu referente y recoge su feedback', ['crm']],
+        ['Revisa cuándo usar briefs, alertas y coaching de Adobo', [18]],
+        ['Defiende la propuesta de valor con supuestos de ROI', ['playbook-pricing-roi', 'proposal']],
+        ['Consulta las battlecards y compara alternativas con evidencia', [5, 'objection']],
+        ['Elige y explica un caso de uso relevante para tu cliente', [16, 'advice-orders']],
+        ['Observa una reunión real, revisa Diio y propone el follow-up', ['crm']],
+        ['Simula discovery, demo, pricing y el siguiente paso en HubSpot', ['crm']],
+      ]),
+      aeDay('Revisión con el líder y plan inicial', 53, [
+        ['Revisa agenda, cuentas asignadas y preparación con tu líder', ['crm']],
+        ['Acuerda el plan de 30/60 días para cartera, actividad, pipeline y coaching', ['crm']],
+      ]),
+    ],
+  },
+];
+
+export const AE_ONBOARDING_EVIDENCE = [
+  { id: 'brief', label: 'Discovery y resultado esperado', hint: 'Dolor, impacto, BANT, decisor y qué falta confirmar.' },
+  { id: 'demo', label: 'Demo, pricing y objeción', hint: 'Recorrido elegido, módulos, MRR y setup de práctica, supuestos, exclusiones y respuesta a la objeción.' },
+  { id: 'deal', label: 'Registro de práctica en HubSpot', hint: 'Referencia del deal de prueba, etapa y motivo, monto, fecha de cierre y qué falta para el forecast.' },
+  { id: 'next', label: 'Próxima actividad', hint: 'Resume el acuerdo y deja la actividad con fecha, responsable y objetivo en el deal de prueba.' },
+  { id: 'shadowing', label: 'Shadowing y Diio', hint: 'Resume el acuerdo observado, tu follow-up propuesto y lo que revisarás con tu referente. Usa datos anonimizados.' },
+  { id: 'review', label: 'Revisión de go-live con tu líder', hint: 'Fecha, resultado, feedback del roleplay y simulación, agenda y confirmación de cartera asignada. Anota los pendientes.' },
+  { id: 'plan', label: 'Plan de 30/60 días', hint: 'Para cada hito, registra el objetivo de cartera, actividad, pipeline y la fecha de revisión de coaching.' },
+];
