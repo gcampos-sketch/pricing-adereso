@@ -43,6 +43,10 @@ body { background-image:none; }
 #academy-save-banner { color:var(--warning);font-size:12px;line-height:1.5;margin-top:10px; }
 .academy-reflection { display:grid;gap:10px;font-size:13px;color:var(--text2);margin-top:24px; }
 .academy-reflection textarea { width:100%;padding:12px;background:var(--glass);border:1px solid var(--border);border-radius:10px;color:var(--text);font:400 14px/1.5 'Work Sans',sans-serif;resize:vertical; }
+.academy-hypothesis-summary { display:grid;gap:6px; }
+.academy-hypothesis-summary dt { color:var(--text);font-weight:600; }
+.academy-hypothesis-summary dd { margin:0 0 10px;white-space:pre-wrap; }
+.academy-hypothesis-review { margin-top:16px; }
 .academy-edition { font-size:11px!important; }
 .academy-recovery { display:none; }
 .academy-save-error .academy-recovery { display:flex; }

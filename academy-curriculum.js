@@ -209,6 +209,31 @@ export const ADVISORY_MISSIONS = [
 
 const PLAYBOOK = '/?hubView=playbook';
 
+export const HYPOTHESIS_MISSION = {
+  title:'Formula hipótesis a partir de una respuesta',
+  skill:'Discovery · Respuesta libre',
+  minutes:6,
+  story:'Tras una primera reunión sobre automatizar consultas repetitivas de WhatsApp, enviaste un resumen del piloto que conversaron. La contraparte te responde al día siguiente.',
+  reply:'«Sí, nos interesa. Déjame conversarlo internamente y retomamos más adelante.»',
+  fields:[
+    {name:'observation',label:'¿Qué puedes afirmar a partir de su respuesta?'},
+    {name:'first',label:'Primera hipótesis'},
+    {name:'second',label:'Segunda hipótesis'},
+    {name:'question',label:'¿Qué le preguntarías para comprobar o descartar tus hipótesis?'}
+  ],
+  example:[
+    'La persona expresa interés y dice que lo conversará internamente. Todavía falta saber con quién, para qué y en qué plazo.',
+    'Una posibilidad es que Operaciones vea valor en el piloto y necesite que otra persona valide el alcance. Otra es que el problema haya bajado de prioridad y el equipo aún no decida si quiere moverlo.',
+    'Podría preguntar: «Cuando lo conversen internamente, ¿qué necesitan resolver para saber si vale la pena retomar el piloto?»'
+  ],
+  criteria:[
+    'La observación se apoya en lo que la persona dijo.',
+    'Las dos hipótesis explican la respuesta de maneras distintas y se pueden comprobar.',
+    'La pregunta le da espacio al cliente para explicar qué ocurre con sus propias palabras.'
+  ],
+  reference:{section:'Etapas 2 y 5 · Discovery y proceso de decisión',url:PLAYBOOK}
+};
+
 export const PLAYBOOK_MISSIONS = [
   {id:'playbook-outbound', revision:'2026-11-24.1', title:'«Ustedes me contactaron»', skill:'Preparación e introducción', minutes:6,
     story:'Tienes 20 minutos antes de una primera reunión outbound. La invitación incluye dos dominios y el brief de Adobo todavía no llega. El contacto aceptó hablar de automatización, sin mencionar un proyecto.',
