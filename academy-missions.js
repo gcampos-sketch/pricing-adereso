@@ -1,5 +1,5 @@
 import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, PLAYBOOK_MISSIONS, HYPOTHESIS_MISSION, CONSEQUENCES, skillResult,
-  dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview } from './academy-curriculum.js';
+  dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_SOURCE, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -7,6 +7,8 @@ let progress = { role:'AE', mode:'onboarding', attempts:{}, reviews:{}, tasks:{}
 let revision = 0, ready = false, saving = false, dirty = false, blocked = false, active = null, conflict = false;
 let lastStatus={text:'Comprobando tu avance…',error:false};
 let originTab = 'home';
+let aeEvidenceDraft = {};
+const aeOpenDays = new Set(['0-0']);
 const role = () => ROLES[progress.role] || ROLES.AE;
 const wikiChanged = () => (window.academySourceDates || []).some(d => d.id === '3219c274-7df5-81a2-baeb-de4de645d487' && Date.parse(d.editedAt) > Date.parse('2026-11-13T13:20:34.925Z'));
 const mission = id => MISSIONS.find(m => m.id === id);
@@ -30,6 +32,8 @@ async function load() {
     const data = await response.json();
     revision = data.revision;
     progress = {...progress,...data.payload};
+    progress.aeOnboardingEvidence = data.payload.aeOnboardingEvidence;
+    aeEvidenceDraft = {...progress.aeOnboardingEvidence};
     state = {...state,...(progress.legacy || {})};
     ready = true; blocked = false; conflict = false;document.body.classList.remove('academy-pending');
     renderHome(); updateHeader(); renderProductAcademies(); renderAchievements(); render();
@@ -84,6 +88,7 @@ switchTab = function(tab) {
 resetProgress = function() {
   if(!ready || !confirm('¿Reiniciar tu avance personal de Academy? Esta acción borra tus prácticas y apuntes guardados.')) return;
   progress = {role:progress.role,mode:progress.mode,attempts:{},reviews:{},tasks:{},legacy:{},resume:null};
+  aeEvidenceDraft = {};
   state = {completedLessons:[],xp:0,streak:0,quizzesDone:0,totalCorrect:0,totalAnswered:0,lastDate:'',level:'bronce',examsPassed:[],productsMastered:[]};
   progress.legacy=clone(state); void persist(); renderHome();updateHeader();renderProductAcademies();renderAchievements();render();renderSkills();
 };
@@ -212,12 +217,112 @@ function playbookChallenges(){
 function demoChallenges(){
   return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3>¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
+const aeActivityKey = id => 'ae-route-' + id;
+const hasAeRoute = () => progress.role === 'AE' && progress.mode === 'onboarding';
+const aeCount = activities => activities.filter(({id}) => progress.tasks[aeActivityKey(id)]).length;
+const aeActivities = AE_ONBOARDING_WEEKS.flatMap(week => week.days.flatMap(day => day.activities));
+
+function aeAction(action) {
+  if (action === 'crm') return '<button type="button" class="academy-btn" data-ae-evidence>Ver práctica y revisión →</button>';
+  if (typeof action === 'number') {
+    const lesson = LESSONS.find(item => item.id === action);
+    return `<button type="button" class="academy-btn" data-ae-lesson="${action}" ${!ready?'disabled':''}>${escape(lesson.title)} →</button>`;
+  }
+  return `<button type="button" class="academy-btn" data-start="${action}" ${!ready?'disabled':''}>${escape(mission(action).title)} →</button>`;
+}
+
+const aeResources = {
+  4: ['Leer Marco Mental', 'https://www.notion.so/3409c2747df581a4b358e1ba9bf80491'],
+  7: ['Ver video', 'https://youtu.be/99BVNGON6ZM'],
+  8: ['Ver video', 'https://youtu.be/4h76P4flwxE'],
+  9: ['Ver video', 'https://www.youtube.com/watch?v=qb0Pnn9Oc2E'],
+  25: ['Abrir guía de HubSpot', 'https://app.notion.com/p/3529c2747df581ceac51f8285bb824e7'],
+  36: ['Abrir evaluación', 'https://docs.google.com/forms/d/1Rn1kMbnz8i-SZIRjrgGPPqjyqxhAgxgowEgQPqfKYis/viewform'],
+};
+
+function aeRoute() {
+  return `<section id="academy-ae-route" class="academy-panel academy-ae-route" aria-labelledby="academy-ae-title">
+    <div class="academy-section-head">
+      <h3 id="academy-ae-title" tabindex="-1">Tu onboarding AE en dos semanas</h3>
+      <span class="academy-pill" data-ae-total aria-live="polite">${aeCount(aeActivities)}/${aeActivities.length} completadas</span>
+    </div>
+    <p class="academy-muted">Marca cada actividad después de hacerla. Acuerda el ritmo con tu líder y registra abajo el resultado de la revisión.</p>
+    <div class="academy-actions"><a class="academy-btn" href="${AE_ONBOARDING_SOURCE}" target="_blank" rel="noopener noreferrer">Ver Gantt en Notion ↗</a><button class="academy-btn" type="button" data-ae-evidence>Ir a la práctica y revisión →</button></div>
+    ${AE_ONBOARDING_WEEKS.map((week, weekIndex) => `<h4>${escape(week.title)}</h4>
+      ${week.days.map((day, dayIndex) => {
+        const key = weekIndex + '-' + dayIndex;
+        return `<details class="academy-ae-day" data-ae-day="${key}" ${aeOpenDays.has(key)?'open':''}>
+          <summary><span>Día ${dayIndex + 1} · ${escape(day.title)}</span><span class="academy-muted" data-ae-day-count>${aeCount(day.activities)}/${day.activities.length}</span></summary>
+          <ul>${day.activities.map(({id,title,source,actions}) => `<li>
+            <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" ${progress.tasks[aeActivityKey(id)]?'checked':''} ${!ready?'disabled':''}>${escape(title)}</label>
+            <div class="academy-actions">${actions.map(aeAction).join('')}
+              ${aeResources[id] ? `<a class="academy-btn" href="${aeResources[id][1]}" target="_blank" rel="noopener noreferrer">${aeResources[id][0]} ↗</a>` : ''}
+              <a class="academy-btn" href="${source}" target="_blank" rel="noopener noreferrer">Ficha en Notion ↗</a>
+            </div>
+          </li>`).join('')}</ul>
+        </details>`;
+      }).join('')}`).join('')}
+    <section id="academy-ae-evidence" class="academy-ae-evidence" aria-labelledby="academy-ae-evidence-title">
+      <h3 id="academy-ae-evidence-title" tabindex="-1">Simulación completa y revisión de go-live</h3>
+      <p class="academy-muted">Caso de práctica. Una tienda recibe 4.000 consultas mensuales por WhatsApp. Le preocupa la atención fuera de horario y compara tu propuesta con un proveedor más barato. Operaciones evalúa la solución, Finanzas aprueba y la conexión al sistema de pedidos está por validar.</p>
+      <p class="academy-muted">Practica con tu referente. Usa un deal de prueba en un entorno de capacitación, o describe cómo quedaría el registro si todavía no tienes acceso. Guarda aquí tu evidencia personal. La revisión de go-live se acuerda con tu líder.</p>
+      <details class="academy-ae-rubric">
+        <summary>Pauta para revisar con tu referente</summary>
+        <ul>
+          <li>Explica un dolor con impacto medible y distingue lo confirmado de los supuestos.</li>
+          <li>Muestra un recorrido de demo y una excepción. Aclara qué debe validar el cliente o SSPP.</li>
+          <li>Defiende el precio y comprueba que el deal de prueba conserva acuerdos, etapa y próxima actividad.</li>
+          <li>Acuerda qué mejorar antes del go-live y cuándo revisar el plan de 30/60 días.</li>
+        </ul>
+      </details>
+      <form id="academy-ae-evidence-form">
+        <div class="academy-ae-fields">${AE_ONBOARDING_EVIDENCE.map(({id,label,hint}) => `<label>
+          <strong>${escape(label)}</strong><span class="academy-muted" id="ae-hint-${id}">${escape(hint)}</span>
+          <textarea class="notes-area" data-ae-field="${id}" aria-describedby="ae-hint-${id}" maxlength="800" ${!ready?'disabled':''}>${escape(aeEvidenceDraft[id] ?? '')}</textarea>
+        </label>`).join('')}</div>
+        <button class="academy-btn primary" type="submit" ${!ready?'disabled':''}>Guardar evidencia</button>
+        <span class="academy-muted" data-academy-save role="status"></span>
+      </form>
+    </section>
+  </section>`;
+}
+
+function wireAeRoute() {
+  const route = $('academy-ae-route');
+  if (!route) return;
+  route.querySelectorAll('[data-ae-day]').forEach(day => day.addEventListener('toggle', () => {
+    if (day.open) aeOpenDays.add(day.dataset.aeDay);
+    else aeOpenDays.delete(day.dataset.aeDay);
+  }));
+  route.addEventListener('change', event => {
+    const input = event.target.closest('[data-ae-activity]');
+    if (!input) return;
+    progress.tasks[aeActivityKey(input.dataset.aeActivity)] = input.checked;
+    route.querySelector('[data-ae-total]').textContent = aeCount(aeActivities) + '/' + aeActivities.length + ' completadas';
+    const day = input.closest('[data-ae-day]');
+    const [weekIndex, dayIndex] = day.dataset.aeDay.split('-').map(Number);
+    const activities = AE_ONBOARDING_WEEKS[weekIndex].days[dayIndex].activities;
+    day.querySelector('[data-ae-day-count]').textContent = aeCount(activities) + '/' + activities.length;
+    void persist();
+  });
+  const form = $('academy-ae-evidence-form');
+  form.addEventListener('input', event => {
+    if (event.target.matches('[data-ae-field]')) aeEvidenceDraft[event.target.dataset.aeField] = event.target.value;
+  });
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    progress.aeOnboardingEvidence = Object.fromEntries(AE_ONBOARDING_EVIDENCE.map(({id}) => [id, (aeEvidenceDraft[id] ?? '').trim()]));
+    void persist();
+  });
+}
+
 function render() {
   const saved=resume();
   const current=saved?.id??pending();
   const next = mission(current);
   const completed = role().missions.filter(passed).length;
   const due = reviewKeys();
+  const showAeRoute = hasAeRoute();
   $('academy-dashboard').innerHTML = `
     <div class="academy-controls">
       <label>Tu recorrido<select id="academy-role" ${!ready?'disabled':''}>${Object.entries(ROLES).map(([id,r])=>`<option value="${id}" ${id===progress.role?'selected':''}>${r.name}</option>`).join('')}</select></label>
@@ -227,13 +332,14 @@ function render() {
       <div class="academy-kicker">${progress.mode==='onboarding'?'Tu ruta de onboarding':'Tu entrenamiento de hoy'} · ${escape(progress.role)}</div>
       <h2>${saved?'Retoma tu misión':completed===role().missions.length?'Sigue afinando tu criterio':'Tu próxima misión'}<br>${escape(next.title)}</h2>
       <p>${escape(next.story)}<br>${next.minutes} minutos · 3 decisiones · feedback en cada paso</p>
-      <div class="academy-actions"><button class="academy-btn primary" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button><button class="academy-btn" type="button" data-case-section="advisory">Escenarios de asesoría ↓${newCaseDot(ADVISORY_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button><button class="academy-btn" type="button" data-case-section="playbook">Practicar Playbook ↓${newCaseDot(isNewCase(HYPOTHESIS_MISSION.id)||PLAYBOOK_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button></div>
+      <div class="academy-actions">${showAeRoute?'<button class="academy-btn primary" type="button" data-case-section="ae-route">Ver ruta de dos semanas ↓</button>':''}<button class="academy-btn ${showAeRoute?'':'primary'}" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button><button class="academy-btn" type="button" data-case-section="advisory">Escenarios de asesoría ↓${newCaseDot(ADVISORY_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button><button class="academy-btn" type="button" data-case-section="playbook">Practicar Playbook ↓${newCaseDot(isNewCase(HYPOTHESIS_MISSION.id)||PLAYBOOK_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button></div>
       <p class="academy-muted">${completed}/${role().missions.length} misiones aprobadas · ${escape(role().goal)}</p>
       <div class="academy-sync-note" data-academy-save role="status"></div>
       <p class="academy-muted academy-edition">${wikiChanged()?'La wiki tiene novedades posteriores a la edición de las misiones base. Revisa la fuente indicada en cada desafío.':'Misiones base edición '+LEGACY_MISSION_REVISION+' · consulta la fuente de cada desafío.'}</p>
       <div class="academy-actions academy-recovery"><button class="academy-btn" id="academy-retry">${!ready?'Reintentar carga':'Reintentar guardado'}</button><button class="academy-btn" id="academy-reload">Cargar avance guardado</button></div>
       ${hasLegacy()?'<button class="academy-btn" id="academy-import">Recuperar mi avance anterior de este navegador</button>':''}
     </section>
+    ${showAeRoute ? aeRoute() : ''}
     <section class="academy-main-missions"><div class="academy-section-head"><h3>${progress.mode==='onboarding'?'Aprende resolviendo':'Elige tu desafío'}</h3><span class="academy-muted">Sin límite de intentos</span></div>
       <div class="academy-mission-grid">${(progress.mode==='onboarding'?role().missions.map(mission):MISSIONS.filter(m=>!m.demo&&!m.advice&&!m.playbook)).map(missionCard).join('')}</div>
       <div id="academy-advisory" style="margin-top:24px">${advisoryChallenges()}</div>
@@ -243,6 +349,7 @@ function render() {
     <aside class="academy-sidebar"><section class="academy-panel"><div class="academy-kicker">${progress.mode==='onboarding'?'De conocer a practicar':'Tu siguiente mejora'}</div><h3>${progress.mode==='onboarding'?'Tu recorrido, paso a paso':'Entrena con intención'}</h3><ol class="academy-path"><li>Comprende el cliente y el alcance.</li><li>Resuelve los casos de tu rol.</li><li>Practica con tu referente y revisa dudas.</li></ol><p class="academy-muted">El ritmo es flexible. Aprobar un ejercicio no certifica preparación para trabajar sin acompañamiento.</p>
     ${progress.mode==='onboarding'?tasks.map((t,i)=>`<label class="academy-check"><input type="checkbox" data-task="${progress.role}-${i}" ${progress.tasks[progress.role+'-'+i]?'checked':''} ${!ready?'disabled':''}>${t}</label>`).join(''): `<p class="academy-muted" style="margin-top:16px">${due.length?due.length+' decisiones listas para repasar.':'Aún no tienes repasos vencidos. Los errores volverán mañana; los aciertos se espacian.'}</p>`}
     <div class="academy-actions"><button class="academy-btn" data-library>Consultar la biblioteca ↗</button></div></section></aside>`;
+  wireAeRoute();
   $('academy-role').addEventListener('change',event=>{progress.role=event.target.value;void persist();render();});
   $('academy-dashboard').querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{progress.mode=button.dataset.mode;void persist();render();});
   $('academy-retry').onclick=()=>{if(!ready)void load();else if(conflict)saveNote('Carga el avance guardado para conciliar la otra pestaña. Tu práctica pendiente sigue visible aquí.',true);else{blocked=false;void persist();}};
@@ -437,6 +544,9 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-library]'))library();
   const section=event.target.closest('[data-case-section]');
   if(section)scrollToCaseSection(section.dataset.caseSection);
+  if(event.target.closest('[data-ae-evidence]'))scrollToCaseSection('ae-evidence');
+  const lesson=event.target.closest('[data-ae-lesson]');
+  if(lesson)openLesson(Number(lesson.dataset.aeLesson));
 });
 document.addEventListener('academy:sources-checked',()=>{if($('academy-dashboard'))render();});
 const view=document.createElement('div');view.id='academy-mission-view';view.className='main mission-view';$('app').insertBefore(view,document.querySelector('.nav'));
@@ -451,5 +561,11 @@ render();
 const academySearch = location.href === 'about:srcdoc' ? parent.location.search : location.search;
 void load().then(()=>{
   const section=new URLSearchParams(academySearch).get('academySection');
+  if(section==='ae-route'){
+    progress.role='AE';
+    progress.mode='onboarding';
+    render();
+    scrollToCaseSection(section);
+  }
   if(section==='advisory'||section==='playbook')scrollToCaseSection(section);
 });
