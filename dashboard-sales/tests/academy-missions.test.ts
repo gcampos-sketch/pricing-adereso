@@ -1,5 +1,5 @@
 import { expect,test } from 'bun:test';
-import { MISSIONS,DEMO_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
+import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
   missionRevision,currentMissionEntry,currentMissionReview } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
@@ -51,6 +51,18 @@ test('demo challenges include a source, screen-by-screen rehearsal and peer feed
     expect(m.reference.query.length).toBeGreaterThan(8);
     expect(m.demo.steps).toHaveLength(3);
     expect(m.demo.rubric).toHaveLength(3);
+  }
+});
+test('advisory cases show the proposed flow and a model response using the shared mission engine',()=>{
+  const onboarding = Object.values(ROLES).flatMap(role => role.missions);
+  expect(ADVISORY_MISSIONS).toHaveLength(6);
+  for (const mission of ADVISORY_MISSIONS) {
+    expect(MISSIONS).toContain(mission);
+    expect(onboarding).not.toContain(mission.id);
+    expect(mission.advice.flow).toHaveLength(3);
+    expect(mission.advice.model.length).toBeGreaterThan(100);
+    expect(new URL(mission.reference.url).protocol).toBe('https:');
+    expect(new Set(mission.questions.map(question => question.id)).size).toBe(3);
   }
 });
 test('account comes exclusively from verified identity and reads stay isolated',async()=>{
