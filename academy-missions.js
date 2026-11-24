@@ -1,4 +1,4 @@
-import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, CONSEQUENCES, skillResult,
+import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, CONSEQUENCES, skillResult,
   dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
@@ -168,7 +168,10 @@ function installAcademyNavigation(icons) {
 }
 
 function missionCard(m){
-  return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}</h4><p>${m.demo?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
+  return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}</h4><p>${m.demo||m.advice?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
+}
+function advisoryChallenges(){
+  return `<section aria-label="Escenarios de asesoría"><div class="academy-section-head"><h3>Escenarios de asesoría</h3></div><p class="academy-muted">El cliente trae un flujo. Elige qué ajustar, prepara dos alternativas y practica cómo se las explicarías.</p><div class="academy-mission-grid" style="margin-top:14px">${ADVISORY_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
 function demoChallenges(){
   return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3>¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
@@ -196,7 +199,8 @@ function render() {
       ${hasLegacy()?'<button class="academy-btn" id="academy-import">Recuperar mi avance anterior de este navegador</button>':''}
     </section>
     <section class="academy-main-missions"><div class="academy-section-head"><h3>${progress.mode==='onboarding'?'Aprende resolviendo':'Elige tu desafío'}</h3><span class="academy-muted">Sin límite de intentos</span></div>
-      <div class="academy-mission-grid">${(progress.mode==='onboarding'?role().missions.map(mission):MISSIONS.filter(m=>!m.demo)).map(missionCard).join('')}</div>
+      <div class="academy-mission-grid">${(progress.mode==='onboarding'?role().missions.map(mission):MISSIONS.filter(m=>!m.demo&&!m.advice)).map(missionCard).join('')}</div>
+      <div style="margin-top:24px">${advisoryChallenges()}</div>
       <div style="margin-top:24px">${demoChallenges()}</div>
     </section>
     <aside class="academy-sidebar"><section class="academy-panel"><div class="academy-kicker">${progress.mode==='onboarding'?'De conocer a practicar':'Tu siguiente mejora'}</div><h3>${progress.mode==='onboarding'?'Tu recorrido, paso a paso':'Entrena con intención'}</h3><ol class="academy-path"><li>Comprende el cliente y el alcance.</li><li>Resuelve los casos de tu rol.</li><li>Practica con tu referente y revisa dudas.</li></ol><p class="academy-muted">El ritmo es flexible. Aprobar un ejercicio no certifica preparación para trabajar sin acompañamiento.</p>
@@ -212,6 +216,7 @@ function render() {
     catch{saveNote('No se pudo recuperar el avance anterior. El original sigue en este navegador.',true);}
   };
   $('academy-dashboard').querySelectorAll('[data-task]').forEach(input=>input.onchange=()=>{progress.tasks[input.dataset.task]=input.checked;void persist();});
+  $('academy-practice-cases').innerHTML=advisoryChallenges();
   $('academy-demo-challenges').innerHTML=demoChallenges();
   saveNote(lastStatus.text,lastStatus.error);
   accessible();
@@ -238,7 +243,9 @@ function showStep() {
   if(!q) {showResult();return;}
   const answer=active.answers[active.index],answered=Number.isInteger(answer);
   $('academy-mission-view').innerHTML=`<div class="lesson-header"><button class="back-btn" data-exit aria-label="Volver a desafíos">←</button><h2>${escape(active.review?'Repaso de decisiones':m.title)}</h2></div>
-    <div class="mission-layout"><aside class="academy-panel mission-story"><div class="academy-kicker">${escape(m.skill)} · ${m.minutes} min</div><h3>El contexto</h3><p>${escape(m.story)}</p><p class="academy-muted" style="margin-top:20px">Puedes salir y retomar una misión. Cada decisión se guarda después de tu respuesta.</p>
+    <div class="mission-layout"><aside class="academy-panel mission-story"><div class="academy-kicker">${escape(m.skill)} · ${m.minutes} min</div><h3>El contexto</h3><p>${escape(m.story)}</p>
+    ${m.advice?`<h3 style="margin-top:20px">Flujo que propone el cliente</h3><ol class="academy-path">${m.advice.flow.map(step=>`<li>${escape(step)}</li>`).join('')}</ol>`:''}
+    <p class="academy-muted" style="margin-top:20px">Puedes salir y retomar una misión. Cada decisión se guarda después de tu respuesta.</p>
     ${m.reference?`<p class="academy-muted">${escape(m.reference.section)}</p>`:''}<div class="academy-actions"><button class="academy-btn" data-source>${m.reference?'Buscar esta fuente en la biblioteca':'Consultar referencias'} ↗</button></div></aside>
     <section class="mission-stage"><div class="mission-progress">${active.review?'Repaso':'Decisión'} ${active.index+1}/${active.questions.length}</div><h3 tabindex="-1" id="mission-prompt">${escape(q.prompt)}</h3>
     ${q.options.map((option,i)=>`<button class="mission-option ${answered&&i===q.correct?'correct':answered&&i===answer?'wrong':''}" data-answer="${i}" ${answered?'disabled':''}>${answered&&i===q.correct?'✓ ':answered&&i===answer?'Por revisar · ':String.fromCharCode(65+i)+' · '}${escape(option)}</button>`).join('')}
@@ -276,12 +283,23 @@ function showResult() {
     ${misses.length?`<ul class="mission-review-list">${misses.map(q=>`<li>${escape(q.explanation)}</li>`).join('')}</ul>`:'<p class="academy-muted">El siguiente paso es practicar con tu referente. Este resultado no es una certificación comercial.</p>'}
     ${!active.review&&m.demo?`<section class="academy-panel" style="margin-top:24px"><h3>Ensayo con tu equipo · 3 min</h3><p>Una persona interpreta al cliente, otra hace la demo y otra devuelve feedback.</p><ol class="academy-path">${m.demo.steps.map(step=>`<li>${escape(step)}</li>`).join('')}</ol><h3>Qué revisar juntos</h3><ul class="mission-review-list">${m.demo.rubric.map(item=>`<li>${escape(item)}</li>`).join('')}</ul><div class="academy-actions"><button class="academy-btn" data-demo-source>Buscar esta fuente en la biblioteca ↗</button><a class="academy-btn" href="${escape(m.reference.url)}" target="_blank" rel="noopener noreferrer">${escape(m.reference.url.startsWith('https://help.adereso.ai/')?'Abrir guía de producto':'Abrir Wiki comercial')} ↗</a></div></section>`:''}
     <p class="academy-muted" style="margin-top:16px">Tus decisiones volverán en repasos espaciados. Revisión ${escape(active.edition)}.</p><div class="academy-actions"><button class="academy-btn primary" data-exit>Volver a mi ruta →</button><button class="academy-btn" data-retry>Practicar de nuevo</button><button class="academy-btn" data-lesson>Consultar la lección</button></div><div class="academy-sync-note" data-academy-save role="status"></div></div>`;
-  const reflection=document.createElement('label');reflection.className='academy-reflection';reflection.textContent='Llévalo a la práctica: ¿qué preguntarías o harías en tu próxima reunión?';
-  const note=document.createElement('textarea');note.maxLength=1000;note.rows=3;note.placeholder='Escribe tu próximo paso (opcional)…';note.value=progress.reflections?.[m.id]||'';
+  const reflection=document.createElement('label');reflection.className='academy-reflection';const advice = active.review ? null : m.advice;
+  reflection.textContent=advice
+    ? '¿Cómo le responderías al cliente? Escribe dos alternativas, cuál recomendarías primero y qué queda por validar.'
+    : 'Llévalo a la práctica: ¿qué preguntarías o harías en tu próxima reunión?';
+  const note=document.createElement('textarea');note.maxLength=1000;note.rows=3;note.placeholder=advice?'Escribe tu respuesta al cliente…':'Escribe tu próximo paso (opcional)…';note.value=progress.reflections?.[m.id]||'';
   note.oninput=()=>{progress.reflections||={};progress.reflections[m.id]=note.value;void persist();};reflection.append(note);$('academy-mission-view').querySelector('.mission-stage').append(reflection);
   $('academy-mission-view').querySelector('[data-exit]').onclick=exit;
   $('academy-mission-view').querySelector('[data-retry]').onclick=()=>openMission(active.id);
   $('academy-mission-view').querySelector('[data-lesson]').onclick=()=>{exit();openLesson(m.lesson);};
+  if(advice) {
+    const example=document.createElement('details');
+    example.className='academy-panel';
+    example.style.marginTop='16px';
+    example.innerHTML=`<summary>Ver una respuesta posible</summary><p style="margin-top:12px">${escape(advice.model)}</p><div class="academy-actions"><button class="academy-btn" data-advice-source>Consultar la fuente en la biblioteca ↗</button></div>`;
+    reflection.after(example);
+    example.querySelector('[data-advice-source]').onclick=()=>library(m.reference.query);
+  }
   const source=$('academy-mission-view').querySelector('[data-demo-source]');
   if(source)source.onclick=()=>library(m.reference.query);
   window.scrollTo(0,0);
@@ -316,7 +334,7 @@ const view=document.createElement('div');view.id='academy-mission-view';view.cla
 const banner=document.createElement('p');banner.id='academy-save-banner';banner.setAttribute('role','status');banner.hidden=true;document.querySelector('.header').append(banner);
 const dashboard=document.createElement('div');dashboard.id='academy-dashboard';dashboard.className='academy-home';$('tab-home').prepend(dashboard);
 const skills=document.createElement('div');skills.id='academy-skills';$('tab-progress').prepend(skills);
-const practice=document.createElement('section');practice.className='academy-panel';practice.innerHTML='<div class="academy-kicker">Entrena tu criterio</div><h2>Un caso antes del próximo cliente</h2><p class="academy-muted">Resuelve una situación comercial o repasa decisiones de prácticas anteriores.</p><div class="academy-actions"><button class="academy-btn primary" data-start="objection">Resolver una objeción →</button><button class="academy-btn" data-review>Repasar decisiones</button></div><div id="academy-demo-challenges" style="margin-top:24px"></div>';$('tab-games').prepend(practice);
+const practice=document.createElement('section');practice.className='academy-panel';practice.innerHTML='<div class="academy-kicker">Entrena tu criterio</div><h2>Un caso antes del próximo cliente</h2><p class="academy-muted">Resuelve una situación comercial o repasa decisiones de prácticas anteriores.</p><div class="academy-actions"><button class="academy-btn primary" data-start="objection">Resolver una objeción →</button><button class="academy-btn" data-review>Repasar decisiones</button></div><div id="academy-practice-cases" style="margin-top:24px"></div><div id="academy-demo-challenges" style="margin-top:24px"></div>';$('tab-games').prepend(practice);
 // Lucide icons rendered from the project's existing lucide-react package.
 installAcademyNavigation({"home": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-house\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"></path><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path></svg>", "games": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-dumbbell\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"></path><path d=\"m2.5 21.5 1.4-1.4\"></path><path d=\"m20.1 3.9 1.4-1.4\"></path><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"></path><path d=\"m9.6 14.4 4.8-4.8\"></path></svg>", "products": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-graduation-cap\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z\"></path><path d=\"M22 10v6\"></path><path d=\"M6 12.5V16a6 3 0 0 0 12 0v-3.5\"></path></svg>", "progress": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-combined\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 16v5\"></path><path d=\"M16 14v7\"></path><path d=\"M20 10v11\"></path><path d=\"m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15\"></path><path d=\"M4 18v3\"></path><path d=\"M8 14v7\"></path></svg>", "open": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-open\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m14 9 3 3-3 3\"></path></svg>", "close": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-close\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m16 15-3-3 3-3\"></path></svg>"});
 document.body.classList.add('academy-pending');

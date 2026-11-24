@@ -60,6 +60,153 @@ export const DEMO_MISSIONS = [
     ] },
 ];
 
+export const ADVISORY_MISSIONS = [
+  { id: 'advice-orders', revision: '2026-11-24.1', title: 'Estado del pedido fuera de horario', skill: 'Studio + Desk', minutes: 7, lesson: 22,
+    story: 'Una tienda Shopify quiere reducir las consultas de despacho que llegan por WhatsApp de noche. Tiene el estado del pedido en Shopify, pero todavía no ha validado la conexión de la tienda.',
+    advice: {
+      flow: ['La persona escribe «¿dónde está mi pedido?».', 'El bot busca el estado usando solo el número de pedido.', 'Aunque la búsqueda falle, el bot responde «va en camino» y cierra.'],
+      model: 'Podemos empezar con Studio explicando los plazos generales y dejando los casos individuales en Desk. Si validamos la conexión a Shopify y cómo confirmar que el pedido corresponde a la persona, automatizamos la consulta con el estado real. Ante un pedido ambiguo o una falla, Soporte recibe el contexto y retoma. Probemos un pedido válido, uno ajeno y una caída de la consulta.'
+    },
+    reference: {section:'Casos de uso — Studio',query:'Shopify',url:WIKI},
+    questions: [
+      q('advice-orders-flow','¿Qué flujo recomiendas si la conexión está lista para un piloto?',[
+        'Pedir el número de pedido y devolver el estado que aparezca para ese número.',
+        'Validar la identificación antes de consultar Shopify y derivar a Desk si faltan datos, hay ambigüedad o falla la consulta.',
+        'Responder con el plazo promedio y cerrar los casos que no aparezcan.'
+      ],1,'El estado individual debe venir de la tienda y corresponder a quien consulta. El contexto de la búsqueda permite que Soporte retome las excepciones.','Diseño de flujo',true),
+      q('advice-orders-fallback','La conexión se retrasa. ¿Qué alternativa puedes ofrecer en la primera fase?',[
+        'Explicar los plazos publicados y derivar las consultas individuales a Desk para revisión humana.',
+        'Copiar los estados de la última semana al conocimiento de Studio y usarlos como estado actual.',
+        'Pedir un pantallazo del pedido y estimar la fecha de entrega en el chat.'
+      ],0,'Las políticas de despacho sirven para orientar. El estado de un pedido requiere una fuente actualizada o revisión humana.','Alcance'),
+      q('advice-orders-pilot','¿Qué pruebas le propones a Operaciones?',[
+        'Un pedido entregado y otro en tránsito, ambos del mismo comprador.',
+        'Una pregunta de horarios y una de cambios.',
+        'Un pedido válido, uno que no corresponde a quien consulta y una falla de la conexión.'
+      ],2,'El piloto debe cubrir el recorrido exitoso y dos excepciones que cambian la respuesta y la derivación.','Validación')
+    ] },
+  { id: 'advice-queues', revision: '2026-11-24.1', title: 'Una fila para ventas y soporte', skill: 'Studio + Desk + Analítica', minutes: 7, lesson: 8,
+    story: 'Operaciones recibe cotizaciones, cobros y reclamos en el mismo WhatsApp. Ventas atiende hasta las 20:00 y Soporte hasta las 18:00. Quieren bajar el tiempo de espera sin aumentar la dotación.',
+    advice: {
+      flow: ['La persona elige una opción en un menú de ocho categorías.', 'Todas las opciones ingresan a la misma fila.', 'Se asigna al primer ejecutivo libre y se mide el saludo del bot como primera atención.'],
+      model: 'Para partir, usaría un menú de ventas, soporte y «otro», con departamentos y horarios definidos en Desk. También podemos pilotear que Studio detecte la intención y derive cuando la reconozca, con una pregunta breve o una cola de triage para los casos ambiguos. Comparemos la primera respuesta humana por departamento y las reasignaciones antes de ampliar.'
+    },
+    reference: {section:'Rendimiento de Equipo — Primera Atención',query:'Rendimiento del Equipo',url:TEAM_PERFORMANCE},
+    questions: [
+      q('advice-queues-flow','¿Qué ajuste probarías para reducir los traspasos?',[
+        'Mantener una fila única y exigir que cada persona elija una de las ocho opciones.',
+        'Asignar todo a Ventas después de las 18:00 y devolver los reclamos a Soporte al día siguiente.',
+        'Separar ventas y soporte según intención y horario, con una ruta para solicitudes ambiguas y continuidad fuera de horario.'
+      ],2,'Definir equipo, disponibilidad y excepción desde la entrada evita derivaciones a un equipo cerrado o equivocado.','Diseño de flujo',true),
+      q('advice-queues-pilot','Operaciones prefiere empezar sin clasificación por IA. ¿Qué le ofreces?',[
+        'Un menú breve de ventas, soporte y «otro», con asignación a los departamentos definidos en Desk.',
+        'Un equipo general con instrucciones para leer todo y reenviar cada solicitud.',
+        'Una fila por cada opción actual, aunque las atiendan las mismas personas.'
+      ],0,'Un menú breve permite probar la asignación con criterios explícitos. Las solicitudes ambiguas pueden entrar a triage y alimentar una mejora posterior.','Producto'),
+      q('advice-queues-metric','¿Qué dato usarías para saber si mejoró la atención humana?',[
+        'El tiempo hasta el mensaje automático de bienvenida.',
+        'El tiempo hasta la primera respuesta humana por departamento, con períodos y filtros comparables.',
+        'El total de conversaciones que recibió cada equipo.'
+      ],1,'Primera Atención permite revisar el tiempo de respuesta humana. El volumen y la carga ayudan a explicar los cambios, pero miden fenómenos distintos.','Medición')
+    ] },
+  { id: 'advice-campaigns', revision: '2026-11-24.1', title: 'Una promoción por WhatsApp', skill: 'Engage + WhatsApp BSP', minutes: 7, lesson: 10,
+    story: 'Marketing quiere anunciar una oferta a su base. Tiene un segmento con permiso registrado y otro que viene de una planilla sin trazabilidad. El equipo comercial necesita atender las respuestas durante el lanzamiento.',
+    advice: {
+      flow: ['Se importa toda la base desde la planilla.', 'Se envía la promoción desde WhatsApp con el mismo texto.', 'Se cuentan los clics como ventas y se repite el envío a quien no respondió.'],
+      model: 'Podemos pilotear en Engage con el segmento que tiene permiso documentado y una plantilla aprobada, con un equipo listo para recibir las respuestas. Si la prioridad es ampliar la base, preparemos primero un punto de opt-in para quienes todavía no tienen permiso trazable. Si la plantilla tiene un enlace medido, revisaremos destinatarios que abrieron el enlace y, por separado, compras confirmadas mediante evidencia de la tienda.'
+    },
+    reference: {section:'Medir y analizar botones de campañas de WhatsApp',query:'enlaces medidos',url:BUTTON_ANALYTICS},
+    questions: [
+      q('advice-campaigns-flow','¿Qué le recomiendas para lanzar la promoción?',[
+        'Enviar a toda la planilla en una tanda pequeña y retirar a quienes se quejen.',
+        'Pilotear en Engage con el segmento elegible, una plantilla aprobada y responsables para atender respuestas y bajas.',
+        'Enviar el mismo texto desde Studio como sugerencia proactiva a toda la base.'
+      ],1,'El contacto proactivo requiere una base elegible y una plantilla adecuada. También hace falta definir cómo atender las respuestas y respetar las bajas.','Diseño de flujo',true),
+      q('advice-campaigns-option','¿Qué alternativa das para el segmento sin permiso trazable?',[
+        'Hacer un primer envío de prueba para preguntar si quieren recibir ofertas.',
+        'Enviar solo a quienes compraron recientemente, usando el historial como permiso.',
+        'Habilitar un punto de opt-in y sumar contactos a campañas cuando su permiso quede registrado.'
+      ],2,'Un registro de opt-in permite comprobar la elegibilidad del contacto antes de incorporarlo a un envío proactivo.','Alcance'),
+      q('advice-campaigns-metric','Hay más clics que destinatarios. ¿Qué le dices a Marketing?',[
+        'Una persona puede hacer varios clics. Las compras se validan por separado con datos de la tienda.',
+        'Cada clic equivale a una compra atribuible a la campaña.',
+        'Los clics repetidos indican que se envió la campaña dos veces.'
+      ],0,'El reporte de Engage distingue interacciones y destinatarios por botón medido. Para medir ventas necesitas evidencia de compra y un criterio de atribución.','Medición')
+    ] },
+  { id: 'advice-checkout', revision: '2026-11-24.1', title: 'Del catálogo al pago', skill: 'Studio + Shopify', minutes: 7, lesson: 22,
+    story: 'Un e-commerce quiere recomendar productos y vender por WhatsApp. Su Shopify ya funciona y el equipo puede tomar conversaciones de venta complejas.',
+    advice: {
+      flow: ['El bot recomienda usando un PDF de catálogo.', 'La persona elige talla y paga dentro de WhatsApp.', 'El bot le escribe al día siguiente a cualquiera que haya preguntado por un producto.'],
+      model: 'Validemos si la tienda conectada permite que Studio recomiende variantes y entregue un enlace de checkout en Shopify. Si todavía no tenemos los datos de stock, lancemos recomendaciones de catálogo con enlaces de producto y derivación a ventas para confirmar disponibilidad. Revisemos después la recuperación de checkouts con un evento verificable, contacto elegible y exclusión de compras completadas.'
+    },
+    reference: {section:'Casos de uso — Studio',query:'Shopify',url:WIKI},
+    questions: [
+      q('advice-checkout-flow','¿Qué recorrido ofrecerías como piloto?',[
+        'Recomendar desde el catálogo conectado, validar variante y disponibilidad, y continuar en el checkout de Shopify con salida a ventas.',
+        'Mostrar productos desde el PDF, confirmar stock con esos datos y recibir el pago dentro de WhatsApp.',
+        'Enviar a todos directamente a la portada de Shopify y cerrar la conversación.'
+      ],0,'La tienda conectada permite validar qué datos están disponibles y continuar en el checkout. Así el comprador puede confirmar la variante y el equipo resolver las excepciones.','Diseño de flujo',true),
+      q('advice-checkout-option','La consulta de stock todavía no está lista. ¿Qué sí podrías lanzar?',[
+        'Reservar la variante por chat usando el inventario de la última carga.',
+        'Orientar con el catálogo y enlaces de producto, y ofrecer ayuda humana para confirmar stock o compatibilidad.',
+        'Armar siempre el carrito con la variante más vendida y pedir confirmación después.'
+      ],1,'Una recomendación orienta la compra aunque la disponibilidad todavía deba confirmarse. Los enlaces y la derivación permiten continuar en ese escenario.','Alcance'),
+      q('advice-checkout-trigger','¿Qué validarías para sugerir un recordatorio de checkout?',[
+        'Que la persona haya abierto al menos una ficha.',
+        'Que hayan pasado 24 horas desde su pregunta, aunque ya compró.',
+        'Que exista un checkout abandonado identificable, un contacto elegible y una forma de excluir compras ya completadas.'
+      ],2,'Una consulta de catálogo, un carrito y un checkout son eventos distintos. La recuperación requiere comprobar el evento y las condiciones de contacto y exclusión.','Validación')
+    ] },
+  { id: 'advice-knowledge', revision: '2026-11-24.1', title: 'Dos políticas de devolución', skill: 'Studio + Desk', minutes: 7, lesson: 22,
+    story: 'Una marca vende en Chile y México. Las compras online y las presenciales tienen condiciones distintas. Soporte comparte PDFs con políticas antiguas y nuevas.',
+    advice: {
+      flow: ['Se cargan todos los PDFs al agente.', 'El cliente pregunta si puede devolver su compra.', 'El bot aplica una política general y confirma la devolución.'],
+      model: 'Empecemos con la política vigente de un país y canal, con un responsable de actualizar la fuente. Studio puede orientar y derivar las excepciones a Desk. Si quieren cubrir los cuatro recorridos, pidamos país y canal cuando falten y aprobemos las fuentes de cada combinación. Probemos una compra online, una presencial y un caso que requiera revisión humana.'
+    },
+    reference: {section:'Conocimiento de Studio',query:'fuentes de conocimiento',url:WIKI},
+    questions: [
+      q('advice-knowledge-flow','¿Qué le recomiendas antes de cargar conocimiento?',[
+        'Conservar todos los PDFs y pedirle al bot que deduzca cuál es el vigente.',
+        'Elegir una política común para ambos países y corregir a mano los reclamos.',
+        'Validar fuentes vigentes por país y canal, pedir el dato que falte y derivar las excepciones a Desk.'
+      ],2,'El alcance de la política depende del contexto de compra. Una fuente aprobada y un camino de excepción reducen respuestas contradictorias.','Diseño de flujo',true),
+      q('advice-knowledge-option','Solo hay una política aprobada al comienzo. ¿Cómo propones salir a piloto?',[
+        'Acotar el piloto al país y canal cubiertos y enviar los demás casos a revisión humana.',
+        'Extrapolar esa política hasta que aprueben las otras.',
+        'Publicar las políticas que faltan como borradores de uso interno y permitir que el bot las cite.'
+      ],0,'Un alcance parcial puede resolver casos reales si el agente sabe a quién cubre y cómo continúa la atención para el resto.','Alcance'),
+      q('advice-knowledge-action','El cliente pregunta si el bot puede aprobar y registrar la devolución. ¿Qué respondes?',[
+        'Si puede explicar la política, también puede registrar la devolución.',
+        'Puede orientar con la política. Para ejecutar la devolución, validemos el sistema, sus permisos y los casos que requieren aprobación humana.',
+        'Sí, basta con que el agente etiquete la conversación como devolución.'
+      ],1,'Una respuesta basada en conocimiento, una etiqueta y una operación en un sistema externo tienen efectos distintos. La última requiere una acción e integración verificadas.','Producto')
+    ] },
+  { id: 'advice-surveys', revision: '2026-11-24.1', title: 'Una encuesta al cerrar el caso', skill: 'Desk + Experience', minutes: 7, lesson: 8,
+    story: 'Experiencia quiere medir la atención. Hoy hay tickets que se cierran por resolución, por inactividad o durante un cambio de equipo. A veces el cliente vuelve con la misma consulta.',
+    advice: {
+      flow: ['Cualquier cierre del ticket dispara una encuesta.', 'Si el caso se reabre y vuelve a cerrar, se repite la encuesta.', 'Se compara el promedio de todas las áreas como si atendieran los mismos casos.'],
+      model: 'Pilotearía la encuesta post-atención de Experience con un equipo que pueda distinguir casos resueltos de cierres por inactividad. Probemos también qué ocurre si el ticket vuelve a abrirse. Otra opción es incorporar más equipos después de validar la configuración por canal y acordar qué cierres entran. Revisemos satisfacción y tasa de respuesta por separado antes de comparar áreas.'
+    },
+    reference: {section:'Adereso Experience',query:'Encuestas Post Atención',url:WIKI},
+    questions: [
+      q('advice-surveys-flow','¿Cuál es el cambio más importante antes del piloto?',[
+        'Acordar qué significa resuelto, definir los cierres elegibles y probar en Desk y Experience qué ocurre con reaperturas y duplicados.',
+        'Activar la encuesta después de cualquier cierre y filtrar las respuestas según el puntaje.',
+        'Enviar una encuesta también al derivar el ticket para tener una línea base.'
+      ],0,'El cierre puede representar varios eventos. Definir elegibilidad y probar reaperturas permite interpretar a qué atención corresponde cada respuesta.','Diseño de flujo',true),
+      q('advice-surveys-option','Aún no pueden distinguir cierres en todos los equipos. ¿Qué alternativa propones?',[
+        'Lanzar en todas las áreas y corregir la clasificación cuando lleguen las primeras encuestas.',
+        'Medir solo a quienes reciben una atención automática.',
+        'Partir con un equipo que ya registra resoluciones de forma consistente y validar sus reglas antes de ampliar.'
+      ],2,'Con un equipo y reglas claras se puede aprender con un flujo acotado antes de comparar operaciones con criterios de cierre distintos.','Validación'),
+      q('advice-surveys-metric','Un área tiene una nota alta y pocas respuestas. ¿Qué le dirías al cliente?',[
+        'El área ya tiene el mejor servicio porque tiene la nota más alta.',
+        'Revisemos el número y la tasa de respuestas, el período y el tipo de tickets junto con la nota.',
+        'Sumemos las conversaciones sin respuesta como valoraciones positivas.'
+      ],1,'La nota describe las respuestas recibidas. El volumen, la tasa y el tipo de casos ayudan a saber qué tan comparable es el resultado.','Medición')
+    ] },
+];
+
 export const MISSIONS = [
   { id: 'discovery', title: '¿Agendas o falta discovery?', skill: 'Discovery', minutes: 5, story: 'Caso ficticio · Casa Norte recibe muchas consultas, quiere “un bot” y pide una reunión de propuesta. Todavía no sabes qué resultado necesita.', lesson: 2,
     questions: [
@@ -104,6 +251,7 @@ export const MISSIONS = [
       q('owner', '¿Cómo compruebas que el traspaso quedó listo?', ['Por haber enviado un mensaje.', 'Por haber adjuntado un archivo.', 'Confirmando recepción, responsables y siguiente acción acordada.'], 2, 'Enviar información es parte del traspaso. Completarlo requiere que el siguiente responsable pueda actuar.', 'Traspaso'),
     ] },
   ...DEMO_MISSIONS,
+  ...ADVISORY_MISSIONS,
 ];
 export const missionRevision = mission => mission.revision ?? LEGACY_MISSION_REVISION;
 export const currentMissionEntry = (mission, entry) =>
@@ -119,6 +267,24 @@ export const skillResult = (mission, answers) => {
 };
 // Fictional consequences make the practice about a conversation, not just recall.
 export const CONSEQUENCES = {
+  'advice-orders-flow': ["El comprador obtiene un estado verificable y Soporte recibe solo la excepción.", "El comprador recibe información que puede ser incorrecta o corresponder a otra persona."],
+  'advice-orders-fallback': ["La tienda reduce preguntas generales mientras valida la conexión.", "El flujo presenta una estimación o información antigua como si fuera el estado del pedido."],
+  'advice-orders-pilot': ["Operaciones ve qué recibe el comprador cuando la consulta funciona y cuando necesita ayuda.", "Las pruebas dejan sin cubrir un caso que puede terminar con información incorrecta o sin ayuda."],
+  'advice-queues-flow': ["Cada equipo recibe consultas durante su horario y puede retomar las excepciones.", "La consulta puede pasar por un equipo que no puede resolverla."],
+  'advice-queues-pilot': ["El cliente puede probar el reparto con su estructura actual y contar los casos ambiguos.", "El equipo agrega trabajo de clasificación o más filas sin cambiar quién resuelve."],
+  'advice-queues-metric': ["Operaciones puede comparar la espera hasta que responde una persona.", "El indicador cambia aunque el tiempo de espera humana siga igual."],
+  'advice-campaigns-flow': ["Marketing puede observar las respuestas del segmento elegible y gestionar sus bajas.", "El equipo contacta personas sin evidencia suficiente de elegibilidad."],
+  'advice-campaigns-option': ["Marketing puede ampliar la base a medida que queda registrado el permiso.", "Parte del segmento recibe promociones con el permiso aún sin verificar."],
+  'advice-campaigns-metric': ["Marketing distingue el interés en la oferta de las ventas registradas.", "El equipo atribuye ventas sin una compra que respalde el dato."],
+  'advice-checkout-flow': ["El comprador puede continuar con la variante correcta y pedir ayuda si se atasca.", "La persona puede llegar al pago sin una variante disponible o tener que buscar el producto otra vez."],
+  'advice-checkout-option': ["Ventas puede confirmar disponibilidad mientras el bot sigue orientando.", "El usuario avanza con una variante o una reserva que el equipo no verificó."],
+  'advice-checkout-trigger': ["El recordatorio parte de un checkout comprobable y excluye a quien compró.", "El comprador puede recibir un aviso por una simple consulta o después de pagar."],
+  'advice-knowledge-flow': ["Soporte puede comprobar qué fuente explica la respuesta dada.", "El cliente puede recibir condiciones de otro país, otro canal o una versión antigua."],
+  'advice-knowledge-option': ["El equipo aprende del primer alcance mientras prepara las demás fuentes.", "El caso sin política aprobada termina con una condición que el equipo podría no poder aplicar."],
+  'advice-knowledge-action': ["El cliente identifica qué debe validar antes de automatizar una decisión irreversible.", "La propuesta confunde orientación o categorización con un cambio real en el sistema."],
+  'advice-surveys-flow': ["El equipo puede interpretar qué atención evalúa cada respuesta.", "La encuesta puede llegar por un cierre técnico o repetirse antes de resolver el caso."],
+  'advice-surveys-option': ["El primer equipo permite comprobar el disparo y ajustar el piloto antes de ampliarlo.", "Los resultados mezclan cierres incompatibles o dejan fuera parte de la atención."],
+  'advice-surveys-metric': ["El cliente ve el puntaje junto con la participación y el contexto de cada área.", "El ranking puede reflejar diferencias de muestra más que de atención."],
   need: ['El contacto describe consultas de pedidos que se acumulan fuera de horario. Ya tienes un problema que explorar.', 'El contacto insiste en “un bot”, pero sigues sin saber qué necesita resolver.'],
   authority: ['Operaciones se suma a la siguiente conversación con preguntas concretas sobre el proceso.', 'Llegas a la propuesta sin entender quién puede decidir ni qué necesita operaciones.'],
   brief: ['El siguiente comercial puede preparar preguntas útiles sin pedirle al cliente que empiece de cero.', 'El siguiente comercial recibe una cita, pero tendrá que reconstruir el contexto.'],
