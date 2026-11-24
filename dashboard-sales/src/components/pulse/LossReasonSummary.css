@@ -23,3 +23,19 @@
 .loss-reason-comments a { color: var(--brand); }
 .loss-reason-comments small { display: block; margin-top: 2px; }
 .loss-reason-comments blockquote { margin: 4px 0 0; color: var(--body); white-space: pre-wrap; }
+
+.loss-reason-opening > p { font-size: 14px; line-height: 1.5; color: var(--foreground); }
+.loss-reason-opening > ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 9px 0 3px;
+  padding: 0;
+}
+.loss-reason-opening li {
+  border-left: 2px solid var(--brand);
+  padding: 0 0 0 9px;
+  font-size: 12px;
+}
+.loss-reason-opening a { color: var(--brand); font-weight: 600; }
+.loss-reason-opening blockquote { margin: 3px 0 0; color: var(--body); line-height: 1.4; }

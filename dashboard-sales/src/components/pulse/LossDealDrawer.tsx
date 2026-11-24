@@ -53,6 +53,7 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
           <Dialog.Close type="button" aria-label="Cerrar lista de deals"><X size={18} aria-hidden="true" /></Dialog.Close>
         </header>
         <div className="scenario-drawer-body">
+          {selection.reasonWords && <LossReasonSummary deals={rows} available={narrativesAvailable} />}
           <div className="loss-deal-tools">
             {deals.length > 1 && <label className="loss-deal-search">
               <Search size={15} aria-hidden="true" /><input type="search" placeholder="Buscar deal o comercial" aria-label="Buscar deal o comercial" value={query} onChange={event => setQuery(event.target.value)} />
@@ -65,7 +66,6 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
             </label>}
             <p role="status"><strong>{count} {deals.length === 1 ? "deal" : "deals"}</strong><span>{money(sum(rows, deal => deal.amountValue))} USD de MRR</span></p>
           </div>
-          {selection.reasonWords && <LossReasonSummary deals={rows} available={narrativesAvailable} />}
           {ghostRows.length > 0 && <div className="loss-ghosting-caption">
             <p>Mínimo por deal · 2 llamadas, 2 mensajes nativos de WhatsApp y 2 correos registrados en HubSpot. Reuniones completadas desde la creación del deal hasta antes de su entrada a perdido.</p>
             {partialActivity && !ghosting.isFetching && <button type="button" className="cell-button" onClick={() => void ghosting.refetch()}>Verificar de nuevo</button>}
