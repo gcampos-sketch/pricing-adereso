@@ -48,6 +48,7 @@ const activityProperties = {
 function activityStatus(
   channel: ActivityChannel,
   p: Props,
+  connected?: ReadonlySet<string>,
 ): { status: string; counted: boolean } | null {
   if (channel === "communications") {
     if (!["WHATS_APP", "WHATSAPP"].includes(p["hs_communication_channel_type"] ?? "")) return null;
@@ -69,7 +70,7 @@ function activityStatus(
     };
   }
   if (channel === "calls") {
-    const result = callOutcome(p["hs_call_status"], false);
+    const result = callOutcome(p["hs_call_status"], connected?.has(p["hs_call_disposition"] ?? "") ?? false);
     const direction =
       p["hs_call_direction"] === "OUTBOUND"
         ? " · Saliente"
@@ -92,10 +93,11 @@ function activityStatus(
   };
 }
 
-async function readChannel(
+export async function readDealActivityChannel(
   channel: ActivityChannel,
-  deals: ActivityDeal[],
+  deals: readonly Pick<ActivityDeal, "id">[],
   names: Map<string, string>,
+  connected?: ReadonlySet<string>,
 ) {
   const data: ActivityReport["channels"][ActivityChannel] = {
     events: {},
@@ -119,7 +121,8 @@ async function readChannel(
             method: "POST",
             body: JSON.stringify({
               inputs: inputs.map((id) => ({ id })),
-              properties: ["hs_timestamp", "hubspot_owner_id", ...activityProperties[channel]],
+              properties: ["hs_timestamp", "hubspot_owner_id", ...activityProperties[channel],
+                ...(channel === "calls" && connected ? ["hs_call_disposition"] : [])],
             }),
           });
           if (response.status && response.status !== "COMPLETE") continue;
@@ -128,7 +131,7 @@ async function readChannel(
             if (!inputs.includes(id) || seen.has(id))
               throw Error("Registro de actividad inesperado");
             seen.add(id);
-            const status = activityStatus(channel, properties);
+            const status = activityStatus(channel, properties, connected);
             const at = Date.parse(properties["hs_timestamp"] ?? "");
             const actorId = properties["hubspot_owner_id"] ?? "";
             known.set(
@@ -275,10 +278,10 @@ export async function readDealActivityAnalysis(
       });
     }
     const [emails, communications, calls, meetings] = await Promise.all([
-      readChannel("emails", deals, names),
-      readChannel("communications", deals, names),
-      readChannel("calls", deals, names),
-      readChannel("meetings", deals, names),
+      readDealActivityChannel("emails", deals, names),
+      readDealActivityChannel("communications", deals, names),
+      readDealActivityChannel("calls", deals, names),
+      readDealActivityChannel("meetings", deals, names),
     ]);
     return { readAt, deals, undated, channels: { emails, communications, calls, meetings } };
   });

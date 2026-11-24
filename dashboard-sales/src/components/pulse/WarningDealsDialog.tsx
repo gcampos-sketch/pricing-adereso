@@ -3,13 +3,14 @@ import { ArrowUpRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { Drilldown } from "@/lib/pulse-types";
 import { getWarningDeals } from "@/lib/warning-deals.functions";
-import { WARNING_HEALTH, WARNING_PROPERTIES, warningHealth, type WarningDetail, type WarningProperty } from "@/lib/warning-deals";
+import { ACTIVITY_CHANNELS, activityChannels } from "@/lib/deal-activity-analysis";
+import { WARNING_CONTACT, WARNING_HEALTH, WARNING_PROPERTIES, warningHealth, type WarningDetail, type WarningProperty } from "@/lib/warning-deals";
 import "./WarningDealsDialog.css";
 
 const dateFormat = new Intl.DateTimeFormat("es-CL", { timeZone: "America/Coyhaique", dateStyle: "medium" });
 const duration = (days: number) => days === 0 ? "Menos de 1 día" : days === 1 ? "1 día" : `${days} días`;
 const fields = Object.entries(WARNING_PROPERTIES) as [WarningProperty, string][];
-type Filter = "owner" | "origin" | "health" | "age" | "reason" | "alert" | "delay";
+type Filter = "owner" | "origin" | "health" | "age" | "reason" | "alert" | "delay" | "contact" | "kickoff";
 type Option = [string, string];
 const optionsOf = (values: string[]): Option[] => [...new Set(values)].sort((a, b) => a.localeCompare(b, "es")).map(value => [value, value]);
 
@@ -61,7 +62,9 @@ export function WarningDealsDialog({ payload, readAt, onClose }: { payload: Dril
       && (!filters.age || row.age === filters.age)
       && (!filters.reason || row.reasons.includes(filters.reason))
       && (!filters.alert || row.alerts.includes(filters.alert))
-      && (!filters.delay || Boolean(row.detail?.fields.motivo_de_retraso?.length)),
+      && (!filters.delay || Boolean(row.detail?.fields.motivo_de_retraso?.length))
+      && (!filters.contact || (row.detail?.activity?.contact ?? "unknown") === filters.contact)
+      && (!filters.kickoff || row.detail?.kickoffPending),
   ).sort((a, b) => (b.detail?.days ?? -1) - (a.detail?.days ?? -1) || a.deal.name.localeCompare(b.deal.name, "es"));
   const select = (field: Filter, label: string, choices: Option[]) => (
     <label key={field}>
@@ -92,13 +95,15 @@ export function WarningDealsDialog({ payload, readAt, onClose }: { payload: Dril
           {select("reason", "Motivo Warning", optionsOf(rows.flatMap(row => row.reasons)))}
           {select("alert", "Alerta", optionsOf(rows.flatMap(row => row.alerts)))}
           {select("delay", "Motivo de retraso", [["recorded", "Con motivo registrado"]])}
+          {select("contact", "Contactabilidad", Object.entries(WARNING_CONTACT))}
+          {select("kickoff", "Kick off", [["pending", "Sin kick off · desde E6"]])}
           {Object.values(filters).some(Boolean) && <button type="button" className="cell-button" onClick={() => setFilters({})}>Limpiar filtros</button>}
         </div>
         <div className="warning-deals-meta">
           <span role="status">{visible.length} de {rows.length} deals{!results && deals.length > 0 ? " · Consultando HubSpot…" : ""}{results && rows.length !== deals.length ? ` · ${deals.length - rows.length} fuera de E6.1 en Comercial` : ""}</span>
           <details>
             <summary>Criterio de salud</summary>
-            <p>Crítica desde 30 días en Warning. Prioritaria desde 7 días o con una alerta operativa de Finanzas o SSPP. En observación durante los primeros 7 días sin alertas operativas. Sin evaluar cuando faltan datos para clasificar. La alerta «Deal en warning» indica la etapa.</p>
+            <p>Crítica desde 30 días en Warning si no hay respuesta, llamada conectada ni reunión realizada en los últimos 14 días y la lectura está completa, según las señales registradas. Prioritaria desde 7 días o con una alerta operativa de Finanzas o SSPP. En observación durante los primeros 7 días sin alertas operativas. Dos días distintos con respuesta entrante, llamada conectada o reunión realizada en los últimos 14 días indican contacto sostenido. La fecha de último contacto de HubSpot puede incluir intentos.</p>
           </details>
         </div>
         {missing > 0 && <p className="warning-deals-error" role="status">
@@ -120,9 +125,27 @@ export function WarningDealsDialog({ payload, readAt, onClose }: { payload: Dril
                   {detail?.enteredAt && <dd className="warning-deal-note">Desde {dateFormat.format(new Date(detail.enteredAt))}</dd>}
                 </div>
                 <div><dt>Etapa anterior</dt><dd>{origin}{detail?.previousStage ? " → E6.1" : ""}</dd>
+                  {detail?.kickoffPending && <dd className="warning-deal-note">Sin kick off · pasó desde E6</dd>}
                   {detail?.previousDays != null && <dd className="warning-deal-note">{duration(detail.previousDays)} en la etapa anterior</dd>}
                 </div>
               </dl>
+              {detail?.activity && <div className="warning-deal-activity">
+                <strong>{WARNING_CONTACT[detail.activity.contact]}</strong>
+                <dl>
+                  <div><dt>Último contacto en HubSpot</dt><dd>{detail.activity.lastContact ? dateFormat.format(new Date(detail.activity.lastContact)) : "Sin fecha registrada"}</dd></div>
+                  {detail.activity.lastMeeting && <div><dt>Última reunión realizada</dt><dd>{dateFormat.format(new Date(detail.activity.lastMeeting))}</dd></div>}
+                  {detail.activity.lastConnectedCall && <div><dt>Última llamada conectada</dt><dd>{dateFormat.format(new Date(detail.activity.lastConnectedCall))}</dd></div>}
+                  {detail.activity.lastReply && <div><dt>Última respuesta entrante</dt><dd>{dateFormat.format(new Date(detail.activity.lastReply))}</dd></div>}
+                  <div><dt>Próxima actividad</dt><dd>{detail.activity.nextActivity ? dateFormat.format(new Date(detail.activity.nextActivity)) : "Sin actividad futura registrada"}</dd></div>
+                  {detail.activity.nextStep && <div><dt>Próximo paso</dt><dd>{detail.activity.nextStep}</dd></div>}
+                </dl>
+                <details>
+                  <summary>Actividad de los últimos 14 días</summary>
+                  <ul>{activityChannels.map(channel => <li key={channel}>{ACTIVITY_CHANNELS[channel]} · {detail.activity!.recentCounts[channel]}</li>)}</ul>
+                  {detail.activity.lastActivity && <p>Última actividad registrada · {dateFormat.format(new Date(detail.activity.lastActivity))}</p>}
+                  {!detail.activity.complete && <p>Lectura parcial de actividades. Los conteos muestran lo verificado.</p>}
+                </details>
+              </div>}
               {detail && Object.keys(detail.fields).length > 0 && (
                 <dl className="warning-deal-evidence">
                   {fields.map(([field, label]) => detail.fields[field]?.length ? (
