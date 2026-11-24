@@ -53,121 +53,329 @@
    const stylesheet=el('link');stylesheet.rel='stylesheet';stylesheet.href='/hub-content/operativa/adobo-flow.css';document.head.append(stylesheet);
    const trigger=el('button','adobo-flow-trigger','Ver flujo comercial');
    trigger.type='button';trigger.hidden=true;
-   trigger.setAttribute('aria-haspopup','dialog');
-   trigger.setAttribute('aria-controls','adobo-flow');
-   const heroIntro=document.querySelector('.hero p');
-   (heroIntro||status).after(trigger);
+   trigger.setAttribute('aria-haspopup','dialog');trigger.setAttribute('aria-controls','adobo-flow');
+   (document.querySelector('.hero p')||status).after(trigger);
 
    const dialog=el('dialog','adobo-flow');dialog.id='adobo-flow';
    dialog.setAttribute('aria-labelledby','adobo-flow-title');
    const header=el('header','adobo-flow-header');
-   const title=el('h2','','Flujo comercial');title.id='adobo-flow-title';
-   const close=el('button','adobo-flow-close','×');
-   close.type='button';close.setAttribute('aria-label','Cerrar flujo');close.autofocus=true;
-   const actions=el('div','adobo-flow-actions');
-   const back=el('button','adobo-flow-back','Volver al mapa');
-   back.type='button';back.hidden=true;
-   actions.append(back,close);header.append(title,actions);
-
-   const overview=el('div','adobo-flow-overview');
-   const hint=el('p','adobo-flow-hint','Abre un nodo para ver qué ocurre y quién interviene.');
-   const route=el('ol','adobo-flow-route');route.setAttribute('aria-label','Recorrido principal');
-   const branches=el('ul','adobo-flow-branches');branches.setAttribute('aria-label','Entradas, salidas y controles');
-   overview.append(hint,route,branches);
-
-   const panel=el('section','adobo-flow-panel');panel.id='adobo-flow-panel';panel.hidden=true;
-   const panelTitle=el('h3','adobo-flow-panel-title');panelTitle.id='adobo-flow-panel-title';
-   panel.setAttribute('aria-labelledby',panelTitle.id);
-   const steps=el('nav','adobo-flow-steps');steps.setAttribute('aria-label','Etapas de este tramo');
-   const body=el('section','adobo-flow-body');body.id='adobo-flow-detail';body.hidden=true;
-   const stageTitle=el('h4','adobo-flow-stage');stageTitle.id='adobo-flow-stage';
-   body.setAttribute('aria-labelledby',stageTitle.id);
-   const cards=el('div','adobo-flow-cards');
-   body.append(stageTitle,cards);panel.append(panelTitle,steps,body);
-
-   const info=el('details','adobo-flow-info');
-   info.append(el('summary','','Alcance y fuente'));
-   const intro=el('div','adobo-flow-intro');
+   const heading=el('div');
+   const title=el('h2','','Mapa de Operativa');title.id='adobo-flow-title';
+   const hint=el('p','','Toca un nodo para extender el flujo o ver su detalle.');
+   heading.append(title,hint);
+   const scope=el('details','adobo-flow-scope');
+   const scopeContent=el('div','adobo-flow-scope-content');
+   const preface=el('div');
    const source=el('a','','Ver fuente en Notion');source.target='_blank';source.rel='noopener noreferrer';
-   info.append(intro,source);
-   dialog.append(header,overview,panel,info);
+   scopeContent.append(preface,source);scope.append(el('summary','','Alcance y fuente'),scopeContent);
+   const close=el('button','adobo-flow-icon','×');close.type='button';close.setAttribute('aria-label','Cerrar flujo');close.autofocus=true;
+   const headerActions=el('div','adobo-flow-header-actions');headerActions.append(scope,close);
+   header.append(heading,headerActions);
+
+   const workspace=el('div','adobo-flow-workspace');
+   const viewport=el('div','adobo-flow-viewport');
+   viewport.tabIndex=0;viewport.setAttribute('role','region');viewport.setAttribute('aria-label','Lienzo del flujo comercial. Usa las flechas para moverlo.');
+   const canvas=el('canvas','adobo-flow-lines');canvas.setAttribute('aria-hidden','true');
+   const world=el('div','adobo-flow-world');
+   viewport.append(canvas,world);
+
+   const toolbar=el('div','adobo-flow-toolbar');toolbar.setAttribute('role','group');toolbar.setAttribute('aria-label','Controles del mapa');
+   const zoomOut=el('button','adobo-flow-icon','−');zoomOut.type='button';zoomOut.setAttribute('aria-label','Alejar');
+   const scaleLabel=el('output','adobo-flow-scale');
+   const zoomIn=el('button','adobo-flow-icon','+');zoomIn.type='button';zoomIn.setAttribute('aria-label','Acercar');
+   const fit=el('button','adobo-flow-fit','Encuadrar');fit.type='button';
+   toolbar.append(zoomOut,scaleLabel,zoomIn,fit);
+
+   const detail=el('section','adobo-flow-detail');detail.id='adobo-flow-detail';detail.hidden=true;
+   const detailHeader=el('div','adobo-flow-detail-header');
+   const detailTitle=el('h3');detailTitle.id='adobo-flow-stage';
+   detail.setAttribute('aria-labelledby',detailTitle.id);
+   const detailClose=el('button','adobo-flow-icon','×');detailClose.type='button';detailClose.setAttribute('aria-label','Cerrar detalle');
+   detailHeader.append(detailTitle,detailClose);
+   const cards=el('div','adobo-flow-cards');detail.append(detailHeader,cards);
+   workspace.append(viewport,toolbar,detail);dialog.append(header,workspace);
    document.body.append(dialog);
 
    const definitions=[
     {id:'sdr',label:'Captación',detail:'SDR · Prospección y calificación',codes:['SDR'],main:true},
-    {id:'sale',label:'Venta',detail:'E1–E5.1 · Reunión a negociación',codes:['E1','E2','E3','E4','E5'],main:true},
-    {id:'delivery',label:'Firma y servicio',detail:'E6–E8 · Cierre a servicio iniciado',codes:['E6','E7','E8'],main:true},
-    {id:'expansion',label:'Expansión',detail:'E0 · Entrada a venta desde cartera',codes:['E0']},
+    {id:'sale',label:'Venta',detail:'E1–E5.1 · De reunión a negociación',codes:['E1','E2','E3','E4','E5'],main:true},
+    {id:'delivery',label:'Firma y servicio',detail:'E6–E8 · De firma a servicio iniciado',codes:['E6','E7','E8'],main:true},
+    {id:'expansion',label:'Expansión',detail:'E0 · Entrada desde cartera',codes:['E0']},
     {id:'loss',label:'Pérdidas y churn',detail:'Salidas de venta y servicio',codes:['Salidas']},
-    {id:'health',label:'Saneación y control',detail:'Apoyo a todo el pipeline',codes:['Todo el pipeline']},
+    {id:'health',label:'Saneación y control',detail:'Apoyo transversal',codes:['Todo el pipeline']},
    ];
-   let groups=[],groupId='',stageId='',opener=null;
-   function reveal(heading){
-    const {top,bottom}=heading.getBoundingClientRect();
-    const frame=dialog.getBoundingClientRect();
-    const headerBottom=header.getBoundingClientRect().bottom;
-    if(top<headerBottom||bottom>frame.bottom-24)heading.scrollIntoView({block:'start',behavior:'instant'});
+   const width=208,height=82,gap=258,lane=154,minZoom=.26,maxZoom=1.45;
+   const openGroups=new Map(),buttons=new Map();
+   const camera={x:0,y:0,k:1};
+   let groups=[],graph={nodes:[],edges:[]},selected='',opener=null,frame=0;
+   let canvasWidth=0,canvasHeight=0;
+   const pointers=new Map();
+   const compact=matchMedia('(max-width: 719px)');
+
+   function buildGraph(){
+    const nodes=[],edges=[],bounds=new Map();
+    const add=(item,x,y,group,stage)=>{
+     const n={id:stage?.heading.id||group.id,x,y,group,stage,title:item.label,caption:item.detail||item.code};
+     nodes.push(n);return n;
+    };
+    const connect=(from,to,kind='primary',fromSide='right',toSide='left')=>{
+     if(from&&to)edges.push({from,to,kind,fromSide,toSide});
+    };
+    let col=0,previous=null;
+    for(const group of groups.filter(group=>group.main)){
+     const root=add(group,col++*gap,lane,group);
+     connect(previous,root);
+     let tail=root;
+     for(const stage of group.stages.slice(0,openGroups.get(group.id)||0)){
+      const next=add(stage,col++*gap,lane,group,stage);
+      connect(tail,next,'stage');tail=next;
+     }
+     bounds.set(group.id,{root,tail});previous=tail;
+    }
+    const sale=bounds.get('sale'),delivery=bounds.get('delivery');
+    for(const group of groups.filter(group=>!group.main)){
+     const positions={
+      expansion:[Math.max(0,(sale?.root.x||gap)-gap*.45),0],
+      loss:[(delivery?.root.x??previous?.x??gap)+gap*.4,312],
+      health:[Math.max(0,(sale?.root.x||gap)-gap*.45),312],
+      other:[0,462],
+     };
+     const [x,y]=positions[group.id];
+     const root=add(group,x,y,group);
+     if(group.id==='expansion')connect(root,sale?.root,'alternate','bottom','top');
+     if(group.id==='loss'){
+      connect(sale?.tail,root,'loss','bottom','top');
+      connect(delivery?.tail,root,'loss','bottom','top');
+     }
+     if(group.id==='health')connect(root,sale?.root,'control','top','bottom');
+     if(openGroups.has(group.id)){
+      let tail=root;
+      for(const [index,stage] of group.stages.slice(0,openGroups.get(group.id)||0).entries()){
+       const next=add(stage,x+(index+1)*gap,y,group,stage);
+       connect(tail,next,'stage');tail=next;
+      }
+     }
+    }
+    return {nodes,edges};
    }
-   function selectStage(stage){
-    stageId=stage?.heading.id||'';
-    body.hidden=!stage;
+
+   function point(n,side){
+    if(side==='top')return [n.x+width/2,n.y];
+    if(side==='bottom')return [n.x+width/2,n.y+height];
+    return [n.x+(side==='right'?width:0),n.y+height/2];
+   }
+   function paint(){
+    if(!dialog.open)return;
+    world.style.transform=`translate(${camera.x}px,${camera.y}px) scale(${camera.k})`;
+    viewport.style.setProperty('--grid-x',camera.x+'px');
+    viewport.style.setProperty('--grid-y',camera.y+'px');
+    viewport.style.setProperty('--grid-size',24*camera.k+'px');
+    const w=viewport.clientWidth,h=viewport.clientHeight,ratio=Math.min(devicePixelRatio||1,2);
+    if(w!==canvasWidth||h!==canvasHeight||canvas.width!==Math.round(w*ratio)){
+     canvasWidth=w;canvasHeight=h;canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
+    }
+    const ctx=canvas.getContext('2d');if(!ctx)return;
+    ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,w,h);
+    ctx.translate(camera.x,camera.y);ctx.scale(camera.k,camera.k);
+    for(const edge of graph.edges){
+     const {from,to,kind,fromSide,toSide}=edge;
+     const [x1,y1]=point(from,fromSide),[x2,y2]=point(to,toSide);
+     const vertical=fromSide==='bottom'||fromSide==='top';
+     const mid=vertical?(y1+y2)/2:(x1+x2)/2;
+     ctx.strokeStyle=ctx.fillStyle={primary:'#8394ab',stage:'#ffd46a',alternate:'#9d91f2',loss:'#fa9ba9',control:'#78c8bd'}[kind];
+     ctx.lineWidth=1.55/camera.k;
+     ctx.setLineDash(['primary','stage'].includes(kind)?[]:[5/camera.k,5/camera.k]);
+     ctx.beginPath();ctx.moveTo(x1,y1);
+     if(vertical)ctx.bezierCurveTo(x1,mid,x2,mid,x2,y2);
+     else ctx.bezierCurveTo(mid,y1,mid,y2,x2,y2);
+     ctx.stroke();
+     if(kind==='control')continue;
+     const angle=vertical?(toSide==='top'?Math.PI/2:-Math.PI/2):0;
+     const length=6/camera.k;
+     ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(x2,y2);
+     ctx.lineTo(x2-length*Math.cos(angle-.55),y2-length*Math.sin(angle-.55));
+     ctx.lineTo(x2-length*Math.cos(angle+.55),y2-length*Math.sin(angle+.55));
+     ctx.closePath();ctx.fill();
+    }
+    scaleLabel.value=Math.round(camera.k*100)+'%';
+    zoomOut.disabled=camera.k<=minZoom;zoomIn.disabled=camera.k>=maxZoom;
+   }
+   function queuePaint(){
+    if(frame)return;
+    frame=requestAnimationFrame(()=>{frame=0;paint();});
+   }
+   function usefulWidth(){
+    return viewport.clientWidth-(!detail.hidden&&!compact.matches?detail.offsetWidth:0);
+   }
+   function usefulHeight(){
+    return viewport.clientHeight-(!detail.hidden&&compact.matches?detail.offsetHeight:0);
+   }
+   function fitGraph(initial=false){
+    if(!graph.nodes.length||!viewport.clientWidth)return;
+    const left=Math.min(...graph.nodes.map(n=>n.x));
+    const right=Math.max(...graph.nodes.map(n=>n.x+width));
+    const top=Math.min(...graph.nodes.map(n=>n.y));
+    const bottom=Math.max(...graph.nodes.map(n=>n.y+height));
+    const w=usefulWidth(),h=usefulHeight();
+    if(initial&&w<640){
+     camera.k=Math.max(.58,Math.min(.8,(w-44)/(gap+width)));
+     camera.x=22-left*camera.k;camera.y=h*.37-lane*camera.k;
+    }else{
+     camera.k=Math.max(minZoom,Math.min(1.05,(w-56)/(right-left),(h-104)/(bottom-top)));
+     camera.x=(w-(right-left)*camera.k)/2-left*camera.k;
+     camera.y=(h-42-(bottom-top)*camera.k)/2-top*camera.k;
+    }
+    queuePaint();
+   }
+   function showRange(first,last=first){
+    if(!first)return;
+    const w=usefulWidth(),h=usefulHeight();
+    const needed=last.x+width-first.x;
+    if(first!==last&&w<575)camera.k=Math.min(camera.k,Math.max(.58,(w-50)/needed));
+    if(needed*camera.k<=w-48){
+     camera.x=(w-needed*camera.k)/2-first.x*camera.k;
+    }else{
+     camera.x=24-first.x*camera.k;
+    }
+    const focusY=h*.43;
+    camera.y=focusY-(first.y+height/2)*camera.k;
+    queuePaint();
+   }
+   function zoom(k,x=viewport.clientWidth/2,y=viewport.clientHeight/2){
+    const next=Math.min(maxZoom,Math.max(minZoom,k)),ratio=next/camera.k;
+    camera.x=x-(x-camera.x)*ratio;camera.y=y-(y-camera.y)*ratio;camera.k=next;queuePaint();
+   }
+
+   function renderGraph(){
+    graph=buildGraph();
+    const live=new Set(graph.nodes.map(n=>n.id));
+    for(const [id,button] of buttons)if(!live.has(id)){button.remove();buttons.delete(id);}
+    for(const [i,n] of graph.nodes.entries()){
+     let button=buttons.get(n.id);
+     if(!button){
+      button=el('button','adobo-flow-node');button.type='button';button.dataset.node=n.id;
+      button.addEventListener('click',()=>activate(n.id));
+      button.addEventListener('focus',()=>ensureInFrame(n.id));
+      buttons.set(n.id,button);
+     }
+     if(world.children[i]!==button)world.insertBefore(button,world.children[i]||null);
+     const isGroup=!n.stage&&n.group.stages.length>1;
+     const expanded=isGroup?openGroups.has(n.id):selected===n.id;
+     button.classList.toggle('is-stage',Boolean(n.stage));
+     button.dataset.kind=n.group.id;
+     button.style.left=n.x+'px';button.style.top=n.y+'px';
+     button.setAttribute('aria-expanded',String(expanded));
+     if(!isGroup)button.setAttribute('aria-controls',detail.id);
+     else button.removeAttribute('aria-controls');
+     const frontier=n.stage&&n.group.stages.indexOf(n.stage)===openGroups.get(n.group.id)-1&&openGroups.get(n.group.id)<n.group.stages.length;
+     button.classList.toggle('is-frontier',Boolean(frontier));
+     const label=el('span','adobo-flow-node-label',n.title);
+     const caption=el('span','adobo-flow-node-caption',n.caption||'');
+     const marker=el('span','adobo-flow-node-marker',isGroup?(expanded?'−':'+'):frontier?'+':'↗');
+     marker.setAttribute('aria-hidden','true');
+     button.replaceChildren(...(n.stage?[caption,label,marker]:[label,caption,marker]));
+    }
+    queuePaint();
+   }
+   function ensureInFrame(id){
+    const n=graph.nodes.find(node=>node.id===id);if(!n)return;
+    const left=camera.x+n.x*camera.k,top=camera.y+n.y*camera.k;
+    const w=usefulWidth();
+    if(left<12||left+width*camera.k>w-12||top<8||top+height*camera.k>usefulHeight()-8)showRange(n);
+   }
+   function showDetail(stage,nodeId){
+    selected=stage?nodeId:'';
+    detail.hidden=!stage;
     cards.replaceChildren();
-    for(const button of steps.querySelectorAll('button'))button.setAttribute('aria-expanded',String(button.dataset.stage===stageId));
     if(!stage)return;
-    stageTitle.replaceChildren();rich(stageTitle,stage.heading.text);
+    detailTitle.replaceChildren();rich(detailTitle,stage.heading.text);detail.scrollTop=0;
     let target=cards;
     for(const block of stage.blocks){
      if(block.type==='heading_3'){
       target=el('section','adobo-flow-card');
-      const label=el('h5');rich(label,block.text);target.append(label);cards.append(target);
+      const label=el('h4');rich(label,block.text);target.append(label);cards.append(target);
      }else target.append(node(block));
     }
    }
-   function selectGroup(group,rememberedStage=''){
-    groupId=group?.id||'';
-    panel.hidden=!group;back.hidden=!group;
-    for(const button of overview.querySelectorAll('button'))button.setAttribute('aria-expanded',String(button.dataset.group===groupId));
-    steps.replaceChildren();
-    if(!group){selectStage(null);return;}
-    const single=group.stages.length===1;
-    panelTitle.textContent=group.label;
-    panelTitle.hidden=single;
-    steps.hidden=single;
-    if(!single){
-     for(const stage of group.stages){
-      const button=el('button','adobo-flow-step');
-      button.type='button';button.dataset.stage=stage.heading.id;button.setAttribute('aria-controls',body.id);
-      if(stage.code)button.append(el('span','adobo-flow-code',stage.code));
-      button.append(el('span','adobo-flow-label',stage.label));
-      button.addEventListener('click',()=>{
-       const expand=stageId!==stage.heading.id;
-       selectStage(expand?stage:null);
-       if(expand)reveal(stageTitle);
-      });
-      steps.append(button);
-     }
+   function activate(id){
+    const n=graph.nodes.find(item=>item.id===id);if(!n)return;
+    const group=n.group;
+    if(!n.stage&&group.stages.length>1){
+     const opening=!openGroups.delete(id);
+     if(opening)openGroups.set(id,1);
+     if(!opening&&group.stages.some(stage=>stage.heading.id===selected))showDetail(null);
+     renderGraph();
+     const root=graph.nodes.find(item=>item.id===id);
+     const first=opening?graph.nodes.find(item=>item.group.id===id&&item.stage):null;
+     showRange(root,first||root);
+     return;
     }
-    selectStage(single?group.stages[0]:group.stages.find(stage=>stage.heading.id===rememberedStage));
+    const opening=selected!==id;
+    const count=openGroups.get(group.id);
+    const index=group.stages.indexOf(n.stage);
+    const extendsRoute=opening&&count&&index===count-1&&count<group.stages.length;
+    if(extendsRoute)openGroups.set(group.id,count+1);
+    showDetail(opening?n.stage||group.stages[0]:null,id);
+    renderGraph();
+    const next=extendsRoute?graph.nodes.find(item=>item.stage===group.stages[count]):null;
+    showRange(n,next||n);
    }
+   const resize=new ResizeObserver(queuePaint);resize.observe(viewport);
+   viewport.addEventListener('pointerdown',event=>{
+    if(event.button!==0||event.target.closest('button')||pointers.size>=2)return;
+    pointers.set(event.pointerId,[event.clientX,event.clientY]);
+    viewport.setPointerCapture(event.pointerId);viewport.classList.add('is-panning');
+   });
+   viewport.addEventListener('pointermove',event=>{
+    const previous=pointers.get(event.pointerId);if(!previous)return;
+    const next=[event.clientX,event.clientY],dx=next[0]-previous[0],dy=next[1]-previous[1];
+    pointers.set(event.pointerId,next);
+    if(pointers.size===1){camera.x+=dx;camera.y+=dy;queuePaint();return;}
+    const [ax,ay]=[...pointers.entries()].find(([id])=>id!==event.pointerId)[1];
+    const oldDistance=Math.hypot(ax-previous[0],ay-previous[1]);
+    const newDistance=Math.hypot(ax-next[0],ay-next[1]);
+    const rect=viewport.getBoundingClientRect();
+    camera.x+=dx/2;camera.y+=dy/2;
+    if(oldDistance>0)zoom(camera.k*newDistance/oldDistance,(ax+next[0])/2-rect.left,(ay+next[1])/2-rect.top);
+    else queuePaint();
+   });
+   viewport.addEventListener('lostpointercapture',event=>{
+    pointers.delete(event.pointerId);
+    if(!pointers.size)viewport.classList.remove('is-panning');
+   });
+   viewport.addEventListener('wheel',event=>{
+    event.preventDefault();
+    if(event.ctrlKey||event.metaKey){
+     const rect=viewport.getBoundingClientRect();
+     zoom(camera.k*Math.exp(-event.deltaY*.012),event.clientX-rect.left,event.clientY-rect.top);
+    }else{camera.x-=event.deltaX;camera.y-=event.deltaY;queuePaint();}
+   },{passive:false});
+   viewport.addEventListener('keydown',event=>{
+    if(event.target!==viewport)return;
+    const offset={ArrowLeft:[54,0],ArrowRight:[-54,0],ArrowUp:[0,54],ArrowDown:[0,-54]}[event.key];
+    if(!offset)return;
+    event.preventDefault();camera.x+=offset[0];camera.y+=offset[1];queuePaint();
+   });
+   zoomIn.addEventListener('click',()=>zoom(camera.k*1.2));
+   zoomOut.addEventListener('click',()=>zoom(camera.k/1.2));
+   fit.addEventListener('click',()=>fitGraph());
+   detailClose.addEventListener('click',()=>{
+    const last=selected;showDetail(null);renderGraph();buttons.get(last)?.focus();
+   });
    function open(origin){
     if(!groups.length||dialog.open)return;
-    opener=origin;dialog.showModal();
+    opener=origin;dialog.showModal();fitGraph(true);
    }
    trigger.addEventListener('click',()=>open(trigger));
    close.addEventListener('click',()=>dialog.close());
-   back.addEventListener('click',()=>{
-    dialog.scrollTop=0;
-    overview.querySelector('button[aria-expanded="true"]')?.focus({preventScroll:true});
-   });
    dialog.addEventListener('close',()=>{(opener?.isConnected?opener:trigger).focus({preventScroll:true});opener=null;});
    return {open,render(doc){
-    const stages=[],preface=[];
+    const stages=[],intro=[];
     for(const block of doc?.blocks||[]){
      if(block.type==='heading_2'){
-      const heading=plain(block);
-      const split=heading.indexOf(' · ');
-      stages.push({heading:block,blocks:[],code:split<0?'':heading.slice(0,split),label:split<0?heading:heading.slice(split+3)});
-     }else (stages.at(-1)?.blocks??preface).push(block);
+      const label=plain(block),split=label.indexOf(' · ');
+      stages.push({heading:block,blocks:[],code:split<0?'':label.slice(0,split),label:split<0?label:label.slice(split+3)});
+     }else (stages.at(-1)?.blocks??intro).push(block);
     }
     const assigned=new Set();
     groups=definitions.map(group=>({...group,stages:stages.filter(stage=>{
@@ -179,29 +387,12 @@
     if(other.length)groups.push({id:'other',label:'Otras etapas',stages:other});
     trigger.hidden=!groups.length;
     if(!groups.length){if(dialog.open)dialog.close();return false;}
-    intro.replaceChildren(...preface.map(node));
+    preface.replaceChildren(...intro.map(node));
     source.href=safe(doc.url)||'https://www.notion.so/'+flowPageId.replaceAll('-','');
-
-    const {group:focusedGroup,stage:focusedStage}=document.activeElement.dataset;
-    route.replaceChildren();branches.replaceChildren();
-    for(const group of groups){
-     const item=el('li','adobo-flow-item');
-     const button=el('button','adobo-flow-node');
-     button.type='button';button.dataset.group=group.id;button.setAttribute('aria-controls',panel.id);
-     button.append(el('span','adobo-flow-node-label',group.label));
-     if(group.detail)button.append(el('span','adobo-flow-node-detail',group.detail));
-     const chevron=el('span','adobo-flow-chevron');chevron.setAttribute('aria-hidden','true');button.append(chevron);
-     button.addEventListener('click',()=>{
-      const expand=groupId!==group.id;
-      selectGroup(expand?group:null);
-      if(expand)reveal(panelTitle.hidden?stageTitle:panelTitle);
-     });
-     item.append(button);(group.main?route:branches).append(item);
-    }
-    selectGroup(groups.find(group=>group.id===groupId),stageId);
-    const restored=[...dialog.querySelectorAll('button[data-stage],button[data-group]')].find(button=>
-     (focusedGroup&&button.dataset.group===focusedGroup)||(focusedStage&&button.dataset.stage===focusedStage));
-    if(restored)restored.focus({preventScroll:true});
+    const activeStage=groups.flatMap(group=>group.stages.map(stage=>({group,stage}))).find(({group,stage})=>
+     stage.heading.id===selected||(group.stages.length===1&&group.id===selected));
+    showDetail(activeStage?.stage,selected);
+    renderGraph();
     return true;
    }};
   }
