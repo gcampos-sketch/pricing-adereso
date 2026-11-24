@@ -1,8 +1,7 @@
 import { AlertTriangle, Check, CircleHelp } from "lucide-react";
 import type { InsightDeal } from "@/lib/insights-types";
-import { GHOSTING_CHANNELS, GHOSTING_MINIMUM, ghostingMinimum, type GhostingActivity } from "@/lib/loss-ghosting";
+import { GHOSTING_CHANNELS, GHOSTING_MINIMUM, GHOSTING_STATUS_LABELS, ghostingMinimum, type GhostingActivity } from "@/lib/loss-ghosting";
 
-const labels = { met: "Cumple el mínimo", short: "Bajo el mínimo", unknown: "Mínimo sin verificar" };
 const unknownStage = "Etapa sin verificar";
 
 export function LossGhostingOrigins({ deals, evidence, loading, onOpen }: {
@@ -44,7 +43,7 @@ export function LossGhostingActivity({ activity, loading }: { activity?: Ghostin
   return <div className="loss-ghosting-activity">
     <p><strong>Etapa anterior a perdido</strong> · {loading ? "Consultando HubSpot…" : activity?.originStage ?? unknownStage}</p>
     <div className="loss-ghosting-status" data-status={status}>
-      <Icon size={14} aria-hidden="true" />{loading ? "Consultando HubSpot…" : labels[status]}
+      <Icon size={14} aria-hidden="true" />{loading ? "Consultando HubSpot…" : GHOSTING_STATUS_LABELS[status]}
     </div>
     <dl className="loss-ghosting-counts">
       {GHOSTING_CHANNELS.map(([channel, label]) => {

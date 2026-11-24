@@ -39,3 +39,5 @@
 }
 .loss-reason-opening a { color: var(--brand); font-weight: 600; }
 .loss-reason-opening blockquote { margin: 3px 0 0; color: var(--body); line-height: 1.4; }
+
+.loss-comment-copy { display: flex; justify-content: flex-end; }
