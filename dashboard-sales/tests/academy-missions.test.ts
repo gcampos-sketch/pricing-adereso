@@ -1,6 +1,6 @@
 import { expect,test } from 'bun:test';
 import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,PLAYBOOK_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
-  missionRevision,currentMissionEntry,currentMissionReview } from '../../academy-curriculum.js';
+  missionRevision,currentMissionEntry,currentMissionReview,AE_ONBOARDING_WEEKS,AE_ROLEPLAY_STAGES } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
 const payload={role:'AE',mode:'onboarding',attempts:{},reviews:{},tasks:{},legacy:{},resume:null};
@@ -98,4 +98,16 @@ test('learning assets remain inside the private Hub package and outside Pages',(
   const root=new URL('../../',import.meta.url);
   const docker=readFileSync(new URL('dashboard-sales/Dockerfile',root),'utf8'),ignore=readFileSync(new URL('.dockerignore',root),'utf8'),pages=readFileSync(new URL('_config.yml',root),'utf8');
   for(const file of ['academy-missions.js','academy-curriculum.js','academy-missions.css']){expect(docker).toContain(file);expect(ignore.split('\n')).toContain('!'+file);expect(pages).toContain('  - "'+file+'"');}
+});
+
+test('the AE route retains all activity IDs and has a roleplay for each Playbook stage in order',()=>{
+  const days = AE_ONBOARDING_WEEKS.flatMap((week, w) => week.days.map((day, d) => ({...day, key:w+'-'+d})));
+  expect(days).toHaveLength(10);
+  expect(days.flatMap(day => day.activities.map(activity => activity.id))).toEqual(Array.from({length:54},(_,i)=>i+1));
+  expect(days.flatMap(day => AE_ROLEPLAY_STAGES.filter(stage => stage.day === day.key).map(stage => stage.stage))).toEqual([0,1,2,3,4,5,6]);
+  expect(new Set(AE_ROLEPLAY_STAGES.map(stage => stage.mission)).size).toBe(7);
+  for (const stage of AE_ROLEPLAY_STAGES) {
+    expect(PLAYBOOK_MISSIONS.find(mission => mission.id === stage.mission)?.playbook.prompt).toBeTruthy();
+    expect(stage.check.length).toBeGreaterThan(50);
+  }
 });

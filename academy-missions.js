@@ -1,5 +1,5 @@
-import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, PLAYBOOK_MISSIONS, HYPOTHESIS_MISSION, CONSEQUENCES, skillResult,
-  dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_SOURCE, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE } from './academy-curriculum.js';
+import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, HYPOTHESIS_MISSION, CONSEQUENCES, skillResult,
+  dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_SOURCE, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE, AE_ROLEPLAY_STAGES } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -7,8 +7,10 @@ let progress = { role:'AE', mode:'onboarding', attempts:{}, reviews:{}, tasks:{}
 let revision = 0, ready = false, saving = false, dirty = false, blocked = false, active = null, conflict = false;
 let lastStatus={text:'Comprobando tu avance…',error:false};
 let originTab = 'home';
+let lessonOrigin = 'products';
 let aeEvidenceDraft = {};
-const aeOpenDays = new Set(['0-0']);
+let roleplaySaveTimer;
+const aeOpenDays = new Set();
 const role = () => ROLES[progress.role] || ROLES.AE;
 const wikiChanged = () => (window.academySourceDates || []).some(d => d.id === '3219c274-7df5-81a2-baeb-de4de645d487' && Date.parse(d.editedAt) > Date.parse('2026-11-13T13:20:34.925Z'));
 const mission = id => MISSIONS.find(m => m.id === id);
@@ -33,6 +35,9 @@ async function load() {
     revision = data.revision;
     progress = {...progress,...data.payload};
     progress.aeOnboardingEvidence = data.payload.aeOnboardingEvidence;
+    clearTimeout(roleplaySaveTimer);
+    roleplaySaveTimer = undefined;
+    progress.aeRoleplayNotes = data.payload.aeRoleplayNotes;
     aeEvidenceDraft = {...progress.aeOnboardingEvidence};
     state = {...state,...(progress.legacy || {})};
     ready = true; blocked = false; conflict = false;document.body.classList.remove('academy-pending');
@@ -76,6 +81,21 @@ for(const name of ['startQuiz','startFlashcards','startLessonChallenge','complet
   window[name]=function(...args){if(!ready){saveNote('Carga tu avance desde Onboarding para guardar esta práctica. La biblioteca sigue disponible.',true);return;}return original(...args);};
 }
 const oldSwitch = switchTab;
+const oldOpenLesson = openLesson;
+openLesson = function(id) {
+  const tab = document.querySelector('.nav-item.active')?.dataset.academyTab;
+  if (tab) lessonOrigin = tab;
+  oldOpenLesson(id);
+};
+closeLessonView = function() {
+  switchTab(lessonOrigin);
+  restoreOnboardingFocus();
+};
+const oldCloseExam = closeExamView;
+closeExamView = function() {
+  oldCloseExam();
+  switchTab('progress');
+};
 switchTab = function(tab) {
   $('academy-mission-view').classList.remove('active');
   $('academy-mission-view').style.display='none';
@@ -89,6 +109,8 @@ resetProgress = function() {
   if(!ready || !confirm('¿Reiniciar tu avance personal de Academy? Esta acción borra tus prácticas y apuntes guardados.')) return;
   progress = {role:progress.role,mode:progress.mode,attempts:{},reviews:{},tasks:{},legacy:{},resume:null};
   aeEvidenceDraft = {};
+  clearTimeout(roleplaySaveTimer);
+  roleplaySaveTimer = undefined;
   state = {completedLessons:[],xp:0,streak:0,quizzesDone:0,totalCorrect:0,totalAnswered:0,lastDate:'',level:'bronce',examsPassed:[],productsMastered:[]};
   progress.legacy=clone(state); void persist(); renderHome();updateHeader();renderProductAcademies();renderAchievements();render();renderSkills();
 };
@@ -123,6 +145,7 @@ function installAcademyNavigation(icons) {
   const tabs=['home','games','products','progress'];
   const buttons=[...nav.querySelectorAll('.nav-item')];
   buttons.forEach((button,i)=>{
+    button.dataset.academyTab=tabs[i];
     const icon=button.querySelector('.nav-icon');
     const emoji=document.createElement('span');emoji.className='academy-nav-mobile-icon';emoji.textContent=icon.textContent;
     const vector=document.createElement('span');vector.className='academy-nav-desktop-icon';vector.innerHTML=icons[tabs[i]];
@@ -196,7 +219,8 @@ function missionCard(m){
   return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}${newCaseDot((m.advice||m.playbook)&&isNewCase(m.id))}</h4><p>${m.demo||m.advice||m.playbook?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
 }
 function scrollToCaseSection(section){
-  const heading = $('academy-'+section).querySelector('h3');
+  const heading = $('academy-'+section)?.querySelector('h3');
+  if (!heading) return;
   const headerHeight = document.querySelector('.header').getBoundingClientRect().height;
   const offset = heading.getBoundingClientRect().top - headerHeight - 16;
   window.scrollBy(0, offset);
@@ -212,15 +236,73 @@ function hypothesisCard(){
   return `<button class="mission-card" type="button" data-hypothesis ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(skill)}</span><span>${minutes} min</span></div><h4>${escape(title)}${newCaseDot(isNewCase(id))}</h4><p>${escape(story)}</p><div class="academy-actions"><span class="academy-pill">${status}</span><span class="academy-muted">${practice?.submittedAt?'Revisar →':'Practicar →'}</span></div></button>`;
 }
 function playbookChallenges(){
-  return `<section aria-label="Simulaciones del Playbook"><div class="academy-section-head"><h3 tabindex="-1">Simulaciones del Playbook</h3></div><p class="academy-muted">Practica qué preguntar, cómo demostrar valor y cómo acordar el siguiente paso en cada etapa de una reunión comercial.</p><div class="academy-mission-grid" style="margin-top:14px">${hypothesisCard()}${PLAYBOOK_MISSIONS.map(missionCard).join('')}</div></section>`;
+  const stages = AE_ROLEPLAY_STAGES.map(stage => {
+    const practice = mission(stage.mission);
+    return missionCard({...practice, skill:'Etapa ' + stage.stage + ' · ' + stage.title});
+  });
+  return `<section aria-label="Roleplays del Playbook"><div class="academy-section-head"><h3 tabindex="-1">Roleplays del Playbook</h3></div><div class="academy-mission-grid">${stages.join('')}${hypothesisCard()}</div></section>`;
 }
 function demoChallenges(){
-  return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3>¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
+  return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3 tabindex="-1">¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
 const aeActivityKey = id => 'ae-route-' + id;
-const hasAeRoute = () => progress.role === 'AE' && progress.mode === 'onboarding';
-const aeCount = activities => activities.filter(({id}) => progress.tasks[aeActivityKey(id)]).length;
-const aeActivities = AE_ONBOARDING_WEEKS.flatMap(week => week.days.flatMap(day => day.activities));
+const aeRoleplayKey = stage => 'ae-roleplay-' + stage;
+const hasAeRoute = () => progress.role === 'AE';
+const aeDays = AE_ONBOARDING_WEEKS.flatMap((week, weekIndex) => week.days.map((day, dayIndex) => {
+  const key = weekIndex + '-' + dayIndex;
+  return {
+    ...day, key, weekIndex, dayIndex,
+    entries: [
+      ...day.activities.map(activity => ({...activity, key:aeActivityKey(activity.id)})),
+      ...AE_ROLEPLAY_STAGES.filter(stage => stage.day === key).map(stage => ({...stage, key:aeRoleplayKey(stage.stage)})),
+    ],
+  };
+}));
+const aeEntries = aeDays.flatMap(day => day.entries);
+const aeActivities = aeEntries.filter(entry => entry.stage === undefined);
+const aeRoleplays = aeEntries.filter(entry => entry.stage !== undefined);
+const aeCount = entries => entries.filter(({key}) => progress.tasks[key]).length;
+const nextAeEntry = () => aeEntries.find(({key}) => !progress.tasks[key]);
+const aeCounter = () => `${aeCount(aeActivities)}/${aeActivities.length} actividades · ${aeCount(aeRoleplays)}/${aeRoleplays.length} roleplays`;
+const nextAeTitle = entry => entry.stage === undefined ? escape(entry.title) : `Roleplay · Etapa ${entry.stage} · ${escape(entry.title)}`;
+
+function aeNext() {
+  const entry = nextAeEntry();
+  if (!entry) return '<p class="academy-next-title">Completaste las actividades y los roleplays.</p><button class="academy-btn" data-ae-evidence>Revisar el go-live →</button>';
+  const {weekIndex, dayIndex} = aeDays.find(day => day.entries.includes(entry));
+  return `<div><p class="academy-kicker">Próximo paso · Semana ${weekIndex+1} · Día ${dayIndex+1}</p><p class="academy-next-title">${nextAeTitle(entry)}</p></div>
+    <button class="academy-btn primary" type="button" data-ae-resume="${entry.key}" ${!ready?'disabled':''}>Continuar onboarding →</button>`;
+}
+
+let aeReturnEntry = null;
+function focusAeEntry(key) {
+  const item = $('academy-entry-' + key);
+  if (!item) return;
+  item.closest('details').open = true;
+  aeOpenDays.add(item.closest('details').dataset.aeDay);
+  item.scrollIntoView({block:'center'});
+  item.querySelector('input').focus({preventScroll:true});
+}
+
+function restoreOnboardingFocus() {
+  if (!aeReturnEntry) return;
+  focusAeEntry(aeReturnEntry);
+  aeReturnEntry = null;
+}
+
+function aeRoleplayCard(entry) {
+  const disabled = ready ? '' : 'disabled';
+  return `<li class="academy-roleplay" id="academy-entry-${entry.key}">
+    <p class="academy-kicker">Roleplay con tu referente · Etapa ${entry.stage}</p>
+    <h5>${escape(entry.title)}</h5>
+    <p class="academy-muted">${escape(entry.check)}</p>
+    <div class="academy-actions"><button type="button" class="academy-btn" data-start="${entry.mission}" ${disabled}>Abrir escenario de práctica →</button></div>
+    <label class="academy-roleplay-note">Feedback y próximo intento
+      <textarea class="notes-area" rows="2" maxlength="500" data-roleplay-note="${entry.stage}" ${disabled}>${escape(progress.aeRoleplayNotes?.[entry.stage] ?? '')}</textarea>
+    </label>
+    <label class="academy-check"><input type="checkbox" data-ae-task="${entry.key}" ${progress.tasks[entry.key]?'checked':''} ${disabled}>Roleplay etapa ${entry.stage} practicado con mi referente</label>
+  </li>`;
+}
 
 function aeAction(action) {
   if (action === 'crm') return '<button type="button" class="academy-btn" data-ae-evidence>Ver práctica y revisión →</button>';
@@ -244,24 +326,27 @@ function aeRoute() {
   return `<section id="academy-ae-route" class="academy-panel academy-ae-route" aria-labelledby="academy-ae-title">
     <div class="academy-section-head">
       <h3 id="academy-ae-title" tabindex="-1">Tu onboarding AE en dos semanas</h3>
-      <span class="academy-pill" data-ae-total aria-live="polite">${aeCount(aeActivities)}/${aeActivities.length} completadas</span>
+      <span class="academy-pill" data-ae-total aria-live="polite">${aeCounter()}</span>
     </div>
-    <p class="academy-muted">Marca cada actividad después de hacerla. Acuerda el ritmo con tu líder y registra abajo el resultado de la revisión.</p>
-    <div class="academy-actions"><a class="academy-btn" href="${AE_ONBOARDING_SOURCE}" target="_blank" rel="noopener noreferrer">Ver Gantt en Notion ↗</a><button class="academy-btn" type="button" data-ae-evidence>Ir a la práctica y revisión →</button></div>
+    <div class="academy-next" data-ae-next>${aeNext()}</div>
+    <p class="academy-muted">Marca las actividades al completarlas. Ensaya cada etapa con tu referente y registra el feedback antes de la simulación final.</p>
+    <div class="academy-actions"><a class="academy-btn" href="${AE_ONBOARDING_SOURCE}" target="_blank" rel="noopener noreferrer">Ver Gantt en Notion ↗</a><button class="academy-btn" type="button" data-ae-evidence>Ver simulación final y go-live →</button></div>
     ${AE_ONBOARDING_WEEKS.map((week, weekIndex) => `<h4>${escape(week.title)}</h4>
-      ${week.days.map((day, dayIndex) => {
-        const key = weekIndex + '-' + dayIndex;
-        return `<details class="academy-ae-day" data-ae-day="${key}" ${aeOpenDays.has(key)?'open':''}>
-          <summary><span>Día ${dayIndex + 1} · ${escape(day.title)}</span><span class="academy-muted" data-ae-day-count>${aeCount(day.activities)}/${day.activities.length}</span></summary>
-          <ul>${day.activities.map(({id,title,source,actions}) => `<li>
-            <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" ${progress.tasks[aeActivityKey(id)]?'checked':''} ${!ready?'disabled':''}>${escape(title)}</label>
-            <div class="academy-actions">${actions.map(aeAction).join('')}
-              ${aeResources[id] ? `<a class="academy-btn" href="${aeResources[id][1]}" target="_blank" rel="noopener noreferrer">${aeResources[id][0]} ↗</a>` : ''}
-              <a class="academy-btn" href="${source}" target="_blank" rel="noopener noreferrer">Ficha en Notion ↗</a>
-            </div>
-          </li>`).join('')}</ul>
-        </details>`;
-      }).join('')}`).join('')}
+      ${aeDays.filter(day => day.weekIndex === weekIndex).map(day => `
+        <details class="academy-ae-day" data-ae-day="${day.key}" ${aeOpenDays.has(day.key)||day.entries.includes(nextAeEntry())?'open':''}>
+          <summary><span>Día ${day.dayIndex + 1} · ${escape(day.title)}</span><span class="academy-muted" data-ae-day-count>${aeCount(day.entries)}/${day.entries.length}</span></summary>
+          <ul>${day.entries.map(entry => {
+            if (entry.stage !== undefined) return aeRoleplayCard(entry);
+            const {id, title, source, actions, key} = entry;
+            return `<li id="academy-entry-${key}">
+              <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" data-ae-task="${key}" ${progress.tasks[key]?'checked':''} ${!ready?'disabled':''}>${escape(title)}</label>
+              <div class="academy-actions">${actions.map(aeAction).join('')}
+                ${aeResources[id] ? `<a class="academy-btn" href="${aeResources[id][1]}" target="_blank" rel="noopener noreferrer">${aeResources[id][0]} ↗</a>` : ''}
+                <a class="academy-btn" href="${source}" target="_blank" rel="noopener noreferrer">Ficha en Notion ↗</a>
+              </div>
+            </li>`;
+          }).join('')}</ul>
+        </details>`).join('')}`).join('')}
     <section id="academy-ae-evidence" class="academy-ae-evidence" aria-labelledby="academy-ae-evidence-title">
       <h3 id="academy-ae-evidence-title" tabindex="-1">Simulación completa y revisión de go-live</h3>
       <p class="academy-muted">Caso de práctica. Una tienda recibe 4.000 consultas mensuales por WhatsApp. Le preocupa la atención fuera de horario y compara tu propuesta con un proveedor más barato. Operaciones evalúa la solución, Finanzas aprueba y la conexión al sistema de pedidos está por validar.</p>
@@ -295,15 +380,32 @@ function wireAeRoute() {
     else aeOpenDays.delete(day.dataset.aeDay);
   }));
   route.addEventListener('change', event => {
-    const input = event.target.closest('[data-ae-activity]');
-    if (!input) return;
-    progress.tasks[aeActivityKey(input.dataset.aeActivity)] = input.checked;
-    route.querySelector('[data-ae-total]').textContent = aeCount(aeActivities) + '/' + aeActivities.length + ' completadas';
-    const day = input.closest('[data-ae-day]');
-    const [weekIndex, dayIndex] = day.dataset.aeDay.split('-').map(Number);
-    const activities = AE_ONBOARDING_WEEKS[weekIndex].days[dayIndex].activities;
-    day.querySelector('[data-ae-day-count]').textContent = aeCount(activities) + '/' + activities.length;
-    void persist();
+    const input = event.target.closest('[data-ae-task]');
+    if (input) {
+      progress.tasks[input.dataset.aeTask] = input.checked;
+      route.querySelector('[data-ae-total]').textContent = aeCounter();
+      route.querySelector('[data-ae-next]').innerHTML = aeNext();
+      const day = input.closest('[data-ae-day]');
+      const entries = aeDays.find(({key}) => key === day.dataset.aeDay).entries;
+      day.querySelector('[data-ae-day-count]').textContent = aeCount(entries) + '/' + entries.length;
+      void persist();
+    }
+    if (event.target.matches('[data-roleplay-note]') && roleplaySaveTimer !== undefined) {
+      clearTimeout(roleplaySaveTimer);
+      roleplaySaveTimer = undefined;
+      void persist();
+    }
+  });
+  route.addEventListener('input', event => {
+    const note = event.target.closest('[data-roleplay-note]');
+    if (!note) return;
+    progress.aeRoleplayNotes ??= {};
+    progress.aeRoleplayNotes[note.dataset.roleplayNote] = note.value;
+    clearTimeout(roleplaySaveTimer);
+    roleplaySaveTimer = setTimeout(() => {
+      roleplaySaveTimer = undefined;
+      void persist();
+    }, 500);
   });
   const form = $('academy-ae-evidence-form');
   form.addEventListener('input', event => {
@@ -317,52 +419,49 @@ function wireAeRoute() {
 }
 
 function render() {
-  const saved=resume();
-  const current=saved?.id??pending();
-  const next = mission(current);
-  const completed = role().missions.filter(passed).length;
-  const due = reviewKeys();
-  const showAeRoute = hasAeRoute();
   $('academy-dashboard').innerHTML = `
-    <div class="academy-controls">
-      <label>Tu recorrido<select id="academy-role" ${!ready?'disabled':''}>${Object.entries(ROLES).map(([id,r])=>`<option value="${id}" ${id===progress.role?'selected':''}>${r.name}</option>`).join('')}</select></label>
-      <div class="academy-mode" role="group" aria-label="Modo de aprendizaje">${[['onboarding','Estoy empezando'],['practice','Quiero practicar']].map(([id,label])=>`<button class="academy-btn" data-mode="${id}" aria-pressed="${progress.mode===id}" ${!ready?'disabled':''}>${label}</button>`).join('')}</div>
-    </div>
-    <section class="academy-hero">
-      <div class="academy-kicker">${progress.mode==='onboarding'?'Tu ruta de onboarding':'Tu entrenamiento de hoy'} · ${escape(progress.role)}</div>
-      <h2>${saved?'Retoma tu misión':completed===role().missions.length?'Sigue afinando tu criterio':'Tu próxima misión'}<br>${escape(next.title)}</h2>
-      <p>${escape(next.story)}<br>${next.minutes} minutos · 3 decisiones · feedback en cada paso</p>
-      <div class="academy-actions">${showAeRoute?'<button class="academy-btn primary" type="button" data-case-section="ae-route">Ver ruta de dos semanas ↓</button>':''}<button class="academy-btn ${showAeRoute?'':'primary'}" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button><button class="academy-btn" type="button" data-case-section="advisory">Escenarios de asesoría ↓${newCaseDot(ADVISORY_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button><button class="academy-btn" type="button" data-case-section="playbook">Practicar Playbook ↓${newCaseDot(isNewCase(HYPOTHESIS_MISSION.id)||PLAYBOOK_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}</button></div>
-      <p class="academy-muted">${completed}/${role().missions.length} misiones aprobadas · ${escape(role().goal)}</p>
-      <div class="academy-sync-note" data-academy-save role="status"></div>
-      <p class="academy-muted academy-edition">${wikiChanged()?'La wiki tiene novedades posteriores a la edición de las misiones base. Revisa la fuente indicada en cada desafío.':'Misiones base edición '+LEGACY_MISSION_REVISION+' · consulta la fuente de cada desafío.'}</p>
+    <header class="academy-panel academy-onboarding-head">
+      <div>
+        <h2>Onboarding</h2>
+        <div class="academy-sync-note" data-academy-save role="status"></div>
+      </div>
+      <div class="academy-controls"><label>Rol<select id="academy-role" ${!ready?'disabled':''}>${Object.entries(ROLES).map(([id,r])=>`<option value="${id}" ${id===progress.role?'selected':''}>${r.name}</option>`).join('')}</select></label></div>
       <div class="academy-actions academy-recovery"><button class="academy-btn" id="academy-retry">${!ready?'Reintentar carga':'Reintentar guardado'}</button><button class="academy-btn" id="academy-reload">Cargar avance guardado</button></div>
       ${hasLegacy()?'<button class="academy-btn" id="academy-import">Recuperar mi avance anterior de este navegador</button>':''}
-    </section>
-    ${showAeRoute ? aeRoute() : ''}
-    <section class="academy-main-missions"><div class="academy-section-head"><h3>${progress.mode==='onboarding'?'Aprende resolviendo':'Elige tu desafío'}</h3><span class="academy-muted">Sin límite de intentos</span></div>
-      <div class="academy-mission-grid">${(progress.mode==='onboarding'?role().missions.map(mission):MISSIONS.filter(m=>!m.demo&&!m.advice&&!m.playbook)).map(missionCard).join('')}</div>
-      <div id="academy-advisory" style="margin-top:24px">${advisoryChallenges()}</div>
-      <div id="academy-playbook" style="margin-top:24px">${playbookChallenges()}</div>
-      <div style="margin-top:24px">${demoChallenges()}</div>
-    </section>
-    <aside class="academy-sidebar"><section class="academy-panel"><div class="academy-kicker">${progress.mode==='onboarding'?'De conocer a practicar':'Tu siguiente mejora'}</div><h3>${progress.mode==='onboarding'?'Tu recorrido, paso a paso':'Entrena con intención'}</h3><ol class="academy-path"><li>Comprende el cliente y el alcance.</li><li>Resuelve los casos de tu rol.</li><li>Practica con tu referente y revisa dudas.</li></ol><p class="academy-muted">El ritmo es flexible. Aprobar un ejercicio no certifica preparación para trabajar sin acompañamiento.</p>
-    ${progress.mode==='onboarding'?tasks.map((t,i)=>`<label class="academy-check"><input type="checkbox" data-task="${progress.role}-${i}" ${progress.tasks[progress.role+'-'+i]?'checked':''} ${!ready?'disabled':''}>${t}</label>`).join(''): `<p class="academy-muted" style="margin-top:16px">${due.length?due.length+' decisiones listas para repasar.':'Aún no tienes repasos vencidos. Los errores volverán mañana; los aciertos se espacian.'}</p>`}
-    <div class="academy-actions"><button class="academy-btn" data-library>Consultar la biblioteca ↗</button></div></section></aside>`;
+    </header>
+    ${hasAeRoute() ? aeRoute() : `<section class="academy-panel">
+      <div class="academy-section-head"><h3>Tu recorrido · ${escape(role().name)}</h3></div>
+      <p class="academy-muted">${escape(role().goal)}</p>
+      <div class="academy-mission-grid">${role().missions.map(mission).map(missionCard).join('')}</div>
+      ${tasks.map((task,i)=>`<label class="academy-check"><input type="checkbox" data-task="${progress.role}-${i}" ${progress.tasks[progress.role+'-'+i]?'checked':''} ${!ready?'disabled':''}>${task}</label>`).join('')}
+    </section>`}`;
   wireAeRoute();
-  $('academy-role').addEventListener('change',event=>{progress.role=event.target.value;void persist();render();});
-  $('academy-dashboard').querySelectorAll('[data-mode]').forEach(button=>button.onclick=()=>{progress.mode=button.dataset.mode;void persist();render();});
-  $('academy-retry').onclick=()=>{if(!ready)void load();else if(conflict)saveNote('Carga el avance guardado para conciliar la otra pestaña. Tu práctica pendiente sigue visible aquí.',true);else{blocked=false;void persist();}};
-  $('academy-reload').onclick=()=>{if(dirty&&!confirm('Hay cambios pendientes en esta pestaña. ¿Descartarlos y cargar el avance guardado?'))return;dirty=false;void load();};
+  $('academy-role').onchange = event => { progress.role=event.target.value; void persist(); render(); };
+  $('academy-retry').onclick = () => {
+    if(!ready) void load();
+    else if(conflict) saveNote('Carga el avance guardado para conciliar la otra pestaña. Tu práctica pendiente sigue visible aquí.',true);
+    else { blocked=false; void persist(); }
+  };
+  $('academy-reload').onclick = () => {
+    if((dirty||roleplaySaveTimer!==undefined)&&!confirm('Hay cambios pendientes en esta pestaña. ¿Descartarlos y cargar el avance guardado?')) return;
+    dirty=false; void load();
+  };
   if($('academy-import'))$('academy-import').onclick=()=>{
     if(!confirm('¿Confirmas que el avance anterior de este navegador es tuyo? Lo copiaremos a tu cuenta sin borrar el original.'))return;
     try{const previous=JSON.parse(localStorage.getItem('adereso_academy'));if(!previous||JSON.stringify(previous).length>70000)throw Error();state={...state,...previous};progress.legacy=clone(state);progress.legacyImported=true;void persist();renderHome();updateHeader();renderProductAcademies();renderAchievements();render();}
-    catch{saveNote('No se pudo recuperar el avance anterior. El original sigue en este navegador.',true);}
+    catch{saveNote('No se pudo recuperar el avance anterior de este navegador.',true);}
   };
   $('academy-dashboard').querySelectorAll('[data-task]').forEach(input=>input.onchange=()=>{progress.tasks[input.dataset.task]=input.checked;void persist();});
-  $('academy-practice-cases').innerHTML=advisoryChallenges();
-  $('academy-practice-playbook').innerHTML=playbookChallenges();
-  $('academy-demo-challenges').innerHTML=demoChallenges();
+  $('academy-training-core').innerHTML = `<section><div class="academy-section-head"><h3 tabindex="-1">Misiones comerciales</h3></div><div class="academy-mission-grid">${MISSIONS.filter(m=>!m.demo&&!m.advice&&!m.playbook).map(missionCard).join('')}</div></section>`;
+  $('academy-playbook').innerHTML=playbookChallenges();
+  $('academy-advisory').innerHTML=advisoryChallenges();
+  $('academy-demo').innerHTML=demoChallenges();
+  const review = $('academy-training-review');
+  review.disabled = !ready;
+  review.textContent = reviewKeys().length ? 'Repasar ' + reviewKeys().length + ' decisiones' : 'Practicar un caso';
+  const resumeButton = $('academy-training-resume');
+  resumeButton.hidden = !ready || !resume();
+  resumeButton.dataset.start = resume()?.id ?? '';
   saveNote(lastStatus.text,lastStatus.error);
   accessible();
 }
@@ -380,7 +479,7 @@ function openMission(id, reviewQuestions) {
   showStep();
 }
 function activateMissionView() {
-  originTab=$('tab-games').style.display!=='none'?'games':'home';
+  originTab=document.querySelector('.nav-item.active')?.dataset.academyTab ?? 'home';
   document.querySelectorAll('.tab-content,.lesson-view,.quiz-view').forEach(el=>el.style.display='none');
   const view=$('academy-mission-view');
   view.style.display='block';
@@ -517,7 +616,7 @@ function showResult() {
   if(source)source.onclick=()=>library(m.reference.query);
   window.scrollTo(0,0);
 }
-function exit() {$('academy-mission-view').classList.remove('active');$('academy-mission-view').style.display='none';switchTab(originTab);active=null;}
+function exit() {$('academy-mission-view').classList.remove('active');$('academy-mission-view').style.display='none';switchTab(originTab);active=null;restoreOnboardingFocus();}
 function library(query) {
   if(active)exit();
   switchTab('products');$('academy-sources').open=true;
@@ -535,10 +634,17 @@ function startReview() {
   else {const current=pending();const alternative=MISSIONS.find(m=>m.id!==current&&!passed(m.id))||MISSIONS.find(m=>m.id!==current);openMission(alternative.id);}
 }
 function renderSkills() {
-  const node=$('academy-skills');node.innerHTML=`<div class="section-title">Tus habilidades en práctica</div><p class="academy-muted" style="margin-bottom:16px">Resultados de desafíos · una práctica aprobada no equivale a certificación.</p><div class="academy-evidence-grid">${MISSIONS.map(m=>{const r=record(m.id);return `<div class="academy-evidence"><h3>${escape(m.skill)}</h3><p class="academy-muted">${!r?'Aún sin práctica':r.lastPassed?'Último caso aprobado':r.passed?'Aprobada antes · último intento por reforzar':'Por reforzar'}${r?' · '+r.correct+'/'+r.total:''}</p><div class="academy-actions"><button class="academy-btn" data-start="${m.id}">Practicar →</button></div></div>`;}).join('')}</div>`;
+  const node=$('academy-skills');
+  const onboarding = `<section class="academy-panel academy-progress-route"><h3>Avance de onboarding AE</h3><p class="academy-muted">${aeCounter()}</p><button class="academy-btn" type="button" data-open-onboarding>Ir al onboarding →</button></section>`;
+  node.innerHTML=onboarding+`<div class="section-title">Tus habilidades en práctica</div><p class="academy-muted" style="margin-bottom:16px">Resultados de desafíos · una práctica aprobada no equivale a certificación.</p><div class="academy-evidence-grid">${MISSIONS.map(m=>{const r=record(m.id);return `<div class="academy-evidence"><h3>${escape(m.skill)}</h3><p class="academy-muted">${!r?'Aún sin práctica':r.lastPassed?'Último caso aprobado':r.passed?'Aprobada antes · último intento por reforzar':'Por reforzar'}${r?' · '+r.correct+'/'+r.total:''}</p><div class="academy-actions"><button class="academy-btn" data-start="${m.id}">Practicar →</button></div></div>`;}).join('')}</div>`;
 }
 document.addEventListener('click',event=>{
-  const start=event.target.closest('[data-start]');if(start)openMission(start.dataset.start);
+  const entry = event.target.closest('[id^="academy-entry-"]');
+  const start=event.target.closest('[data-start]');
+  if (start) {
+    aeReturnEntry = entry?.id.slice('academy-entry-'.length) ?? null;
+    openMission(start.dataset.start);
+  }
   if(event.target.closest('[data-hypothesis]'))openHypothesis();
   if(event.target.closest('[data-review]'))startReview();
   if(event.target.closest('[data-library]'))library();
@@ -546,14 +652,67 @@ document.addEventListener('click',event=>{
   if(section)scrollToCaseSection(section.dataset.caseSection);
   if(event.target.closest('[data-ae-evidence]'))scrollToCaseSection('ae-evidence');
   const lesson=event.target.closest('[data-ae-lesson]');
-  if(lesson)openLesson(Number(lesson.dataset.aeLesson));
+  if(lesson) {
+    aeReturnEntry = entry?.id.slice('academy-entry-'.length) ?? null;
+    openLesson(Number(lesson.dataset.aeLesson));
+  }
+  const resume = event.target.closest('[data-ae-resume]');
+  if (resume) focusAeEntry(resume.dataset.aeResume);
+  if (event.target.closest('[data-open-onboarding]')) {
+    progress.role='AE';
+    switchTab('home');
+  }
 });
-document.addEventListener('academy:sources-checked',()=>{if($('academy-dashboard'))render();});
+document.addEventListener('academy:sources-checked', () => {
+  $('academy-mission-source-status').textContent = wikiChanged()
+    ? 'La wiki tiene novedades posteriores a las misiones base. Consulta la referencia del caso.'
+    : 'Misiones base · edición ' + LEGACY_MISSION_REVISION;
+});
 const view=document.createElement('div');view.id='academy-mission-view';view.className='main mission-view';$('app').insertBefore(view,document.querySelector('.nav'));
 const banner=document.createElement('p');banner.id='academy-save-banner';banner.setAttribute('role','status');banner.hidden=true;document.querySelector('.header').append(banner);
 const dashboard=document.createElement('div');dashboard.id='academy-dashboard';dashboard.className='academy-home';$('tab-home').prepend(dashboard);
 const skills=document.createElement('div');skills.id='academy-skills';$('tab-progress').prepend(skills);
-const practice=document.createElement('section');practice.className='academy-panel';practice.innerHTML='<div class="academy-kicker">Entrena tu criterio</div><h2>Un caso antes del próximo cliente</h2><p class="academy-muted">Resuelve una situación comercial o repasa decisiones de prácticas anteriores.</p><div class="academy-actions"><button class="academy-btn primary" data-start="objection">Resolver una objeción →</button><button class="academy-btn" data-review>Repasar decisiones</button></div><div id="academy-practice-cases" style="margin-top:24px"></div><div id="academy-practice-playbook" style="margin-top:24px"></div><div id="academy-demo-challenges" style="margin-top:24px"></div>';$('tab-games').prepend(practice);
+const practice=document.createElement('section');
+practice.className='academy-training';
+practice.innerHTML=`<header class="academy-panel">
+  <h2>Entrenamiento</h2>
+  <div class="academy-actions">
+    <button class="academy-btn primary" type="button" id="academy-training-resume" hidden>Retomar mi práctica →</button>
+    <button class="academy-btn" type="button" id="academy-training-review" data-review>Practicar un caso</button>
+    <button class="academy-btn" type="button" data-case-section="playbook">Roleplays del Playbook ↓</button>
+    <button class="academy-btn" type="button" data-case-section="advisory">Asesoría ↓</button>
+    <button class="academy-btn" type="button" data-case-section="demo">Demos ↓</button>
+    <button class="academy-btn" type="button" data-case-section="quizzes">Quizzes y juegos ↓</button>
+  </div>
+  <p id="academy-mission-source-status" class="academy-muted academy-edition">Misiones base · edición ${LEGACY_MISSION_REVISION}</p>
+</header>
+<div id="academy-playbook"></div><div id="academy-training-core"></div><div id="academy-advisory"></div><div id="academy-demo"></div>`;
+$('tab-games').prepend(practice);
+const legacy=document.querySelector('.academy-legacy');
+const products=$('tab-products');
+const progressTab=$('tab-progress');
+const practiceTools=document.createElement('section');
+practiceTools.id='academy-quizzes';
+practiceTools.innerHTML='<h3 tabindex="-1">Quizzes y juegos</h3>';
+for (const child of [...$('tab-games').children].slice(1)) {
+  if (child.classList.contains('section-title') && child.textContent.includes('Entrenamiento')) child.remove();
+  else practiceTools.append(child);
+}
+const quizInfo=practiceTools.querySelector('div');
+if (quizInfo) quizInfo.textContent='Practica a tu ritmo. Los exámenes de nivel están en Progreso.';
+$('tab-games').append(practiceTools);
+const lessons = document.createElement('section');
+lessons.className='academy-panel academy-lesson-library';
+const lessonHeading = $('lessons-list').previousElementSibling;
+lessonHeading.firstChild.textContent = 'Biblioteca de lecciones ';
+lessons.append(lessonHeading, $('lessons-list'));
+products.append(document.querySelector('.academy-source-intro'), lessons);
+progressTab.prepend(legacy.querySelector('.welcome-card'), $('exam-section'));
+const legacyReview = document.createElement('div');
+legacyReview.hidden = true;
+legacyReview.append($('srs-card'));
+practice.append(legacyReview);
+legacy.remove();
 // Lucide icons rendered from the project's existing lucide-react package.
 installAcademyNavigation({"home": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-house\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"></path><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path></svg>", "games": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-dumbbell\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"></path><path d=\"m2.5 21.5 1.4-1.4\"></path><path d=\"m20.1 3.9 1.4-1.4\"></path><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"></path><path d=\"m9.6 14.4 4.8-4.8\"></path></svg>", "products": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-graduation-cap\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z\"></path><path d=\"M22 10v6\"></path><path d=\"M6 12.5V16a6 3 0 0 0 12 0v-3.5\"></path></svg>", "progress": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-combined\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 16v5\"></path><path d=\"M16 14v7\"></path><path d=\"M20 10v11\"></path><path d=\"m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15\"></path><path d=\"M4 18v3\"></path><path d=\"M8 14v7\"></path></svg>", "open": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-open\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m14 9 3 3-3 3\"></path></svg>", "close": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-close\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m16 15-3-3 3-3\"></path></svg>"});
 document.body.classList.add('academy-pending');
@@ -563,9 +722,8 @@ void load().then(()=>{
   const section=new URLSearchParams(academySearch).get('academySection');
   if(section==='ae-route'){
     progress.role='AE';
-    progress.mode='onboarding';
-    render();
+    switchTab('home');
     scrollToCaseSection(section);
   }
-  if(section==='advisory'||section==='playbook')scrollToCaseSection(section);
+  if(section==='advisory'||section==='playbook'){switchTab('games');scrollToCaseSection(section);}
 });
