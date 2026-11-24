@@ -18,7 +18,6 @@
 .loss-conclusions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 265px), 1fr));
-  align-items: start;
   gap: 12px;
 }
 .loss-conclusion {
@@ -97,6 +96,9 @@
   align-items: center;
   gap: 5px;
   white-space: nowrap;
+}
+.loss-conclusions-grid .loss-conclusion-front > .loss-conclusion-link {
+  margin-top: auto;
 }
 
 .loss-conclusions-empty {

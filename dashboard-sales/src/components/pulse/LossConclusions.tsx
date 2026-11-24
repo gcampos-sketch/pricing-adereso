@@ -33,6 +33,7 @@ export function LossConclusions({ deals, scope, onOpen }: {
       />}
       {priorities.length ? <div className="loss-conclusions-grid">
         {priorities.map(group => {
+          const ghosting = isGhostingLoss(group.reason);
           const front = <>
             <header>
               <h3>{group.reason}</h3>
@@ -44,7 +45,7 @@ export function LossConclusions({ deals, scope, onOpen }: {
               <div><dt>{group.count === 1 ? "Deal perdido" : "Deals perdidos"}</dt><dd><strong>{group.count}</strong><span> · {pct(group.dealShare)}</span></dd></div>
               <div><dt>MRR perdido</dt><dd><strong>{money(group.mrr)}</strong>{group.mrrShare !== null && <span> · {pct(group.mrrShare)}</span>}</dd></div>
             </dl>
-            {group.stage && <p className="loss-conclusion-stage">{group.stage.count} de {group.count} con <strong>{group.stage.label}</strong> como última etapa registrada</p>}
+            {!ghosting && group.stage && <p className="loss-conclusion-stage">{group.stage.count} de {group.count} con <strong>{group.stage.label}</strong> como última etapa registrada</p>}
           </>;
           const recommendation = <div className="loss-conclusion-recommendation">
               <h4>Qué cambiar</h4>
@@ -52,7 +53,7 @@ export function LossConclusions({ deals, scope, onOpen }: {
               <p className="loss-conclusion-measure"><strong>Qué medir</strong> {group.recommendation.measure}</p>
           </div>;
           const openEvidence = (rows: InsightDeal[], detail?: string) => view(group.reason, rows, detail, "words");
-          return isGhostingLoss(group.reason)
+          return ghosting
             ? <GhostingConclusion key={group.reason} label={group.reason} deals={group.deals} front={front} recommendation={recommendation} onOpen={openEvidence} />
             : <LossConclusionFlip key={group.reason} label={group.reason} front={<>{front}{recommendation}</>}
               back={<LossOwnerEvidence deals={group.deals} priority={(group.mrr <= 0 || (group.leadsCount && !group.leadsMrr)) ? "count" : "mrr"} onOpen={openEvidence} />} />;
