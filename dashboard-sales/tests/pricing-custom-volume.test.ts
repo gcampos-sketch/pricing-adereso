@@ -3,19 +3,21 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 const html=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
 const start=html.indexOf('function finishCustomVolume(');
+const commonStart=html.indexOf('function customVolumeLabel(');
+const common=html.slice(commonStart,html.indexOf('function volGrid(',commonStart));
 const source=html.slice(start,html.indexOf("document.getElementById('volArea').addEventListener('focusout'",start));
 function finish(value:string,previous={volMode:'tile',volCustom:0,vol:5000}){
  const state={...previous};
  const node=()=>({hidden:false,textContent:'',attributes:{} as Record<string,string>,classList:{toggle:(_k:string,_v:boolean)=>{},remove:(_k:string)=>{}},setAttribute(k:string,v:string){this.attributes[k]=v;}});
  const number=node(),label=node(),check=node(),hint=node();
  const button={...node(),querySelector:(s:string)=>s==='.conv'?number:s==='.lbl'?label:check};
- const box={...node(),querySelector:(s:string)=>s==='[data-vol-edit]'?button:hint};
+ const box={...node(),querySelector:(s:string)=>s==='.custom-volume-display'?button:hint};
  const input={value,hidden:false,closest:()=>box};
  const fixed={...node(),dataset:{vol:'5000'}};
  const updated:string[]=[];
- const ctx:any={state,document:{querySelectorAll:()=>[box,fixed]}};
+ const ctx:any={state,outboundCount:(n:number)=>n.toLocaleString('es-CL'),document:{querySelectorAll:()=>[fixed]}};
  for(const name of ['updateSpot','updateConversationStatus','syncRoiVolume','renderRail','renderSummary'])ctx[name]=()=>updated.push(name);
- runInNewContext(source+';finishCustomVolume(input);',{...ctx,input});
+ runInNewContext(common+source+';finishCustomVolume(input);',{...ctx,input});
  return {state,input,button,number,label,check,updated};
 }
 test('confirming a custom bag displays its formatted quantity and selected accessible state',()=>{
