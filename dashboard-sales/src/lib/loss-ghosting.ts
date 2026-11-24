@@ -12,6 +12,7 @@ export const GHOSTING_CHANNELS = [
   ["emails", "Correos"],
 ] as const;
 export const GHOSTING_MINIMUM = 2;
+export const GHOSTING_STATUS_LABELS = { met: "Cumple el mínimo", short: "Bajo el mínimo", unknown: "Mínimo sin verificar" };
 export const GHOSTING_BATCH_SIZE = 50;
 
 export function isGhostingLoss(reason: string | null | undefined) {

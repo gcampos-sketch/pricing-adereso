@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 
 import { buildLossReasonWords, type LossNarrative } from '@/lib/loss-reason-words';
 import { summarizeLossByOwner } from '@/lib/loss-summary';
 import type { InsightDeal } from '@/lib/insights-types';
+import { CopyDealLinksButton } from './CopyControls';
 import { money } from './insights-shared';
 import './LossReasonWords.css';
 
@@ -62,6 +63,11 @@ export function LossReasonWords({ deals, available, compact = false, initialLimi
         <h4 id={`${evidenceId}-heading`} ref={evidenceHeading} tabIndex={-1}>
           «{selected.term}» en Closed Lost Reason
         </h4>
+        <CopyDealLinksButton title={`Copiar todo · Comentarios con «${selected.term}»`}
+          heading={[`«${selected.term}» en Closed Lost Reason`]}
+          getDeals={() => selected.comments.map(comment => ({ name: comment.name, url: comment.url || '', details: [
+            `${comment.owner || 'Sin comercial'} · ${money(comment.amountValue)} USD de MRR`, comment.text,
+          ] }))} />
         <button type="button" onClick={() => { setSelection(null); activeBubble.current?.focus(); }}>Cerrar comentarios</button>
       </div>
       <LossBreakdown key={selected.term} deals={selected.comments} />

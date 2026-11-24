@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, LoaderCircle, X } from "lucide-react";
+import { buildDealListClipboard, type CopyableDeal } from "@/lib/deal-list-clipboard";
 import { copyBlockImage, copyText } from "@/lib/snapshot";
 
 type State = "idle" | "busy" | "ok" | "fail";
@@ -88,37 +89,43 @@ export function CopyTextButton({
 }
 
 /** Rich deal links, with a URL-preserving plain-text alternative for plain editors. */
-export function CopyDealLinksButton({ getDeals }: { getDeals: () => { name: string; url: string }[] }) {
+export function CopyDealLinksButton({ getDeals, heading, title = "Copiar deals como hipervínculos", disabled = false }: {
+  getDeals: () => readonly CopyableDeal[];
+  heading?: readonly string[];
+  title?: string;
+  disabled?: boolean;
+}) {
   const [state, setState] = useState<State>("idle");
   const [count, setCount] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
-  const message = state === "ok" ? `${count} ${count === 1 ? "deal copiado como hipervínculo" : "deals copiados como hipervínculos"}` : state === "fail" ? "No se pudo copiar. Revisa el permiso del portapapeles." : "";
+  const message = state === "ok" ? `${count} ${count === 1 ? "deal copiado" : "deals copiados"}` : state === "fail" ? "No se pudo copiar. Revisa el permiso del portapapeles." : "";
+
   return <span className="deal-links-copy" data-capture-ignore>
-    <button type="button" className="copy-btn section-copy-btn" title="Copiar deals como hipervínculos" aria-label="Copiar deals como hipervínculos" aria-busy={state === "busy"} disabled={state === "busy"} data-state={state} onClick={async event => {
-      event.stopPropagation();
-      if (timer.current) clearTimeout(timer.current);
-      setState("busy");
-      try {
-        const deals = [...new Map(getDeals().map(deal => [deal.url, deal])).values()];
-        if (!deals.length) throw new Error("No deals");
-        const list = document.createElement("ul");
-        for (const deal of deals) {
-          const item = document.createElement("li"), link = document.createElement("a");
-          link.href = deal.url;
-          link.textContent = deal.name;
-          item.append(link);
-          list.append(item);
+    <button type="button" className="copy-btn section-copy-btn" title={title} aria-label={title}
+      aria-busy={state === "busy"} disabled={disabled || state === "busy"} data-state={state} onClick={async event => {
+        event.stopPropagation();
+        if (timer.current) clearTimeout(timer.current);
+        const { count, html, text } = buildDealListClipboard(getDeals(), heading);
+        if (!count) return;
+        setState("busy");
+        let copied = false;
+        if (navigator.clipboard?.write && typeof ClipboardItem !== "undefined") {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({
+              "text/html": new Blob([html], { type: "text/html" }),
+              "text/plain": new Blob([text], { type: "text/plain" }),
+            })]);
+            copied = true;
+          } catch {
+            // Some apps or browsers only support plain text.
+          }
         }
-        await navigator.clipboard.write([new ClipboardItem({
-          "text/html": new Blob([list.outerHTML], { type: "text/html" }),
-          "text/plain": new Blob([deals.map(deal => `${deal.name} — ${deal.url}`).join("\n")], { type: "text/plain" }),
-        })]);
-        setCount(deals.length);
-        setState("ok");
-      } catch { setState("fail"); }
-      timer.current = setTimeout(() => setState("idle"), 5000);
-    }}><CopyStateIcon state={state} /></button>
+        if (!copied) copied = await copyText(text);
+        setCount(count);
+        setState(copied ? "ok" : "fail");
+        timer.current = setTimeout(() => setState("idle"), 5000);
+      }}><CopyStateIcon state={state} /></button>
     <span className="section-copy-feedback" role="status" aria-live="polite">{message}</span>
   </span>;
 }
