@@ -183,6 +183,11 @@ async function commercialDeals(ids: string[]) {
   return deals;
 }
 
+export async function readConnectedCallDispositions(): Promise<Set<string>> {
+  const dispositions = await gateway<{ id: string; label: string }[]>("/calling/v1/dispositions");
+  return new Set(dispositions.filter(row => /^(conectado|connected)$/i.test(row.label)).map(row => row.id));
+}
+
 async function readChannel(channel: ContactChannel, now: number): Promise<ContactActivity[]> {
   const records = await searchChannel(channel, now - 30 * DAY, now);
   const links = await associatedDeals(
@@ -192,11 +197,7 @@ async function readChannel(channel: ContactChannel, now: number): Promise<Contac
   const deals = await commercialDeals([...new Set([...links.values()].flat())]);
   const connected =
     channel === "calls" && records.length
-      ? new Set(
-          (await gateway<{ id: string; label: string }[]>("/calling/v1/dispositions"))
-            .filter((row) => /^(conectado|connected)$/i.test(row.label))
-            .map((row) => row.id),
-        )
+      ? await readConnectedCallDispositions()
       : new Set<string>();
   const activities: ContactActivity[] = [];
   for (const { id, properties: p } of records) {
