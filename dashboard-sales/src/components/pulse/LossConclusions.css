@@ -97,7 +97,23 @@
   gap: 5px;
   white-space: nowrap;
 }
-.loss-conclusions-grid .loss-conclusion-front > .loss-conclusion-link {
+.loss-conclusion-flip-button {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--brand);
+  cursor: pointer;
+}
+.loss-conclusion-flip-button:hover {
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+}
+.loss-conclusions-grid .loss-conclusion-front > .loss-conclusion-flip-button {
   margin-top: auto;
 }
 
