@@ -5,6 +5,7 @@ import { isGhostingLoss } from "@/lib/loss-ghosting";
 import { useLossGhosting } from "@/hooks/use-loss-ghosting";
 import { LossGhostingActivity } from "./LossGhostingActivity";
 import type { InsightDeal } from "@/lib/insights-types";
+import { LossReasonSummary } from "./LossReasonSummary";
 import { LossReasonWords } from "./LossReasonWords";
 import { money, sum } from "./insights-shared";
 
@@ -64,6 +65,7 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
             </label>}
             <p role="status"><strong>{count} {deals.length === 1 ? "deal" : "deals"}</strong><span>{money(sum(rows, deal => deal.amountValue))} USD de MRR</span></p>
           </div>
+          {selection.reasonWords && <LossReasonSummary deals={rows} available={narrativesAvailable} />}
           {ghostRows.length > 0 && <div className="loss-ghosting-caption">
             <p>Mínimo por deal · 2 llamadas, 2 mensajes nativos de WhatsApp y 2 correos registrados en HubSpot. Reuniones completadas desde la creación del deal hasta antes de su entrada a perdido.</p>
             {partialActivity && !ghosting.isFetching && <button type="button" className="cell-button" onClick={() => void ghosting.refetch()}>Verificar de nuevo</button>}
@@ -77,10 +79,12 @@ export function LossDealDrawer({ selection, narrativesAvailable, onClose, restor
               <div>
                 <a href={deal.url} target="_blank" rel="noopener noreferrer">{deal.name}<ExternalLink size={12} aria-hidden="true" /></a>
                 <small>{[deal.owner || "Sin comercial", deal.lostReason || "Sin motivo listado"].join(" · ")}</small>
-                {selection.records && <details className="loss-deal-record">
+                {(selection.records || selection.reasonWords) && <details className="loss-deal-record" open={rows.length === 1 ? true : undefined}>
                   <summary>Comentario y etapa</summary>
                   <small>{deal.lostStage || "Sin recorrido"} · {deal.lostStageDays > 0 ? `${deal.lostStageDays} días` : "Sin duración registrada"}</small>
-                  <p>{deal.lostReasonText || "Sin comentario registrado"}</p>
+                  <p>{selection.reasonWords
+                    ? (narrativesAvailable ? deal.lostReasonNarrative?.trim() || "Sin comentario de cierre registrado" : "Comentario de cierre pendiente de actualización")
+                    : deal.lostReasonText || "Sin comentario registrado"}</p>
                 </details>}
               </div>
               <span><strong>{money(deal.amountValue)}</strong><small>MRR perdido</small></span>

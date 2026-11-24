@@ -1,0 +1,25 @@
+.loss-reason-summary {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 12px 0;
+  overflow-wrap: anywhere;
+}
+.loss-reason-summary h4,.loss-reason-summary h5 { margin: 0; color: var(--foreground); font-size: 13px; }
+.loss-reason-summary p,.loss-reason-summary-detail ul { margin: 0; color: var(--muted); font-size: 12px; }
+.loss-reason-summary-detail summary { cursor: pointer; color: var(--body); font-size: 12px; padding: 5px 0; }
+.loss-reason-summary-detail summary:hover { color: var(--brand); }
+.loss-reason-summary-detail summary span { margin-left: 8px; color: var(--muted); }
+.loss-reason-topics { display: grid; gap: 4px; border-top: 1px solid var(--border); padding-top: 10px; }
+.loss-reason-summary .loss-reason-comments {
+  list-style: none;
+  padding: 0 0 0 10px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.loss-reason-comments li { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.loss-reason-comments a { color: var(--brand); }
+.loss-reason-comments small { display: block; margin-top: 2px; }
+.loss-reason-comments blockquote { margin: 4px 0 0; color: var(--body); white-space: pre-wrap; }

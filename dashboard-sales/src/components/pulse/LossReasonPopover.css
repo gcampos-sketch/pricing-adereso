@@ -7,5 +7,5 @@
 .loss-reason-popup-heading p { font-size:11px; color:var(--muted); margin:5px 0 0; }
 .loss-reason-popup-close { display:grid; place-items:center; flex:0 0 30px; width:30px; height:30px; border:1px solid var(--border); border-radius:50%; color:var(--muted); background:none; cursor:pointer; }
 .loss-reason-popup-close:hover { color:var(--foreground); background:var(--glass-track); }
-.loss-reason-popover > .loss-reason-words { padding:0; border:0; background:none; margin:14px 0 0; }
+.loss-reason-popover .loss-reason-words { padding:0; border:0; background:none; margin:14px 0 0; }
 .loss-reason-popover .loss-words-heading h3 { font-size:13px; }

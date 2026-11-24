@@ -204,7 +204,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
           </button></span>)}
       </nav>
       <div className="loss-analysis-heading">
-        <div><h2 className="pulse-h2">{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa una barra para ver sus deals, el motivo para ver sus palabras o la flecha para cruzar categorías." : "Pulsa una barra para ver sus deals o la flecha para cruzar categorías."}</p></div>
+        <div><h2 className="pulse-h2">{question}</h2><p>{path.length ? `${scoped.length} de ${lost.length} deals · ${money(scopedAmount)} MRR` : dimension === "reason" ? "Pulsa una barra para ver sus deals, el motivo para leer el resumen o la flecha para cruzar categorías." : "Pulsa una barra para ver sus deals o la flecha para cruzar categorías."}</p></div>
         <div className="tabs" aria-label="Medida del análisis">{(["amount", "count"] as const).map(value => <button type="button" key={value} data-active={measure === value} aria-pressed={measure === value} onClick={() => setMeasure(value)}>{value === "amount" ? "MRR" : "Deals"}</button>)}</div>
       </div>
       <div className="loss-dimensions" aria-label="Analizar pérdidas por">
@@ -214,7 +214,7 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         <button type="button" className="cell-button" onClick={() => { const last = path[path.length - 1]!; updatePath(path.slice(0, -1)); setDimension(last.dimension); }}><ArrowLeft size={14} aria-hidden="true" /> Volver un nivel</button>
         <button type="button" className="cell-button" onClick={() => open(path.map(slice => slice.key).join(" · "), scoped)}>Ver {scoped.length} deals</button>
       </div>}
-      {path.some(slice => slice.dimension === "reason") && <LossReasonPopover label={path.find(slice => slice.dimension === "reason")!.key} triggerLabel="Ver palabras del motivo" deals={scoped} scope={wordScope} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />}
+      {path.some(slice => slice.dimension === "reason") && <LossReasonPopover label={path.find(slice => slice.dimension === "reason")!.key} triggerLabel="Ver resumen del motivo" deals={scoped} scope={wordScope} available={report.lossNarrativesVersion === "closed-lost-reason/v1"} />}
       <div className="loss-rows">
         {visibleRows.map(row => <div key={row.key} className="loss-row">
           <div className={`loss-category${dimension === "reason" ? " loss-category--reason" : ""}`}>
