@@ -170,8 +170,15 @@ function installAcademyNavigation(icons) {
 function missionCard(m){
   return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}</h4><p>${m.demo||m.advice?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
 }
+function scrollToAdvisory(){
+  const heading = $('academy-advisory').querySelector('h3');
+  const headerHeight = document.querySelector('.header').getBoundingClientRect().height;
+  const offset = heading.getBoundingClientRect().top - headerHeight - 16;
+  window.scrollBy(0, offset);
+  heading.focus({preventScroll:true});
+}
 function advisoryChallenges(){
-  return `<section aria-label="Escenarios de asesoría"><div class="academy-section-head"><h3>Escenarios de asesoría</h3></div><p class="academy-muted">El cliente trae un flujo. Elige qué ajustar, prepara dos alternativas y practica cómo se las explicarías.</p><div class="academy-mission-grid" style="margin-top:14px">${ADVISORY_MISSIONS.map(missionCard).join('')}</div></section>`;
+  return `<section aria-label="Escenarios de asesoría"><div class="academy-section-head"><h3 tabindex="-1">Escenarios de asesoría</h3></div><p class="academy-muted">El cliente trae un flujo. Elige qué ajustar, prepara dos alternativas y practica cómo se las explicarías.</p><div class="academy-mission-grid" style="margin-top:14px">${ADVISORY_MISSIONS.map(missionCard).join('')}</div></section>`;
 }
 function demoChallenges(){
   return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3>¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
@@ -191,7 +198,7 @@ function render() {
       <div class="academy-kicker">${progress.mode==='onboarding'?'Tu ruta de onboarding':'Tu entrenamiento de hoy'} · ${escape(progress.role)}</div>
       <h2>${saved?'Retoma tu misión':completed===role().missions.length?'Sigue afinando tu criterio':'Tu próxima misión'}<br>${escape(next.title)}</h2>
       <p>${escape(next.story)}<br>${next.minutes} minutos · 3 decisiones · feedback en cada paso</p>
-      <div class="academy-actions"><button class="academy-btn primary" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button></div>
+      <div class="academy-actions"><button class="academy-btn primary" data-start="${current}" ${!ready?'disabled':''}>${saved?'Continuar misión':'Comenzar desafío'} →</button><button class="academy-btn" data-review ${!ready?'disabled':''}>${due.length?'Repasar '+due.length+' decisiones':'Practicar un caso distinto'}</button><button class="academy-btn" type="button" data-advisory>Escenarios de asesoría ↓</button></div>
       <p class="academy-muted">${completed}/${role().missions.length} misiones aprobadas · ${escape(role().goal)}</p>
       <div class="academy-sync-note" data-academy-save role="status"></div>
       <p class="academy-muted academy-edition">${wikiChanged()?'La wiki tiene novedades posteriores a la edición de las misiones base. Revisa la fuente indicada en cada desafío.':'Misiones base edición '+LEGACY_MISSION_REVISION+' · consulta la fuente de cada desafío.'}</p>
@@ -200,7 +207,7 @@ function render() {
     </section>
     <section class="academy-main-missions"><div class="academy-section-head"><h3>${progress.mode==='onboarding'?'Aprende resolviendo':'Elige tu desafío'}</h3><span class="academy-muted">Sin límite de intentos</span></div>
       <div class="academy-mission-grid">${(progress.mode==='onboarding'?role().missions.map(mission):MISSIONS.filter(m=>!m.demo&&!m.advice)).map(missionCard).join('')}</div>
-      <div style="margin-top:24px">${advisoryChallenges()}</div>
+      <div id="academy-advisory" style="margin-top:24px">${advisoryChallenges()}</div>
       <div style="margin-top:24px">${demoChallenges()}</div>
     </section>
     <aside class="academy-sidebar"><section class="academy-panel"><div class="academy-kicker">${progress.mode==='onboarding'?'De conocer a practicar':'Tu siguiente mejora'}</div><h3>${progress.mode==='onboarding'?'Tu recorrido, paso a paso':'Entrena con intención'}</h3><ol class="academy-path"><li>Comprende el cliente y el alcance.</li><li>Resuelve los casos de tu rol.</li><li>Practica con tu referente y revisa dudas.</li></ol><p class="academy-muted">El ritmo es flexible. Aprobar un ejercicio no certifica preparación para trabajar sin acompañamiento.</p>
@@ -328,6 +335,7 @@ document.addEventListener('click',event=>{
   const start=event.target.closest('[data-start]');if(start)openMission(start.dataset.start);
   if(event.target.closest('[data-review]'))startReview();
   if(event.target.closest('[data-library]'))library();
+  if(event.target.closest('[data-advisory]'))scrollToAdvisory();
 });
 document.addEventListener('academy:sources-checked',()=>{if($('academy-dashboard'))render();});
 const view=document.createElement('div');view.id='academy-mission-view';view.className='main mission-view';$('app').insertBefore(view,document.querySelector('.nav'));
@@ -338,4 +346,8 @@ const practice=document.createElement('section');practice.className='academy-pan
 // Lucide icons rendered from the project's existing lucide-react package.
 installAcademyNavigation({"home": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-house\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"></path><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path></svg>", "games": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-dumbbell\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"></path><path d=\"m2.5 21.5 1.4-1.4\"></path><path d=\"m20.1 3.9 1.4-1.4\"></path><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"></path><path d=\"m9.6 14.4 4.8-4.8\"></path></svg>", "products": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-graduation-cap\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z\"></path><path d=\"M22 10v6\"></path><path d=\"M6 12.5V16a6 3 0 0 0 12 0v-3.5\"></path></svg>", "progress": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-combined\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 16v5\"></path><path d=\"M16 14v7\"></path><path d=\"M20 10v11\"></path><path d=\"m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15\"></path><path d=\"M4 18v3\"></path><path d=\"M8 14v7\"></path></svg>", "open": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-open\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m14 9 3 3-3 3\"></path></svg>", "close": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-close\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m16 15-3-3 3-3\"></path></svg>"});
 document.body.classList.add('academy-pending');
-render();void load();
+render();
+const academySearch = location.href === 'about:srcdoc' ? parent.location.search : location.search;
+void load().then(()=>{
+  if(new URLSearchParams(academySearch).get('academySection')==='advisory')scrollToAdvisory();
+});
