@@ -207,6 +207,155 @@ export const ADVISORY_MISSIONS = [
     ] },
 ];
 
+const PLAYBOOK = '/?hubView=playbook';
+
+export const PLAYBOOK_MISSIONS = [
+  {id:'playbook-outbound', revision:'2026-11-24.1', title:'«Ustedes me contactaron»', skill:'Preparación e introducción', minutes:6,
+    story:'Tienes 20 minutos antes de una primera reunión outbound. La invitación incluye dos dominios y el brief de Adobo todavía no llega. El contacto aceptó hablar de automatización, sin mencionar un proyecto.',
+    reference:{section:'Preparación · Etapas 0 y 1',url:PLAYBOOK},
+    playbook:{
+      prompt:'Escribe cómo abrirías la reunión. Confirma para qué empresa es la conversación y averigua qué motivó al contacto a aceptar.',
+      model:'Gracias por el tiempo. Vi dos dominios en la invitación. ¿La conversación es para una de las empresas o para ambas? Mi equipo te contactó para explorar automatización conversacional. ¿Qué te interesó de esa conversación? Si recién están mirando opciones, podemos partir por cómo atienden hoy y ver si hay algo que valga la pena explorar.'
+    },
+    questions:[
+      q('pb-outbound-prep','¿Qué haces con los minutos que quedan?',[
+        'Revisar el handoff disponible en Slack y HubSpot, mirar los canales de la empresa y preparar un ejemplo para confirmar durante la reunión.',
+        'Preparar una demo para la empresa con el dominio más conocido y completar el deal con esa hipótesis.',
+        'Revisar solo la web de ambas empresas y dejar que el contacto reconstituya todo lo conversado con SDR.'
+      ],0,'Cuando falta el brief, el handoff y la web permiten llegar con contexto y preguntas acotadas. La relación entre los dominios sigue por confirmar.','Preparación'),
+      q('pb-outbound-scope','Al entrar, las personas se presentan desde empresas distintas. ¿Cómo decides el alcance de la reunión?',[
+        'Pedir al primer contacto que describa su operación y usarla como referente para ambas.',
+        'Mostrar un ejemplo genérico para cubrir a las dos empresas y confirmar el alcance después.',
+        'Aclarar para cuál empresa quieren enfocar la conversación o si comparten la operación antes de hablar del caso de uso.'
+      ],2,'Aclarar el vínculo desde el inicio evita atribuir necesidades o datos a la empresa equivocada y permite personalizar la conversación.','Introducción',true),
+      q('pb-outbound-handoff','El contacto dice «ustedes me llamaron, yo solo quería escuchar». ¿Qué preguntas?',[
+        '¿Qué porcentaje de automatización tiene como meta su proyecto?',
+        '¿Qué te llamó la atención de la invitación? ¿Hay algo que estén evaluando o por ahora quieren explorar?',
+        '¿Quién es la persona que aprueba la compra para que se sume a la demo?'
+      ],1,'El handoff outbound conecta con el motivo real de la cita y deja espacio para que el contacto diga que está explorando.','Handoff SDR')
+    ]},
+  {id:'playbook-discovery-event', revision:'2026-11-24.1', title:'«Lo necesitamos antes de diciembre»', skill:'Discovery y Critical Event', minutes:7,
+    story:'Un inbound ya contó al SDR que el WhatsApp posventa se satura cada tarde. Quiere ver la demo pronto y dice que le gustaría tener algo funcionando en diciembre. Aún no sabes el impacto de la saturación.',
+    reference:{section:'Etapa 2 · Levantamiento de dolores y operativa · Critical Event',url:PLAYBOOK},
+    playbook:{
+      prompt:'Formula dos preguntas naturales para aclarar el impacto y el hito. Explica cómo pasarías a la demo sin repetir el discovery.',
+      model:'Entendí que las consultas se acumulan por la tarde. ¿Qué le pasa hoy al equipo o a los clientes cuando quedan pendientes? Mencionaste diciembre. ¿Qué ocurre en ese mes y qué pasaría si llegan con el mismo problema? Con eso te muestro el recorrido de una de esas consultas y vemos juntos qué resultado tendría sentido medir.'
+    },
+    questions:[
+      q('pb-discovery-impact','Te piden ver la demo de inmediato. ¿Cómo respondes?',[
+        'Pasar a toda la demo y dejar el contexto para otra reunión.',
+        'Resumir lo que ya sabes, hacer una pregunta breve sobre el impacto y seguir con el flujo relevante mientras aclaras lo que falte.',
+        'Recorrer la calificación completa antes de compartir pantalla para dejar todos los datos cerrados.'
+      ],1,'El Playbook pide confirmar lo conocido y ajustar el ritmo. Una pregunta enfocada puede orientar la demo y el resto se profundiza cuando aporta al recorrido.','Discovery'),
+      q('pb-discovery-ce','¿Qué convierte «en diciembre» en un posible Critical Event?',[
+        'Confirmar qué pasa en diciembre, qué consecuencia tendría llegar igual y qué deben resolver o decidir antes.',
+        'Pasar diciembre al cierre estimado porque es el único plazo mencionado.',
+        'Pedir una fecha exacta de salida para calcular desde cuándo conviene enviar la propuesta.'
+      ],0,'El Critical Event une un hito con una consecuencia para el cliente. El calendario operativo y el proceso de compra se verifican por separado.','Critical Event',true),
+      q('pb-discovery-recap','Te dicen que el equipo podría quedar corto para el peak, pero aún no tienen cifras. ¿Con qué pasas a la demo?',[
+        'Con una estimación de ahorro basada en tu última cuenta del mismo rubro.',
+        'Con una promesa de automatización completa durante el peak.',
+        'Con el dolor y el impacto posible en sus palabras, la cifra pendiente y una consulta de posventa que represente el problema.'
+      ],2,'Recapitular con evidencia valida el entendimiento. Mostrar una consulta relevante permite avanzar mientras la medición sigue pendiente.','Recapitulación')
+    ]},
+  {id:'playbook-demo-dialogue', revision:'2026-11-24.1', title:'La demo se desvía hacia una integración', skill:'Demo consultiva', minutes:7,
+    story:'La jefa de operaciones quiere reducir la espera para cambios de reserva. En la demo pregunta si Studio puede actualizar directamente su sistema. La conexión todavía no se ha revisado y allí se guardan los datos reales.',
+    reference:{section:'Etapa 3 · Presentación Demo y técnicas de conexión',url:PLAYBOOK},
+    playbook:{
+      prompt:'Explica en voz de ejecutivo qué puedes mostrar hoy, qué sigue por validar y cómo comprobarías si la demo se ajusta a su operación.',
+      model:'Te muestro en nuestra instancia demo cómo se recibe una solicitud de cambio, qué acción haría el agente y qué contexto recibe Soporte si necesita intervenir. Lo hacemos con datos simulados. Para confirmar una actualización real necesitamos revisar qué permite su sistema y con qué permisos. ¿Qué cambio hace hoy el equipo con más frecuencia y cuál requiere aprobación?'
+    },
+    questions:[
+      q('pb-demo-path','¿Qué recorrido muestras con el tiempo disponible?',[
+        'Primero todos los canales de Desk y después un recorrido rápido por las pantallas de Studio.',
+        'Un ejemplo cercano en la cuenta productiva de otro cliente, ocultando el nombre del ticket.',
+        'En ADERESO DEMO, una solicitud representativa, la acción simulada y la derivación a Desk cuando corresponda.'
+      ],2,'Un recorrido completo y acotado conecta el dolor con lo que podría cambiar en la operación. La instancia de demo permite trabajar con datos ficticios.','Demo',true),
+      q('pb-demo-connection','La acción simulada termina con éxito. La clienta dice «entonces ya sabemos que se conecta». ¿Cómo respondes?',[
+        'Aclarar qué mostró la simulación y acordar qué accesos, operación y permisos se validarán con su equipo.',
+        'Dejar la duda anotada y pasar al precio porque todavía no es una reunión técnica.',
+        'Decir que el ejemplo es suficiente para incluir la actualización en el alcance inicial.'
+      ],0,'Mostrar un recorrido acredita su funcionamiento en la demo. La capacidad de actualizar ese sistema se confirma con evidencia de la cuenta y de la operación real.','Alcance',true),
+      q('pb-demo-dialogue','Hay una pausa después de la derivación. ¿Cómo retomas la conversación?',[
+        'Resumir las otras funciones para llenar el silencio.',
+        'Preguntar cómo reciben hoy una excepción y dar espacio para que describan qué falta en el ticket.',
+        'Inferir que la derivación ya resolvió el dolor y pasar al cierre.'
+      ],1,'La demo sigue siendo discovery. Una pregunta sobre la excepción devuelve el foco a la operación y permite comprobar si falta contexto.','Conversación')
+    ]},
+  {id:'playbook-pricing-roi', revision:'2026-11-24.1', title:'«Dame un precio para 20 ejecutivos»', skill:'Pricing y ROI', minutes:7,
+    story:'El contacto quiere llevar un número a Finanzas. Conoce el tamaño del equipo, pero no el volumen de conversaciones ni cuánto tiempo dedica a responder consultas repetitivas.',
+    reference:{section:'Etapa 4 · Presentación de Pricing · Pricing y ROI en esta reunión',url:PLAYBOOK},
+    playbook:{
+      prompt:'Escribe cómo explicarías el pricing y cómo cerrarías la validación de los datos antes de presentar una propuesta.',
+      model:'Para dimensionar la propuesta usamos el volumen de conversaciones y el alcance que acordemos. Los 20 ejecutivos nos ayudan a entender la operación. ¿Puede Operaciones compartir el reporte del último mes y un ejemplo del tiempo que toman las consultas repetitivas? Con eso armamos un escenario y revisamos juntos qué supuestos explican su retorno.'
+    },
+    questions:[
+      q('pb-pricing-scope','¿Qué explicas primero?',[
+        'Que la propuesta se dimensiona por conversaciones y alcance, y que el número de ejecutivos ayuda a entender cómo operan.',
+        'Que vale la pena calcular el precio dividiendo el presupuesto entre los 20 ejecutivos.',
+        'Que primero deberían elegir entre tres niveles y luego veremos el volumen.'
+      ],0,'El Playbook empieza por conversaciones y conecta una recomendación de alcance con la necesidad del cliente. El número de ejecutivos contextualiza la operación.','Pricing'),
+      q('pb-pricing-baseline','¿Qué compromiso puedes hacer con los datos disponibles?',[
+        'Enviar hoy una propuesta firme usando un promedio de conversaciones de cuentas parecidas.',
+        'Acordar con Operaciones la fuente del volumen y el tiempo de atención, quién los trae y cuándo revisarán el escenario.',
+        'Enviar un ROI garantizado con el supuesto de que todas las consultas repetitivas quedarán automatizadas.'
+      ],1,'Una propuesta necesita un alcance y un volumen sustentados. El ROI explicita sus supuestos y los datos que respaldan el escenario.','ROI',true),
+      q('pb-pricing-present','Llega el reporte. ¿Cómo lo presentas en la siguiente reunión?',[
+        'Recorrer todas las combinaciones del cotizador y pedir al cliente que elija.',
+        'Mostrar el monto final y dejar la conversación sobre retorno para después de Finanzas.',
+        'Simular un alcance recomendado, mostrar el ROI y sus supuestos, y revisar cómo calza con presupuesto y aprobación.'
+      ],2,'Una recomendación concreta, su retorno esperado y los supuestos permiten a Finanzas evaluar el caso con el mismo entendimiento del alcance.','Propuesta')
+    ]},
+  {id:'playbook-enterprise-decision', revision:'2026-11-24.1', title:'Una expansión con tres aprobaciones', skill:'Cierre y proceso de decisión', minutes:7,
+    story:'Eres KAM. Una cuenta con Desk quiere agregar automatización a una segunda unidad. Operaciones está interesada. TI todavía debe revisar accesos y Finanzas aprueba el presupuesto. El cliente menciona que quiere salir en enero.',
+    reference:{section:'Preparación KAM · Etapa 5 · SMB vs. Enterprise',url:PLAYBOOK},
+    playbook:{
+      prompt:'Plantea el cierre de la reunión. Distingue la fecha de decisión del objetivo de implementación y propone quién participa en el próximo hito.',
+      model:'Antes de dimensionar la segunda unidad, revisemos qué tienen contratado y qué resultados les da hoy Desk. Enero es el objetivo operativo. ¿Qué necesitan validar TI y Finanzas antes de decidir? Propongo reunirnos la próxima semana con Operaciones y TI para revisar el flujo y los accesos. Acordemos quién coordina con Finanzas y en qué fecha podemos confirmar esa revisión.'
+    },
+    questions:[
+      q('pb-decision-kam','¿Qué llevas a la conversación con la unidad nueva?',[
+        'La propuesta de otra cuenta con el mismo número de ejecutivos.',
+        'El alcance actual, la adopción y resultados de Desk, los pendientes y quiénes operan y deciden en ambas unidades.',
+        'Una cotización de ampliación hecha sobre la expectativa de que las dos unidades operan igual.'
+      ],1,'La preparación KAM parte de evidencia de la cuenta y permite decidir qué conservar, qué ampliar y qué depende de una nueva validación.','Preparación KAM'),
+      q('pb-decision-stakeholders','Operaciones te dice «cuenta con nosotros». ¿Qué necesitas aclarar?',[
+        'Si pueden firmar mientras TI y Finanzas se incorporan al proyecto.',
+        'Si el objetivo de enero permite usar esa misma fecha como cierre de venta.',
+        'Qué aprueba cada persona, con qué criterios, y qué validaciones deben ocurrir antes del compromiso de compra.'
+      ],2,'El interés de quien impulsa el proyecto es una señal. Confirmar validadores, aprobadores y secuencia convierte esa señal en un proceso de compra verificable.','SPICED · Decision',true),
+      q('pb-decision-next','Todavía no pueden comprometer el comité de compra. ¿Con qué sales de la reunión?',[
+        'Con un próximo paso acordado, objetivo, responsable y fecha o ventana para revisar los requisitos con TI.',
+        'Con un envío de propuesta y un recordatorio interno para escribir a Operaciones más adelante.',
+        'Con una fecha de implementación tentativa para que tengan un incentivo.'
+      ],0,'La validación con quien corresponda es un avance concreto aun sin fecha de comité. Su resultado ayuda a definir lo que el cliente puede decidir.','Próximo paso')
+    ]},
+  {id:'playbook-followup-pain', revision:'2026-11-24.1', title:'«Volvamos a hablar después del inventario»', skill:'Seguimiento al dolor', minutes:6,
+    story:'Una pyme confirmó que su equipo dedica la tarde a resolver consultas repetitivas. La dueña pide retomar por correo después del inventario del jueves y deja pendiente definir qué tipo de consulta entraría primero al piloto.',
+    reference:{section:'Etapa 6 · Acordar el seguimiento al dolor',url:PLAYBOOK},
+    playbook:{
+      prompt:'Redacta el correo que prepararías para la ventana acordada. Retoma el problema, haz una pregunta útil y propone un siguiente paso.',
+      model:'Hola, Paula. Te escribo por seguimiento a las consultas repetitivas que están ocupando la tarde del equipo. ¿Pudieron ver cuáles se acumulan más? Si sigue siendo prioridad, podemos revisar un ejemplo juntos y acordar qué tipo de consulta incluir primero en el piloto. ¿Te sirve verlo esta semana?'
+    },
+    questions:[
+      q('pb-followup-record','¿Qué registras antes de cerrar la reunión?',[
+        'El dolor confirmado, su efecto en la tarde del equipo y el acuerdo de retomar por correo después del jueves para priorizar la primera consulta.',
+        'La propuesta pendiente y la fecha de envío, dejando que el equipo recuerde el resto.',
+        'Que el piloto debe arrancar el viernes por la urgencia del inventario.'
+      ],0,'El registro debe permitir que otra persona retome la conversación con el motivo, el canal y el compromiso correctos.','Registro'),
+      q('pb-followup-window','Es miércoles y la propuesta está lista. ¿Qué haces con el seguimiento?',[
+        'Le escribes ese día porque la propuesta ya está preparada.',
+        'Preparas el seguimiento y respetas el canal y la ventana acordados con la clienta.',
+        'La llamas el jueves para que lo tenga presente cuando termine el inventario.'
+      ],1,'El seguimiento respeta lo conversado. La fecha solicitada por el cliente manda sobre una cadencia genérica o sobre cuándo queda lista la propuesta.','Cadencia',true),
+      q('pb-followup-changed','Al retomar te dice que bajó el volumen y el equipo ya puede responder. ¿Qué haces?',[
+        'Insistir con el piloto porque el dolor existía durante la reunión.',
+        'Cambiar de inmediato la conversación a una campaña de WhatsApp.',
+        'Preguntar qué cambió y si queda una necesidad concreta, y actualizar el acuerdo y el registro según su respuesta.'
+      ],2,'Si cambia el dolor, cambia el motivo para avanzar. Escuchar y registrar la nueva situación mantiene el seguimiento conectado con la operación.','Seguimiento')
+    ]},
+];
+
 export const MISSIONS = [
   { id: 'discovery', title: '¿Agendas o falta discovery?', skill: 'Discovery', minutes: 5, story: 'Caso ficticio · Casa Norte recibe muchas consultas, quiere “un bot” y pide una reunión de propuesta. Todavía no sabes qué resultado necesita.', lesson: 2,
     questions: [
@@ -252,6 +401,7 @@ export const MISSIONS = [
     ] },
   ...DEMO_MISSIONS,
   ...ADVISORY_MISSIONS,
+  ...PLAYBOOK_MISSIONS,
 ];
 export const missionRevision = mission => mission.revision ?? LEGACY_MISSION_REVISION;
 export const currentMissionEntry = (mission, entry) =>
@@ -267,6 +417,24 @@ export const skillResult = (mission, answers) => {
 };
 // Fictional consequences make the practice about a conversation, not just recall.
 export const CONSEQUENCES = {
+  'pb-outbound-prep': ["Llegas con hipótesis útiles y puedes confirmar lo que falta en pocos minutos.", "Llegas con el caso centrado en un supuesto o haces repetir información al contacto."],
+  'pb-outbound-scope': ["El grupo confirma a qué operación corresponde la conversación.", "La demo puede terminar respondiendo a una empresa distinta de la que evalúa el proyecto."],
+  'pb-outbound-handoff': ["El contacto puede decir qué le dio curiosidad sin comprometerse a un proyecto.", "El contacto tiene que corregir premisas antes de hablar de lo que le interesa."],
+  'pb-discovery-impact': ["La clienta ve pronto un caso pertinente y aporta el impacto que faltaba.", "La reunión avanza con poca conexión al problema o se vuelve un cuestionario."],
+  'pb-discovery-ce': ["Puedes comprobar si hay una consecuencia y qué necesita decidir el cliente antes del hito.", "La fecha aparece como certeza comercial sin información sobre urgencia o compra."],
+  'pb-discovery-recap': ["El cliente reconoce su operación y queda claro qué cifra falta levantar.", "La demo o la propuesta parte de un impacto que todavía no se puede respaldar."],
+  'pb-demo-path': ["Operaciones reconoce el caso y ve la continuidad entre Studio y Desk.", "El cliente ve funciones sueltas o un ejemplo que no corresponde a un entorno de demo."],
+  'pb-demo-connection': ["Queda una validación técnica concreta antes de definir el alcance.", "La clienta puede salir esperando una actualización que aún no se comprobó."],
+  'pb-demo-dialogue': ["La clienta explica qué necesita ver Soporte en la derivación.", "El silencio se llena con funciones o se interpreta como aprobación."],
+  'pb-pricing-scope': ["Finanzas entiende qué dato dimensiona el alcance y cuál describe al equipo.", "El cliente aterriza en un precio por persona o en una elección sin contexto."],
+  'pb-pricing-baseline': ["El equipo sabe qué datos traer y cómo se preparará una estimación útil.", "El número llega a Finanzas con un supuesto que podría confundirse con un compromiso."],
+  'pb-pricing-present': ["El cliente puede discutir inversión y retorno con los mismos supuestos.", "Finanzas recibe demasiadas opciones o un monto sin contexto del valor."],
+  'pb-decision-kam': ["Puedes conectar la expansión con resultados y restricciones conocidos de la cuenta.", "La solución para la segunda unidad parte de condiciones que aún no comprobaste."],
+  'pb-decision-stakeholders': ["Descubres qué señal falta de TI y de Finanzas antes de proyectar la compra.", "El plan toma el apoyo de Operaciones o el go-live como confirmación de la decisión."],
+  'pb-decision-next': ["El cliente tiene una reunión concreta para resolver una dependencia de la compra.", "La oportunidad queda con una acción unilateral o una fecha sin respaldo."],
+  'pb-followup-record': ["El siguiente ejecutivo puede retomar por el canal y en la ventana acordados.", "El acuerdo se transforma en un recordatorio sin motivo o en una urgencia no confirmada."],
+  'pb-followup-window': ["La clienta recibe el correo cuando ya puede revisar qué priorizar.", "El contacto llega durante el intervalo que la clienta pidió reservar para el inventario."],
+  'pb-followup-changed': ["El deal refleja si queda un problema y qué siguiente paso tiene sentido.", "La conversación se desvía de la realidad actual del equipo."],
   'advice-orders-flow': ["El comprador obtiene un estado verificable y Soporte recibe solo la excepción.", "El comprador recibe información que puede ser incorrecta o corresponder a otra persona."],
   'advice-orders-fallback': ["La tienda reduce preguntas generales mientras valida la conexión.", "El flujo presenta una estimación o información antigua como si fuera el estado del pedido."],
   'advice-orders-pilot': ["Operaciones ve qué recibe el comprador cuando la consulta funciona y cuando necesita ayuda.", "Las pruebas dejan sin cubrir un caso que puede terminar con información incorrecta o sin ayuda."],

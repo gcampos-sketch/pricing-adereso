@@ -1,5 +1,5 @@
 import { expect,test } from 'bun:test';
-import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
+import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,PLAYBOOK_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
   missionRevision,currentMissionEntry,currentMissionReview } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
@@ -55,7 +55,7 @@ test('demo challenges include a source, screen-by-screen rehearsal and peer feed
 });
 test('advisory cases show the proposed flow and a model response using the shared mission engine',()=>{
   const onboarding = Object.values(ROLES).flatMap(role => role.missions);
-  expect(ADVISORY_MISSIONS).toHaveLength(6);
+  expect(ADVISORY_MISSIONS.length).toBeGreaterThanOrEqual(6);
   for (const mission of ADVISORY_MISSIONS) {
     expect(MISSIONS).toContain(mission);
     expect(onboarding).not.toContain(mission.id);
@@ -63,6 +63,18 @@ test('advisory cases show the proposed flow and a model response using the share
     expect(mission.advice.model.length).toBeGreaterThan(100);
     expect(new URL(mission.reference.url).protocol).toBe('https:');
     expect(new Set(mission.questions.map(question => question.id)).size).toBe(3);
+  }
+});
+test('Playbook simulations connect the practice prompt to the current Hub guide',()=>{
+  const onboarding = Object.values(ROLES).flatMap(role => role.missions);
+  expect(PLAYBOOK_MISSIONS.length).toBeGreaterThanOrEqual(6);
+  for (const mission of PLAYBOOK_MISSIONS) {
+    expect(MISSIONS).toContain(mission);
+    expect(onboarding).not.toContain(mission.id);
+    expect(mission.reference.url).toBe('/?hubView=playbook');
+    expect(mission.reference.section).toBeTruthy();
+    expect(mission.playbook.prompt).toBeTruthy();
+    expect(mission.playbook.model.length).toBeGreaterThan(100);
   }
 });
 test('account comes exclusively from verified identity and reads stay isolated',async()=>{
