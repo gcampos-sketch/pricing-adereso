@@ -1,4 +1,4 @@
-import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, OBJECTION_MISSIONS, HYPOTHESIS_MISSION, CONSEQUENCES, skillResult,
+import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, OBJECTION_MISSIONS, HYPOTHESIS_MISSION, TRAINING_LEVELS, trainingLevel, CONSEQUENCES, skillResult,
   dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE, AE_ROLEPLAY_STAGES } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
@@ -221,8 +221,12 @@ function newCaseDot(show, label='Nuevo') {
   return show?`<span class="academy-new-dot" role="img" aria-label="${label}" title="${label}"></span>`:'';
 }
 
+function practiceDuration(mission) {
+  const level = mission.level || mission.advice || mission.demo || mission.playbook || mission.objection;
+  return (level ? TRAINING_LEVELS[trainingLevel(mission)] + ' · ' : '') + mission.minutes + ' min';
+}
 function missionCard(m){
-  return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${m.minutes} min</span></div><h4>${escape(m.title)}${newCaseDot((m.advice||m.playbook||m.objection)&&isNewCase(m.id))}</h4><p>${m.demo||m.advice||m.playbook||m.objection?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
+  return `<button class="mission-card" data-start="${m.id}" ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(m.skill)}</span><span>${practiceDuration(m)}</span></div><h4>${escape(m.title)}${newCaseDot((m.advice||m.playbook||m.objection)&&isNewCase(m.id))}</h4><p>${m.demo||m.advice||m.playbook||m.objection?escape(m.story.replace('Caso simulado · ','')):'Un caso, tres decisiones y un próximo paso.'}</p><div class="academy-actions"><span class="academy-pill ${passed(m.id)?'done':''}">${passed(m.id)?'Práctica aprobada':record(m.id)?'Por reforzar':'Por descubrir'}</span><span class="academy-muted">${resume()?.id===m.id?'Retomar →':'Resolver →'}</span></div></button>`;
 }
 function scrollToCaseSection(section){
   const heading = $('academy-'+section)?.querySelector('h3');
@@ -232,28 +236,51 @@ function scrollToCaseSection(section){
   window.scrollBy(0, offset);
   heading.focus({preventScroll:true});
 }
-function objectionChallenges(){
-  const cases = [...OBJECTION_MISSIONS, mission('objection')];
-  return `<section aria-label="Objeciones comerciales"><div class="academy-section-head"><h3 tabindex="-1">Objeciones comerciales</h3></div><p class="academy-muted">Escucha qué está cuestionando el cliente, elige cómo responder y ensaya tu respuesta.</p><div class="academy-mission-grid" style="margin-top:14px">${cases.map(missionCard).join('')}</div></section>`;
-}
-function advisoryChallenges(){
-  return `<section aria-label="Escenarios de asesoría"><div class="academy-section-head"><h3 tabindex="-1">Escenarios de asesoría</h3></div><p class="academy-muted">El cliente trae un flujo. Elige qué ajustar, prepara dos alternativas y practica cómo se las explicarías.</p><div class="academy-mission-grid" style="margin-top:14px">${ADVISORY_MISSIONS.map(missionCard).join('')}</div></section>`;
-}
 function hypothesisCard(){
-  const {id,title,story,skill,minutes}=HYPOTHESIS_MISSION;
+  const {id,title,story,skill}=HYPOTHESIS_MISSION;
   const practice=progress.hypothesis;
   const status=practice?.submittedAt?'Respuesta registrada':Object.values(practice?.answers||{}).some(text=>text.trim())?'Borrador':'Por descubrir';
-  return `<button class="mission-card" type="button" data-hypothesis ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(skill)}</span><span>${minutes} min</span></div><h4>${escape(title)}${newCaseDot(isNewCase(id))}</h4><p>${escape(story)}</p><div class="academy-actions"><span class="academy-pill">${status}</span><span class="academy-muted">${practice?.submittedAt?'Revisar →':'Practicar →'}</span></div></button>`;
+  return `<button class="mission-card" type="button" data-hypothesis ${!ready?'disabled':''}><div class="academy-muted"><span>${escape(skill)}</span><span>${practiceDuration(HYPOTHESIS_MISSION)}</span></div><h4>${escape(title)}${newCaseDot(isNewCase(id))}</h4><p>${escape(story)}</p><div class="academy-actions"><span class="academy-pill">${status}</span><span class="academy-muted">${practice?.submittedAt?'Revisar →':'Practicar →'}</span></div></button>`;
 }
-function playbookChallenges(){
-  const stages = AE_ROLEPLAY_STAGES.map(stage => {
-    const practice = mission(stage.mission);
-    return missionCard({...practice, skill:'Etapa ' + stage.stage + ' · ' + stage.title});
-  });
-  return `<section aria-label="Roleplays del Playbook"><div class="academy-section-head"><h3 tabindex="-1">Roleplays del Playbook</h3></div><div class="academy-mission-grid">${stages.join('')}${hypothesisCard()}</div></section>`;
-}
-function demoChallenges(){
-  return `<section aria-label="¿Dónde lo mostrarías?"><div class="academy-section-head"><h3 tabindex="-1">¿Dónde lo mostrarías?</h3><span class="academy-muted">Desafíos de demo</span></div><p class="academy-muted">Resuelve una solicitud de cliente y ensaya la demo de tres minutos con tu equipo.</p><div class="academy-mission-grid" style="margin-top:14px">${DEMO_MISSIONS.map(missionCard).join('')}</div></section>`;
+
+const TRAINING_SECTIONS = {
+  objections:{
+    title:'Objeciones comerciales',
+    description:'Descubre qué le preocupa al cliente y practica cómo responder.',
+    cases:[...OBJECTION_MISSIONS, mission('objection')]
+  },
+  playbook:{
+    title:'Roleplays del Playbook',
+    description:'Ensaya decisiones de la reunión comercial, desde la apertura hasta el seguimiento.',
+    cases:[
+      ...AE_ROLEPLAY_STAGES.map(stage=>({...mission(stage.mission),skill:'Etapa ' + stage.stage + ' · ' + stage.title})),
+      HYPOTHESIS_MISSION
+    ]
+  },
+  advisory:{
+    title:'Consultoría de soluciones',
+    description:'El cliente propone un flujo. Decide qué ajustar, qué alternativas ofrecer y qué validar.',
+    cases:ADVISORY_MISSIONS
+  },
+  demo:{
+    title:'Casos de uso y demos',
+    description:'Ante «¿Puede Adereso resolver esto?», elige qué mostrar, cómo probarlo y qué queda por validar.',
+    cases:DEMO_MISSIONS
+  }
+};
+const selectedTrainingLevels = {};
+function renderTrainingSection(section) {
+  const {title,description,cases} = TRAINING_SECTIONS[section];
+  const current = selectedTrainingLevels[section] || 'all';
+  const visible = cases.filter(practice=>current==='all'||trainingLevel(practice)===current);
+  $('academy-'+section).innerHTML = `<section aria-label="${escape(title)}">
+    <div class="academy-section-head"><h3 tabindex="-1">${escape(title)}</h3></div>
+    <p class="academy-muted">${escape(description)}</p>
+    <div class="academy-training-levels" role="group" aria-label="Nivel de desafío en ${escape(title)}">
+      ${Object.entries({all:'Todos',...TRAINING_LEVELS}).map(([level,label])=>`<button type="button" class="academy-btn" data-training-section="${section}" data-training-level="${level}" aria-pressed="${current===level}">${label}</button>`).join('')}
+    </div>
+    ${visible.length?`<div class="academy-mission-grid">${visible.map(practice=>practice.id===HYPOTHESIS_MISSION.id?hypothesisCard():missionCard(practice)).join('')}</div>`:'<p class="academy-muted">Todavía no hay casos en este nivel.</p>'}
+  </section>`;
 }
 const aeActivityKey = id => 'ae-route-' + id;
 const aeRoleplayKey = stage => 'ae-roleplay-' + stage;
@@ -579,11 +606,8 @@ function render() {
   };
   $('academy-dashboard').querySelectorAll('[data-task]').forEach(input=>input.onchange=()=>{progress.tasks[input.dataset.task]=input.checked;void persist();});
   $('academy-training-core').innerHTML = `<section><div class="academy-section-head"><h3 tabindex="-1">Misiones comerciales</h3></div><div class="academy-mission-grid">${MISSIONS.filter(m=>!m.demo&&!m.advice&&!m.playbook&&!m.objection&&m.id!=='objection').map(missionCard).join('')}</div></section>`;
-  $('academy-objections').innerHTML=objectionChallenges();
+  Object.keys(TRAINING_SECTIONS).forEach(renderTrainingSection);
   $('academy-training-objections').innerHTML=`Practicar objeciones ↓${newCaseDot(OBJECTION_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}`;
-  $('academy-playbook').innerHTML=playbookChallenges();
-  $('academy-advisory').innerHTML=advisoryChallenges();
-  $('academy-demo').innerHTML=demoChallenges();
   const review = $('academy-training-review');
   review.disabled = !ready;
   review.textContent = reviewKeys().length ? 'Repasar ' + reviewKeys().length + ' decisiones' : 'Practicar un caso';
@@ -778,6 +802,13 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-hypothesis]'))openHypothesis();
   if(event.target.closest('[data-review]'))startReview();
   if(event.target.closest('[data-library]'))library();
+  const levelButton=event.target.closest('[data-training-level]');
+  if(levelButton) {
+    const {trainingSection,trainingLevel}=levelButton.dataset;
+    selectedTrainingLevels[trainingSection]=trainingLevel;
+    renderTrainingSection(trainingSection);
+    $('academy-'+trainingSection).querySelector('[aria-pressed="true"]').focus({preventScroll:true});
+  }
   const section=event.target.closest('[data-case-section]');
   if(section)scrollToCaseSection(section.dataset.caseSection);
   if(event.target.closest('[data-ae-evidence]'))scrollToCaseSection('ae-evidence');
@@ -811,8 +842,8 @@ practice.innerHTML=`<header class="academy-panel">
     <button class="academy-btn" type="button" id="academy-training-review" data-review>Practicar un caso</button>
     <button class="academy-btn" type="button" id="academy-training-objections" data-case-section="objections">Practicar objeciones ↓</button>
     <button class="academy-btn" type="button" data-case-section="playbook">Roleplays del Playbook ↓</button>
-    <button class="academy-btn" type="button" data-case-section="advisory">Asesoría ↓</button>
-    <button class="academy-btn" type="button" data-case-section="demo">Demos ↓</button>
+    <button class="academy-btn" type="button" data-case-section="advisory">Consultoría ↓</button>
+    <button class="academy-btn" type="button" data-case-section="demo">Casos de uso y demos ↓</button>
     <button class="academy-btn" type="button" data-case-section="quizzes">Quizzes y juegos ↓</button>
   </div>
   <p id="academy-mission-source-status" class="academy-muted academy-edition">Misiones base · edición ${LEGACY_MISSION_REVISION}</p>
@@ -857,5 +888,5 @@ void load().then(()=>{
     switchTab('home');
     scrollToCaseSection(section);
   }
-  if(section==='advisory'||section==='playbook'||section==='objections'){switchTab('games');scrollToCaseSection(section);}
+  if(Object.hasOwn(TRAINING_SECTIONS,section)){switchTab('games');scrollToCaseSection(section);}
 });

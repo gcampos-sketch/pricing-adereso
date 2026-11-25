@@ -5,12 +5,14 @@ export const ROLES = {
   AE: { name: 'Account Executive', goal: 'Del discovery a una propuesta defendible.', missions: ['discovery', 'demo', 'scope', 'objection', 'proposal', 'handoff'], lessons: [3, 22, 4, 5, 6, 7] },
   KAM: { name: 'Key Account Manager', goal: 'Entiende la cuenta, anticipa riesgos y encuentra valor.', missions: ['discovery', 'scope', 'renewal', 'proposal', 'handoff'], lessons: [24, 25, 8, 9] },
 };
+export const TRAINING_LEVELS = {basic:'Básico',intermediate:'Medio',advanced:'Avanzado'};
+export const trainingLevel = mission => mission.level ?? 'intermediate';
 const q = (id, prompt, options, correct, explanation, skill, critical = false) => ({ id, prompt, options, correct, explanation, skill, critical });
 const WIKI = 'https://app.notion.com/p/3219c2747df581a2baebde4de645d487';
 const TEAM_PERFORMANCE = 'https://help.adereso.ai/anal%C3%ADtica/89RzusWYBEWNTBJg2WFu5G/rendimiento-de-equipo/71YFbZFH7Q4AErniCZrPMy';
 const BUTTON_ANALYTICS = 'https://help.adereso.ai/adereso-engage-mis-campa%C3%B1as/6jf5LkrjFuc3QJXWBTqY5e/medir-y-analizar-botones-de-campa%C3%B1as-de-whatsapp/97JuCUbFZ3uJ5iFiL1NmPG';
 export const DEMO_MISSIONS = [
-  { id:'demo-orders', revision:'2026-11-22.1', title:'¿Dónde está mi pedido?', skill:'Demo de postventa', minutes:8, lesson:22,
+  { id:'demo-orders', level:'basic', revision:'2026-11-22.1', title:'¿Dónde está mi pedido?', skill:'Demo de postventa', minutes:8, lesson:22,
     story:'Caso simulado · Una tienda quiere que sus clientes consulten el estado de su pedido por WhatsApp, incluso fuera de horario.',
     reference:{section:'Casos de uso — Studio', query:'Shopify — una tienda por agente', url:WIKI},
     demo:{
@@ -22,7 +24,7 @@ export const DEMO_MISSIONS = [
       q('orders-show','¿Qué recorrido le mostrarías al cliente?',['Solo el reporte de tickets cerrados.','La configuración del agente y sus preguntas frecuentes.','La consulta en Studio y el ticket de una derivación en Desk.'],2,'La demo permite ver qué recibe el comprador y qué contexto queda para la persona que atiende la excepción.','Demo'),
       q('orders-limit','El tester respondió con un pedido ficticio. ¿Qué puedes afirmar?',['La API del cliente ya está lista.','El recorrido está demostrado; falta validar la conexión a los datos del cliente.','Cualquier tienda funcionará igual.'],1,'Los datos ficticios prueban el recorrido mostrado. La disponibilidad, los accesos y las respuestas reales del sistema se validan por separado.','Alcance',true)
     ] },
-  { id:'demo-followup', revision:'2026-11-22.1', title:'La venta quedó a medias', skill:'Demo de seguimiento', minutes:8, lesson:22,
+  { id:'demo-followup', level:'advanced', revision:'2026-11-22.1', title:'La venta quedó a medias', skill:'Demo de seguimiento', minutes:8, lesson:22,
     story:'Caso simulado · Un comprador preguntó por un producto y dejó de responder. El cliente quiere recuperar la conversación sin insistir cuando ya no corresponde.',
     reference:{section:'Seguimientos automáticos de venta — cómo se configuraron y probaron',query:'temporizadores nativos de 5 y 60 minutos',url:WIKI},
     demo:{
@@ -34,7 +36,7 @@ export const DEMO_MISSIONS = [
       q('followup-show','¿Qué conviene probar delante del cliente?',['Silencio, nueva respuesta y una exclusión, contando ambos plazos desde el último mensaje.','Ir directamente a un envío desde una cuenta de producción.','Configurar el segundo aviso 60 minutos después del primero.'],0,'Los plazos parten del último mensaje del cliente y se reinician al responder. Contrastar los tres resultados hace visible la lógica.','Demo'),
       q('followup-limit','¿Cuál es el alcance de la evidencia del segundo aviso?',['Entrega verificada en WhatsApp real de todas las demos.','Resultados de venta demostrados en producción.','La lógica se probó internamente; la entrega real del aviso de 60 minutos quedó por verificar.'],2,'El primer aviso se recibió en WhatsApp real de ADERESO DEMO. El segundo, el reinicio y las exclusiones se comprobaron internamente.','Alcance',true)
     ] },
-  { id:'demo-buttons', revision:'2026-11-22.1', title:'¿Quién hizo clic en el catálogo?', skill:'Demo de analítica', minutes:8, lesson:10,
+  { id:'demo-buttons', level:'intermediate', revision:'2026-11-22.1', title:'¿Quién hizo clic en el catálogo?', skill:'Demo de analítica', minutes:8, lesson:10,
     story:'Caso simulado · Marketing quiere enviar un catálogo por campaña de WhatsApp y saber cuántos destinatarios distintos de esa campaña usaron el enlace.',
     reference:{section:'Medir y analizar botones de campañas de WhatsApp',query:'enlaces medidos',url:BUTTON_ANALYTICS},
     demo:{
@@ -46,7 +48,7 @@ export const DEMO_MISSIONS = [
       q('buttons-show','¿Dónde muestras la configuración y los resultados?',['En sugerencias proactivas de Studio.','En toda plantilla histórica, sin cambiar su configuración.','En un botón URL medido de una plantilla BSP nueva y luego en Resultados de botones de Engage.'],2,'Engage informa accesos a enlaces medidos de campañas Adereso BSP. Verifica la plantilla y el alcance compatible antes de prometer cobertura.','Alcance',true),
       q('buttons-count','Una persona abrió dos veces el mismo enlace. ¿Cómo lees el reporte?',['Siempre son dos destinatarios distintos.','Pueden ser dos interacciones del mismo destinatario.','El porcentaje se puede leer como conversión de toda la base.'],1,'Interacciones cuenta eventos válidos. Destinatarios cuenta originales distintos por botón; el porcentaje compara la participación en las interacciones del resultado.','Demo')
     ] },
-  { id:'demo-desk-routing', revision:'2026-11-22.1', title:'¿Dónde se atrasan los tickets?', skill:'Demo de operación', minutes:8, lesson:8,
+  { id:'demo-desk-routing', level:'intermediate', revision:'2026-11-22.1', title:'¿Dónde se atrasan los tickets?', skill:'Demo de operación', minutes:8, lesson:8,
     story:'Caso simulado · Operaciones reparte tickets entre ventas y soporte, pero quiere entender dónde se acumulan y cuánto tarda la primera respuesta humana.',
     reference:{section:'Rendimiento de Equipo — Primera Atención',query:'Rendimiento del Equipo',url:TEAM_PERFORMANCE},
     demo:{
@@ -61,7 +63,7 @@ export const DEMO_MISSIONS = [
 ];
 
 export const ADVISORY_MISSIONS = [
-  { id: 'advice-orders', revision: '2026-11-24.1', title: 'Estado del pedido fuera de horario', skill: 'Studio + Desk', minutes: 7, lesson: 22,
+  { id: 'advice-orders', level:'intermediate', revision: '2026-11-24.1', title: 'Estado del pedido fuera de horario', skill: 'Studio + Desk', minutes: 7, lesson: 22,
     story: 'Una tienda Shopify quiere reducir las consultas de despacho que llegan por WhatsApp de noche. Tiene el estado del pedido en Shopify, pero todavía no ha validado la conexión de la tienda.',
     advice: {
       flow: ['La persona escribe «¿dónde está mi pedido?».', 'El bot busca el estado usando solo el número de pedido.', 'Aunque la búsqueda falle, el bot responde «va en camino» y cierra.'],
@@ -85,7 +87,7 @@ export const ADVISORY_MISSIONS = [
         'Un pedido válido, uno que no corresponde a quien consulta y una falla de la conexión.'
       ],2,'El piloto debe cubrir el recorrido exitoso y dos excepciones que cambian la respuesta y la derivación.','Validación')
     ] },
-  { id: 'advice-queues', revision: '2026-11-24.1', title: 'Una fila para ventas y soporte', skill: 'Studio + Desk + Analítica', minutes: 7, lesson: 8,
+  { id: 'advice-queues', level:'basic', revision: '2026-11-24.1', title: 'Una fila para ventas y soporte', skill: 'Studio + Desk + Analítica', minutes: 7, lesson: 8,
     story: 'Operaciones recibe cotizaciones, cobros y reclamos en el mismo WhatsApp. Ventas atiende hasta las 20:00 y Soporte hasta las 18:00. Quieren bajar el tiempo de espera sin aumentar la dotación.',
     advice: {
       flow: ['La persona elige una opción en un menú de ocho categorías.', 'Todas las opciones ingresan a la misma fila.', 'Se asigna al primer ejecutivo libre y se mide el saludo del bot como primera atención.'],
@@ -109,7 +111,7 @@ export const ADVISORY_MISSIONS = [
         'El total de conversaciones que recibió cada equipo.'
       ],1,'Primera Atención permite revisar el tiempo de respuesta humana. El volumen y la carga ayudan a explicar los cambios, pero miden fenómenos distintos.','Medición')
     ] },
-  { id: 'advice-campaigns', revision: '2026-11-24.1', title: 'Una promoción por WhatsApp', skill: 'Engage + WhatsApp BSP', minutes: 7, lesson: 10,
+  { id: 'advice-campaigns', level:'advanced', revision: '2026-11-24.1', title: 'Una promoción por WhatsApp', skill: 'Engage + WhatsApp BSP', minutes: 7, lesson: 10,
     story: 'Marketing quiere anunciar una oferta a su base. Tiene un segmento con permiso registrado y otro que viene de una planilla sin trazabilidad. El equipo comercial necesita atender las respuestas durante el lanzamiento.',
     advice: {
       flow: ['Se importa toda la base desde la planilla.', 'Se envía la promoción desde WhatsApp con el mismo texto.', 'Se cuentan los clics como ventas y se repite el envío a quien no respondió.'],
@@ -133,7 +135,7 @@ export const ADVISORY_MISSIONS = [
         'Los clics repetidos indican que se envió la campaña dos veces.'
       ],0,'El reporte de Engage distingue interacciones y destinatarios por botón medido. Para medir ventas necesitas evidencia de compra y un criterio de atribución.','Medición')
     ] },
-  { id: 'advice-checkout', revision: '2026-11-24.1', title: 'Del catálogo al pago', skill: 'Studio + Shopify', minutes: 7, lesson: 22,
+  { id: 'advice-checkout', level:'advanced', revision: '2026-11-24.1', title: 'Del catálogo al pago', skill: 'Studio + Shopify', minutes: 7, lesson: 22,
     story: 'Un e-commerce quiere recomendar productos y vender por WhatsApp. Su Shopify ya funciona y el equipo puede tomar conversaciones de venta complejas.',
     advice: {
       flow: ['El bot recomienda usando un PDF de catálogo.', 'La persona elige talla y paga dentro de WhatsApp.', 'El bot le escribe al día siguiente a cualquiera que haya preguntado por un producto.'],
@@ -157,7 +159,7 @@ export const ADVISORY_MISSIONS = [
         'Que exista un checkout abandonado identificable, un contacto elegible y una forma de excluir compras ya completadas.'
       ],2,'Una consulta de catálogo, un carrito y un checkout son eventos distintos. La recuperación requiere comprobar el evento y las condiciones de contacto y exclusión.','Validación')
     ] },
-  { id: 'advice-knowledge', revision: '2026-11-24.1', title: 'Dos políticas de devolución', skill: 'Studio + Desk', minutes: 7, lesson: 22,
+  { id: 'advice-knowledge', level:'basic', revision: '2026-11-24.1', title: 'Dos políticas de devolución', skill: 'Studio + Desk', minutes: 7, lesson: 22,
     story: 'Una marca vende en Chile y México. Las compras online y las presenciales tienen condiciones distintas. Soporte comparte PDFs con políticas antiguas y nuevas.',
     advice: {
       flow: ['Se cargan todos los PDFs al agente.', 'El cliente pregunta si puede devolver su compra.', 'El bot aplica una política general y confirma la devolución.'],
@@ -181,7 +183,7 @@ export const ADVISORY_MISSIONS = [
         'Sí, basta con que el agente etiquete la conversación como devolución.'
       ],1,'Una respuesta basada en conocimiento, una etiqueta y una operación en un sistema externo tienen efectos distintos. La última requiere una acción e integración verificadas.','Producto')
     ] },
-  { id: 'advice-surveys', revision: '2026-11-24.1', title: 'Una encuesta al cerrar el caso', skill: 'Desk + Experience', minutes: 7, lesson: 8,
+  { id: 'advice-surveys', level:'intermediate', revision: '2026-11-24.1', title: 'Una encuesta al cerrar el caso', skill: 'Desk + Experience', minutes: 7, lesson: 8,
     story: 'Experiencia quiere medir la atención. Hoy hay tickets que se cierran por resolución, por inactividad o durante un cambio de equipo. A veces el cliente vuelve con la misma consulta.',
     advice: {
       flow: ['Cualquier cierre del ticket dispara una encuesta.', 'Si el caso se reabre y vuelve a cerrar, se repite la encuesta.', 'Se compara el promedio de todas las áreas como si atendieran los mismos casos.'],
@@ -210,7 +212,7 @@ export const ADVISORY_MISSIONS = [
 const PLAYBOOK = '/?hubView=playbook';
 
 export const HYPOTHESIS_MISSION = {
-  id:'playbook-hypothesis',
+  id:'playbook-hypothesis', level:'advanced',
   title:'Formula hipótesis a partir de una respuesta',
   skill:'Discovery · Respuesta libre',
   minutes:6,
@@ -236,7 +238,7 @@ export const HYPOTHESIS_MISSION = {
 };
 
 export const PLAYBOOK_MISSIONS = [
-  {id:'playbook-icebreaker', revision:'2026-11-24.1', title:'La sala todavía se está armando', skill:'Apertura y lectura del prospecto', minutes:5,
+  {id:'playbook-icebreaker', level:'basic', revision:'2026-11-24.1', title:'La sala todavía se está armando', skill:'Apertura y lectura del prospecto', minutes:5,
     story:'Es tu primera reunión con una cadena regional. Una persona se conecta apurada desde una sucursal y no sabes si llegó quien lidera el proyecto. Tienes un minuto para abrir.',
     reference:{section:'Etapa 0 · Romper el hielo',url:PLAYBOOK},
     playbook:{
@@ -261,7 +263,7 @@ export const PLAYBOOK_MISSIONS = [
       ],2,'Identificar quién entró y acordar el foco prepara una introducción que aprovecha el contexto del SDR.','Transición')
     ]},
 
-  {id:'playbook-outbound', revision:'2026-11-24.1', title:'«Ustedes me contactaron»', skill:'Preparación e introducción', minutes:6,
+  {id:'playbook-outbound', level:'intermediate', revision:'2026-11-24.1', title:'«Ustedes me contactaron»', skill:'Preparación e introducción', minutes:6,
     story:'Tienes 20 minutos antes de una primera reunión outbound. La invitación incluye dos dominios y el brief de Adobo todavía no llega. El contacto aceptó hablar de automatización, sin mencionar un proyecto.',
     reference:{section:'Preparación · Etapas 0 y 1',url:PLAYBOOK},
     playbook:{
@@ -285,7 +287,7 @@ export const PLAYBOOK_MISSIONS = [
         '¿Quién es la persona que aprueba la compra para que se sume a la demo?'
       ],1,'El handoff outbound conecta con el motivo real de la cita y deja espacio para que el contacto diga que está explorando.','Handoff SDR')
     ]},
-  {id:'playbook-discovery-event', revision:'2026-11-24.1', title:'«Lo necesitamos antes de diciembre»', skill:'Discovery y Critical Event', minutes:7,
+  {id:'playbook-discovery-event', level:'intermediate', revision:'2026-11-24.1', title:'«Lo necesitamos antes de diciembre»', skill:'Discovery y Critical Event', minutes:7,
     story:'Un inbound ya contó al SDR que el WhatsApp posventa se satura cada tarde. Quiere ver la demo pronto y dice que le gustaría tener algo funcionando en diciembre. Aún no sabes el impacto de la saturación.',
     reference:{section:'Etapa 2 · Levantamiento de dolores y operativa · Critical Event',url:PLAYBOOK},
     playbook:{
@@ -309,7 +311,7 @@ export const PLAYBOOK_MISSIONS = [
         'Con el dolor y el impacto posible en sus palabras, la cifra pendiente y una consulta de posventa que represente el problema.'
       ],2,'Recapitular con evidencia valida el entendimiento. Mostrar una consulta relevante permite avanzar mientras la medición sigue pendiente.','Recapitulación')
     ]},
-  {id:'playbook-demo-dialogue', revision:'2026-11-24.1', title:'La demo se desvía hacia una integración', skill:'Demo consultiva', minutes:7,
+  {id:'playbook-demo-dialogue', level:'advanced', revision:'2026-11-24.1', title:'La demo se desvía hacia una integración', skill:'Demo consultiva', minutes:7,
     story:'La jefa de operaciones quiere reducir la espera para cambios de reserva. En la demo pregunta si Studio puede actualizar directamente su sistema. La conexión todavía no se ha revisado y allí se guardan los datos reales.',
     reference:{section:'Etapa 3 · Presentación Demo y técnicas de conexión',url:PLAYBOOK},
     playbook:{
@@ -333,7 +335,7 @@ export const PLAYBOOK_MISSIONS = [
         'Inferir que la derivación ya resolvió el dolor y pasar al cierre.'
       ],1,'La demo sigue siendo discovery. Una pregunta sobre la excepción devuelve el foco a la operación y permite comprobar si falta contexto.','Conversación')
     ]},
-  {id:'playbook-pricing-roi', revision:'2026-11-24.1', title:'«Dame un precio para 20 ejecutivos»', skill:'Pricing y ROI', minutes:7,
+  {id:'playbook-pricing-roi', level:'intermediate', revision:'2026-11-24.1', title:'«Dame un precio para 20 ejecutivos»', skill:'Pricing y ROI', minutes:7,
     story:'El contacto quiere llevar un número a Finanzas. Conoce el tamaño del equipo, pero no el volumen de conversaciones ni cuánto tiempo dedica a responder consultas repetitivas.',
     reference:{section:'Etapa 4 · Presentación de Pricing · Pricing y ROI en esta reunión',url:PLAYBOOK},
     playbook:{
@@ -357,7 +359,7 @@ export const PLAYBOOK_MISSIONS = [
         'Simular un alcance recomendado, mostrar el ROI y sus supuestos, y revisar cómo calza con presupuesto y aprobación.'
       ],2,'Una recomendación concreta, su retorno esperado y los supuestos permiten a Finanzas evaluar el caso con el mismo entendimiento del alcance.','Propuesta')
     ]},
-  {id:'playbook-enterprise-decision', revision:'2026-11-24.1', title:'Una expansión con tres aprobaciones', skill:'Cierre y proceso de decisión', minutes:7,
+  {id:'playbook-enterprise-decision', level:'advanced', revision:'2026-11-24.1', title:'Una expansión con tres aprobaciones', skill:'Cierre y proceso de decisión', minutes:7,
     story:'Eres KAM. Una cuenta con Desk quiere agregar automatización a una segunda unidad. Operaciones está interesada. TI todavía debe revisar accesos y Finanzas aprueba el presupuesto. El cliente menciona que quiere salir en enero.',
     reference:{section:'Preparación KAM · Etapa 5 · SMB vs. Enterprise',url:PLAYBOOK},
     playbook:{
@@ -381,7 +383,7 @@ export const PLAYBOOK_MISSIONS = [
         'Con una fecha de implementación tentativa para que tengan un incentivo.'
       ],0,'La validación con quien corresponda es un avance concreto aun sin fecha de comité. Su resultado ayuda a definir lo que el cliente puede decidir.','Próximo paso')
     ]},
-  {id:'playbook-followup-pain', revision:'2026-11-24.1', title:'«Volvamos a hablar después del inventario»', skill:'Seguimiento al dolor', minutes:6,
+  {id:'playbook-followup-pain', level:'basic', revision:'2026-11-24.1', title:'«Volvamos a hablar después del inventario»', skill:'Seguimiento al dolor', minutes:6,
     story:'Una pyme confirmó que su equipo dedica la tarde a resolver consultas repetitivas. La dueña pide retomar por correo después del inventario del jueves y deja pendiente definir qué tipo de consulta entraría primero al piloto.',
     reference:{section:'Etapa 6 · Acordar el seguimiento al dolor',url:PLAYBOOK},
     playbook:{
@@ -408,7 +410,7 @@ export const PLAYBOOK_MISSIONS = [
 ];
 
 export const OBJECTION_MISSIONS = [
-  {id:'objection-price-before-trial', revision:'2026-11-25.1', title:'Vio el precio antes de probar', skill:'Precio y alternativas', minutes:6, lesson:5,
+  {id:'objection-price-before-trial', level:'intermediate', revision:'2026-11-25.1', title:'Vio el precio antes de probar', skill:'Precio y alternativas', minutes:6, lesson:5,
     story:'Caso simulado · Después de recibir la propuesta, el cliente dice que todavía no ha probado la plataforma. El precio le pareció alto y cree que hay alternativas mejores. Por eso frenó la evaluación.',
     objection:{
       prompt:'Escribe lo que dirías en un audio de 20–30 segundos. Agradece la franqueza, haz una pregunta para entender qué está comparando y ofrece un próximo paso fácil de aceptar.',
@@ -431,6 +433,29 @@ export const OBJECTION_MISSIONS = [
         'Le ofrezco revisar un solo caso cuando tenga espacio y le pregunto si hay una fecha o un hito razonable para retomar.'
       ],2,'Un paso acotado respeta que la evaluación está frenada. Acordar cuándo retomar permite seguir conversando sobre su caso sin convertir el próximo contacto en una presión por decidir.','Próximo paso')
     ]},
+  {id:'objection-switching-risk', level:'advanced', revision:'2026-11-25.1', title:'«Cambiar de proveedor pone en riesgo la atención»', skill:'Continuidad y decisión de compra', minutes:8, lesson:5,
+    story:'Caso simulado · Una empresa ya atiende por WhatsApp con otro proveedor. Operaciones quiere mejorar el reparto a soporte y ventas. TI aún desconoce qué pasaría con el número y el historial, Finanzas quiere comparar el costo total, y la renovación está cerca.',
+    objection:{
+      prompt:'Redacta tu respuesta al cliente. Explica cómo probarías valor con bajo riesgo, qué confirmarías con TI y con qué evidencia el cliente decidiría si conviene avanzar antes de renovar.',
+      model:'Tiene sentido cuidar la continuidad. Probemos con datos ficticios cómo quedaría el reparto de un caso de ventas y uno de soporte. En paralelo, revisemos con TI qué pasa con el número, los accesos y el historial, y qué haríamos si el cambio se interrumpe. Con eso podemos poner sobre la mesa el costo total y tomar una decisión antes de la renovación, con fechas que su equipo pueda sostener.'
+    },
+    questions:[
+      q('switch-risk-discovery','Operaciones dice «con que funcione igual el lunes, estamos». ¿Qué aclaras antes de comprometer el cambio?',[
+        'Acordar qué debe seguir operando, qué datos quieren conservar, quién controla el número y los accesos, y qué condiciones permitirían continuar o detener el cambio.',
+        'Pedir el contrato y el costo mensual actual para armar una comparación. Revisar número, historial y accesos cuando aprueben el presupuesto.',
+        'Confirmar los horarios de mayor tráfico para proponer un fin de semana, y revisar el historial después de la prueba.'
+      ],0,'La continuidad depende de requisitos operativos y técnicos que deben confirmarse antes de comprometer un cambio. El momento de menor tráfico ayuda a planificar una vez que se conocen esos requisitos.','Continuidad',true),
+      q('switch-risk-pilot','El cliente acepta una prueba, pero quiere mantener su canal actual operativo. ¿Qué evidencia puedes preparar ya?',[
+        'Un recorrido de todas las pantallas en demo y una lista comparativa de funciones para que TI evalúe el cambio.',
+        'Una simulación del reparto con datos de prueba y criterios de éxito acordados, mientras TI valida por separado la continuidad y el alcance del cambio.',
+        'Un ejercicio en demo con datos ficticios. Si funciona, presentar la continuidad del número y el historial como comprobada.'
+      ],1,'El piloto puede mostrar el flujo y el resultado esperado sin tocar el canal. Las dependencias de la cuenta requieren validación adicional antes de comprometer la transición.','Piloto',true),
+      q('switch-risk-decision','Finanzas recibe el precio mensual y pregunta si conviene renovar con el proveedor actual. ¿Cómo estructuras esa decisión?',[
+        'Comparar las mensualidades, agregar una estimación de ahorro con el piloto y pedir una decisión esa semana.',
+        'Entregar una propuesta de cambio por etapas y esperar a que Finanzas autorice el presupuesto para volver a conversar con Operaciones.',
+        'Acordar con Operaciones, TI y Finanzas una revisión previa a la renovación que compare resultado del piloto, costo total, dependencias y riesgo de continuidad.'
+      ],2,'La decisión necesita evidencia que sirva a las tres áreas. El siguiente paso queda ligado a la renovación y a las condiciones que cada equipo debe validar.','Decisión de compra')
+    ]},
 ];
 
 export const MISSIONS = [
@@ -452,7 +477,7 @@ export const MISSIONS = [
       q('internal', '¿Qué debe entender el cliente sobre comentarios internos de Desk?', ['Los comentarios no se envían al cliente; mencionar no cambia permisos.', 'Cualquier mención da acceso al ticket.', 'Se envían como respuesta pública.'], 0, 'La actualización del 13 de noviembre documenta comentarios internos, hilos y menciones. No son mensajes al cliente ni conceden permisos.', 'Alcance', true),
       q('flag', 'Una capacidad funciona en una cuenta piloto. ¿Qué prometes a otra cuenta?', ['Activación inmediata para todas.', 'La misma habilitación sin comprobarla.', 'El beneficio potencial, sujeto a comprobar habilitación y requisitos.'], 2, 'Una habilitación particular no implica disponibilidad general. Registra la comprobación necesaria antes de comprometerla.', 'Alcance'),
     ] },
-  { id: 'objection', title: '“Está muy caro”', skill: 'Negociación', minutes: 5, story: 'Después de la demo, Casa Norte responde: “Está muy caro; otro proveedor cuesta menos”. Debes entender qué está comparando.', lesson: 5,
+  { id: 'objection', level:'basic', title: '“Está muy caro”', skill: 'Negociación', minutes: 5, story: 'Después de la demo, Casa Norte responde: “Está muy caro; otro proveedor cuesta menos”. Debes entender qué está comparando.', lesson: 5,
     questions: [
       q('compare', '¿Cuál es tu primera respuesta?', ['Ofrecer el máximo descuento.', 'Decir que el competidor es malo.', 'Preguntar qué alcance y resultado están comparando.'], 2, 'La objeción puede esconder una diferencia de alcance, presupuesto o valor percibido. Entenderla permite responder con precisión.', 'Negociación'),
       q('value', '¿Cómo explicas el valor?', ['Garantizando un ahorro que no calculaste.', 'Relacionando la solución con un impacto acordado y supuestos explícitos.', 'Repitiendo la lista de funciones.'], 1, 'Construye el argumento con información del caso. Los supuestos de retorno no deben presentarse como resultados garantizados.', 'Negociación', true),
@@ -495,6 +520,9 @@ export const skillResult = (mission, answers) => {
 };
 // Fictional consequences make the practice about a conversation, not just recall.
 export const CONSEQUENCES = {
+  'switch-risk-discovery': ['Cada equipo puede distinguir lo que debe seguir funcionando de lo que se podría mejorar.', 'El cambio empieza a planificarse sin una condición acordada para proteger la atención.'],
+  'switch-risk-pilot': ['Operaciones obtiene evidencia del reparto y TI puede revisar el cambio sin tocar el canal activo.', 'La prueba entrega un recorrido general o se interpreta como evidencia de condiciones que aún faltan.'],
+  'switch-risk-decision': ['El cliente puede decidir con un resultado operativo, costo total y riesgos conocidos.', 'Finanzas recibe un número sin una decisión coordinada entre quienes dirigen la atención y quienes la operan.'],
   'price-trial-open': ['El cliente puede explicar qué entiende por una alternativa mejor.', 'La conversación se va a una defensa del precio antes de saber qué está comparando.'],
   'price-trial-compare': ['Ambas opciones se pueden mirar con el mismo caso y las mismas condiciones.', 'El cliente recibe un recorrido largo o una lista de funciones sin resolver su duda sobre costo y esfuerzo.'],
   'price-trial-next': ['Queda una forma de retomar que el cliente puede aceptar según su disponibilidad.', 'La conversación queda en una invitación no acordada o en un enlace genérico.'],
