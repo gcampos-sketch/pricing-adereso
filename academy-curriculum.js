@@ -407,6 +407,32 @@ export const PLAYBOOK_MISSIONS = [
     ]},
 ];
 
+export const OBJECTION_MISSIONS = [
+  {id:'objection-price-before-trial', revision:'2026-11-25.1', title:'Vio el precio antes de probar', skill:'Precio y alternativas', minutes:6, lesson:5,
+    story:'Caso simulado · Después de recibir la propuesta, el cliente dice que todavía no ha probado la plataforma. El precio le pareció alto y cree que hay alternativas mejores. Por eso frenó la evaluación.',
+    objection:{
+      prompt:'Escribe lo que dirías en un audio de 20–30 segundos. Agradece la franqueza, haz una pregunta para entender qué está comparando y ofrece un próximo paso fácil de aceptar.',
+      model:'Gracias por decírmelo así. Para ver si la propuesta tiene sentido para ustedes, ¿qué te convence más de las otras alternativas? Si te sirve, revisamos en diez minutos una consulta real de tu operación y usamos ese mismo caso para comparar qué cubre cada opción. Así puedes decidir si vale la pena seguir mirando.'
+    },
+    questions:[
+      q('price-trial-open','¿Qué respondes primero al audio?',[
+        'Le digo que podría revisar un descuento y le pregunto qué tendría que bajar para que decida.',
+        'Le agradezco la franqueza y le pregunto qué le parece mejor de las otras opciones y qué necesita resolver.',
+        'Le mando una comparación de funcionalidades para demostrarle por qué Adereso cuesta más.'
+      ],1,'La objeción trae tres señales: vio la propuesta, aún no usó la plataforma y percibe mejores opciones. Una pregunta abierta ayuda a descubrir si la diferencia es de alcance, facilidad de uso, presupuesto u otro criterio.','Diagnóstico',true),
+      q('price-trial-compare','En el ejercicio, el cliente aclara que la otra alternativa cuesta menos y dice que es más fácil de configurar. ¿Qué propones?',[
+        'Comparar ambas con una consulta real de su negocio y revisar qué cubre cada propuesta y qué trabajo requiere ponerla en marcha.',
+        'Enviar una lista con todas las capacidades de Adereso y pedirle que la revise antes de hablar de su caso.',
+        'Mostrar una demo completa para que vea todas las diferencias antes de volver al precio.'
+      ],0,'Una consulta del negocio permite comparar el resultado y la facilidad de operar el flujo. Revisa el alcance y el esfuerzo de puesta en marcha con lo que el cliente pueda verificar de ambas alternativas.','Demostrar valor'),
+      q('price-trial-next','El cliente dice que todavía no tiene tiempo para una sesión. ¿Cómo cierras?',[
+        'Le envío una invitación por si se desocupa y le pido confirmar.',
+        'Le digo que al probarlo entenderá el precio y le dejo el enlace de la demo.',
+        'Le ofrezco revisar un solo caso cuando tenga espacio y le pregunto si hay una fecha o un hito razonable para retomar.'
+      ],2,'Un paso acotado respeta que la evaluación está frenada. Acordar cuándo retomar permite seguir conversando sobre su caso sin convertir el próximo contacto en una presión por decidir.','Próximo paso')
+    ]},
+];
+
 export const MISSIONS = [
   { id: 'discovery', title: '¿Agendas o falta discovery?', skill: 'Discovery', minutes: 5, story: 'Caso ficticio · Casa Norte recibe muchas consultas, quiere “un bot” y pide una reunión de propuesta. Todavía no sabes qué resultado necesita.', lesson: 2,
     questions: [
@@ -452,6 +478,7 @@ export const MISSIONS = [
     ] },
   ...DEMO_MISSIONS,
   ...ADVISORY_MISSIONS,
+  ...OBJECTION_MISSIONS,
   ...PLAYBOOK_MISSIONS,
 ];
 export const missionRevision = mission => mission.revision ?? LEGACY_MISSION_REVISION;
@@ -468,6 +495,9 @@ export const skillResult = (mission, answers) => {
 };
 // Fictional consequences make the practice about a conversation, not just recall.
 export const CONSEQUENCES = {
+  'price-trial-open': ['El cliente puede explicar qué entiende por una alternativa mejor.', 'La conversación se va a una defensa del precio antes de saber qué está comparando.'],
+  'price-trial-compare': ['Ambas opciones se pueden mirar con el mismo caso y las mismas condiciones.', 'El cliente recibe un recorrido largo o una lista de funciones sin resolver su duda sobre costo y esfuerzo.'],
+  'price-trial-next': ['Queda una forma de retomar que el cliente puede aceptar según su disponibilidad.', 'La conversación queda en una invitación no acordada o en un enlace genérico.'],
   'pb-ice-context': ['La persona entra en confianza y tienes una primera señal de cómo viene a la reunión.', 'Arrancas con un discurso o una pregunta que la persona aún no tiene contexto para responder.'],
   'pb-ice-pace': ['Ambas partes saben qué pueden resolver con el tiempo disponible.', 'La reunión se queda sin tiempo para el acuerdo que el cliente necesitaba.'],
   'pb-ice-transition': ['Sabes quién se sumó y puedes usar el handoff con el foco correcto.', 'Empiezas a hablarle a un supuesto decisor sin confirmar su papel.'],
