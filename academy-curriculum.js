@@ -409,6 +409,149 @@ export const PLAYBOOK_MISSIONS = [
     ]},
 ];
 
+export const SPICED_MISSIONS = [
+  {id:'spiced-situation', level:'basic', revision:'2026-11-25.1', title:'Sigue una consulta de principio a fin', skill:'S · Situation', minutes:5,
+    story:'Caso ficticio · En una primera reunión, la encargada de atención dice: «Nos llegan mensajes por WhatsApp y tenemos tres sucursales». Todavía falta entender quién recibe una consulta y cómo llega al equipo que la resuelve.',
+    reference:{section:'Etapa 2 · SPICED en discovery · Situation',url:PLAYBOOK},
+    spiced:{
+      label:'Situación',
+      responses:['«El mensaje entra al WhatsApp de la sucursal. Quien lo ve primero lo reenvía al grupo de Soporte».','«La sucursal toma las ventas. Para postventa busca el pedido en la tienda y después avisa a Soporte».','«Depende de la sucursal. En dos usan el grupo, en la otra responde una persona fija».']
+    },
+    playbook:{
+      prompt:'Formula una pregunta abierta para que el cliente describa qué pasó con una consulta real y una frase para confirmar que entendiste el flujo.',
+      model:'Piensa en el último mensaje de postventa. ¿Qué pasó desde que llegó hasta que alguien lo atendió? Si entendí bien, entra a la sucursal y recién se asigna cuando alguien lo reenvía al grupo. ¿Ese recorrido es el normal?'
+    },
+    questions:[
+      q('spiced-s-open','¿Con qué pregunta ayudas a que describa cómo opera hoy?',[
+        '¿Cuántas personas necesitarían acceso si activáramos una bandeja central?',
+        '¿Puedes contarme qué pasó con la última consulta, desde que llegó hasta que alguien la atendió?',
+        '¿Te parece que las tres sucursales deberían empezar a usar el mismo canal?'
+      ],1,'Un ejemplo reciente hace visibles los pasos, las personas y las herramientas. Así puedes confirmar la operación en palabras del cliente.','Situation',true),
+      q('spiced-s-confirm','Te dice que la última consulta fue reenviada a un grupo de Soporte. ¿Qué aclaras?',[
+        'Si ese recorrido es habitual y qué cambia según la sucursal o el tipo de consulta.',
+        'Si todos los mensajes se atrasan por usar el grupo.',
+        'Si quiere que la IA reemplace ese grupo en todas las sucursales.'
+      ],0,'La Situation describe cómo se trabaja y cuándo cambia el recorrido. Confirmar si el ejemplo es típico ayuda a evitar generalizaciones.','Situation'),
+      q('spiced-s-recap','¿Cómo devuelves lo que entendiste?',[
+        '«Entonces Soporte pierde consultas todo el día».',
+        '«Entonces el problema es que necesitan automatizar WhatsApp».',
+        '«En este caso la sucursal recibió y reenvió; Soporte respondió después. ¿Ese es el flujo habitual?»'
+      ],2,'La recapitulación devuelve los hechos y permite corregirlos. El dolor y su impacto se exploran con preguntas propias.','Situation')
+    ]},
+  {id:'spiced-pain', level:'basic', revision:'2026-11-25.1', title:'Encuentra dónde se traba la atención', skill:'P · Pain', minutes:5,
+    story:'Caso ficticio · Ya sabes que las sucursales reenvían consultas a Soporte. Cuando preguntas cómo les funciona, te dicen: «En general bien, pero cuando se junta todo es pesado».',
+    reference:{section:'Etapa 2 · SPICED en discovery · Pain',url:PLAYBOOK},
+    spiced:{
+      label:'Dolor',
+      responses:['«Después de las seis quedan mensajes sin dueño y recién los vemos a la mañana siguiente».','«El problema es que nadie sabe a quién le toca responder. Nos ha pasado que dos personas contestan lo mismo».','«La demora no nos preocupa tanto. Lo que nos pesa es que el cliente tenga que contarnos su caso otra vez».']
+    },
+    playbook:{
+      prompt:'Escribe una pregunta que haga concreto «es pesado» y cómo confirmarías el dolor que el cliente prioriza.',
+      model:'Cuando se junta todo, ¿en qué parte se complica la atención? ¿Me cuentas la última vez que pasó? Entonces lo que más les pesa es que después de las seis algunas consultas quedan sin dueño. ¿Ese es el problema que quieren resolver primero?'
+    },
+    questions:[
+      q('spiced-p-specific','¿Cómo profundizas en «es pesado»?',[
+        '¿Te preocupa más perder ventas o que suba el costo de Soporte?',
+        '¿Qué función te falta en la herramienta para automatizarlo?',
+        '¿En qué parte se complica cuando se junta todo? ¿Cuándo pasó por última vez?'
+      ],2,'Una pregunta abierta permite que el cliente ubique la dificultad y la explique con un caso propio.','Pain',true),
+      q('spiced-p-priority','Menciona mensajes sin dueño y respuestas duplicadas. ¿Qué haces?',[
+        'Preguntas cuál de los dos problemas le pesa más y por qué.',
+        'Tomas respuestas duplicadas como principal porque es más fácil de mostrar.',
+        'Registras ambos como igual de urgentes y pasas a la demo.'
+      ],0,'La prioridad viene del cliente. Dos problemas pueden coexistir y tener pesos distintos para la operación.','Pain'),
+      q('spiced-p-repeat','¿Qué registro respeta lo que dijo el cliente?',[
+        '«Necesitan IA conversacional urgente».',
+        '«Después de las seis quedan mensajes sin dueño; dice que ese es el problema que quiere resolver primero».',
+        '«Se pierden ingresos cada noche por el manejo de WhatsApp».'
+      ],1,'Registrar el problema con sus palabras ayuda a sostener el resto de la conversación en un dolor confirmado.','Pain')
+    ]},
+  {id:'spiced-impact', level:'intermediate', revision:'2026-11-25.1', title:'Dimensiona el costo de lo que pasa hoy', skill:'I · Impact', minutes:6,
+    story:'Caso ficticio · La encargada confirmó que hay consultas sin dueño después de las seis. Al preguntarle si afecta al negocio dice: «Sí, nos quita tiempo, aunque no lo tenemos medido».',
+    reference:{section:'Etapa 2 · SPICED en discovery · Impact',url:PLAYBOOK},
+    spiced:{
+      label:'Impacto',
+      responses:['«Dos personas usan la primera hora de la mañana para ponerse al día. Lo vemos casi todos los lunes».','«Los clientes vuelven a escribir, pero todavía no sabemos cuántos. Soporte puede revisar una semana en el reporte».','«Nos genera molestia. Por ahora el equipo absorbe la carga y no hemos visto efectos en las ventas».']
+    },
+    playbook:{
+      prompt:'Escribe dos preguntas. La primera debe ayudar al cliente a explicar el impacto con sus palabras. La segunda debe aclarar qué respaldo tiene o quién puede medirlo.',
+      model:'Cuando quedan esas consultas, ¿qué cambia al día siguiente para el equipo o para quienes escribieron? Si la primera hora se ocupa en ponerse al día, ¿saben si ocurre todas las semanas? ¿Quién podría comprobarlo con una muestra del reporte?'
+    },
+    questions:[
+      q('spiced-i-effect','¿Qué pregunta le ayuda a dimensionar el dolor?',[
+        'Cuando quedan mensajes pendientes, ¿qué efecto tiene al día siguiente y quién lo nota?',
+        '¿Dirías que pierden al menos un 10 % de sus ventas por eso?',
+        '¿Te parece si usamos el ahorro promedio de otros proyectos para estimarlo?'
+      ],0,'Hablar de efectos observables permite al cliente reconocer la magnitud que realmente ve.','Impact',true),
+      q('spiced-i-evidence','El cliente estima que dos personas toman una hora, pero no tiene el reporte. ¿Cómo lo registras?',[
+        'Como dos horas exactas por día confirmadas por Operaciones.',
+        'Como una estimación del cliente y con un acuerdo para contrastarla en un período y fuente definidos.',
+        'Como una cifra que se borra del registro hasta que se mida.'
+      ],1,'Una estimación sirve de punto de partida si queda identificada como tal y se acuerda cómo contrastarla.','Evidencia'),
+      q('spiced-i-low','El cliente agrega «hoy lo alcanzamos a absorber». ¿Qué haces?',[
+        'Proponer un ahorro garantizado para que la prioridad suba.',
+        'Asumir que hay un problema financiero difícil de reconocer.',
+        'Confirmar el efecto actual y preguntar si hay situaciones donde aumente, sin asumir que siempre pasa.'
+      ],2,'La respuesta puede señalar un impacto acotado. Preguntar en qué condiciones cambia permite comprenderlo sin inflarlo.','Impact')
+    ]},
+  {id:'spiced-critical-event', level:'advanced', revision:'2026-11-25.1', title:'¿Qué pasa si llega el lanzamiento?', skill:'CE · Critical Event', minutes:7,
+    story:'Caso ficticio · El cliente confirmó que después de las seis quedan consultas sin dueño. También te dijo que el 14 de diciembre lanzan una promoción. Ya tienes el dolor y la fecha que mencionó. Falta entender qué significaría llegar al lanzamiento con el mismo problema.',
+    reference:{section:'Etapa 2 · CE — Critical Event',url:PLAYBOOK},
+    spiced:{
+      label:'Critical Event',
+      responses:['«Esa semana esperamos el doble de consultas. Si siguen quedando pendientes, tendremos que sacar dos personas de Ventas para absorberlas a la mañana siguiente».','«Creemos que se podría acumular más trabajo, pero no lo sabemos. Operaciones puede comparar con el último lanzamiento».','«Queríamos llegar con algo listo, pero tenemos un refuerzo temporal. Si no cambiamos el proceso para esa fecha, podemos seguir operando».']
+    },
+    playbook:{
+      prompt:'El 14 de diciembre y el dolor ya están confirmados. Escribe la pregunta con la que conectarías ambos y cómo responderías si el cliente dice que puede seguir con el proceso actual.',
+      model:'Mencionaste el lanzamiento del 14 de diciembre y que después de las seis quedan consultas sin dueño. ¿Qué pasaría si llega el lanzamiento y esas consultas siguen quedando sin atender? Si me dices que pueden cubrirlo con el refuerzo, confirmaría qué les permite cubrir y dejaría registrado cuánto pesa el hito según ustedes.'
+    },
+    questions:[
+      q('spiced-ce-question','Ya tienes el dolor y la fecha. ¿Qué le preguntas?',[
+        '¿El 14 de diciembre es una fecha definitiva para que les envíe la propuesta?',
+        '¿Qué pasaría si llega el lanzamiento del 14 de diciembre y después de las seis siguen quedando consultas sin dueño?',
+        'Para el 14 de diciembre, ¿cómo les afectaría perder ventas por responder tarde?'
+      ],1,'La fecha es el punto de partida. El Critical Event se aclara cuando el cliente explica la consecuencia que tendría llegar a ese hito con el dolor sin resolver.','Critical Event',true),
+      q('spiced-ce-listen','El cliente responde «tendremos que sacar gente de Ventas». ¿Cómo profundizas?',[
+        '«Claro, entonces podrían perder ventas. ¿Lo ponemos como impacto en la propuesta?»',
+        '«Entonces el 14 de diciembre es el cierre de la compra».',
+        '«¿Cómo se ve eso en la operación? ¿Quién tendría que cubrir la carga y qué dejaría de hacer?»'
+      ],2,'Dejar espacio y pedir un ejemplo permite que el cliente explique por sí mismo el peso de la consecuencia.','Escucha'),
+      q('spiced-ce-preference','En otra simulación dice que existe un refuerzo y que podrían seguir igual. ¿Qué registras?',[
+        'La fecha, el refuerzo y que el cliente aún puede operar. La urgencia ligada a ese hito queda por validar.',
+        'Que cada día de demora impactará las ventas hasta el lanzamiento.',
+        'Una fecha de cierre antes del lanzamiento, aunque aún no haya decisión ni aprobación.'
+      ],0,'También es válido que el cliente diga que el problema es manejable para esa fecha. Su respuesta define qué tan crítico es el hito.','Registro',true)
+    ]},
+  {id:'spiced-decision', level:'advanced', revision:'2026-11-25.1', title:'Averigua cómo van a decidir', skill:'D · Decision', minutes:6,
+    story:'Caso ficticio · La encargada de Operaciones quiere resolver las consultas sin dueño antes del lanzamiento. Le gustó la demo y te pide una propuesta. Todavía falta saber quién valida, quién aprueba y con qué criterio decidirán.',
+    reference:{section:'Etapa 5 · D — Decision',url:PLAYBOOK},
+    spiced:{
+      label:'Decisión',
+      responses:['«Operaciones tiene que probar el reparto. TI valida accesos y después Finanzas compara el costo total en comité».','«Yo preparo la recomendación. Aún no sé quién firma ni qué pide Compras para revisar proveedores».','«La decisión la toma la gerenta. Quiere ver que el equipo pueda empezar con una sucursal y cuánto tiempo requeriría».']
+    },
+    playbook:{
+      prompt:'Escribe una pregunta abierta sobre el proceso de decisión y una forma de acordar el siguiente paso con objetivo, responsable y fecha o ventana.',
+      model:'Para decidir si tiene sentido avanzar antes del lanzamiento, ¿qué tiene que pasar internamente y qué necesita validar cada persona? Si TI revisa accesos primero, ¿te parece que coordinemos una revisión con su responsable esta semana y confirmemos después quién presenta el resultado a Finanzas?'
+    },
+    questions:[
+      q('spiced-d-process','¿Qué preguntas cuando el contacto te pide la propuesta?',[
+        '¿Puedes decidir si te mando el monto por correo hoy?',
+        '¿Te sirve la misma fecha de lanzamiento como fecha de firma?',
+        '¿Qué necesitan validar para decidir si avanzan, quién participa y con qué criterios lo revisará?'
+      ],2,'El proceso se expresa en palabras de quien lo conoce. Pregunta por roles, criterios y secuencia para entender cómo se toma la decisión.','Decision',true),
+      q('spiced-d-unknown','Dice que recomienda, pero todavía no sabe quién firma. ¿Cómo sigues?',[
+        'Acuerdas con esa persona cómo averiguar quién aprueba y cuándo confirmar el próximo paso.',
+        'La registras como decisora porque pidió la propuesta.',
+        'Fijas una fecha probable de compra antes del lanzamiento sin confirmar quién decide.'
+      ],0,'Un dato desconocido se convierte en una validación concreta con responsable y plazo. El interés del contacto no confirma su autoridad.','Validación'),
+      q('spiced-d-next','TI revisa accesos antes de que Finanzas vea el costo. ¿Cuál es el siguiente paso más útil?',[
+        'Acordar con TI y Operaciones el objetivo, responsable y ventana para revisar accesos, y confirmar cómo llegará el resultado a Finanzas.',
+        'Mandar la propuesta a Finanzas primero para que el precio no se demore.',
+        'Agendar otra demo general con Operaciones sin incluir el requisito técnico.'
+      ],0,'El paso siguiente tiene sentido cuando despeja una condición real de la decisión y respeta el orden que definió el cliente.','Próximo paso')
+    ]}
+];
+
 export const OBJECTION_MISSIONS = [
   {id:'objection-price-before-trial', level:'intermediate', revision:'2026-11-25.1', title:'Vio el precio antes de probar', skill:'Precio y alternativas', minutes:6, lesson:5,
     story:'Caso simulado · Después de recibir la propuesta, el cliente dice que todavía no ha probado la plataforma. El precio le pareció alto y cree que hay alternativas mejores. Por eso frenó la evaluación.',
@@ -505,6 +648,7 @@ export const MISSIONS = [
   ...ADVISORY_MISSIONS,
   ...OBJECTION_MISSIONS,
   ...PLAYBOOK_MISSIONS,
+  ...SPICED_MISSIONS,
 ];
 export const missionRevision = mission => mission.revision ?? LEGACY_MISSION_REVISION;
 export const currentMissionEntry = (mission, entry) =>
@@ -520,6 +664,21 @@ export const skillResult = (mission, answers) => {
 };
 // Fictional consequences make the practice about a conversation, not just recall.
 export const CONSEQUENCES = {
+  'spiced-s-open': ["El cliente narra un recorrido real que puedes reconstruir.", "La conversación salta a una solución sin entender el proceso actual."],
+  'spiced-s-confirm': ["Distingues el flujo habitual de las excepciones por sucursal.", "El ejemplo termina convertido en una regla para toda la operación."],
+  'spiced-s-recap': ["La encargada puede confirmar o corregir los pasos.", "El resumen atribuye un problema que la persona aún no describió."],
+  'spiced-p-specific': ["El cliente ubica el momento exacto en que aparece el problema.", "La pregunta le ofrece opciones antes de que pueda describir su experiencia."],
+  'spiced-p-priority': ["El cliente expresa cuál dolor le pesa más y qué quiere resolver primero.", "El equipo elige por él qué necesidad vale más."],
+  'spiced-p-repeat': ["La prioridad queda respaldada por lo que el cliente confirmó.", "El registro convierte una dificultad concreta en una solución o consecuencia supuesta."],
+  'spiced-i-effect': ["La persona puede dimensionar el efecto con lo que ve a diario.", "La cifra propuesta condiciona su respuesta o se trata como evidencia propia."],
+  'spiced-i-evidence': ["Queda una estimación útil y una forma de verificarla.", "Se pierde una señal útil o se usa como cifra cerrada sin respaldo."],
+  'spiced-i-low': ["El alcance del problema refleja lo que sucede hoy y cuándo cambia.", "La evaluación se apoya en un impacto que el cliente no reconoce."],
+  'spiced-ce-question': ["El cliente explica qué significaría llegar a su fecha con el dolor todavía activo.", "La conversación se va a una fecha comercial o a una consecuencia sugerida por el ejecutivo."],
+  'spiced-ce-listen': ["La persona describe con un ejemplo qué capacidad del equipo quedaría comprometida.", "El relato del cliente se convierte en una pérdida o una fecha de cierre que todavía no confirmó."],
+  'spiced-ce-preference': ["Queda claro qué permite manejar el lanzamiento y qué está pendiente.", "La propuesta se apoya en una urgencia que el cliente no expresó."],
+  'spiced-d-process': ["La contraparte explica cómo deciden y quién participa.", "La conversación confunde interés y calendario operativo con una aprobación."],
+  'spiced-d-unknown': ["Queda un acuerdo para completar el dato que falta.", "La oportunidad queda con un decisor o una fecha que nadie confirmó."],
+  'spiced-d-next': ["TI puede resolver una dependencia antes de que Finanzas evalúe.", "La siguiente actividad no responde al orden que describe el cliente."],
   'switch-risk-discovery': ['Cada equipo puede distinguir lo que debe seguir funcionando de lo que se podría mejorar.', 'El cambio empieza a planificarse sin una condición acordada para proteger la atención.'],
   'switch-risk-pilot': ['Operaciones obtiene evidencia del reparto y TI puede revisar el cambio sin tocar el canal activo.', 'La prueba entrega un recorrido general o se interpreta como evidencia de condiciones que aún faltan.'],
   'switch-risk-decision': ['El cliente puede decidir con un resultado operativo, costo total y riesgos conocidos.', 'Finanzas recibe un número sin una decisión coordinada entre quienes dirigen la atención y quienes la operan.'],

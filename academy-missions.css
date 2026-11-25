@@ -263,6 +263,7 @@ body { background-image:none; }
 .academy-training .academy-edition { margin-top:12px; }
 .academy-training-levels { display:flex;flex-wrap:wrap;gap:8px;margin-block:12px 14px; }
 .academy-training-levels .academy-btn { padding-inline:12px; }
+#academy-spiced { margin-top:24px; }
 .academy-training [hidden] { display:none; }
 #academy-quizzes h3 { margin-bottom:12px; }
 .academy-lesson-library .section-title { margin-top:0; }
