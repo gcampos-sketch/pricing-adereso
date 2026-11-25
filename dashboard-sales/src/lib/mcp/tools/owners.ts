@@ -1,6 +1,15 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
+import type { OwnerRow } from "@/lib/pulse-types";
 import { assertTeamCaller, loadPulse, usd } from "../report";
+
+export function formatOwnerPerformance(
+  owner: Pick<OwnerRow, "name" | "openAmount" | "openCount" | "weightedQ" | "avgProbability">,
+): string {
+  // Pulse stores the arithmetic mean of open-deal probabilities as a 0–1 fraction.
+  const probabilityPercent = Math.round(owner.avgProbability * 100);
+  return `${owner.name}: abierto ${usd(owner.openAmount)} (${owner.openCount} deals) · ponderado ${usd(owner.weightedQ)} · prob. ${probabilityPercent}%`;
+}
 
 export default defineTool({
   name: "list_owner_performance",
@@ -12,7 +21,7 @@ export default defineTool({
     await assertTeamCaller(ctx);
     const r = await loadPulse(role);
     const text = r.ownerRows
-      .map((o) => `${o.name}: abierto ${usd(o.openAmount)} (${o.openCount} deals) · ponderado ${usd(o.weightedQ)} · prob. ${Math.round(o.avgProbability)}%`)
+      .map(formatOwnerPerformance)
       .join("\n") || "Sin comerciales en este alcance.";
     return { content: [{ type: "text", text }] };
   },
