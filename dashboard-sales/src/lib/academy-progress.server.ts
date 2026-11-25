@@ -2,12 +2,35 @@ import { readFile,writeFile,mkdir,rename,unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { supabaseAdmin } from '../integrations/supabase/client.server';
 import { verifyHubIdentity } from './hub-auth.server';
 import { createAcademyProgressGateway,type AcademyProgress } from './academy-progress-gateway';
 const db=supabaseAdmin as unknown as SupabaseClient;
 const development=process.env['NODE_ENV']==='development';
 const directory=resolve(process.cwd(),'.migration-backups/academy-progress');
+const peoplePlanSchema=z.object({
+  periods:z.array(z.string().min(1)).min(1),
+  phases:z.array(z.object({
+    title:z.string().min(1),
+    entries:z.array(z.object({
+      id:z.number().int().positive(),
+      period:z.number().int().nonnegative(),
+      title:z.string().min(1),
+      owner:z.string().min(1),
+      action:z.string().min(1),
+    })).min(1),
+  })).min(1),
+}).refine(({periods,phases})=>{
+  const entries=phases.flatMap(phase=>phase.entries);
+  return new Set(entries.map(entry=>entry.id)).size===entries.length &&
+    entries.every(entry=>entry.period<periods.length);
+});
+function readPeoplePlan(raw:string|undefined){
+  if(!raw)return undefined;
+  try{return peoplePlanSchema.safeParse(JSON.parse(raw)).data;}
+  catch{return undefined;}
+}
 async function read(userId:string):Promise<AcademyProgress>{
   if(development){
     try{return {...JSON.parse(await readFile(resolve(directory,userId+'.json'),'utf8')),storage:'development'};}
@@ -31,4 +54,10 @@ async function write(userId:string,revision:number,payload:Record<string,unknown
   const {data,error}=await db.rpc('academy_save_personal_progress',{p_user_id:userId,p_revision:revision,p_payload:payload});
   if(error)throw Error('progress_unavailable');return data?{revision:data,payload}:null;
 }
-export const handleAcademyProgressRequest=createAcademyProgressGateway({verify:verifyHubIdentity,read,write,publicOrigin:development?undefined:process.env['RENDER_EXTERNAL_URL']});
+export const handleAcademyProgressRequest=createAcademyProgressGateway({
+  verify:verifyHubIdentity,
+  read,
+  write,
+  peoplePlan:readPeoplePlan(process.env['ACADEMY_PEOPLE_PLAN']),
+  publicOrigin:development?undefined:process.env['RENDER_EXTERNAL_URL'],
+});

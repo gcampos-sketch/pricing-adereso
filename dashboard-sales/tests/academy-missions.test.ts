@@ -5,11 +5,12 @@ import { createAcademyProgressGateway } from '../src/lib/academy-progress-gatewa
 import { readFileSync } from 'node:fs';
 const payload={role:'AE',mode:'onboarding',attempts:{},reviews:{},tasks:{},legacy:{},resume:null};
 const cookie=(token:string)=>'adereso_hub_session='+encodeURIComponent(JSON.stringify({accessToken:token}));
-function fixture(){
+function fixture(peoplePlan?:unknown){
   const rows=new Map<string,any>();const writes:string[]=[];
   const gateway=createAcademyProgressGateway({
     verify:async token=>['alice','bob'].includes(token)?{userId:token,expiresAt:Date.now()+60000}:null,
     read:async id=>rows.get(id)||{revision:0,payload:{}},
+    peoplePlan,
     write:async(id,revision,data)=>{const current=rows.get(id)||{revision:0};if(current.revision!==revision)return null;const saved={revision:revision+1,payload:data};rows.set(id,saved);writes.push(id);return saved;},
   });
   const request=(token='alice',body:any={revision:0,payload},origin='https://hub.test')=>new Request('https://hub.test/api/academy/progress',{method:'PUT',headers:{cookie:cookie(token),origin,'content-type':'application/json'},body:JSON.stringify(body)});
@@ -81,6 +82,20 @@ test('account comes exclusively from verified identity and reads stay isolated',
   const f=fixture();const response=await f.gateway(f.request('alice',{revision:0,payload,userId:'bob'}));expect(response?.status).toBe(200);expect(f.writes).toEqual(['alice']);
   const bob=await f.gateway(new Request('https://hub.test/api/academy/progress',{headers:{cookie:cookie('bob')}}));expect(await bob?.json()).toEqual({revision:0,payload:{}});
   expect((await f.gateway(f.request('unknown')))?.status).toBe(401);
+});
+test('the People template is available only through authenticated progress reads',async()=>{
+  const peoplePlan={periods:['Day 1'],phases:[{title:'Welcome',entries:[{id:1,period:0,title:'Welcome',owner:'Team',action:'Join the session'}]}]};
+  const f=fixture(peoplePlan);
+  const get=(token:string)=>f.gateway(new Request('https://hub.test/api/academy/progress',{headers:{cookie:cookie(token)}}));
+  const unauthorized=await get('unknown');
+  expect(unauthorized?.status).toBe(401);
+  expect(await unauthorized?.json()).not.toHaveProperty('peoplePlan');
+  const authorized=await get('alice');
+  expect(authorized?.headers.get('cache-control')).toBe('private, no-store');
+  expect(await authorized?.json()).toEqual({revision:0,payload:{},peoplePlan});
+  const saved=await f.gateway(f.request());
+  expect(await saved?.json()).not.toHaveProperty('peoplePlan');
+  expect(f.rows.get('alice').payload).toEqual(payload);
 });
 test('stale tabs cannot overwrite more recent practice; off-origin writes are rejected',async()=>{
   const f=fixture();expect((await f.gateway(f.request()))?.status).toBe(200);
