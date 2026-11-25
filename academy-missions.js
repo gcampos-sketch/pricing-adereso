@@ -10,11 +10,11 @@ let originTab = 'home';
 let lessonOrigin = 'products';
 let aeEvidenceDraft = {};
 let roleplaySaveTimer;
-const aeOpenDays = new Set();
-let aeView = 'checklist';
-let aeSelectedDay;
-let peopleSelectedGroup;
-let peoplePeriods = [], peoplePhases = [], peopleGroups = [], peopleEntries = [];
+let peoplePlan;
+let onboardingWeeks = [];
+let onboardingSlots = [];
+let selectedWeek;
+let selectedSlot;
 const role = () => ROLES[progress.role] || ROLES.AE;
 const wikiChanged = () => (window.academySourceDates || []).some(d => d.id === '3219c274-7df5-81a2-baeb-de4de645d487' && Date.parse(d.editedAt) > Date.parse('2026-11-13T13:20:34.925Z'));
 const mission = id => MISSIONS.find(m => m.id === id);
@@ -38,7 +38,8 @@ async function load() {
     const data = await response.json();
     revision = data.revision;
     progress = {...progress,...data.payload};
-    loadPeoplePlan(data.peoplePlan);
+    peoplePlan = data.peoplePlan;
+    loadOnboardingCalendar();
     progress.aeOnboardingEvidence = data.payload.aeOnboardingEvidence;
     clearTimeout(roleplaySaveTimer);
     roleplaySaveTimer = undefined;
@@ -263,32 +264,47 @@ const aeDays = AE_ONBOARDING_WEEKS.flatMap((week, weekIndex) => week.days.map((d
     ],
   };
 }));
-const aeEntries = aeDays.flatMap(day => day.entries);
-const aeActivities = aeEntries.filter(entry => entry.stage === undefined);
-const aeRoleplays = aeEntries.filter(entry => entry.stage !== undefined);
-function loadPeoplePlan(plan) {
-  peoplePeriods = plan?.periods ?? [];
-  peoplePhases = (plan?.phases ?? []).map(({title,entries}, phase) => ({
-    title,
-    groups: peoplePeriods.map((period,index) => ({
-      key: phase + '-' + index,
-      title: period,
-      entries: entries.filter(entry => entry.period === index).map(entry => ({...entry,key:'people-onboarding-' + entry.id})),
-    })),
-  }));
-  peopleGroups = peoplePhases.flatMap(phase => phase.groups).filter(group => group.entries.length);
-  peopleEntries = peopleGroups.flatMap(group => group.entries);
+const weekOfDay = day => Math.ceil(day / 7);
+
+function loadOnboardingCalendar() {
+  const byDay = new Map(aeDays.map(day => [day.weekIndex * 7 + day.dayIndex + 1, day]));
+  const periods = (peoplePlan?.periods ?? []).map((title, index) => {
+    const day = Number(title.match(/^Día\s+(\d+)$/i)?.[1]);
+    const range = title.match(/^Semanas?\s+(\d+)(?:\s*[-–]\s*(\d+))?$/i);
+    const firstWeek = day ? weekOfDay(day) : Number(range?.[1]);
+    const lastWeek = Number(range?.[2] ?? firstWeek);
+    const groups = peoplePlan.phases.map(phase => ({
+      title:phase.title,
+      entries:phase.entries.filter(entry => entry.period === index).map(entry => ({...entry,key:'people-onboarding-' + entry.id})),
+    })).filter(group => group.entries.length);
+    return {key:'period-'+index,title,day,firstWeek,lastWeek,groups,entries:groups.flatMap(group => group.entries)};
+  }).filter(period => period.entries.length);
+  const lastWeek = Math.max(AE_ONBOARDING_WEEKS.length,...periods.map(period => period.lastWeek || 0));
+  onboardingWeeks = Array.from({length:lastWeek}, (_, index) => {
+    const number = index + 1;
+    const days = Array.from({length:7}, (_, offset) => {
+      const day = index * 7 + offset + 1;
+      const ae = byDay.get(day);
+      const groups = periods.filter(period => period.day === day).flatMap(period => period.groups);
+      return {key:'day-'+day,title:'Día '+day,ae,groups,entries:[...(ae?.entries ?? []),...groups.flatMap(group => group.entries)]};
+    });
+    const windows = periods.filter(period => !period.day && period.firstWeek <= number && period.lastWeek >= number);
+    return {number,days,windows,entries:[...days,...windows].flatMap(slot => slot.entries)};
+  });
+  const unscheduled = periods.filter(period => !period.firstWeek);
+  if (unscheduled.length) onboardingWeeks.push({number:0,days:[],windows:unscheduled,entries:unscheduled.flatMap(slot => slot.entries)});
+  onboardingSlots = [...new Set(onboardingWeeks.flatMap(week => [...week.days,...week.windows]))].filter(slot => slot.entries.length);
 }
 const aeCount = entries => entries.filter(({key}) => progress.tasks[key]).length;
-const nextAeEntry = () => aeEntries.find(({key}) => !progress.tasks[key]);
-const aeCounter = () => `${aeCount(aeActivities)}/${aeActivities.length} actividades · ${aeCount(aeRoleplays)}/${aeRoleplays.length} roleplays`;
+const pendingSlot = slots => slots.find(slot => aeCount(slot.entries) < slot.entries.length);
+const allOnboardingEntries = () => onboardingSlots.flatMap(slot => slot.entries);
 const nextAeTitle = entry => entry.stage === undefined ? escape(entry.title) : `Roleplay · Etapa ${entry.stage} · ${escape(entry.title)}`;
 
 function aeNext() {
-  const entry = nextAeEntry();
-  if (!entry) return '<p class="academy-next-title">Completaste las actividades y los roleplays.</p><button class="academy-btn" data-ae-evidence>Revisar el go-live →</button>';
-  const {weekIndex, dayIndex} = aeDays.find(day => day.entries.includes(entry));
-  return `<div><p class="academy-kicker">Próximo paso · Semana ${weekIndex+1} · Día ${dayIndex+1}</p><p class="academy-next-title">${nextAeTitle(entry)}</p></div>
+  const slot = pendingSlot(onboardingSlots);
+  const entry = slot?.entries.find(({key}) => !progress.tasks[key]);
+  if (!entry) return '<p class="academy-next-title">Completaste el plan disponible.</p><button class="academy-btn" data-ae-evidence>Revisar el go-live →</button>';
+  return `<div><p class="academy-kicker">Próximo paso · ${entry.key.startsWith('people-')?'People':'AE'} · ${escape(slot.title)}</p><p class="academy-next-title">${nextAeTitle(entry)}</p></div>
     <button class="academy-btn primary" type="button" data-ae-resume="${entry.key}" ${!ready?'disabled':''}>Continuar onboarding →</button>`;
 }
 
@@ -296,12 +312,10 @@ let aeReturnEntry = null;
 function focusAeEntry(key) {
   const item = $('academy-entry-' + key);
   if (!item) return;
-  const day = item.closest('[data-ae-day]');
-  if (aeView === 'people') aeView = 'checklist';
-  aeSelectedDay = day.dataset.aeDay;
-  applyOnboardingView($('academy-ae-route'));
-  day.open = true;
-  aeOpenDays.add(aeSelectedDay);
+  selectedSlot = item.closest('[data-calendar-detail]').dataset.calendarDetail;
+  const weeks = onboardingWeeks.filter(week => [...week.days,...week.windows].some(slot => slot.key === selectedSlot));
+  if (!weeks.some(week => week.number === selectedWeek)) selectedWeek = weeks[0].number;
+  showOnboardingCalendar($('academy-ae-route'));
   item.scrollIntoView({block:'center'});
   item.querySelector('input').focus({preventScroll:true});
 }
@@ -344,115 +358,109 @@ const aeResources = {
   36: ['Abrir evaluación', 'https://docs.google.com/forms/d/1Rn1kMbnz8i-SZIRjrgGPPqjyqxhAgxgowEgQPqfKYis/viewform'],
 };
 
-const onboardingViews = {checklist:'Checklist', gantt:'Gantt AE', people:'People'};
+const weekLabel = number => number ? `Semana ${number}` : "Sin fecha";
+const slotSources = slot => [slot.ae && "AE", slot.groups.length && "People"].filter(Boolean).join(" + ");
+const progressLabel = entries => `${aeCount(entries)}/${entries.length} completadas`;
 
-function timeline(label, columns, rows, track) {
-  return `<div class="academy-timeline" role="region" aria-label="${label}" tabindex="0"><table aria-label="${label}">
-    <thead><tr><th scope="col">Etapa</th>${columns.map(column => `<th scope="col">${escape(column)}</th>`).join('')}</tr></thead>
-    <tbody>${rows.map(({title,groups}) => `<tr><th scope="row">${escape(title)}</th>${groups.map(group => `<td>${group?.entries.length
-      ? `<button type="button" class="academy-timeline-chip" data-onboarding-track="${track}" data-onboarding-group="${group.key}" aria-pressed="false" title="${escape(group.title)}"><span class="academy-timeline-fill" aria-hidden="true"></span><span data-onboarding-chip-count></span><span class="academy-visually-hidden"> · ${escape(group.title)}</span></button>`
-      : ''}</td>`).join('')}</tr>`).join('')}</tbody>
-  </table></div>`;
+function calendarSlot(slot, isWindow) {
+  if (!slot.entries.length) return `<div class="academy-calendar-empty"><strong>${escape(slot.title)}</strong><span>Sin tareas</span></div>`;
+  const detail = isWindow ? slot.groups.map(group => group.title).join(" · ") : slot.ae?.title ?? slot.groups[0].title;
+  return `<button type="button" class="academy-calendar-slot${isWindow ? ' academy-calendar-window' : ''}" data-calendar-slot="${slot.key}" aria-pressed="false" aria-controls="academy-calendar-${slot.key}">
+    <span class="academy-calendar-slot-head"><strong>${escape(slot.title)}</strong><span class="academy-calendar-source">${slotSources(slot)}</span></span>
+    <span class="academy-calendar-slot-title">${escape(detail)}</span>
+    <span class="academy-calendar-slot-progress" data-calendar-count>${progressLabel(slot.entries)}</span>
+    <span class="academy-calendar-slot-fill" aria-hidden="true"></span>
+  </button>`;
 }
 
-function aeTimeline() {
-  const slots = aeDays.map((_,index) => 'Día ' + (index + 1));
-  return timeline('Gantt de Sales Academy', slots, AE_ONBOARDING_WEEKS.map((_,index) => ({
-    title: 'Semana ' + (index + 1),
-    groups: aeDays.map(day => day.weekIndex === index ? day : null),
-  })), 'gantt');
-}
-
-function peopleTimeline() {
-  if (!peopleEntries.length) return `<div data-onboarding-panel="people" hidden>
-    <p class="academy-muted">${ready?'El plan de People no está disponible en este momento.':'Cargando plan de People…'}</p>
-  </div>`;
-  return `<div data-onboarding-panel="people" hidden>
-    <div class="academy-people-head">
-      <h4>Onboarding de People</h4><p class="academy-muted" data-people-total aria-live="polite"></p>
+function aeActivity(entry) {
+  if (entry.stage !== undefined) return aeRoleplayCard(entry);
+  const {id,title,source,actions,key} = entry;
+  return `<li id="academy-entry-${key}">
+    <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" data-ae-task="${key}" ${progress.tasks[key]?'checked':''} ${!ready?'disabled':''}><span>${escape(title)}</span></label>
+    <div class="academy-actions">${actions.map(aeAction).join('')}
+      ${aeResources[id] ? `<a class="academy-btn" href="${aeResources[id][1]}" target="_blank" rel="noopener noreferrer">${aeResources[id][0]} ↗</a>` : ''}
+      <a class="academy-btn" href="${source}" target="_blank" rel="noopener noreferrer">Ficha en Notion ↗</a>
     </div>
-    ${timeline('Gantt de People', peoplePeriods, peoplePhases, 'people')}
-    ${peoplePhases.flatMap(phase => phase.groups.filter(group => group.entries.length).map(group => `<section class="academy-people-group" data-people-group="${group.key}" hidden>
-      <h4>${escape(phase.title)} · ${escape(group.title)}</h4>
-      <ul>${group.entries.map(entry => `<li>
+  </li>`;
+}
+
+function calendarDetail(slot) {
+  return `<section class="academy-calendar-detail" id="academy-calendar-${slot.key}" data-calendar-detail="${slot.key}" aria-labelledby="academy-calendar-title-${slot.key}" hidden>
+    <div class="academy-section-head"><h4 id="academy-calendar-title-${slot.key}">${escape(slot.title)}${slot.ae ? ' · ' + escape(slot.ae.title) : ''}</h4><span class="academy-pill" data-calendar-detail-count>${progressLabel(slot.entries)}</span></div>
+    ${slot.ae ? `<section class="academy-ae-day"><h5>AE · Sales Academy</h5><ul>${slot.ae.entries.map(aeActivity).join('')}</ul></section>` : ''}
+    ${slot.groups.map(group => `<section class="academy-people-group">
+      <h5>People · ${escape(group.title)}</h5>
+      <ul>${group.entries.map(entry => `<li id="academy-entry-${entry.key}">
         <label class="academy-check"><input type="checkbox" data-ae-task="${entry.key}" ${progress.tasks[entry.key]?'checked':''} ${!ready?'disabled':''}><span>${escape(entry.title)}</span></label>
         <p class="academy-muted"><strong>${escape(entry.owner)}</strong> · ${escape(entry.action)}</p>
       </li>`).join('')}</ul>
-    </section>`)).join('')}
-  </div>`;
+    </section>`).join('')}
+  </section>`;
 }
 
-function applyOnboardingView(route) {
-  const currentDay = aeDays.find(day => day.entries.includes(nextAeEntry()));
-  const selectedDay = aeSelectedDay ?? (currentDay ?? aeDays[0]).key;
-  const firstPendingPeople = peopleGroups.find(group => aeCount(group.entries) < group.entries.length);
-  const selectedPeople = peopleSelectedGroup ?? (firstPendingPeople ?? peopleGroups[0])?.key;
-  route.querySelector('#academy-ae-title').textContent = aeView === 'people' ? 'Tu onboarding AE' : 'Tu onboarding AE en dos semanas';
-  route.querySelector('[data-ae-total]').hidden = aeView === 'people';
-  route.querySelectorAll('[data-onboarding-view]').forEach(chip => {
-    chip.setAttribute('aria-pressed', String(chip.dataset.onboardingView === aeView));
+function onboardingCalendar() {
+  return `<p class="academy-muted academy-calendar-caption">Días contados desde el inicio del onboarding.</p>
+  <div class="academy-calendar-nav" role="group" aria-label="Semanas del onboarding">
+    ${onboardingWeeks.map(week => `<button class="academy-btn" type="button" data-calendar-week="${week.number}" aria-pressed="false" aria-controls="academy-week-${week.number}">${weekLabel(week.number)}</button>`).join('')}
+  </div>
+  ${onboardingWeeks.map(week => `<section class="academy-calendar-week" id="academy-week-${week.number}" data-calendar-panel="${week.number}" aria-labelledby="academy-week-heading-${week.number}" hidden>
+    <div class="academy-calendar-week-head">
+      <h4 id="academy-week-heading-${week.number}">${weekLabel(week.number)}</h4>
+      <span class="academy-muted" data-calendar-week-count aria-live="polite"></span>
+      <progress aria-label="Avance de ${weekLabel(week.number)}" max="${week.entries.length || 1}" value="${aeCount(week.entries)}"></progress>
+    </div>
+    ${week.days.length ? `<div class="academy-calendar-scroll" role="region" aria-label="Calendario de ${weekLabel(week.number)}" tabindex="0"><div class="academy-calendar-days">${week.days.map(slot => calendarSlot(slot,false)).join('')}</div></div>` : ''}
+    ${week.windows.map(slot => calendarSlot(slot,true)).join('')}
+    ${week.entries.length ? '' : '<p class="academy-muted academy-calendar-no-tasks">No hay actividades programadas para esta semana.</p>'}
+  </section>`).join('')}
+  ${onboardingSlots.map(calendarDetail).join('')}`;
+}
+
+function showOnboardingCalendar(route) {
+  const next = pendingSlot(onboardingSlots);
+  const active = onboardingWeeks.find(week => week.number === selectedWeek) ??
+    onboardingWeeks.find(week => week.days.includes(next) || week.windows.includes(next)) ?? onboardingWeeks[0];
+  const slots = [...active.days,...active.windows].filter(slot => slot.entries.length);
+  const current = slots.find(slot => slot.key === selectedSlot) ?? pendingSlot(slots) ?? slots[0];
+  route.querySelectorAll("[data-calendar-week]").forEach(chip => {
+    chip.setAttribute("aria-pressed", String(Number(chip.dataset.calendarWeek) === active.number));
   });
-  route.querySelectorAll('[data-onboarding-panel]').forEach(panel => {
-    panel.hidden = panel.dataset.onboardingPanel === 'ae' ? aeView === 'people' : panel.dataset.onboardingPanel !== aeView;
+  route.querySelectorAll("[data-calendar-panel]").forEach(panel => { panel.hidden = Number(panel.dataset.calendarPanel) !== active.number; });
+  route.querySelectorAll("[data-calendar-slot]").forEach(chip => {
+    chip.setAttribute("aria-pressed", String(chip.dataset.calendarSlot === current?.key));
   });
-  route.querySelectorAll('[data-ae-day]').forEach(day => {
-    day.hidden = aeView === 'gantt' && day.dataset.aeDay !== selectedDay;
-    if (aeView === 'gantt' && !day.hidden) day.open = true;
-  });
-  route.querySelectorAll('[data-ae-week]').forEach(week => {
-    week.hidden = aeView === 'gantt' && !week.querySelector('[data-ae-day]:not([hidden])');
-  });
-  route.querySelectorAll('[data-people-group]').forEach(group => { group.hidden = group.dataset.peopleGroup !== selectedPeople; });
-  route.querySelectorAll('[data-onboarding-group]').forEach(chip => {
-    const selected = chip.dataset.onboardingTrack === 'people' ? selectedPeople : selectedDay;
-    chip.setAttribute('aria-pressed', String(chip.dataset.onboardingGroup === selected));
-  });
-  return {selectedDay,selectedPeople};
+  route.querySelectorAll("[data-calendar-detail]").forEach(detail => { detail.hidden = detail.dataset.calendarDetail !== current?.key; });
 }
 
 function updateOnboardingCounts(route) {
-  route.querySelector('[data-ae-total]').textContent = aeCounter();
-  const peopleTotal = route.querySelector('[data-people-total]');
-  if (peopleTotal) peopleTotal.textContent = `${aeCount(peopleEntries)}/${peopleEntries.length} hitos completados`;
-  route.querySelectorAll('[data-onboarding-group]').forEach(chip => {
-    const groups = chip.dataset.onboardingTrack === 'people' ? peopleGroups : aeDays;
-    const {entries} = groups.find(group => group.key === chip.dataset.onboardingGroup);
-    const completed = aeCount(entries);
-    chip.querySelector('[data-onboarding-chip-count]').textContent = `${completed}/${entries.length}`;
-    chip.style.setProperty('--academy-completed', `${100 * completed / entries.length}%`);
+  route.querySelector("[data-ae-total]").textContent = progressLabel(allOnboardingEntries());
+  route.querySelectorAll("[data-calendar-panel]").forEach(panel => {
+    const {entries} = onboardingWeeks.find(week => week.number === Number(panel.dataset.calendarPanel));
+    panel.querySelector("[data-calendar-week-count]").textContent = entries.length ? progressLabel(entries) : "Sin actividades";
+    panel.querySelector("progress").value = aeCount(entries);
+  });
+  route.querySelectorAll("[data-calendar-slot]").forEach(chip => {
+    const {entries} = onboardingSlots.find(slot => slot.key === chip.dataset.calendarSlot);
+    chip.querySelector("[data-calendar-count]").textContent = progressLabel(entries);
+    chip.style.setProperty("--academy-completed", `${100 * aeCount(entries) / entries.length}%`);
+  });
+  route.querySelectorAll("[data-calendar-detail]").forEach(detail => {
+    const {entries} = onboardingSlots.find(slot => slot.key === detail.dataset.calendarDetail);
+    detail.querySelector("[data-calendar-detail-count]").textContent = progressLabel(entries);
   });
 }
 
 function aeRoute() {
   return `<section id="academy-ae-route" class="academy-panel academy-ae-route" aria-labelledby="academy-ae-title">
     <div class="academy-section-head">
-      <h3 id="academy-ae-title" tabindex="-1">Tu onboarding AE en dos semanas</h3>
-      <span class="academy-pill" data-ae-total aria-live="polite">${aeCounter()}</span>
+      <h3 id="academy-ae-title" tabindex="-1">Calendario de onboarding · AE + People</h3>
+      <span class="academy-pill" data-ae-total aria-live="polite"></span>
     </div>
-    <div class="academy-actions academy-onboarding-views" role="group" aria-label="Vista de onboarding">
-      ${Object.entries(onboardingViews).map(([view,label]) => `<button class="academy-btn" type="button" data-onboarding-view="${view}" aria-pressed="false">${label}</button>`).join('')}
-    </div>
-    ${peopleTimeline()}
-    <div data-onboarding-panel="ae">
     <div class="academy-next" data-ae-next>${aeNext()}</div>
-    <div class="academy-actions academy-ae-actions"><button class="academy-btn" type="button" data-ae-evidence>Ver simulación final y go-live →</button></div>
-    <div data-onboarding-panel="gantt" hidden>${aeTimeline()}</div>
-    ${AE_ONBOARDING_WEEKS.map((week, weekIndex) => `<div data-ae-week><h4>${escape(week.title)}</h4>
-      ${aeDays.filter(day => day.weekIndex === weekIndex).map(day => `
-        <details class="academy-ae-day" data-ae-day="${day.key}" ${aeOpenDays.has(day.key)||day.entries.includes(nextAeEntry())?'open':''}>
-          <summary><span>Día ${day.dayIndex + 1} · ${escape(day.title)}</span><span class="academy-muted" data-ae-day-count>${aeCount(day.entries)}/${day.entries.length}</span></summary>
-          <ul>${day.entries.map(entry => {
-            if (entry.stage !== undefined) return aeRoleplayCard(entry);
-            const {id, title, source, actions, key} = entry;
-            return `<li id="academy-entry-${key}">
-              <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" data-ae-task="${key}" ${progress.tasks[key]?'checked':''} ${!ready?'disabled':''}><span>${escape(title)}</span></label>
-              <div class="academy-actions">${actions.map(aeAction).join('')}
-                ${aeResources[id] ? `<a class="academy-btn" href="${aeResources[id][1]}" target="_blank" rel="noopener noreferrer">${aeResources[id][0]} ↗</a>` : ''}
-                <a class="academy-btn" href="${source}" target="_blank" rel="noopener noreferrer">Ficha en Notion ↗</a>
-              </div>
-            </li>`;
-          }).join('')}</ul>
-        </details>`).join('')}</div>`).join('')}
+    ${ready && !peoplePlan ? '<p class="academy-muted">El plan de People no está disponible en este momento.</p>' : ''}
+    ${onboardingCalendar()}
+    <div class="academy-actions"><button class="academy-btn" type="button" data-ae-evidence>Ir a simulación final y go-live →</button></div>
     <section id="academy-ae-evidence" class="academy-ae-evidence" aria-labelledby="academy-ae-evidence-title">
       <h3 id="academy-ae-evidence-title" tabindex="-1">Simulación completa y revisión de go-live</h3>
       <p class="academy-muted">Caso de práctica. Una tienda recibe 4.000 consultas mensuales por WhatsApp. Le preocupa la atención fuera de horario y compara tu propuesta con un proveedor más barato. Operaciones evalúa la solución, Finanzas aprueba y la conexión al sistema de pedidos está por validar.</p>
@@ -475,40 +483,32 @@ function aeRoute() {
         <span class="academy-muted" data-academy-save role="status"></span>
       </form>
     </section>
-    </div>
   </section>`;
 }
 
 function wireAeRoute() {
   const route = $('academy-ae-route');
   if (!route) return;
-  applyOnboardingView(route);
+  showOnboardingCalendar(route);
   updateOnboardingCounts(route);
   route.addEventListener('click', event => {
-    const view = event.target.closest('[data-onboarding-view]');
-    const group = event.target.closest('[data-onboarding-group]');
-    if (!view && !group) return;
-    if (view) aeView = view.dataset.onboardingView;
-    if (group?.dataset.onboardingTrack === 'gantt') aeSelectedDay = group.dataset.onboardingGroup;
-    if (group?.dataset.onboardingTrack === 'people') peopleSelectedGroup = group.dataset.onboardingGroup;
-    const {selectedDay,selectedPeople} = applyOnboardingView(route);
-    if (aeView === 'gantt') aeSelectedDay = selectedDay;
-    if (aeView === 'people') peopleSelectedGroup = selectedPeople;
+    const week = event.target.closest('[data-calendar-week]');
+    const slot = event.target.closest('[data-calendar-slot]');
+    if (!week && !slot) return;
+    if (week) {
+      selectedWeek = Number(week.dataset.calendarWeek);
+      selectedSlot = undefined;
+    } else {
+      selectedWeek = Number(slot.closest('[data-calendar-panel]').dataset.calendarPanel);
+      selectedSlot = slot.dataset.calendarSlot;
+    }
+    showOnboardingCalendar(route);
   });
-  route.querySelectorAll('[data-ae-day]').forEach(day => day.addEventListener('toggle', () => {
-    if (day.open) aeOpenDays.add(day.dataset.aeDay);
-    else aeOpenDays.delete(day.dataset.aeDay);
-  }));
   route.addEventListener('change', event => {
     const input = event.target.closest('[data-ae-task]');
     if (input) {
       progress.tasks[input.dataset.aeTask] = input.checked;
-      const day = input.closest('[data-ae-day]');
-      if (day) {
-        route.querySelector('[data-ae-next]').innerHTML = aeNext();
-        const entries = aeDays.find(({key}) => key === day.dataset.aeDay).entries;
-        day.querySelector('[data-ae-day-count]').textContent = aeCount(entries) + '/' + entries.length;
-      }
+      route.querySelector('[data-ae-next]').innerHTML = aeNext();
       updateOnboardingCounts(route);
       void persist();
     }
@@ -757,7 +757,7 @@ function startReview() {
 }
 function renderSkills() {
   const node=$('academy-skills');
-  const onboarding = `<section class="academy-panel academy-progress-route"><h3>Avance de onboarding AE</h3><p class="academy-muted">${aeCounter()}</p><button class="academy-btn" type="button" data-open-onboarding>Ir al onboarding →</button></section>`;
+  const onboarding = `<section class="academy-panel academy-progress-route"><h3>Avance de onboarding · AE + People</h3><p class="academy-muted">${progressLabel(allOnboardingEntries())}</p><button class="academy-btn" type="button" data-open-onboarding>Ir al onboarding →</button></section>`;
   node.innerHTML=onboarding+`<div class="section-title">Tus habilidades en práctica</div><p class="academy-muted" style="margin-bottom:16px">Resultados de desafíos · una práctica aprobada no equivale a certificación.</p><div class="academy-evidence-grid">${MISSIONS.map(m=>{const r=record(m.id);return `<div class="academy-evidence"><h3>${escape(m.skill)}</h3><p class="academy-muted">${!r?'Aún sin práctica':r.lastPassed?'Último caso aprobado':r.passed?'Aprobada antes · último intento por reforzar':'Por reforzar'}${r?' · '+r.correct+'/'+r.total:''}</p><div class="academy-actions"><button class="academy-btn" data-start="${m.id}">Practicar →</button></div></div>`;}).join('')}</div>`;
 }
 document.addEventListener('click',event=>{
@@ -838,6 +838,7 @@ legacy.remove();
 // Lucide icons rendered from the project's existing lucide-react package.
 installAcademyNavigation({"home": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-house\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\"></path><path d=\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path></svg>", "games": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-dumbbell\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z\"></path><path d=\"m2.5 21.5 1.4-1.4\"></path><path d=\"m20.1 3.9 1.4-1.4\"></path><path d=\"M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z\"></path><path d=\"m9.6 14.4 4.8-4.8\"></path></svg>", "products": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-graduation-cap\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z\"></path><path d=\"M22 10v6\"></path><path d=\"M6 12.5V16a6 3 0 0 0 12 0v-3.5\"></path></svg>", "progress": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chart-no-axes-combined\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 16v5\"></path><path d=\"M16 14v7\"></path><path d=\"M20 10v11\"></path><path d=\"m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15\"></path><path d=\"M4 18v3\"></path><path d=\"M8 14v7\"></path></svg>", "open": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-open\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m14 9 3 3-3 3\"></path></svg>", "close": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-panel-left-close\" aria-hidden=\"true\" focusable=\"false\"><rect width=\"18\" height=\"18\" x=\"3\" y=\"3\" rx=\"2\"></rect><path d=\"M9 3v18\"></path><path d=\"m16 15-3-3 3-3\"></path></svg>"});
 document.body.classList.add('academy-pending');
+loadOnboardingCalendar();
 render();
 const academySearch = location.href === 'about:srcdoc' ? parent.location.search : location.search;
 void load().then(()=>{
