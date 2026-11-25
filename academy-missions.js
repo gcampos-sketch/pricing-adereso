@@ -1,4 +1,4 @@
-import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, OBJECTION_MISSIONS, HYPOTHESIS_MISSION, TRAINING_LEVELS, trainingLevel, CONSEQUENCES, skillResult,
+import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, OBJECTION_MISSIONS, SPICED_MISSIONS, HYPOTHESIS_MISSION, TRAINING_LEVELS, trainingLevel, CONSEQUENCES, skillResult,
   dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE, AE_ROLEPLAY_STAGES } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
@@ -273,13 +273,26 @@ function renderTrainingSection(section) {
   const {title,description,cases} = TRAINING_SECTIONS[section];
   const current = selectedTrainingLevels[section] || 'all';
   const visible = cases.filter(practice=>current==='all'||trainingLevel(practice)===current);
-  $('academy-'+section).innerHTML = `<section aria-label="${escape(title)}">
+  const container = section==='playbook'?'academy-playbook-roleplays':'academy-'+section;
+  $(container).innerHTML = `<section aria-label="${escape(title)}">
     <div class="academy-section-head"><h3 tabindex="-1">${escape(title)}</h3></div>
     <p class="academy-muted">${escape(description)}</p>
     <div class="academy-training-levels" role="group" aria-label="Nivel de desafío en ${escape(title)}">
       ${Object.entries({all:'Todos',...TRAINING_LEVELS}).map(([level,label])=>`<button type="button" class="academy-btn" data-training-section="${section}" data-training-level="${level}" aria-pressed="${current===level}">${label}</button>`).join('')}
     </div>
     ${visible.length?`<div class="academy-mission-grid">${visible.map(practice=>practice.id===HYPOTHESIS_MISSION.id?hypothesisCard():missionCard(practice)).join('')}</div>`:'<p class="academy-muted">Todavía no hay casos en este nivel.</p>'}
+  </section>`;
+}
+let selectedSpicedStage = 'spiced-critical-event';
+function renderSpicedTraining() {
+  const practice = mission(selectedSpicedStage);
+  $('academy-spiced').innerHTML = `<section class="academy-panel academy-spiced" aria-labelledby="academy-spiced-title">
+    <div class="academy-section-head"><h3 id="academy-spiced-title" tabindex="-1">Practicar SPICED</h3></div>
+    <p class="academy-muted">Elige una etapa y practica cómo ayudar al cliente a explicar el problema y lo que significa para su operación.</p>
+    <div class="academy-training-levels" role="group" aria-label="Etapa de SPICED">
+      ${SPICED_MISSIONS.map(stage=>`<button type="button" class="academy-btn" data-spiced-stage="${stage.id}" aria-pressed="${practice.id===stage.id}">${escape(stage.spiced.label)}${newCaseDot(isNewCase(stage.id))}</button>`).join('')}
+    </div>
+    <div class="academy-mission-grid">${missionCard(practice)}</div>
   </section>`;
 }
 const aeActivityKey = id => 'ae-route-' + id;
@@ -607,6 +620,7 @@ function render() {
   $('academy-dashboard').querySelectorAll('[data-task]').forEach(input=>input.onchange=()=>{progress.tasks[input.dataset.task]=input.checked;void persist();});
   $('academy-training-core').innerHTML = `<section><div class="academy-section-head"><h3 tabindex="-1">Misiones comerciales</h3></div><div class="academy-mission-grid">${MISSIONS.filter(m=>!m.demo&&!m.advice&&!m.playbook&&!m.objection&&m.id!=='objection').map(missionCard).join('')}</div></section>`;
   Object.keys(TRAINING_SECTIONS).forEach(renderTrainingSection);
+  renderSpicedTraining();
   $('academy-training-objections').innerHTML=`Practicar objeciones ↓${newCaseDot(OBJECTION_MISSIONS.some(m=>isNewCase(m.id)),'Hay casos nuevos')}`;
   const review = $('academy-training-review');
   review.disabled = !ready;
@@ -763,6 +777,12 @@ function showResult() {
     example.style.marginTop='16px';
     example.innerHTML=`<summary>Ver una respuesta posible</summary><p style="margin-top:12px">${escape(model)}</p>${advice?'<div class="academy-actions"><button class="academy-btn" data-advice-source>Consultar la fuente en la biblioteca ↗</button></div>':''}`;
     reflection.after(example);
+    if(m.spiced) {
+      const responses=document.createElement('details');
+      responses.className='academy-panel academy-hypothesis-review';
+      responses.innerHTML=`<summary>Respuestas que podría dar el cliente</summary><ul class="mission-review-list">${m.spiced.responses.map(response=>`<li>${escape(response)}</li>`).join('')}</ul>`;
+      example.after(responses);
+    }
     const adviceSource=example.querySelector('[data-advice-source]');
     if(adviceSource)adviceSource.onclick=()=>library(m.reference.query);
   }
@@ -770,7 +790,15 @@ function showResult() {
   if(source)source.onclick=()=>library(m.reference.query);
   window.scrollTo(0,0);
 }
-function exit() {$('academy-mission-view').classList.remove('active');$('academy-mission-view').style.display='none';switchTab(originTab);active=null;restoreOnboardingFocus();}
+function exit() {
+  const returnToSpiced=originTab==='games'&&mission(active?.id)?.spiced;
+  $('academy-mission-view').classList.remove('active');
+  $('academy-mission-view').style.display='none';
+  switchTab(originTab);
+  active=null;
+  restoreOnboardingFocus();
+  if(returnToSpiced)scrollToCaseSection('spiced');
+}
 function library(query) {
   if(active)exit();
   switchTab('products');$('academy-sources').open=true;
@@ -807,7 +835,13 @@ document.addEventListener('click',event=>{
     const {trainingSection,trainingLevel}=levelButton.dataset;
     selectedTrainingLevels[trainingSection]=trainingLevel;
     renderTrainingSection(trainingSection);
-    $('academy-'+trainingSection).querySelector('[aria-pressed="true"]').focus({preventScroll:true});
+    document.querySelector(`[data-training-section="${trainingSection}"][aria-pressed="true"]`).focus({preventScroll:true});
+  }
+  const spicedStage=event.target.closest('[data-spiced-stage]');
+  if(spicedStage) {
+    selectedSpicedStage=spicedStage.dataset.spicedStage;
+    renderSpicedTraining();
+    $('academy-spiced').querySelector('[aria-pressed="true"]').focus({preventScroll:true});
   }
   const section=event.target.closest('[data-case-section]');
   if(section)scrollToCaseSection(section.dataset.caseSection);
@@ -842,13 +876,14 @@ practice.innerHTML=`<header class="academy-panel">
     <button class="academy-btn" type="button" id="academy-training-review" data-review>Practicar un caso</button>
     <button class="academy-btn" type="button" id="academy-training-objections" data-case-section="objections">Practicar objeciones ↓</button>
     <button class="academy-btn" type="button" data-case-section="playbook">Roleplays del Playbook ↓</button>
+    <button class="academy-btn" type="button" data-case-section="spiced">SPICED ↓</button>
     <button class="academy-btn" type="button" data-case-section="advisory">Consultoría ↓</button>
     <button class="academy-btn" type="button" data-case-section="demo">Casos de uso y demos ↓</button>
     <button class="academy-btn" type="button" data-case-section="quizzes">Quizzes y juegos ↓</button>
   </div>
   <p id="academy-mission-source-status" class="academy-muted academy-edition">Misiones base · edición ${LEGACY_MISSION_REVISION}</p>
 </header>
-<div id="academy-objections"></div><div id="academy-playbook"></div><div id="academy-training-core"></div><div id="academy-advisory"></div><div id="academy-demo"></div>`;
+<div id="academy-objections"></div><div id="academy-playbook"><div id="academy-playbook-roleplays"></div><div id="academy-spiced"></div></div><div id="academy-training-core"></div><div id="academy-advisory"></div><div id="academy-demo"></div>`;
 $('tab-games').prepend(practice);
 const legacy=document.querySelector('.academy-legacy');
 const products=$('tab-products');
@@ -882,11 +917,14 @@ loadOnboardingCalendar();
 render();
 const academySearch = location.href === 'about:srcdoc' ? parent.location.search : location.search;
 void load().then(()=>{
-  const section=new URLSearchParams(academySearch).get('academySection');
+  const params=new URLSearchParams(academySearch);
+  const section=params.get('academySection');
+  const stage=params.get('spicedStage');
+  if(SPICED_MISSIONS.some(practice=>practice.id===stage))selectedSpicedStage=stage;
   if(section==='ae-route'){
     progress.role='AE';
     switchTab('home');
     scrollToCaseSection(section);
   }
-  if(Object.hasOwn(TRAINING_SECTIONS,section)){switchTab('games');scrollToCaseSection(section);}
+  if(section==='spiced'||Object.hasOwn(TRAINING_SECTIONS,section)){switchTab('games');scrollToCaseSection(section);}
 });

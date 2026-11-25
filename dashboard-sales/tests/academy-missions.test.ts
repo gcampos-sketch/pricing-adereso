@@ -1,5 +1,5 @@
 import { expect,test } from 'bun:test';
-import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,OBJECTION_MISSIONS,PLAYBOOK_MISSIONS,HYPOTHESIS_MISSION,TRAINING_LEVELS,trainingLevel,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
+import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,OBJECTION_MISSIONS,PLAYBOOK_MISSIONS,SPICED_MISSIONS,HYPOTHESIS_MISSION,TRAINING_LEVELS,trainingLevel,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
   missionRevision,currentMissionEntry,currentMissionReview,AE_ONBOARDING_WEEKS,AE_ROLEPLAY_STAGES } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
@@ -98,6 +98,18 @@ test('all four training categories include basic, intermediate and advanced case
     expect(new Set(category.map(trainingLevel))).toEqual(new Set(Object.keys(TRAINING_LEVELS)));
   }
   expect(trainingLevel({})).toBe('intermediate');
+});
+test('SPICED covers five stages and starts Critical Event with a known date and pain',()=>{
+  expect(SPICED_MISSIONS.map(mission=>mission.spiced.label)).toEqual(['Situación','Dolor','Impacto','Critical Event','Decisión']);
+  for (const mission of SPICED_MISSIONS) {
+    expect(MISSIONS).toContain(mission);
+    expect(mission.spiced.responses.length).toBeGreaterThanOrEqual(3);
+    expect(mission.playbook.prompt).toBeTruthy();
+  }
+  const criticalEvent = SPICED_MISSIONS.find(mission=>mission.id==='spiced-critical-event')!;
+  expect(criticalEvent.story).toContain('14 de diciembre');
+  expect(criticalEvent.questions[0]?.options[criticalEvent.questions[0].correct]).toContain('Qué pasaría si');
+  expect(criticalEvent.spiced.responses.some(response=>response.includes('podemos seguir operando'))).toBe(true);
 });
 test('account comes exclusively from verified identity and reads stay isolated',async()=>{
   const f=fixture();const response=await f.gateway(f.request('alice',{revision:0,payload,userId:'bob'}));expect(response?.status).toBe(200);expect(f.writes).toEqual(['alice']);
