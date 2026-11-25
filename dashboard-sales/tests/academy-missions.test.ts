@@ -1,5 +1,5 @@
 import { expect,test } from 'bun:test';
-import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,PLAYBOOK_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
+import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,OBJECTION_MISSIONS,PLAYBOOK_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
   missionRevision,currentMissionEntry,currentMissionReview,AE_ONBOARDING_WEEKS,AE_ROLEPLAY_STAGES } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
@@ -64,6 +64,15 @@ test('advisory cases show the proposed flow and a model response using the share
     expect(mission.advice.model.length).toBeGreaterThan(100);
     expect(new URL(mission.reference.url).protocol).toBe('https:');
     expect(new Set(mission.questions.map(question => question.id)).size).toBe(3);
+  }
+});
+test('objection cases join the shared mission engine and include a response to rehearse',()=>{
+  expect(OBJECTION_MISSIONS.length).toBeGreaterThan(0);
+  expect(ROLES.AE.missions).toContain('objection');
+  for (const mission of OBJECTION_MISSIONS) {
+    expect(MISSIONS).toContain(mission);
+    expect(mission.objection.prompt).toBeTruthy();
+    expect(mission.objection.model).toBeTruthy();
   }
 });
 test('Playbook simulations connect the practice prompt to the current Hub guide',()=>{
