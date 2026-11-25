@@ -1,5 +1,5 @@
 import { expect,test } from 'bun:test';
-import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,OBJECTION_MISSIONS,PLAYBOOK_MISSIONS,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
+import { MISSIONS,DEMO_MISSIONS,ADVISORY_MISSIONS,OBJECTION_MISSIONS,PLAYBOOK_MISSIONS,HYPOTHESIS_MISSION,TRAINING_LEVELS,trainingLevel,LEGACY_MISSION_REVISION,ROLES,CONSEQUENCES,skillResult,nextReview,dueReviews,
   missionRevision,currentMissionEntry,currentMissionReview,AE_ONBOARDING_WEEKS,AE_ROLEPLAY_STAGES } from '../../academy-curriculum.js';
 import { createAcademyProgressGateway } from '../src/lib/academy-progress-gateway';
 import { readFileSync } from 'node:fs';
@@ -86,6 +86,18 @@ test('Playbook simulations connect the practice prompt to the current Hub guide'
     expect(mission.playbook.prompt).toBeTruthy();
     expect(mission.playbook.model.length).toBeGreaterThan(100);
   }
+});
+test('all four training categories include basic, intermediate and advanced cases',()=>{
+  const cases = [
+    DEMO_MISSIONS,
+    ADVISORY_MISSIONS,
+    [...OBJECTION_MISSIONS, MISSIONS.find(mission=>mission.id==='objection')!],
+    [...AE_ROLEPLAY_STAGES.map(stage=>MISSIONS.find(mission=>mission.id===stage.mission)!), HYPOTHESIS_MISSION],
+  ];
+  for (const category of cases) {
+    expect(new Set(category.map(trainingLevel))).toEqual(new Set(Object.keys(TRAINING_LEVELS)));
+  }
+  expect(trainingLevel({})).toBe('intermediate');
 });
 test('account comes exclusively from verified identity and reads stay isolated',async()=>{
   const f=fixture();const response=await f.gateway(f.request('alice',{revision:0,payload,userId:'bob'}));expect(response?.status).toBe(200);expect(f.writes).toEqual(['alice']);
