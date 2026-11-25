@@ -1,5 +1,5 @@
 import { LEGACY_MISSION_REVISION, ROLES, MISSIONS, DEMO_MISSIONS, ADVISORY_MISSIONS, HYPOTHESIS_MISSION, CONSEQUENCES, skillResult,
-  dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_SOURCE, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE, AE_ROLEPLAY_STAGES } from './academy-curriculum.js';
+  dueReviews, nextReview, missionRevision, currentMissionEntry, currentMissionReview, AE_ONBOARDING_WEEKS, AE_ONBOARDING_EVIDENCE, AE_ROLEPLAY_STAGES } from './academy-curriculum.js';
 
 const $ = id => document.getElementById(id);
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -11,6 +11,10 @@ let lessonOrigin = 'products';
 let aeEvidenceDraft = {};
 let roleplaySaveTimer;
 const aeOpenDays = new Set();
+let aeView = 'checklist';
+let aeSelectedDay;
+let peopleSelectedGroup;
+let peoplePeriods = [], peoplePhases = [], peopleGroups = [], peopleEntries = [];
 const role = () => ROLES[progress.role] || ROLES.AE;
 const wikiChanged = () => (window.academySourceDates || []).some(d => d.id === '3219c274-7df5-81a2-baeb-de4de645d487' && Date.parse(d.editedAt) > Date.parse('2026-11-13T13:20:34.925Z'));
 const mission = id => MISSIONS.find(m => m.id === id);
@@ -34,6 +38,7 @@ async function load() {
     const data = await response.json();
     revision = data.revision;
     progress = {...progress,...data.payload};
+    loadPeoplePlan(data.peoplePlan);
     progress.aeOnboardingEvidence = data.payload.aeOnboardingEvidence;
     clearTimeout(roleplaySaveTimer);
     roleplaySaveTimer = undefined;
@@ -261,6 +266,19 @@ const aeDays = AE_ONBOARDING_WEEKS.flatMap((week, weekIndex) => week.days.map((d
 const aeEntries = aeDays.flatMap(day => day.entries);
 const aeActivities = aeEntries.filter(entry => entry.stage === undefined);
 const aeRoleplays = aeEntries.filter(entry => entry.stage !== undefined);
+function loadPeoplePlan(plan) {
+  peoplePeriods = plan?.periods ?? [];
+  peoplePhases = (plan?.phases ?? []).map(({title,entries}, phase) => ({
+    title,
+    groups: peoplePeriods.map((period,index) => ({
+      key: phase + '-' + index,
+      title: period,
+      entries: entries.filter(entry => entry.period === index).map(entry => ({...entry,key:'people-onboarding-' + entry.id})),
+    })),
+  }));
+  peopleGroups = peoplePhases.flatMap(phase => phase.groups).filter(group => group.entries.length);
+  peopleEntries = peopleGroups.flatMap(group => group.entries);
+}
 const aeCount = entries => entries.filter(({key}) => progress.tasks[key]).length;
 const nextAeEntry = () => aeEntries.find(({key}) => !progress.tasks[key]);
 const aeCounter = () => `${aeCount(aeActivities)}/${aeActivities.length} actividades · ${aeCount(aeRoleplays)}/${aeRoleplays.length} roleplays`;
@@ -278,8 +296,12 @@ let aeReturnEntry = null;
 function focusAeEntry(key) {
   const item = $('academy-entry-' + key);
   if (!item) return;
-  item.closest('details').open = true;
-  aeOpenDays.add(item.closest('details').dataset.aeDay);
+  const day = item.closest('[data-ae-day]');
+  if (aeView === 'people') aeView = 'checklist';
+  aeSelectedDay = day.dataset.aeDay;
+  applyOnboardingView($('academy-ae-route'));
+  day.open = true;
+  aeOpenDays.add(aeSelectedDay);
   item.scrollIntoView({block:'center'});
   item.querySelector('input').focus({preventScroll:true});
 }
@@ -300,7 +322,7 @@ function aeRoleplayCard(entry) {
     <label class="academy-roleplay-note">Feedback y próximo intento
       <textarea class="notes-area" rows="2" maxlength="500" data-roleplay-note="${entry.stage}" ${disabled}>${escape(progress.aeRoleplayNotes?.[entry.stage] ?? '')}</textarea>
     </label>
-    <label class="academy-check"><input type="checkbox" data-ae-task="${entry.key}" ${progress.tasks[entry.key]?'checked':''} ${disabled}>Roleplay etapa ${entry.stage} practicado con mi referente</label>
+    <label class="academy-check"><input type="checkbox" data-ae-task="${entry.key}" ${progress.tasks[entry.key]?'checked':''} ${disabled}><span>Roleplay etapa ${entry.stage} practicado con mi referente</span></label>
   </li>`;
 }
 
@@ -322,16 +344,100 @@ const aeResources = {
   36: ['Abrir evaluación', 'https://docs.google.com/forms/d/1Rn1kMbnz8i-SZIRjrgGPPqjyqxhAgxgowEgQPqfKYis/viewform'],
 };
 
+const onboardingViews = {checklist:'Checklist', gantt:'Gantt AE', people:'People'};
+
+function timeline(label, columns, rows, track) {
+  return `<div class="academy-timeline" role="region" aria-label="${label}" tabindex="0"><table aria-label="${label}">
+    <thead><tr><th scope="col">Etapa</th>${columns.map(column => `<th scope="col">${escape(column)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(({title,groups}) => `<tr><th scope="row">${escape(title)}</th>${groups.map(group => `<td>${group?.entries.length
+      ? `<button type="button" class="academy-timeline-chip" data-onboarding-track="${track}" data-onboarding-group="${group.key}" aria-pressed="false" title="${escape(group.title)}"><span class="academy-timeline-fill" aria-hidden="true"></span><span data-onboarding-chip-count></span><span class="academy-visually-hidden"> · ${escape(group.title)}</span></button>`
+      : ''}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function aeTimeline() {
+  const slots = aeDays.map((_,index) => 'Día ' + (index + 1));
+  return timeline('Gantt de Sales Academy', slots, AE_ONBOARDING_WEEKS.map((_,index) => ({
+    title: 'Semana ' + (index + 1),
+    groups: aeDays.map(day => day.weekIndex === index ? day : null),
+  })), 'gantt');
+}
+
+function peopleTimeline() {
+  if (!peopleEntries.length) return `<div data-onboarding-panel="people" hidden>
+    <p class="academy-muted">${ready?'El plan de People no está disponible en este momento.':'Cargando plan de People…'}</p>
+  </div>`;
+  return `<div data-onboarding-panel="people" hidden>
+    <div class="academy-people-head">
+      <h4>Onboarding de People</h4><p class="academy-muted" data-people-total aria-live="polite"></p>
+    </div>
+    ${timeline('Gantt de People', peoplePeriods, peoplePhases, 'people')}
+    ${peoplePhases.flatMap(phase => phase.groups.filter(group => group.entries.length).map(group => `<section class="academy-people-group" data-people-group="${group.key}" hidden>
+      <h4>${escape(phase.title)} · ${escape(group.title)}</h4>
+      <ul>${group.entries.map(entry => `<li>
+        <label class="academy-check"><input type="checkbox" data-ae-task="${entry.key}" ${progress.tasks[entry.key]?'checked':''} ${!ready?'disabled':''}><span>${escape(entry.title)}</span></label>
+        <p class="academy-muted"><strong>${escape(entry.owner)}</strong> · ${escape(entry.action)}</p>
+      </li>`).join('')}</ul>
+    </section>`)).join('')}
+  </div>`;
+}
+
+function applyOnboardingView(route) {
+  const currentDay = aeDays.find(day => day.entries.includes(nextAeEntry()));
+  const selectedDay = aeSelectedDay ?? (currentDay ?? aeDays[0]).key;
+  const firstPendingPeople = peopleGroups.find(group => aeCount(group.entries) < group.entries.length);
+  const selectedPeople = peopleSelectedGroup ?? (firstPendingPeople ?? peopleGroups[0])?.key;
+  route.querySelector('#academy-ae-title').textContent = aeView === 'people' ? 'Tu onboarding AE' : 'Tu onboarding AE en dos semanas';
+  route.querySelector('[data-ae-total]').hidden = aeView === 'people';
+  route.querySelectorAll('[data-onboarding-view]').forEach(chip => {
+    chip.setAttribute('aria-pressed', String(chip.dataset.onboardingView === aeView));
+  });
+  route.querySelectorAll('[data-onboarding-panel]').forEach(panel => {
+    panel.hidden = panel.dataset.onboardingPanel === 'ae' ? aeView === 'people' : panel.dataset.onboardingPanel !== aeView;
+  });
+  route.querySelectorAll('[data-ae-day]').forEach(day => {
+    day.hidden = aeView === 'gantt' && day.dataset.aeDay !== selectedDay;
+    if (aeView === 'gantt' && !day.hidden) day.open = true;
+  });
+  route.querySelectorAll('[data-ae-week]').forEach(week => {
+    week.hidden = aeView === 'gantt' && !week.querySelector('[data-ae-day]:not([hidden])');
+  });
+  route.querySelectorAll('[data-people-group]').forEach(group => { group.hidden = group.dataset.peopleGroup !== selectedPeople; });
+  route.querySelectorAll('[data-onboarding-group]').forEach(chip => {
+    const selected = chip.dataset.onboardingTrack === 'people' ? selectedPeople : selectedDay;
+    chip.setAttribute('aria-pressed', String(chip.dataset.onboardingGroup === selected));
+  });
+  return {selectedDay,selectedPeople};
+}
+
+function updateOnboardingCounts(route) {
+  route.querySelector('[data-ae-total]').textContent = aeCounter();
+  const peopleTotal = route.querySelector('[data-people-total]');
+  if (peopleTotal) peopleTotal.textContent = `${aeCount(peopleEntries)}/${peopleEntries.length} hitos completados`;
+  route.querySelectorAll('[data-onboarding-group]').forEach(chip => {
+    const groups = chip.dataset.onboardingTrack === 'people' ? peopleGroups : aeDays;
+    const {entries} = groups.find(group => group.key === chip.dataset.onboardingGroup);
+    const completed = aeCount(entries);
+    chip.querySelector('[data-onboarding-chip-count]').textContent = `${completed}/${entries.length}`;
+    chip.style.setProperty('--academy-completed', `${100 * completed / entries.length}%`);
+  });
+}
+
 function aeRoute() {
   return `<section id="academy-ae-route" class="academy-panel academy-ae-route" aria-labelledby="academy-ae-title">
     <div class="academy-section-head">
       <h3 id="academy-ae-title" tabindex="-1">Tu onboarding AE en dos semanas</h3>
       <span class="academy-pill" data-ae-total aria-live="polite">${aeCounter()}</span>
     </div>
+    <div class="academy-actions academy-onboarding-views" role="group" aria-label="Vista de onboarding">
+      ${Object.entries(onboardingViews).map(([view,label]) => `<button class="academy-btn" type="button" data-onboarding-view="${view}" aria-pressed="false">${label}</button>`).join('')}
+    </div>
+    ${peopleTimeline()}
+    <div data-onboarding-panel="ae">
     <div class="academy-next" data-ae-next>${aeNext()}</div>
-    <p class="academy-muted">Marca las actividades al completarlas. Ensaya cada etapa con tu referente y registra el feedback antes de la simulación final.</p>
-    <div class="academy-actions"><a class="academy-btn" href="${AE_ONBOARDING_SOURCE}" target="_blank" rel="noopener noreferrer">Ver Gantt en Notion ↗</a><button class="academy-btn" type="button" data-ae-evidence>Ver simulación final y go-live →</button></div>
-    ${AE_ONBOARDING_WEEKS.map((week, weekIndex) => `<h4>${escape(week.title)}</h4>
+    <div class="academy-actions academy-ae-actions"><button class="academy-btn" type="button" data-ae-evidence>Ver simulación final y go-live →</button></div>
+    <div data-onboarding-panel="gantt" hidden>${aeTimeline()}</div>
+    ${AE_ONBOARDING_WEEKS.map((week, weekIndex) => `<div data-ae-week><h4>${escape(week.title)}</h4>
       ${aeDays.filter(day => day.weekIndex === weekIndex).map(day => `
         <details class="academy-ae-day" data-ae-day="${day.key}" ${aeOpenDays.has(day.key)||day.entries.includes(nextAeEntry())?'open':''}>
           <summary><span>Día ${day.dayIndex + 1} · ${escape(day.title)}</span><span class="academy-muted" data-ae-day-count>${aeCount(day.entries)}/${day.entries.length}</span></summary>
@@ -339,14 +445,14 @@ function aeRoute() {
             if (entry.stage !== undefined) return aeRoleplayCard(entry);
             const {id, title, source, actions, key} = entry;
             return `<li id="academy-entry-${key}">
-              <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" data-ae-task="${key}" ${progress.tasks[key]?'checked':''} ${!ready?'disabled':''}>${escape(title)}</label>
+              <label class="academy-check"><input type="checkbox" data-ae-activity="${id}" data-ae-task="${key}" ${progress.tasks[key]?'checked':''} ${!ready?'disabled':''}><span>${escape(title)}</span></label>
               <div class="academy-actions">${actions.map(aeAction).join('')}
                 ${aeResources[id] ? `<a class="academy-btn" href="${aeResources[id][1]}" target="_blank" rel="noopener noreferrer">${aeResources[id][0]} ↗</a>` : ''}
                 <a class="academy-btn" href="${source}" target="_blank" rel="noopener noreferrer">Ficha en Notion ↗</a>
               </div>
             </li>`;
           }).join('')}</ul>
-        </details>`).join('')}`).join('')}
+        </details>`).join('')}</div>`).join('')}
     <section id="academy-ae-evidence" class="academy-ae-evidence" aria-labelledby="academy-ae-evidence-title">
       <h3 id="academy-ae-evidence-title" tabindex="-1">Simulación completa y revisión de go-live</h3>
       <p class="academy-muted">Caso de práctica. Una tienda recibe 4.000 consultas mensuales por WhatsApp. Le preocupa la atención fuera de horario y compara tu propuesta con un proveedor más barato. Operaciones evalúa la solución, Finanzas aprueba y la conexión al sistema de pedidos está por validar.</p>
@@ -369,12 +475,26 @@ function aeRoute() {
         <span class="academy-muted" data-academy-save role="status"></span>
       </form>
     </section>
+    </div>
   </section>`;
 }
 
 function wireAeRoute() {
   const route = $('academy-ae-route');
   if (!route) return;
+  applyOnboardingView(route);
+  updateOnboardingCounts(route);
+  route.addEventListener('click', event => {
+    const view = event.target.closest('[data-onboarding-view]');
+    const group = event.target.closest('[data-onboarding-group]');
+    if (!view && !group) return;
+    if (view) aeView = view.dataset.onboardingView;
+    if (group?.dataset.onboardingTrack === 'gantt') aeSelectedDay = group.dataset.onboardingGroup;
+    if (group?.dataset.onboardingTrack === 'people') peopleSelectedGroup = group.dataset.onboardingGroup;
+    const {selectedDay,selectedPeople} = applyOnboardingView(route);
+    if (aeView === 'gantt') aeSelectedDay = selectedDay;
+    if (aeView === 'people') peopleSelectedGroup = selectedPeople;
+  });
   route.querySelectorAll('[data-ae-day]').forEach(day => day.addEventListener('toggle', () => {
     if (day.open) aeOpenDays.add(day.dataset.aeDay);
     else aeOpenDays.delete(day.dataset.aeDay);
@@ -383,11 +503,13 @@ function wireAeRoute() {
     const input = event.target.closest('[data-ae-task]');
     if (input) {
       progress.tasks[input.dataset.aeTask] = input.checked;
-      route.querySelector('[data-ae-total]').textContent = aeCounter();
-      route.querySelector('[data-ae-next]').innerHTML = aeNext();
       const day = input.closest('[data-ae-day]');
-      const entries = aeDays.find(({key}) => key === day.dataset.aeDay).entries;
-      day.querySelector('[data-ae-day-count]').textContent = aeCount(entries) + '/' + entries.length;
+      if (day) {
+        route.querySelector('[data-ae-next]').innerHTML = aeNext();
+        const entries = aeDays.find(({key}) => key === day.dataset.aeDay).entries;
+        day.querySelector('[data-ae-day-count]').textContent = aeCount(entries) + '/' + entries.length;
+      }
+      updateOnboardingCounts(route);
       void persist();
     }
     if (event.target.matches('[data-roleplay-note]') && roleplaySaveTimer !== undefined) {

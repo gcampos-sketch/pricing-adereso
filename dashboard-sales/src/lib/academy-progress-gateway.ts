@@ -5,6 +5,7 @@ export function createAcademyProgressGateway(deps:{
   verify:(token:string,trust?:string)=>Promise<{userId:string;expiresAt:number}|null>;
   read:(userId:string)=>Promise<AcademyProgress>;
   write:(userId:string,revision:number,payload:Record<string,unknown>)=>Promise<AcademyProgress|null>;
+  peoplePlan?:unknown;
   publicOrigin?:string|undefined;
 }) {
   return async(request:Request):Promise<Response|null>=>{
@@ -15,7 +16,7 @@ export function createAcademyProgressGateway(deps:{
     try {
       const user=await deps.verify(ticket.accessToken,ticket.trustToken);
       if(!user?.userId||user.expiresAt<=Date.now())return json({error:'authentication_required'},401);
-      if(request.method==='GET')return json(await deps.read(user.userId));
+      if(request.method==='GET')return json({...await deps.read(user.userId),peoplePlan:deps.peoplePlan});
       if(!request.headers.get('content-type')?.startsWith('application/json'))return json({error:'invalid_payload'},400);
       const reader=request.body?.getReader();if(!reader)return json({error:'invalid_payload'},400);
       const chunks:Uint8Array[]=[];let bytes=0;
