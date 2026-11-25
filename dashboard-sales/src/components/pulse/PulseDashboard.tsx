@@ -5,7 +5,7 @@ import { MetricTrend } from "./MetricTrend";
 import { trendPoints, type TrendUnit } from "@/lib/chart-trend";
 import { PriceConversion } from './PriceConversion';
 import {QuotaScenarios} from './QuotaScenarios';
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { wonByStage6Entry, withWonDeals, stage6AttributionDates } from "@/lib/won-result-period";
 import { dealExposure } from "@/lib/deal-exposure";
@@ -47,7 +47,8 @@ import { roleOfOwner } from "@/lib/owner-roles";
 import { generationEntryDate, generationStageEntries, generationSourceRows } from "@/lib/pipeline-generation";
 import { creationComparisonWindow } from "@/lib/story-metrics";
 import { buildExecutiveStrip } from "@/lib/executive-strip";
-import { supabase } from "@/integrations/supabase/client";
+import { useAccountEmail } from "@/components/AuthGate";
+import { defaultPulseOwner, defaultPulsePeriod } from "@/lib/pulse-filter-defaults";
 import { quotaStats, classifyQuotaDeal, pendingFromPreviousQuarters } from '@/lib/quota-eligibility';
 
 const money = (value: number) =>
@@ -500,14 +501,14 @@ export function PulseDashboard({
   const [resultDateBasis, setResultDateBasis] = useState<"close" | "stage6">("close");
   const [periodPayload, setPeriodPayload] = useState<(Drilldown & { presentation?: "won" | "stage-entry" | "warning" }) | null>(null);
   const [dense, setDense] = useState(true);
-  const [year, setYear] = useState(report.currentPeriod.split("-Q")[0]!);
-  const [quarter, setQuarter] = useState<string>(report.currentPeriod.split("-Q")[1]!);
+  const [{ year, quarter }, setPeriod] = useState(() => defaultPulsePeriod(Date.now()));
   const { activeMrr: headerMrr } = useRefreshMenu();
-  const [ownerFilter, setOwnerFilter] = useState<string>("team");
+  const accountEmail = useAccountEmail();
+  const [selectedOwner, setOwnerFilter] = useState<string | null>(null);
+  const ownerFilter = selectedOwner ?? defaultPulseOwner(accountEmail, report.periods.ownerEmails, role);
   const [stageFilter, setStageFilter] = useState<string[]>([]);
   /** Tipo de deal: todo (predeterminado), inbound, outbound, upsell o cross sell. */
   const [dealType, setDealType] = useState<string>("all");
-  const ownerDefaultApplied = useRef(false);
   const ago = useAgo(report.generatedAt);
 
   const handleRole = (item: "all" | "AE" | "KAM") => {
@@ -1144,7 +1145,7 @@ export function PulseDashboard({
       {tabs ? <div className="dashboard-tabs-wrap">{tabs}</div> : null}
 
       <CompactFilterBar
-        years={report.periods.years}
+        years={report.periods.years.includes(year) ? report.periods.years : [...report.periods.years, year]}
         quarters={quarters}
         owners={ownerOptions}
         year={year}
@@ -1152,11 +1153,8 @@ export function PulseDashboard({
         ownerId={ownerFilter}
         stages={stageFilter}
         showStages={false}
-        onYear={(item) => {
-          setYear(item);
-          if (quarter !== "all" && !["1", "2", "3", "4"].includes(quarter)) setQuarter("all");
-        }}
-        onQuarter={setQuarter}
+        onYear={item => setPeriod({ year: item, quarter })}
+        onQuarter={item => setPeriod({ year, quarter: item })}
         onOwner={setOwnerFilter}
         onStages={setStageFilter}
         role={role}
