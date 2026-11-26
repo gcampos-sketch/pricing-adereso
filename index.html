@@ -439,11 +439,27 @@
   @media(min-width:560px){.chan-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
   /* En escritorio, Entrada usa dos filas de cinco. Salida y Próximamente conservan tarjetas compactas. */
   @media(min-width:900px){.chan-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}.chan-grid.in-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chan-grid .chan{padding:34px 8px 18px;gap:12px}.chan-grid .chan-lbl{font-size:13px}.chan-grid .chan-logo svg{width:32px;height:32px}.chan-grid .chan-pago,.chan-grid .chan-free{top:8px;right:8px;font-size:9px;padding:2px 6px}}
-  .out-block{margin-top:20px;padding-top:18px;border-top:1px solid var(--b-subtle)}
+  .channel-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .channel-mode{display:flex;align-items:center;gap:10px;padding:12px;text-align:left;color:var(--z300);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);font:inherit;cursor:pointer}
+  .channel-mode:hover{border-color:var(--z400)}
+  .channel-mode[aria-pressed="true"]{border-color:var(--brand);background:rgba(255,213,64,.09);color:var(--brand)}
+  .channel-mode>span:first-child{flex:none}
+  .channel-mode b,.channel-mode small{display:block}
+  .channel-mode b{font-family:var(--font-head);font-weight:600}
+  .channel-mode small{margin-top:2px;color:var(--z400);font-size:11px;line-height:1.35}
+  .channel-mode:focus-visible,.channel-panel .chan:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .channel-panel{margin-top:14px;padding:clamp(14px,2.3vw,22px);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4)}
   .channel-heading{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin:0 0 5px}
-  .channel-heading + .in-grid{margin-top:10px}
-  .chan-grid.out-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));max-width:600px;align-items:start}
-  .out-grid>.chan{align-self:stretch}
+  .channel-group+.channel-group{margin-top:16px;padding-top:16px;border-top:1px solid var(--b-subtle)}
+  .channel-group h4{margin:0 0 9px;color:var(--z400);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .chan-grid.channel-pair{grid-template-columns:repeat(2,minmax(0,1fr));max-width:370px;align-items:stretch}
+  #optWa .channel-panel .chan:not(.on):not(.soon){opacity:1}
+  #optWa .channel-panel .chan:not(.on):not(.soon) .chan-lbl{color:var(--z300)}
+  #optWa .channel-panel .chan:not(.on):not(.soon) .chan-logo{filter:none}
+  #optWa .channel-panel .chan:not(.on):not(.soon):hover{border-color:var(--z400)}
+  #optWa .channel-panel .chan.on{border-color:var(--brand);background:rgba(255,213,64,.07)}
+  #optWa .channel-panel .chan.soon .chan-status{position:absolute;inset:0 0 auto;padding:4px;background:var(--glass);color:var(--text,#fff);font-size:10px;text-align:center}
+  @media(max-width:560px){.channel-mode{flex-direction:column;justify-content:flex-start;gap:5px;padding:9px 5px;text-align:center}.channel-panel .chan-lbl{text-align:center}}
   .call-channel-toggle{display:flex;flex-direction:column;align-items:center;gap:inherit;width:100%;padding:0;border:0;background:none;cursor:pointer}
   .call-channel label{display:grid;width:100%;gap:5px;text-align:left;color:var(--z300);font-size:12px}
   .call-channel select{width:100%;min-width:0;padding:6px;border:1px solid var(--b-default);border-radius:var(--r3);background:var(--surface);color:#fff;font:inherit;color-scheme:dark}
@@ -8689,8 +8705,8 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
       <section class="lvl" id="sc" data-title="Canales">
         <div class="level-head reveal">
           <div class="level-kicker">Nivel 2 · Canales</div>
-          <h2>Elige tus canales de entrada y salida</h2>
-          <p>Selecciona dónde recibirás consultas y cómo contactarás a tus clientes. Activa Engage para cotizar plantillas de WhatsApp o correo masivo.</p>
+          <h2 id="channel-mode-title">¿Texto, voz o ambos?</h2>
+          <p>Elige cómo se comunicará el cliente.</p>
         </div>
         <div id="optWa"></div>
         <div class="continue reveal"><button data-next="s2">Continuar al volumen <span data-i="down"></span></button></div>
@@ -8841,6 +8857,8 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
 const ICONS={
   robot:'<path d="M12 3v2M9 13v-1M15 13v-1"/><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 16h6"/>',
   msg:'<path d="M8 9h8M8 13h5"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/>',
+  phone:'<path d="M7 3H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3l-5-2-2 2a13 13 0 0 1-7-7l2-2-2-5z"/>',
+  layers:'<path d="m12 3 9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 16l9 5 9-5"/>',
   mega:'<path d="M18 8a3 3 0 0 1 0 6"/><path d="M3 10v4a1 1 0 0 0 1 1h3l7 5V4L7 9H4a1 1 0 0 0-1 1z"/>',
   search:'<circle cx="10" cy="10" r="6"/><path d="M20 20l-5.5-5.5"/>',
   chart:'<path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-3"/>',
@@ -8967,7 +8985,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',conversationPlans:{},voiceUpgrades:{},hasDeskContracted:true,hasStudioContracted:false,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,chan:{},out:{correo:false,whatsapp:false,wacall:false},callAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',conversationPlans:{},voiceUpgrades:{},hasDeskContracted:true,hasStudioContracted:false,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,communicationMode:'both',chan:{},out:{correo:false,whatsapp:false,wacall:false},callAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* Cada carga inicia una cotización nueva; retirar la antigua copia del navegador. */
 try{localStorage.removeItem('adereso_pricing_v1');}catch(e){}
@@ -9001,18 +9019,22 @@ window.addEventListener('pagehide',saveSession);document.addEventListener('visib
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 const CHANNELS=[
  {k:'whatsapp',label:'WhatsApp',color:'#25D366',paid:true},
- {k:'x',label:'X',color:'#FFFFFF',paid:true},
  {k:'webchat',label:'Webchat',color:'#186EFA'},
- {k:'correo',label:'Correo',color:'#FFD540'},
  {k:'instagram',label:'Instagram',color:'#E1306C'},
  {k:'facebook',label:'Facebook',color:'#1877F2'},
+ {k:'correo',label:'Correo',color:'#FFD540'},
  {k:'linkedin',label:'LinkedIn',color:'#0A66C2'},
+ {k:'x',label:'X',color:'#FFFFFF',paid:true},
  {k:'tiktok',label:'TikTok',color:'#FFFFFF'},
  {k:'app_store',label:'App Store',color:'#2998FF'},
  {k:'google_play',label:'Google Play',color:'#34A853'},
  {k:'gmb',label:'Google My Business',color:'#4285F4',soon:true},
- {k:'meli',label:'Mercado Libre',color:'#FFE600',soon:true},
- {k:'voip',label:'Llamada VoIP',color:'#52CE5E',paid:true,soon:true}
+ {k:'meli',label:'Mercado Libre',color:'#FFE600',soon:true}
+];
+const COMMUNICATION_MODES=[
+  {key:'text',label:'Texto',hint:'Chat, correo, redes y tiendas',icon:'msg'},
+  {key:'voice',label:'Voz',hint:'WhatsApp saliente',icon:'phone'},
+  {key:'both',label:'Ambos',hint:'Texto y llamadas',icon:'layers'}
 ];
 /* logos en más de un color (el resto usa un solo trazo de CHAN_SVG) */
 const CHAN_ART={
@@ -9425,51 +9447,61 @@ function renderOpts(){
   const el=document.getElementById('optWa');if(!el)return;
   if(!channelsAvailable()){el.innerHTML='';return;}
   const logo=(c)=>`<span class="chan-logo" style="color:${c.color}"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" fill-rule="evenodd">${CHAN_ART[c.k]||`<path d="${CHAN_SVG[c.k]}"/>`}</svg></span><span class="chan-lbl">${c.label}</span>`;
+  const unavailable=(c,status='No disponible')=>`<button type="button" class="chan soon" disabled><span class="chan-status">${status}</span>${logo(c)}</button>`;
+  const priceBadge=(tag,paid)=>`<span class="${paid?'chan-pago':'chan-free'}">${tag}</span>`;
   const inChip=(c)=>{if(c.soon)return `<div class="chan soon" aria-disabled="true" title="${c.label} · próximamente${c.paid?'':', sin costo'}"><span class="chan-ribbon">Próximamente</span>${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</div>`;
     const on=c.k==='whatsapp'?state.whatsapp:!!state.chan[c.k];
-    return `<button class="chan ${on?'on':''} ${c.paid?'paid':''}" data-chan="${c.k}" aria-pressed="${on}">
-      ${c.paid?'<span class="chan-pago">pago</span>':'<span class="chan-free">gratis</span>'}${logo(c)}</button>`;};
+    return `<button type="button" class="chan ${on?'on':''} ${c.paid?'paid':''}" data-chan="${c.k}" aria-pressed="${on}">
+      ${priceBadge(c.k==='x'?'Bolsa mensual':c.paid?'Pago / mensaje':'Gratis',c.paid)}${logo(c)}</button>`;};
+  const mode=state.communicationMode;
+  const showText=mode!=='voice',showVoice=mode!=='text';
+  const voip={k:'voip',label:'Voz IP',color:'var(--z400)'};
+  const call={k:'wacall',label:'WhatsApp Call',color:'#25D366'};
+  const group=(title,gridClass,tiles,note='')=>`<div class="channel-group"><h4>${title}</h4><div class="chan-grid ${gridClass}">${tiles}</div>${note}</div>`;
+  const panel=(id,title,description,groups)=>`<section class="channel-panel" aria-labelledby="${id}"><h3 id="${id}" class="channel-heading">${title}</h3><p class="out-note">${description}</p>${groups}</section>`;
   /* cliente vigente: primero se pregunta si mantiene sus canales o conecta nuevos; el selector aparece solo si conecta nuevos */
   const ex=state.existing,showGrid=hasService()&&(!ex||state.chanNew);
-  let html=ex&&hasService()?`<div class="seg chan-mode ${state.chanNew?'right':''}">
+  let html=`<div class="channel-modes" role="group" aria-labelledby="channel-mode-title">${COMMUNICATION_MODES.map(({key,label,hint,icon})=>`
+    <button type="button" class="channel-mode" data-communication-mode="${key}" aria-pressed="${mode===key}">
+      <span data-i="${icon}" data-sz="17"></span><span><b>${label}</b><small>${hint}</small></span>
+    </button>`).join('')}</div>`;
+  if(ex&&hasService())html+=`<div class="seg chan-mode ${state.chanNew?'right':''}">
       <button class="seg-opt ${!state.chanNew?'on':''}" data-chanmode="keep"><span class="seg-ico" data-i="wa" data-sz="16"></span><span class="seg-txt"><b>Ya tengo WhatsApp conectado</b><small>Mantengo mis canales actuales</small></span></button>
       <button class="seg-opt ${state.chanNew?'on':''}" data-chanmode="new"><span class="seg-ico" data-i="bolt" data-sz="16"></span><span class="seg-txt"><b>Conectar nuevos canales</b><small>Elijo qué canales sumar</small></span></button>
-    </div>`:'';
+    </div>`;
   /* los canales que vienen pronto van en un desplegable aparte, cerrado por defecto, para mostrarlos solo si hace falta */
   const soonBox=(list,id)=>{const s=list.filter(c=>c.soon);if(!s.length)return '';const open=!!(state.soonOpen||{})[id];
     return `<div class="soon-box ${open?'open':''}"><button type="button" class="soon-tg" data-soon-tg="${id}" aria-expanded="${open}"><span class="soon-badge">Próximamente</span><span class="soon-txt">${s.length} canal${s.length>1?'es':''} en camino · ${s.map(c=>c.label).join(', ')}</span><span class="soon-chev"><span data-i="down" data-sz="15"></span></span></button>
       <div class="soon-b"><div class="soon-in"><div class="chan-grid soon-grid">${s.map(inChip).join('')}</div></div></div></div>`;};
-  if(showGrid)html+=`<h3 class="channel-heading">Canales de entrada</h3>
-    <div class="chan-grid in-grid${ex?' chan-grid-ex':''}">${CHANNELS.filter(c=>!c.soon).map(inChip).join('')}</div>
-    <p class="out-note" style="margin:10px 0 0"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>
-    ${soonBox(CHANNELS,'in')}`;
-  if(state.engage){
-    const outChans=[
-      {k:'whatsapp',label:'Plantillas WhatsApp',color:'#25D366',paid:true},
-      {k:'correo',label:ex?'Bolsa de correo masivo':'Correo masivo',color:'#FFD540',paid:true,tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'},
-      {k:'wacall',label:ex?'Bolsa de llamadas por WhatsApp':'Llamadas por WhatsApp',color:'#25D366',paid:true},
-      {k:'voip',label:'Llamada VoIP',color:'#52CE5E',paid:true,soon:true}
-    ];
-    const attention=voiceCallAttention(),{human,ai}=voiceAttentionAvailability();
-    const choices=[['human','Humano',human],['ai','IA',ai],['both','Humano + IA',human&&ai]];
-    const outChip=(c)=>{
-      const on=!!state.out[c.k],badge=c.tag?`<span class="chan-free">${c.tag}</span>`:'<span class="chan-pago">pago</span>';
-      if(c.k==='wacall'&&on){
-        return `<div class="chan on paid call-channel">
-          ${badge}<button type="button" class="call-channel-toggle" data-out="wacall" aria-pressed="true">${logo(c)}</button>
-          <label>¿Quién llama?<select data-call-attention>${choices.map(([key,label,available])=>`<option value="${key}" ${attention===key?'selected':''} ${available?'':'disabled'}>${label}</option>`).join('')}</select></label>
-        </div>`;
-      }
-      return `<button type="button" class="chan ${on?'on':''} paid" data-out="${c.k}" aria-pressed="${on}">${badge}${logo(c)}</button>`;
-    };
-    html+=`<div class="out-block">
-      <h3 class="channel-heading">Canales de salida</h3>
-      <div class="out-note">Las plantillas de WhatsApp se cotizan con Meta.</div>
-      <div class="chan-grid out-grid">${outChans.filter(c=>!c.soon).map(outChip).join('')}</div>
-      ${state.out.wacall?`<div class="out-note" style="margin-top:8px">Cada tipo de llamada requiere su propia bolsa de minutos. Voz humana requiere Desk e IA requiere Studio. La billetera cubre el consumo de Meta y el fee Adereso por separado.</div>`:''}
-      ${soonBox(outChans,'out')}
-    </div>`;
+  if(showGrid){
+    const text=showText?group('Texto',`in-grid${ex?' chan-grid-ex':''}`,CHANNELS.filter(c=>!c.soon).map(inChip).join(''),
+      `<p class="out-note" style="margin:10px 0 0"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>${soonBox(CHANNELS,'in')}`):'';
+    const voice=showVoice?group('Voz entrante','channel-pair',unavailable(call)+unavailable(voip)):'';
+    html+=panel('channels-inbound','Canales de entrada','Dónde recibirás las consultas.',text+voice);
   }
+  const outChip=(c)=>{
+    if(!state.engage)return unavailable(c,'Requiere Engage');
+    const on=!!state.out[c.k],badge=priceBadge(c.tag,c.k!=='correo');
+    if(c.k==='wacall'&&on){
+      const attention=voiceCallAttention(),{human,ai}=voiceAttentionAvailability();
+      const choices=[['human','Humano',human],['ai','IA',ai],['both','Humano + IA',human&&ai]];
+      return `<div class="chan on paid call-channel">
+        ${badge}<button type="button" class="call-channel-toggle" data-out="wacall" aria-pressed="true">${logo(c)}</button>
+        <label>¿Quién llama?<select data-call-attention>${choices.map(([key,label,available])=>`<option value="${key}" ${attention===key?'selected':''} ${available?'':'disabled'}>${label}</option>`).join('')}</select></label>
+      </div>`;
+    }
+    return `<button type="button" class="chan ${on?'on':''} paid" data-out="${c.k}" aria-pressed="${on}">${badge}${logo(c)}</button>`;
+  };
+  const outboundText=showText?group('Texto','channel-pair',[
+    {k:'whatsapp',label:'Plantillas WhatsApp',color:'#25D366',tag:'Pago / mensaje'},
+    {k:'correo',label:'Correo masivo',color:'#FFD540',tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'}
+  ].map(outChip).join('')):'';
+  const outboundVoice=showVoice?group('Voz saliente','channel-pair',
+    outChip({...call,tag:'Pago / minuto'})+unavailable(voip),
+    state.engage&&state.out.wacall?`<p class="out-note" style="margin:10px 0 0">Cada tipo de llamada requiere su propia bolsa de minutos. Voz humana requiere Desk e IA requiere Studio. La billetera cubre el consumo de Meta y el fee Adereso por separado.</p>`:''):'';
+  const description=state.engage?'Para plantillas, campañas y llamadas salientes. Selecciona los canales que necesites.':
+    'Para cotizar canales salientes, activa Engage en <button type="button" class="linkbtn" data-goto="s1">Servicios</button>.';
+  html+=panel('channels-outbound','Canales de salida',description,outboundText+outboundVoice);
   el.innerHTML=html;paintIcons(el);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]');if(!b)return;const box=b.closest('.soon-box'),on=!box.classList.contains('open');
@@ -10709,6 +10741,22 @@ document.getElementById('modgrid').addEventListener('click',e=>{
   renderMods();renderAll();refreshFlow();
 });
 document.getElementById('optWa').addEventListener('click',e=>{
+  const mode=e.target.closest('[data-communication-mode]')?.dataset.communicationMode;
+  if(mode){
+    if(mode===state.communicationMode)return;
+    state.communicationMode=mode;
+    if(mode==='text')state.out.wacall=false;
+    if(mode==='voice'){
+      state.whatsapp=false;
+      state.chan={};
+      state.out.whatsapp=false;
+      state.out.correo=false;
+    }
+    if(!walletManual())state.wa.amount=Math.round((metaEst()||0)*100)/100;
+    renderAll();refreshFlow();
+    document.querySelector('[data-communication-mode="'+mode+'"]')?.focus({preventScroll:true});
+    return;
+  }
   const cm=e.target.closest('[data-chanmode]');if(cm){state.chanNew=cm.dataset.chanmode==='new';renderAll();refreshFlow();return;}
   const o=e.target.closest('[data-out]');
   if(o){
@@ -11343,7 +11391,7 @@ document.getElementById('custSeg')?.addEventListener('click',e=>{const b=e.targe
   /* cliente nuevo parte con Desk + Studio; cliente vigente parte de cero para que el KAM elija */
   state.desk=!ex;state.studio=!ex;state.engage=false;state.cassper=false;state.whatsapp=false;state.walletOnly=false;state.hhCustom=false;state.scope='bolsa';state.bots=1;state.improve=false;state.chanNew=false;state.extraAgents=0;state.deskInteg=false;state.wa.fee=null;
   state.conversationPlans={};state.voiceUpgrades={};
-  state.chan={...INITIAL_STATE.chan};state.out={...INITIAL_STATE.out};state.callAttention=INITIAL_STATE.callAttention;state.humanVoiceMinutes=INITIAL_STATE.humanVoiceMinutes;state.voiceMinutes=INITIAL_STATE.voiceMinutes;state.emailPlan=INITIAL_STATE.emailPlan;state.emailQuantity=INITIAL_STATE.emailQuantity;
+  state.chan={...INITIAL_STATE.chan};state.out={...INITIAL_STATE.out};state.communicationMode=INITIAL_STATE.communicationMode;state.callAttention=INITIAL_STATE.callAttention;state.humanVoiceMinutes=INITIAL_STATE.humanVoiceMinutes;state.voiceMinutes=INITIAL_STATE.voiceMinutes;state.emailPlan=INITIAL_STATE.emailPlan;state.emailQuantity=INITIAL_STATE.emailQuantity;
   if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();
   state.existing?setActive('s0'):computeActive();});
 /* panel de cliente vigente: alcance y bots nuevos */
