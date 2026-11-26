@@ -1,4 +1,5 @@
 import { useId, useState, type CSSProperties } from 'react';
+import { CopySectionButton } from './CopyControls';
 import { ExternalLink, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type { DealDTO } from '@/lib/pulse-types';
@@ -28,9 +29,12 @@ function DistributionOption({ row, measure, period, segment = false }: { row: Wo
 }
 
 function Distribution({ title, note, rows, measure, period }: { title: string; note: string; rows: WonDistributionRow[]; measure: Measure; period: string }) {
-  const visible = rows.filter(row => measure === 'mrr' ? row.mrr > 0 : row.count > 0);
+  const visible = rows
+    .filter(row => row[measure] > 0)
+    .sort((a, b) => b[measure] - a[measure]);
   return <figure className="won-mix-chart">
     <figcaption title={note}><h3>{title}</h3></figcaption>
+    <CopySectionButton widgetLabel={title} />
     {visible.length ? <>
       <div className="won-mix-track" role="group" aria-label={`${title}: selecciona una categoría para ver sus negocios`}>
         {visible.map(row => <DistributionOption key={row.key} row={row} measure={measure} period={period} segment />)}
