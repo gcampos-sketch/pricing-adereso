@@ -26,7 +26,7 @@ export const PULSE_FOCUS_PAGES = [
   { id: 'actividades', title: 'Actividades por deal', description: 'Correos, WhatsApp, llamadas y reuniones en la cartera activa y antes del cierre.' },
   { id: 'pipeline', title: 'Pipeline y reuniones', description: 'Generación, reuniones y avance de oportunidades.' },
   { id: 'forecast', title: 'Forecast y prioridades', description: 'Qué trabajar hoy, próximos cierres y calidad de la gestión.' },
-  { id: 'conversion', title: 'Resultados y conversión', description: 'Win rate, precio, demanda observada y comparación por comercial.' },
+  { id: 'conversion', title: 'Análisis de pipeline', description: 'Adquisición, conversión comercial, activación y churn por cohorte.' },
   { id: 'scenarios', title: 'Simulaciones de escenarios', description: 'Proyecciones guardadas y desviación frente al resultado real.' },
 ] as const;
 export type PulseFocusView = typeof PULSE_FOCUS_PAGES[number]['id'];

@@ -1,0 +1,236 @@
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { getPipelineAnalysis } from '@/lib/pipeline-analysis.functions';
+import {
+  STAGES, adLabel, hasStage, isProspectingCandidate, layoutPipelineFlow, meetingBooked, meetingHeld, pipelineColumns,
+  reachedCommercial, serviceToChurn, wasInService, wasLost, wasWon,
+  type PipelineDeal, type PipelineReport, type RouteDetail, type StageId, type View,
+} from '@/lib/pipeline-analysis';
+import type { RoleFilter } from '@/lib/owner-roles';
+import './PipelineAnalysis.css';
+
+const creativeUrl = 'https://adereso-creative-analytics.adereso-grow-6775.chatgpt.site/';
+const number = new Intl.NumberFormat('es-CL');
+const percent = new Intl.NumberFormat('es-CL', { style: 'percent', maximumFractionDigits: 1 });
+const formatDate = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Coyhaique', dateStyle: 'medium', timeStyle: 'short' });
+const views = [['all', 'Todo el pipeline'], ['Inbound', 'Inbound'], ['Outbound', 'Outbound'], ['Sin clasificar', 'Sin clasificar']] as const;
+const routes = [['summary', 'Recorrido completo'], ['sdr', 'Detalle SDR'], ['sales', 'Detalle Comercial'], ['activation', 'Detalle activación']] as const;
+
+type Drill = { title: string; deals: PipelineDeal[] };
+type Props = { owner: string; role: RoleFilter; periods: string[]; rangeLabel: string; refreshKey: string; segment?: string | undefined };
+
+export function PipelineAnalysis({ owner, role, periods, rangeLabel, refreshKey, segment }: Props) {
+  const query = useQuery({
+    queryKey: ['pipeline-analysis', owner, role, periods, refreshKey],
+    queryFn: async () => JSON.parse(await getPipelineAnalysis({ data: { periods, role, owner } })) as PipelineReport,
+    staleTime: 90_000,
+    retry: false,
+  });
+  if (query.isPending) return <p className="empty-state" role="status">Leyendo los hitos y contactos de HubSpot…</p>;
+  if (query.isError) return <div className="empty-state" role="alert">No se pudo completar la lectura del pipeline. <button type="button" className="tab" onClick={() => void query.refetch()}>Reintentar</button></div>;
+  return <PipelineAnalysisView key={`${owner}:${role}:${rangeLabel}:${segment}`} report={query.data} rangeLabel={rangeLabel} segment={segment} />;
+}
+
+function options(deals: PipelineDeal[], value: (deal: PipelineDeal) => string) {
+  return [...new Set(deals.map(value))].sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+const breakdowns = {
+  industry: ['Industria', (deal: PipelineDeal) => deal.industry],
+  ad: ['Anuncio rastreado', adLabel],
+  campaign: ['Campaña', (deal: PipelineDeal) => deal.campaign],
+  role: ['Rol del contacto', (deal: PipelineDeal) => deal.role],
+  type: ['Tipo de deal', (deal: PipelineDeal) => deal.dealType],
+  source: ['Fuente de creación', (deal: PipelineDeal) => deal.sourceLabel],
+} as const;
+type Breakdown = keyof typeof breakdowns;
+const segmentNames: Record<string, string> = { inbound: 'Inbound', outbound: 'Outbound', upsell: 'Upsell', crossSell: 'Cross sell' };
+const metrics = [
+  ['Agendadas', meetingBooked], ['Concretadas', meetingHeld], ['En Comercial', reachedCommercial],
+  ['Valorizados E4', (deal: PipelineDeal) => hasStage(deal, '171385866')], ['Ganados', wasWon], ['Perdidos', wasLost],
+  ['Llegaron a E8', wasInService], ['En servicio hoy', (deal: PipelineDeal) => deal.stage === '173990327'], ['Churn tras E8', serviceToChurn],
+] as const;
+
+export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: PipelineReport; rangeLabel: string; segment?: string | undefined }) {
+  const [view, setView] = useState<View>('all');
+  const [includeProspecting, setIncludeProspecting] = useState(true);
+  const [rankByRate, setRankByRate] = useState(false);
+  const [route, setRoute] = useState<RouteDetail>('summary');
+  const [source, setSource] = useState<string | null>(null);
+  const [industry, setIndustry] = useState<string | null>(null);
+  const [breakdown, setBreakdown] = useState<Breakdown>('industry');
+  const [focus, setFocus] = useState<string | null>(null);
+  const [drill, setDrill] = useState<Drill | null>(null);
+  const returnFocus = useRef<Element | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [rankMetric, setRankMetric] = useState<(typeof metrics)[number][0]>('Ganados');
+
+  const population = useMemo(() => report.deals.filter(deal =>
+    (!segment || !segmentNames[segment] || deal.segment === segmentNames[segment]) && (view === 'all' || deal.motion === view || (view === 'Outbound' && includeProspecting && isProspectingCandidate(deal)))),
+  [report.deals, segment, view, includeProspecting]);
+  const sources = useMemo(() => [...new Map(population.map(deal => [deal.source, deal.sourceLabel])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1], 'es')), [population]);
+  const bySource = useMemo(() => population.filter(deal => source === null || deal.source === source), [population, source]);
+  const industries = useMemo(() => options(bySource, deal => deal.industry), [bySource]);
+  const scoped = useMemo(() => bySource.filter(deal => industry === null || deal.industry === industry), [bySource, industry]);
+  const [groupLabel, groupBy] = breakdowns[breakdown];
+  const deals = useMemo(() => scoped.filter(deal => focus === null || groupBy(deal) === focus), [scoped, focus, groupBy]);
+  const graph = useMemo(() => layoutPipelineFlow(deals, pipelineColumns(view, route)), [deals, view, route]);
+  const buckets = useMemo(() => {
+    const groups = new Map<string, PipelineDeal[]>();
+    for (const deal of scoped) {
+      const name = groupBy(deal);
+      const rows = groups.get(name) ?? [];
+      rows.push(deal);
+      groups.set(name, rows);
+    }
+    const index = metrics.findIndex(([name]) => name === rankMetric);
+    return [...groups].map(([name, rows]) => {
+      const counts = metrics.map(([, test]) => rows.filter(test).length);
+      const rankCount = counts[index] ?? 0;
+      return { name, rows, counts, rankCount, rate: rankCount / rows.length };
+    }).sort((a, b) => (rankByRate ? b.rate - a.rate : b.rankCount - a.rankCount) ||
+      b.rows.length - a.rows.length || a.name.localeCompare(b.name, 'es'));
+  }, [scoped, groupBy, rankMetric, rankByRate]);
+
+  function open(title: string, members: PipelineDeal[], trigger: Element) {
+    returnFocus.current = trigger;
+    setDrill({ title, deals: members });
+  }
+
+  const contactRead = deals.filter(deal => deal.contactRead).length;
+  const unconfirmed = deals.filter(isProspectingCandidate).length;
+  const ads = deals.filter(deal => deal.adId).length;
+  const width = graph.columns.length * 164;
+  const resetGroup = () => { setFocus(null); setExpanded(false); };
+  return <section className="pipeline-analysis" aria-label="Sankey de pipeline comercial">
+    <div className="pipeline-analysis-controls">
+      <div className="tabs" role="group" aria-label="Origen de adquisición">
+        {views.map(([key, label]) => <button type="button" className="tab" key={key} aria-pressed={view === key} data-active={view === key}
+          onClick={() => { setView(key); setSource(null); setIndustry(null); setBreakdown(key === 'Inbound' ? 'ad' : 'industry'); resetGroup(); }}>{label}</button>)}
+      </div>
+      <div className="pipeline-analysis-filters">
+        <label>Fuente de creación<select value={source === null ? '' : `source:${source}`} onChange={event => {
+          const value = event.target.value;
+          setSource(value ? value.slice(7) : null); setIndustry(null); resetGroup();
+        }}><option value="">Todas las fuentes</option>{sources.map(([value, label]) => <option key={value} value={`source:${value}`}>{label}</option>)}</select></label>
+        <label>Industria<select value={industry ?? ''} onChange={event => { setIndustry(event.target.value || null); resetGroup(); }}>
+          <option value="">Todas las industrias</option>{industries.map(value => <option key={value}>{value}</option>)}</select></label>
+        <label>Vista del recorrido<select value={route} onChange={event => setRoute(event.target.value as RouteDetail)}>
+          {routes.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>
+      </div>
+    </div>
+    <div className="pipeline-analysis-meta">
+      <span>{rangeLabel} por fecha de creación · {number.format(deals.length)} deals · {formatDate.format(new Date(report.readAt))}</span>
+      {focus && <button type="button" className="tab" onClick={() => setFocus(null)}>Quitar filtro «{focus}»</button>}
+      {view === 'Inbound' && <a href={creativeUrl} target="_blank" rel="noreferrer">Biblioteca de Creative Analytics ↗</a>}
+    </div>
+    {view === 'Outbound' && <label className="pipeline-analysis-note">
+      <input type="checkbox" checked={includeProspecting} onChange={event => {
+        setIncludeProspecting(event.target.checked); setSource(null); setIndustry(null); resetGroup();
+      }} /> Incluir prospección SDR sin clasificar{unconfirmed > 0 && ` · ${number.format(unconfirmed)} deals en esta vista`}
+    </label>}
+    {deals.length > 0 ? <>
+      <p className="pipeline-analysis-note">El ancho representa cantidad de deals. Cada columna muestra evidencia registrada del hito. Pulsa cualquier bloque o conexión para ver sus deals.</p>
+      <div className="pipeline-analysis-scroll" role="region" tabIndex={0} aria-label="Sankey desplazable horizontalmente">
+        <div style={{ minWidth: width }}>
+          <div className="pipeline-analysis-columns" style={{ gridTemplateColumns: `repeat(${graph.columns.length}, minmax(0, 1fr))` }}>
+            {graph.columns.map(column => <span key={column.title}>{column.title}</span>)}
+          </div>
+          <svg viewBox={`0 0 ${width} ${graph.height}`} width="100%" style={{ display: 'block' }} aria-label="Flujos por hitos">
+            {graph.links.map(({ depth, source: start, target, width: thickness, y1, y2, members }) => {
+              const x1 = depth * 164 + 24, x2 = x1 + 151, mid = (x1 + x2) / 2;
+              const title = `${start.name} → ${target.name}`;
+              return <path key={JSON.stringify([depth, start.name, target.name])} className="pipeline-analysis-link" role="button" tabIndex={0}
+                data-muted={start.name === 'Sin registro' || target.name === 'Sin registro'}
+                aria-label={`${title} · ${members.length} deals`}
+                d={`M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2} L${x2},${y2 + thickness} C${mid},${y2 + thickness} ${mid},${y1 + thickness} ${x1},${y1 + thickness} Z`}
+                onClick={event => open(title, members, event.currentTarget)} onKeyDown={event => activate(event, () => open(title, members, event.currentTarget))}>
+                <title>{title} · {members.length} deals</title>
+              </path>;
+            })}
+            {graph.columns.flatMap((column, index) => column.nodes.map(node => {
+              const x = index * 164 + 11;
+              const y = node.y + node.height / 2;
+              const title = `${column.title} · ${node.name}`;
+              const display = node.name.startsWith('Anuncio Meta ') ? node.name.slice('Anuncio Meta '.length) : node.name;
+              const label = display.length > 21 ? `${display.slice(0, 20)}…` : display;
+              return <g key={JSON.stringify([index, node.name])} className="pipeline-analysis-node" role="button" tabIndex={0}
+                data-muted={node.name === 'Sin registro'} aria-label={`${title} · ${node.members.length} deals`}
+                onClick={event => open(title, node.members, event.currentTarget)} onKeyDown={event => activate(event, () => open(title, node.members, event.currentTarget))}>
+                <title>{title} · {node.members.length} deals</title>
+                <rect x={x + 13} y={y - 17} width={136} height={34} rx="4" className="pipeline-analysis-label-bg" />
+                <rect x={x} y={node.y} width={13} height={Math.max(1, node.height)} rx="2" />
+                <text x={x + 19} y={y - 2}>{label}</text>
+                <text x={x + 19} y={y + 12} className="pipeline-analysis-count">{number.format(node.members.length)}</text>
+              </g>;
+            }))}
+          </svg>
+        </div>
+      </div>
+      <p className="pipeline-analysis-note">
+        {contactRead < deals.length && `${number.format(deals.length - contactRead)} deals con lectura de contactos pendiente. `}
+        {view === 'Inbound' && `${number.format(ads)}/${number.format(deals.length)} con ID de anuncio rastreado antes de su creación. `}
+        {report.undated > 0 && `${number.format(report.undated)} deals fuera de la cohorte por fecha de creación ausente o inválida.`}
+      </p>
+    </> : <p className="empty-state">No hay deals para estos filtros.{report.undated > 0 && ` Hay ${report.undated} registros con fecha de creación sin verificar en el alcance seleccionado.`}</p>}
+
+    <div className="pipeline-analysis-ranking">
+      <h3 className="pulse-h2">Conversión por segmento</h3>
+      <div className="pipeline-analysis-filters">
+        <label>Comparar por<select value={breakdown} onChange={event => { setBreakdown(event.target.value as Breakdown); resetGroup(); }}>
+          {Object.entries(breakdowns).map(([key, [label]]) => <option key={key} value={key}>{label}</option>)}</select></label>
+        <label>Ordenar por<select value={rankMetric} onChange={event => setRankMetric(event.target.value as typeof rankMetric)}>
+          {metrics.map(([label]) => <option key={label}>{label}</option>)}</select></label>
+        <label>Medida<select value={rankByRate ? 'rate' : 'count'} onChange={event => setRankByRate(event.target.value === 'rate')}>
+          <option value="count">Cantidad</option><option value="rate">Porcentaje de la cohorte</option>
+        </select></label>
+      </div>
+      {!!buckets.length && <div className="pipeline-analysis-scroll" tabIndex={0} role="region" aria-label="Tabla de conversión desplazable horizontalmente">
+        <table className="pipeline-analysis-table">
+          <thead><tr><th scope="col">{groupLabel}</th><th scope="col">Deals</th>{metrics.map(([name]) => <th scope="col" key={name}>{name}</th>)}</tr></thead>
+          <tbody>{buckets.slice(0, expanded ? undefined : 10).map(({ name, rows, counts }) => <tr key={name} data-active={focus === name}>
+            <th scope="row"><button className="pipeline-analysis-row" type="button" aria-pressed={focus === name} onClick={() => setFocus(focus === name ? null : name)}>{name}</button></th>
+            <td><button className="pipeline-analysis-row" type="button" onClick={event => open(name, rows, event.currentTarget)}>{number.format(rows.length)}</button></td>
+            {metrics.map(([label, test], index) => <td key={label}>
+              {counts[index] ? <button className="pipeline-analysis-row" type="button" aria-label={`${name} · ${label} · ${counts[index]} deals`} onClick={event => open(`${name} · ${label}`, rows.filter(test), event.currentTarget)}>
+                {number.format(counts[index])} <small>{percent.format(counts[index] / rows.length)}</small>
+              </button> : '0'}
+            </td>)}
+          </tr>)}</tbody>
+        </table>
+      </div>}
+      {buckets.length > 10 && <button type="button" className="tab" onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos' : `Ver los ${buckets.length} grupos`}</button>}
+      <details><summary>Cómo se calculan las conversiones</summary>
+        <p>Los porcentajes usan todos los deals de la fila como base, incluidos los abiertos. Selecciona el nombre del grupo para seguir su recorrido en el Sankey.</p>
+        <p>Se cuenta un deal por ID. El período usa la creación del deal. Las etapas usan su última entrada registrada o su etapa actual. Un deal puede tener un ganado histórico y una pérdida posterior. Churn tras E8 requiere ambas fechas en ese orden y Churn como etapa actual.</p>
+        <p>En inbound el anuncio se identifica por el ID de Meta del primer enlace rastreado del contacto asociado, con visita anterior o igual a la creación del deal. La biblioteca de Creative Analytics ofrece los nombres y creativos. En outbound el rol usa las etiquetas deal-contacto, con prioridad para los contactos marcados como Key Contact. La fuente Prospección SDR permite explorar negocios sin clasificación confirmada y conserva su etiqueta en el recorrido.</p>
+      </details>
+    </div>
+
+    <Dialog open={Boolean(drill)} onOpenChange={open => { if (!open) setDrill(null); }}>
+      {drill && <DialogContent className="pipeline-analysis-dialog" onCloseAutoFocus={event => {
+        const trigger = returnFocus.current;
+        if (trigger?.isConnected && (trigger instanceof HTMLElement || trigger instanceof SVGElement)) { event.preventDefault(); trigger.focus(); }
+      }}>
+        <DialogTitle>{drill.title}</DialogTitle>
+        <DialogDescription>{number.format(drill.deals.length)} deals de la cohorte · {rangeLabel}</DialogDescription>
+        <div className="pipeline-analysis-scroll" tabIndex={0} role="region" aria-label="Negocios incluidos">
+          <table className="pipeline-analysis-table">
+            <thead><tr>{['Deal', 'Industria', 'Fuente', 'Etapa actual', 'Tipo', 'Anuncio / rol'].map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead>
+            <tbody>{drill.deals.map(deal => <tr key={deal.id}>
+              <th scope="row"><a href={`https://app.hubspot.com/contacts/23480943/record/0-3/${deal.id}?utm_source=hub_comercial&utm_medium=pipeline_analysis`} target="_blank" rel="noreferrer">{deal.name} ↗</a></th>
+              <td>{deal.industry}</td><td>{deal.sourceLabel}</td><td>{STAGES[deal.stage as StageId] ?? 'Etapa sin clasificar'}</td>
+              <td>{deal.dealType}</td><td>{deal.motion === 'Inbound' ? adLabel(deal) : deal.role}</td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      </DialogContent>}
+    </Dialog>
+  </section>;
+}
+
+function activate(event: KeyboardEvent, action: () => void) {
+  if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); action(); }
+}
