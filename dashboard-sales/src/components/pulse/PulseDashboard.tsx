@@ -1,3 +1,4 @@
+import { PipelineAnalysis } from './PipelineAnalysis';
 import { reportTitlePeriod } from "@/lib/report-title-scope";
 import { ReportTitleScope } from "./ReportTitleScope";
 import { AdoboQuality } from "./AdoboQuality";
@@ -1517,6 +1518,9 @@ export function PulseDashboard({
       {section === "actividades" && <DealActivityAnalysis year={year} quarter={quarter} role={role ?? "all"} owner={ownerFilter} segment={dealType} readAt={report.generatedAt} />}
       {section === "scenarios" && <QuotaScenarios report={report} owner={ownerFilter} role={role} />}
       {section === "conversion" && <>
+      <Fold defaultOpen title="Recorrido comercial" subtitle="Desde la adquisición hasta servicio y churn">
+        <PipelineAnalysis role={role ?? "all"} owner={ownerFilter} periods={selectedPeriods} rangeLabel={rangeLabel} refreshKey={report.generatedAt} segment={dealType} />
+      </Fold>
       <Fold defaultOpen title="WR (Win Rate)" subtitle={`Conversión, ticket promedio y pérdidas · ${rangeLabel}`}>
       {/* Fila 3 — Win rate / Ticket prom / Perdido */}
       <section className="grid-3" style={{ marginTop: 16 }}>
