@@ -69,13 +69,13 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
       <span className="loss-sankey-unit">Ancho = cantidad de deals</span></div>
     <div className="loss-sankey-controls">
       <div className="loss-sankey-control"><span>Agrupar</span><div className="tabs" role="group" aria-label="Agrupación del Sankey">
-        <button type="button" aria-pressed={grouping === 'owner'} data-active={grouping === 'owner'} onClick={() => setGrouping('owner')}>Por comercial</button>
-        <button type="button" aria-pressed={grouping === 'team'} data-active={grouping === 'team'} onClick={() => setGrouping('team')}>Por equipo</button>
-        <button type="button" aria-pressed={activityMode} data-active={activityMode} onClick={() => setGrouping('activity')}>Por actividad</button>
+        <button type="button" className="tab" aria-pressed={grouping === 'owner'} data-active={grouping === 'owner'} onClick={() => setGrouping('owner')}>Por comercial</button>
+        <button type="button" className="tab" aria-pressed={grouping === 'team'} data-active={grouping === 'team'} onClick={() => setGrouping('team')}>Por equipo</button>
+        <button type="button" className="tab" aria-pressed={activityMode} data-active={activityMode} onClick={() => setGrouping('activity')}>Por actividad</button>
       </div></div>
       <div className="loss-sankey-control"><span>Fecha del período</span><div className="tabs" role="group" aria-label="Fecha del Sankey">
-        <button type="button" aria-pressed={basis === 'entry'} data-active={basis === 'entry'} onClick={() => setBasis('entry')} title="Última entrada registrada a la etapa perdida actual. Sin sustituir fechas ausentes por cierre o creación.">Entrada a deal perdido</button>
-        <button type="button" aria-pressed={basis === 'close'} data-active={basis === 'close'} onClick={() => setBasis('close')}>Fecha de cierre</button>
+        <button type="button" className="tab" aria-pressed={basis === 'entry'} data-active={basis === 'entry'} onClick={() => setBasis('entry')} title="Última entrada registrada a la etapa perdida actual. Sin sustituir fechas ausentes por cierre o creación.">Entrada a deal perdido</button>
+        <button type="button" className="tab" aria-pressed={basis === 'close'} data-active={basis === 'close'} onClick={() => setBasis('close')}>Fecha de cierre</button>
       </div></div>
       {months.length > 0 && <label className="loss-sankey-control"><span>Mes</span>
         <select value={selectedMonth} onChange={event => setMonth(event.target.value)}>
