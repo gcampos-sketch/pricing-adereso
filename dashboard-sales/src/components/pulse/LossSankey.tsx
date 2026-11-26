@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { ResponsiveContainer, Sankey } from 'recharts';
 import { buildLossSankey, lossSankeyColumns, type LossSankeyNode, type LossSankeyLink, type LossSankeyGrouping } from '@/lib/loss-sankey';
 import type { InsightDeal } from '@/lib/insights-types';
@@ -27,6 +27,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
   const columns = lossSankeyColumns(grouping);
   const [channel, setChannel] = useState<LossActivityChannel>('all');
   const [reasonFilter, setReasonFilter] = useState<{ reason: string; scope: string } | null>(null);
+  const reasonSelect = useRef<HTMLSelectElement>(null);
   const columnLabels = {
     owner: grouping === 'team' ? 'Equipo' : 'Comercial',
     reason: 'Motivo de pérdida',
@@ -42,6 +43,7 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
     [deals, periods, origin, basis, readAt, selectedMonth]);
   const coverageExplanation = `Entre los perdidos disponibles con estos filtros de origen, comercial, rol y etapa, estos deals no tienen ${basis === 'entry' ? 'una entrada a perdido verificable' : 'una fecha de cierre válida'}. Se excluyen del Sankey sin asignarlos al período. Pulsa para revisar sus deals.`;
   const reasonScope = JSON.stringify([scope, periods, basis]);
+  const selectReason = (reason: string | null) => setReasonFilter(reason === null ? null : { reason, scope: reasonScope });
   const activeReason = activityMode && reasonFilter?.scope === reasonScope ? reasonFilter.reason : null;
   const reasons = useMemo(() => [...new Set(filtered.periodDeals.map(deal => deal.lostReason || ''))]
     .sort((a, b) => a.localeCompare(b, 'es')), [filtered]);
@@ -54,9 +56,10 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
   const graph = useMemo(() => buildLossSankey(activityDeals, grouping, { evidence, channel }),
     [activityDeals, grouping, evidence, channel]);
   const context = JSON.stringify([scope, readAt, origin, basis, selectedMonth, grouping, channel, selectedReason, graph.deals.map(deal => deal.id)]);
-  const [inspection, setInspection] = useState<{ context: string; key: string; title: string; count: number; amount: number; deals: InsightDeal[] } | null>(null);
+  type Inspection = { key: string; title: string; count: number; amount: number; deals: InsightDeal[]; isolatesReason?: boolean };
+  const [inspection, setInspection] = useState<(Inspection & { context: string }) | null>(null);
   const hover = inspection?.context === context ? inspection : null;
-  const setHover = (value: { key: string; title: string; count: number; amount: number; deals: InsightDeal[] } | null) => setInspection(value ? { ...value, context } : null);
+  const setHover = (value: Inspection | null) => setInspection(value ? { ...value, context } : null);
   const open = (title: string, rows: InsightDeal[], reasonDetail = false) => onOpen(title, rows, basis, reasonDetail, monthLabel);
   const activityTotals = activityMode && evidence ? lossActivityTotals(hover?.deals ?? graph.deals, evidence) : [];
   const maxNodes = Math.max(...columns.map(kind => graph.nodes.filter(node => node.kind === kind).length));
@@ -91,8 +94,8 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
           </select>
         </label>
         <label className="loss-sankey-control"><span>Motivo</span>
-          <select value={selectedReason === null ? 'all' : `reason:${selectedReason}`} onChange={event => {
-            setReasonFilter(event.target.value === 'all' ? null : { reason: event.target.value.slice(7), scope: reasonScope });
+          <select ref={reasonSelect} value={selectedReason === null ? 'all' : `reason:${selectedReason}`} onChange={event => {
+            selectReason(event.target.value === 'all' ? null : event.target.value.slice(7));
           }}>
             <option value="all">Todos los motivos</option>
             {reasons.map(reason => <option key={reason} value={`reason:${reason}`}>{reason || 'Sin motivo listado'}</option>)}
@@ -102,8 +105,14 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
     </div>
     <div className="loss-sankey-meta">
       <div className="loss-sankey-inspection" aria-live="polite">
-        {hover ? <><strong>{hover.title}</strong><span>{quantity(hover.count)} · {money(hover.amount)} MRR · clic para ver deals</span></> : <span>Pulsa un bloque o conexión para ver sus deals.</span>}
+        {hover ? <><strong>{hover.title}</strong><span>{quantity(hover.count)} · {money(hover.amount)} MRR · {hover.isolatesReason ? 'clic para ver el recorrido' : 'clic para ver deals'}</span></>
+          : selectedReason !== null ? <span>Recorrido de {selectedReason || 'Sin motivo listado'}</span>
+          : <span>{activityMode ? 'Pulsa un motivo para ver su recorrido o una conexión para ver sus deals.' : 'Pulsa un bloque o conexión para ver sus deals.'}</span>}
       </div>
+      {selectedReason !== null && <button type="button" className="loss-sankey-warning-link" onClick={() => {
+        selectReason(null);
+        reasonSelect.current?.focus({ preventScroll: true });
+      }}>Ver todos los motivos</button>}
       {basis === 'entry' && !entryDatesAvailable && <span className="loss-sankey-note" role="status" title="La copia actual aún no incluye las fechas de entrada a perdido; no se sustituyen por fechas de cierre.">Actualiza para leer las fechas de entrada.</span>}
       {filtered.missingDates.length > 0 && (basis === 'close' || entryDatesAvailable) && <>
         <button type="button" className="loss-sankey-warning-link" aria-describedby={coverageHelpId} title={coverageExplanation}
@@ -136,8 +145,18 @@ export function LossSankey({ deals, periods, scope, readAt, entryDatesAvailable,
                 const leftLabelWidth = activityMode ? 156 : 112;
                 const labelX = first ? x - 10 : x + width + 10;
                 const maxLabel = first && !activityMode ? 17 : 26;
-                const focus = () => setHover({ key: node.key, title, count: node.deals.length, amount: node.amount, deals: node.deals });
-                return <g className="loss-sankey-node" role="button" tabIndex={0} aria-label={`Ver ${quantity(node.deals.length)} · ${title}`} onClick={() => open(title, node.deals, node.kind === 'reason')} onKeyDown={event => keyboard(event, () => open(title, node.deals, node.kind === 'reason'))} onMouseEnter={focus} onMouseLeave={() => setHover(null)} onFocus={focus} onBlur={() => setHover(null)}>
+                const isolatesReason = activityMode && node.kind === 'reason' && selectedReason === null;
+                const focus = () => setHover({ key: node.key, title, count: node.deals.length, amount: node.amount, deals: node.deals, isolatesReason });
+                const activate = (restoreFocus = false) => {
+                  if (isolatesReason) {
+                    selectReason(node.deals[0]?.lostReason || '');
+                    if (restoreFocus) reasonSelect.current?.focus({ preventScroll: true });
+                  } else open(title, node.deals, node.kind === 'reason');
+                };
+                return <g className="loss-sankey-node" role="button" tabIndex={0}
+                  aria-label={isolatesReason ? `Ver recorrido de ${node.name} · ${quantity(node.deals.length)}` : `Ver ${quantity(node.deals.length)} · ${title}`}
+                  onClick={() => activate()} onKeyDown={event => keyboard(event, () => activate(true))}
+                  onMouseEnter={focus} onMouseLeave={() => setHover(null)} onFocus={focus} onBlur={() => setHover(null)}>
                   <title>{`${title} · ${quantity(node.deals.length)} · ${money(node.amount)} MRR`}</title>
                   <rect x={first ? x - leftLabelWidth : x} y={Math.min(y, y + nodeHeight / 2 - 11)} width={first ? leftLabelWidth + width : 190} height={Math.max(nodeHeight, 24)} fill="transparent" />
                   <rect x={x} y={y} width={width} height={Math.max(nodeHeight, 2)} rx={3} fill={COLORS[node.kind]} />
