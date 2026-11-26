@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAccountEmail } from '@/components/AuthGate';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { COMMISSION_BANDS, commissionRate } from '@/lib/quarter-performance';
 
 const percent = (value: number) => `${value.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
@@ -27,15 +28,23 @@ export function CommissionRate({ attainment, scope, simulated = false, chipLabel
   const validTarget = targetValue !== null && Number.isFinite(targetValue) && targetValue >= 0 && targetValue <= 100;
   const result = commissionRate(attainment, targetValue);
   const tableTarget = validTarget ? targetValue : 9.09;
+  const trigger = (
+    <PopoverTrigger asChild>
+      <button type="button" className="commission-factor-chip" title={chipLabel ? undefined : 'Ver tabla y detalle de comisión'}>
+        <span>{chipLabel ?? (simulated ? 'Factor simulado' : 'Factor comisión')}</span>
+        <strong>{current ? `${factor(current.factor)}${current.asterisk ? '*' : ''}` : 'Sin datos'}</strong>
+      </button>
+    </PopoverTrigger>
+  );
 
   return <div className="commission-inline" onClick={event => event.stopPropagation()} onKeyDown={event => event.stopPropagation()}>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button type="button" className="commission-factor-chip" title="Ver tabla y detalle de comisión">
-            <span>{chipLabel ?? (simulated ? 'Factor simulado' : 'Factor comisión')}</span>
-            <strong>{current ? `${factor(current.factor)}${current.asterisk ? '*' : ''}` : 'Sin datos'}</strong>
-          </button>
-        </PopoverTrigger>
+        {chipLabel ? <TooltipProvider delayDuration={150}>
+          <Tooltip>
+            <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+            <TooltipContent sideOffset={6}>Factor comisión</TooltipContent>
+          </Tooltip>
+        </TooltipProvider> : trigger}
         <PopoverContent className="commission-popover" align="start" sideOffset={10} collisionPadding={12} aria-labelledby={titleId}>
           <div className="commission-popover-heading">
             <h3 id={titleId}>Factor de comisión{simulated ? ' · Simulación' : ''}</h3>

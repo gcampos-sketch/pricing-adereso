@@ -1,11 +1,37 @@
 import { expect, test } from 'bun:test';
-import { wonAcquisitionSource, wonBusinessType, wonDistribution, wonOwnerBreakdown } from '../src/lib/won-distribution';
+import { wonAcquisitionSource, wonBusinessType, wonComposition, wonDistribution, wonOwnerBreakdown } from '../src/lib/won-distribution';
 import type { DealDTO } from '../src/lib/pulse-types';
 
 const deal = (id: string, overrides: Partial<DealDTO> = {}) => ({
   id, name: id, segment: 'Outbound', dealType: 'newbusiness', productToHire: 'Desk',
   source: 'Prospección SDR Adereso', amountValue: 100, otfValue: 0, closeDateValue: '2026-10-21', ...overrides,
 }) as DealDTO;
+
+test('won card shows role-specific segments and keeps recorded creation sources separate', () => {
+  const rows = [
+    deal('outbound'),
+    deal('self-generated', { segment: 'Sin clasificar', source: 'Account Exec' }),
+    deal('recovery', { segment: 'Sin clasificar', source: 'AE Adereso - Recuperación' }),
+    deal('unclassified', { segment: 'Sin clasificar' }),
+    deal('cross', { segment: 'Cross sell', source: 'Prospección SDR' }),
+    deal('upsell', { segment: 'Upsell', source: 'Customer Success' }),
+    deal('no-source', { segment: 'Upsell', source: null }),
+  ];
+  const labels = (role: Parameters<typeof wonComposition>[1]) =>
+    wonComposition(rows, role).segments.map(segment => [segment.label, segment.deals.map(row => row.id)]);
+  expect(labels('all')).toEqual([
+    ['Inbound', []], ['Outbound', ['outbound']], ['Cross sell', ['cross']], ['Upsell', ['upsell', 'no-source']],
+  ]);
+  expect(labels('AE')).toEqual([['Inbound', []], ['Outbound', ['outbound']]]);
+  expect(labels('KAM')).toEqual([['Cross sell', ['cross']], ['Upsell', ['upsell', 'no-source']]]);
+  expect(wonComposition(rows, 'all').sources).toEqual([]);
+  expect(wonComposition(rows, 'AE').sources).toEqual([{ label: 'AE Adereso', deals: [rows[1]] }]);
+  expect(wonComposition(rows, 'KAM').sources).toEqual([
+    { label: 'CS Adereso', deals: [rows[5]] },
+    { label: 'Prospección SDR Adereso', deals: [rows[4]] },
+    { label: 'Sin fuente registrada', deals: [rows[6]] },
+  ]);
+});
 
 test('business type and source are independent axes; missing types are not invented from inbound/outbound', () => {
   expect(wonBusinessType(deal('a'))).toBe('opportunity');

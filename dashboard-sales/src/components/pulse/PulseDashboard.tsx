@@ -26,6 +26,7 @@ import { WarningDealsDialog } from "./WarningDealsDialog";
 import { WonExecutiveSummary } from "./WonExecutiveSummary";
 import { WonStageChip, type WonStageDetail } from "./WonStageChip";
 import { wonStageBreakdown } from "@/lib/won-stage-breakdown";
+import { wonComposition } from "@/lib/won-distribution";
 import { closeMonthKey, summarizeDealMonths } from "@/lib/deal-month-summary";
 import { pipelineCoverage } from "@/lib/pipeline-coverage";
 import { useLiveNow } from './AdoboIntelligence';
@@ -1126,8 +1127,31 @@ export function PulseDashboard({
     ? ((funnelTop.created.length - funnelTop.previousCreatedCount) / funnelTop.previousCreatedCount) * 100
     : null;
   const openGenerationList = (title: string, subtitle: string, deals: DealDTO[]) => setPeriodPayload({ title, subtitle, deals, presentation: "stage-entry" });
-  const generationSourceRole = ownerFilter === "team" ? role : roleOfOwner(ownerFilter) ?? role;
-  const generationSourceChips = (deals: DealDTO[], title: string): MetricChip[] => generationSourceRows(deals, generationSourceRole).map(row => ({
+  const scopedRole = isTeam ? role : roleOfOwner(ownerFilter) ?? role;
+  const wonMix = useMemo(() => wonComposition(quotaPeriod.eligible, scopedRole), [quotaPeriod, scopedRole]);
+  const renderWonMix = (label: string, groups: { label: string; deals: DealDTO[] }[]) => (
+    <div className="won-card-mix-row" role="group" aria-label={label}>
+      <span className="won-card-mix-label">{label}</span>
+      <div className="won-card-mix-chips">
+        {groups.map(group => {
+          const count = group.deals.length;
+          const content = <>{group.label}<strong>{count}</strong></>;
+          return count > 0 ? (
+            <button key={group.label} type="button" className="won-card-mix-chip" onClick={event => {
+              event.stopPropagation();
+              const mrr = group.deals.reduce((total, deal) => total + (deal.amountValue || 0), 0);
+              setPeriodPayload({
+                title: `${quotaScopeName} · Ganados ${group.label} · ${rangeLabel}`,
+                subtitle: `${resultsDateLabel} · ${count} deals · ${money(mrr)} MRR`,
+                deals: group.deals,
+              });
+            }}>{content}</button>
+          ) : <span key={group.label} className="won-card-mix-chip" data-empty>{content}</span>;
+        })}
+      </div>
+    </div>
+  );
+  const generationSourceChips = (deals: DealDTO[], title: string): MetricChip[] => generationSourceRows(deals, scopedRole).map(row => ({
     label: row.label,
     value: String(row.deals.length),
     onClick: () => openGenerationList(`${title} · ${row.label} · ${rangeLabel}`, "Fuente de creación del deal · misma entrada a etapa y filtros de la tarjeta. SDR incluye prospección y formulario inbound de Adereso.", row.deals),
@@ -1446,7 +1470,11 @@ export function PulseDashboard({
           tooltip={`${resultsDateLabel}. Solo ganados elegibles: excluye renovaciones, contracciones y billeteras puras (se ven en «Fuera de la cuota»). Cumplimiento = MRR ganado del periodo + el OTF (pago único) ganado dividido en 12 meses. La barra clara es el MRR y el tramo rayado es el bonus OTF/12; la marca vertical es el 100% de la cuota.`}
           chipLayout="won"
           chips={["E6 POR MOVER", "E6.1 WARNING", "6.2 EN DESARROLLO", "PEND. Q ANT."].flatMap(label => wonChips.filter(chip => chip.label === label))}
-          chipAddon={<CommissionRate chipLabel="FACTOR COM." attainment={selectedPeriods.length === 1 && periodQuota > 0 ? totalAttainmentPct : null} scope={ownerFilter} />}
+          chipAddon={<CommissionRate chipLabel="F. Com." attainment={selectedPeriods.length === 1 && periodQuota > 0 ? totalAttainmentPct : null} scope={ownerFilter} />}
+          footer={<div className="won-card-mix">
+            {renderWonMix("Composición de ganados", wonMix.segments)}
+            {wonMix.sources.length > 0 && renderWonMix("Fuente de creación", wonMix.sources)}
+          </div>}
         />
         <Metric
           label="Falta para la cuota"
@@ -1604,7 +1632,7 @@ export function PulseDashboard({
           ]}
         />
         <Metric
-          label={generationSourceRole === "KAM" ? "Activados · E0→E1" : "Activados · E1"}
+          label={scopedRole === "KAM" ? "Activados · E0→E1" : "Activados · E1"}
           value={String(funnelTop.e0ToE1.length)}
           note="Entrada registrada a E1 en el período"
           chips={generationSourceChips(funnelTop.e0ToE1, "Deals activados · E1")}
