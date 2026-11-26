@@ -1,3 +1,4 @@
+import { readPipelineCreativeCatalog } from './pipeline-creative-catalog.server';
 import { searchAll } from './customer-directory.server';
 import { acquisitionOf, segmentOf } from './deal-segment';
 import { COMMERCIAL_PIPELINE, gateway, getCached, getPropertyOptionLabels, type RawDeal } from './hubspot.server';
@@ -94,6 +95,7 @@ async function loadPipelineAnalysis({ periods, role, owner }: Scope): Promise<Pi
     (role === 'all' || roleOfOwner(p['hubspot_owner_id'] ?? '') === role));
   const cohort = scoped.filter(row => periods.includes(creationPeriod(row.properties['createdate'], now) ?? ''));
   const { links, contacts } = await readContactEvidence(cohort.map(row => row.id));
+  const catalog = readPipelineCreativeCatalog(process.env['PIPELINE_CREATIVE_CATALOG_JSON']);
   const deals = cohort.map(({ id, properties: p }): PipelineDeal => {
     const associated = links.get(id);
     const contactRead = Boolean(associated?.every(link => contacts.has(String(link.toObjectId))));
@@ -103,6 +105,7 @@ async function loadPipelineAnalysis({ periods, role, owner }: Scope): Promise<Pi
     }) : [];
     const motion = acquisitionOf(p);
     const ad = motion === 'Inbound' ? trackedMetaAd(linked, p['createdate']) : null;
+    const creative = ad ? catalog.ads.get(ad.id) : undefined;
     const entries: PipelineDeal['entries'] = {};
     for (const stage of stageIds) {
       const date = p[`hs_v2_date_entered_${stage}`];
@@ -120,14 +123,14 @@ async function loadPipelineAnalysis({ periods, role, owner }: Scope): Promise<Pi
       industry: industryLabels.get(industry) || industry || 'Sin industria',
       dealType: typeLabels.get(type) || type || 'Sin tipo',
       role: contactRead ? contactRole(linked) : 'Lectura pendiente',
-      adId: ad?.id ?? null,
+      adId: ad?.id ?? null, ...(creative ? { creative } : {}),
       campaign: ad?.campaign || (analyticsCampaign ? `${analyticsCampaign} (fuente original)` : 'Sin campaña rastreada'),
       contactRead,
     };
   });
-  return { readAt: readAt.toISOString(), undated: scoped.filter(row => creationPeriod(row.properties['createdate'], now) === null).length, deals };
+  return { readAt: readAt.toISOString(), creativeCatalogStatus: catalog.status, undated: scoped.filter(row => creationPeriod(row.properties['createdate'], now) === null).length, deals };
 }
 
 export function readPipelineAnalysis(scope: Scope) {
-  return getCached(`pipeline-analysis/v1:${scope.role}:${scope.owner}:${scope.periods.join(',')}`, 90_000, () => loadPipelineAnalysis(scope));
+  return getCached(`pipeline-analysis/v2:${scope.role}:${scope.owner}:${scope.periods.join(',')}`, 90_000, () => loadPipelineAnalysis(scope));
 }
