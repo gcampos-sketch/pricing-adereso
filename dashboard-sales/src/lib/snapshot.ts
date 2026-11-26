@@ -57,16 +57,31 @@ async function renderBlockPng(headEl: HTMLElement): Promise<Blob> {
     ignoreElements: element => element.hasAttribute("data-capture-ignore"),
   });
 
-  const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, "image/png"));
+  return canvasPng(out);
+}
+
+async function renderElementPng(element: HTMLElement): Promise<Blob> {
+  const html2canvas = (await import("html2canvas-pro")).default;
+  const surface = element.closest(".modal") ?? document.body;
+  const canvas = await html2canvas(element, {
+    backgroundColor: getComputedStyle(surface).backgroundColor,
+    scale: 2,
+    ignoreElements: node => node.hasAttribute("data-capture-ignore"),
+  });
+  return canvasPng(canvas);
+}
+
+async function canvasPng(canvas: HTMLCanvasElement): Promise<Blob> {
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
   if (!blob) throw Error("No se pudo generar el PNG");
   return blob;
 }
 
 /** Start the clipboard write within the click gesture, including browsers that require it. */
-export async function copyBlockImage(headEl: HTMLElement): Promise<boolean> {
+async function copyPng(render: () => Promise<Blob>): Promise<boolean> {
   if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") return false;
   try {
-    const png = renderBlockPng(headEl);
+    const png = render();
     // Observe rendering failures even if permission is rejected before the browser awaits the blob.
     void png.catch(() => {});
     await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
@@ -74,4 +89,12 @@ export async function copyBlockImage(headEl: HTMLElement): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export function copyBlockImage(headEl: HTMLElement) {
+  return copyPng(() => renderBlockPng(headEl));
+}
+
+export function copyElementImage(element: HTMLElement) {
+  return copyPng(() => renderElementPng(element));
 }

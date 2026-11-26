@@ -1917,6 +1917,7 @@ export function PulseDashboard({
       {warningPayload && <WarningDealsDialog payload={warningPayload} readAt={report.generatedAt} onClose={closeModal} />}
       <DealModal
         payload={warningPayload ? null : isGapDrilldown ? scopedGapDrilldown : payload}
+        compactWonList={isTeam && periodPayload?.presentation === "won"}
         hideCloseSummary={periodPayload?.presentation === "stage-entry"}
         onClose={closeModal}
         initialSummaryDate={modalKey === qOpenModalKey && !periodPayload ? gapInitialMonth : null}

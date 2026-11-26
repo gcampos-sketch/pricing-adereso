@@ -2,7 +2,7 @@ import { ExpandableCellText } from "./ExpandableCellText";
 import { dealOwnerOptions, filterDealsByOwner } from "@/lib/deal-owner-filter";
 import type {ScenarioScope} from '@/lib/quota-scenarios';
 import {ScenarioProjection} from './ScenarioProjection';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Trash2, CheckCircle2, ChevronDown, Pencil, ListChecks, Zap, Search, X, MoreHorizontal, TriangleAlert } from "lucide-react";
 import type { DealDTO, Drilldown, PulseReport } from "@/lib/pulse-types";
 import { adoboScoreComparison, closingProbabilityComparison } from "@/lib/adobo-score-comparison";
@@ -1168,7 +1168,33 @@ function DealActionMenu({name,children}:{name:string;children:React.ReactNode}) 
   </Popover>;
 }
 
+function WonDealAlerts({ deal }: { deal: DealDTO }) {
+  if (!deal.financeAlert && !deal.ssppAlert) return null;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" className="won-list-alert" aria-label={`Alertas de ${deal.name}`}>
+          <TriangleAlert size={14} aria-hidden="true" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="won-list-alert-details"
+        aria-label={`Alertas de ${deal.name}`}
+        align="start"
+        sideOffset={6}
+        focusBackdrop={false}
+        onEscapeKeyDown={event => event.stopPropagation()}
+      >
+        {deal.financeAlert ? <div><strong>Alerta Finanzas</strong><p>{deal.financeAlert}</p></div> : null}
+        {deal.ssppAlert ? <div><strong>Alerta SSPP</strong><p>{deal.ssppAlert}</p></div> : null}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 const WON_OMITTED_COLUMNS = new Set<SortKey>(['probability', 'adobo', 'activities', 'age', 'nextActivity']);
+const COMPACT_WON_COLUMNS = new Set<SortKey>(["name", "owner", "closeDate", "amount", "setup", "stage"]);
 const modalInitialSort = (requested: DealSort | undefined, won: boolean) => initialDealSort(requested).filter(sort => !won || !WON_OMITTED_COLUMNS.has(sort.key));
 
 export function DealModal({
@@ -1186,10 +1212,12 @@ export function DealModal({
   ownerBreakdown,
   ownerQuotas,
   executiveSummary,
+  compactWonList = false,
   hideCloseSummary = false,
   showOwnerFilter = false,
   detailContent,
 }: {
+  compactWonList?: boolean;
   /** Entry-date event lists must not show an unrelated close-date monthly summary. */
   hideCloseSummary?: boolean;
   /** Optional exact-ID owner filter for review lists; does not widen the parent scope. */
@@ -1235,6 +1263,19 @@ export function DealModal({
   const [sort, setSort] = useState<DealSort[]>(() => modalInitialSort(payload?.initialSort as DealSort | undefined, isWonView));
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const inlineSearchId = useId();
+  const inlineSearchButton = useRef<HTMLButtonElement>(null);
+  const inlineSearchInput = useRef<HTMLInputElement>(null);
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    if (compactWonList && inlineSearchInput.current === document.activeElement) {
+      inlineSearchButton.current?.focus();
+    }
+  }, [compactWonList]);
+
+  useLayoutEffect(() => {
+    if (compactWonList && searchOpen) inlineSearchInput.current?.focus({ preventScroll: true });
+  }, [compactWonList, searchOpen]);
   const [summaryDateFilter, setSummaryDateFilter] = useState<string | null>(initialSummaryDate ?? null);
   const [monthFilter, setMonthFilter] = useState<"all" | "this" | "next">("all");
   const [stageFilter, setStageFilter] = useState<string[]>(initialStages ?? []);
@@ -1346,16 +1387,16 @@ export function DealModal({
     if (!visiblePayload) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || event.defaultPrevented || (event.target instanceof Element && event.target.closest("[data-adobo-score-popup], [data-deal-action-popup], [data-won-distribution-popup], [data-scenario-drawer], [data-scenario-confirm]"))) return;
-      if (searchOpen) setSearchOpen(false);
-      else if (openMenu) setOpenMenu(null);
+      if (openMenu) setOpenMenu(null);
       else if (lostDeal) setLostDeal(null);
       else if (taskDeal) setTaskDeal(null);
       else if (noteDeal) setNoteDeal(null);
+      else if (searchOpen) closeSearch();
       else requestClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [visiblePayload, requestClose, noteDeal, taskDeal, lostDeal, searchOpen, openMenu]);
+  }, [visiblePayload, requestClose, noteDeal, taskDeal, lostDeal, searchOpen, openMenu, closeSearch]);
 
 
   /** Lista base con los cambios guardados en HubSpot ya reflejados. */
@@ -1718,7 +1759,10 @@ export function DealModal({
     () => columns.filter(column => (column.key !== "owner" || multipleOwners) && (!isWonView || !WON_OMITTED_COLUMNS.has(column.key))),
     [columns, multipleOwners, isWonView],
   );
-  const visibleColumns = availableColumns;
+  // Keep the header stable as search narrows the team list.
+  const visibleColumns = compactWonList
+    ? columns.filter(column => COMPACT_WON_COLUMNS.has(column.key))
+    : availableColumns;
 
   // Monto por comercial de los deals visibles (solo se muestra en la vista equipo).
   const ownerBars = useMemo(() => {
@@ -1830,7 +1874,7 @@ export function DealModal({
         if (event.target === event.currentTarget) requestClose();
       }}
     >
-      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-won-view={isWonView} data-quota-view={!!selectionQuota && !isWonView} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
+      <section ref={modalRef} className="modal deal-modal-motion" style={motionStyle} data-motion-state={motionState} data-won-view={isWonView} data-compact-won-list={compactWonList} data-quota-view={!!selectionQuota && !isWonView} role="dialog" aria-modal="true" aria-label={visiblePayload.title}>
         <div className="modal-head">
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="deal-modal-intro"><div className="deal-modal-intro-content"><h3 className="pulse-h3">{visiblePayload.title}</h3>
@@ -1858,14 +1902,14 @@ export function DealModal({
                 options={[{ value: '__all', label: 'Todos' }, ...[...new Set(baseDeals.map(deal => deal.owner || 'Sin comercial'))].sort().map(owner => ({ value: owner, label: owner }))]}
                 activeValues={[summaryOwner ?? '__all']} onSelect={owner => { setSummaryOwner(owner === '__all' ? null : owner); setOpenMenu(null); }}
                 open={openMenu === 'won-owner'} onToggle={() => setOpenMenu(openMenu === 'won-owner' ? null : 'won-owner')} /> : null}
-              <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
+              {!compactWonList ? <Popover open={searchOpen} onOpenChange={next=>{setSearchOpen(next);if(next)setOpenMenu(null);}}>
                 <PopoverTrigger asChild><button type="button" className="deal-search-trigger" aria-label="Buscar deals" title={query ? `Buscar deals · filtro: ${query}` : 'Buscar deals'} data-active={!!query}><Search size={16} aria-hidden="true"/></button></PopoverTrigger>
                 <PopoverContent align="start" sideOffset={10} focusBackdrop={false} className="deal-search-popover" onEscapeKeyDown={event=>event.stopPropagation()}>
                   <div className="deal-search-heading"><label htmlFor="deal-list-search">Buscar en el listado</label><button type="button" aria-label="Cerrar búsqueda" onClick={()=>setSearchOpen(false)}><X size={16} aria-hidden="true"/></button></div>
                   <input autoFocus id="deal-list-search" type="search" className="modal-search" placeholder="Deal, comercial, etapa o motivo…" value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();setSearchOpen(false);}if(event.key==='Enter'){event.preventDefault();setSearchOpen(false);}}} aria-label="Buscar en la lista de deals"/>
                   <div className="deal-search-footer"><span>{deals.length} resultados</span>{query ? <button type="button" onClick={()=>setQuery('')}>Limpiar búsqueda</button> : <span>Enter para volver al listado</span>}</div>
                 </PopoverContent>
-              </Popover>
+              </Popover> : null}
               {actIds.size ? (
                 <GlassSelect
                   id="activacion"
@@ -2163,13 +2207,14 @@ export function DealModal({
           </div>
         ) : null}
         <div className="deal-list" role="region" aria-label="Listado de negocios" tabIndex={0} onScroll={handleListScroll}>
-          {deals.length ? (
+          {deals.length || compactWonList ? (
             <div className="deal-table" style={{minWidth: tableMinimum}}>
               <div className="deal-row deal-header" style={{ gridTemplateColumns: gridTemplate }}>
                 <span className="deal-head-cell">
                   <input
                     type="checkbox"
                     checked={allSelected}
+                    disabled={deals.length === 0}
                     onChange={toggleAll}
                     aria-label="Seleccionar todos los deals visibles"
                     title="Seleccionar todos los deals visibles"
@@ -2194,6 +2239,46 @@ export function DealModal({
                       <span className="deal-sort-label">{column.label}</span>
                       {active ? <span className="deal-sort-order" aria-hidden="true">{active.dir === "asc" ? "↑" : "↓"}<span className="deal-sort-priority">{priority + 1}</span></span> : null}
                     </button>
+                    {compactWonList && column.key === "name" ? (
+                      <div className="won-list-search" data-expanded={searchOpen}>
+                        <div className="won-list-search-field">
+                          <input
+                            ref={inlineSearchInput}
+                            id={inlineSearchId}
+                            type="search"
+                            aria-label="Buscar en la lista de deals"
+                            placeholder="Buscar…"
+                            tabIndex={searchOpen ? 0 : -1}
+                            disabled={!searchOpen}
+                            value={query}
+                            onChange={event => setQuery(event.target.value)}
+                            onKeyDown={event => {
+                              if (event.key === "Enter" || event.key === "Escape") {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                closeSearch();
+                              }
+                            }}
+                          />
+                        </div>
+                        <button
+                          ref={inlineSearchButton}
+                          type="button"
+                          className="won-list-search-toggle"
+                          aria-label={searchOpen ? "Contraer búsqueda" : "Buscar deals"}
+                          aria-expanded={searchOpen}
+                          aria-controls={inlineSearchId}
+                          title={query ? `Búsqueda: ${query}` : "Buscar deals"}
+                          data-active={Boolean(query.trim())}
+                          onClick={() => {
+                            if (searchOpen) closeSearch();
+                            else { setOpenMenu(null); setSearchOpen(true); }
+                          }}
+                        >
+                          <Search size={15} aria-hidden="true" />
+                        </button>
+                      </div>
+                    ) : null}
                   </span>;
                 })}
               </div>
@@ -2215,6 +2300,7 @@ export function DealModal({
                       >
                         <strong>{column.render(deal)}</strong>
                         {column.caption(deal) ? <span className="deal-cell-context">{column.caption(deal)}</span> : null}
+                        {compactWonList && column.key === "name" ? <WonDealAlerts deal={deal} /> : null}
                         {column.key === "name" ? (
                           <DealActionMenu name={deal.name}>
                           <div className="deal-actions" role="group" aria-label={`Herramientas de ${deal.name}`}>
@@ -2260,9 +2346,8 @@ export function DealModal({
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="empty-state">No hay deals para este corte.</div>
-          )}
+          ) : null}
+          {!deals.length ? <div className="empty-state">No hay deals para este corte.</div> : null}
         </div>
       </section>
       {noteDeal ? <NoteDialog deals={noteDeal} onClose={() => setNoteDeal(null)} /> : null}

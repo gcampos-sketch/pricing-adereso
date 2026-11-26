@@ -6775,3 +6775,140 @@ button.won-card-mix-chip:focus-visible { outline:2px solid var(--brand); outline
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
+
+/* The team quota-won list keeps its search in the frozen Deal header. */
+.deal-modal-motion[data-compact-won-list="true"] .deal-table {
+  --deal-select-width: 24px;
+  --deal-column-gap: 8px;
+}
+[data-compact-won-list="true"] .deal-row:not(.deal-header) > :is(.deal-cell, .deal-select) {
+  padding-block: 6px;
+}
+[data-compact-won-list="true"] .deal-cell-name .deal-name-link {
+  -webkit-line-clamp: 1;
+}
+[data-compact-won-list="true"] .deal-edit[data-state="idle"]:not(:hover, :focus) {
+  background: transparent;
+  border-color: transparent;
+}
+@media (max-width: 600px) {
+  [data-compact-won-list="true"] .deal-list {
+    padding-inline: 16px;
+    clip-path: inset(0 16px);
+  }
+}
+[data-compact-won-list="true"] .deal-head-name {
+  gap: 4px;
+}
+[data-compact-won-list="true"] .deal-head-name .sort-button {
+  flex: 0 0 auto;
+}
+.won-list-search {
+  display: grid;
+  grid-template-columns: 0fr 26px;
+  align-items: center;
+  width: min(100%, 166px);
+  min-width: 0;
+  transition: grid-template-columns 220ms ease;
+}
+.won-list-search[data-expanded="true"] {
+  grid-template-columns: 1fr 26px;
+}
+.won-list-search-field {
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.won-list-search[data-expanded="true"] .won-list-search-field {
+  opacity: 1;
+}
+.won-list-search-field input {
+  width: 100%;
+  min-width: 0;
+  height: 26px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--glass-track);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 11px;
+}
+.won-list-search-field input:focus-visible {
+  outline: 1px solid var(--brand);
+  outline-offset: -1px;
+}
+.won-list-search-toggle,
+.won-list-alert {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.won-list-search-toggle:is(:hover, :focus-visible, [data-active="true"], [aria-expanded="true"]) {
+  color: var(--brand);
+}
+
+[data-compact-won-list="true"] .deal-cell-owner {
+  padding-inline-start: 6px;
+}
+.won-list-alert {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  color: var(--warn, var(--brand));
+}
+.won-list-alert:is(:hover, :focus-visible, [data-state="open"]) {
+  background: var(--glass-track);
+}
+.won-list-alert-details {
+  display: grid;
+  gap: 10px;
+  width: min(280px, calc(100vw - 24px));
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.won-list-alert-details p {
+  margin: 3px 0 0;
+  color: var(--body);
+}
+
+.won-mix-chart {
+  position: relative;
+}
+.won-mix-chart > .won-widget-copy {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+}
+.won-widget-copy .copy-btn.section-copy-btn {
+  width: 26px;
+  height: 26px;
+  transition: opacity 150ms ease, color 150ms ease;
+}
+.won-widget-copy .copy-btn-icon {
+  width: 14px;
+  height: 14px;
+}
+.won-widget-copy .section-copy-feedback:not(:empty) {
+  max-width: min(190px, 72vw);
+}
+@media (hover: hover) {
+  .won-mix-chart:not(:hover) .won-widget-copy .copy-btn:not(:focus-visible) {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .won-list-search,
+  .won-list-search-field,
+  .won-widget-copy .copy-btn.section-copy-btn {
+    transition: none;
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, LoaderCircle, X } from "lucide-react";
 import { buildDealListClipboard, type CopyableDeal } from "@/lib/deal-list-clipboard";
-import { copyBlockImage, copyText } from "@/lib/snapshot";
+import { copyBlockImage, copyElementImage, copyText } from "@/lib/snapshot";
 
 type State = "idle" | "busy" | "ok" | "fail";
 
@@ -19,30 +19,32 @@ function CopyStateIcon({ state }: { state: State }) {
   return <Copy aria-hidden="true" className="copy-btn-icon" />;
 }
 
-/** Botón que copia la sección completa como imagen al portapapeles. */
-export function CopySectionButton() {
-  const ref = useRef<HTMLButtonElement>(null);
+/** Copia una sección o la figura que contiene el botón. */
+export function CopySectionButton({ widgetLabel }: { widgetLabel?: string } = {}) {
   const [state, setState] = useState<State>("idle");
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const title = widgetLabel ? `Copiar «${widgetLabel}» como imagen` : "Copiar sección como PNG";
   const message = state === "ok" ? "Imagen copiada al portapapeles" : state === "fail" ? "No se pudo copiar. Revisa el permiso del portapapeles." : "";
   return (
-    <span className="section-copy" data-capture-ignore>
+    <span className={widgetLabel ? "section-copy won-widget-copy" : "section-copy"} data-capture-ignore>
       <button
-        ref={ref}
         type="button"
         className="copy-btn section-copy-btn"
         data-state={state}
-        title="Copiar sección como PNG"
-        aria-label="Copiar sección como PNG"
+        title={title}
+        aria-label={title}
         aria-busy={state === "busy"}
         disabled={state === "busy"}
         onClick={async event => {
           event.stopPropagation();
-          const head = ref.current?.closest("[data-section-head]") as HTMLElement | null;
-          if (!head) return;
+          const target = event.currentTarget.closest<HTMLElement>(widgetLabel ? "figure" : "[data-section-head]");
+          if (!target) return;
+          if (timer.current) clearTimeout(timer.current);
           setState("busy");
-          const ok = await copyBlockImage(head).catch(() => false);
+          const ok = await (widgetLabel ? copyElementImage(target) : copyBlockImage(target));
           setState(ok ? "ok" : "fail");
-          setTimeout(() => setState("idle"), ok ? 5000 : 7000);
+          timer.current = setTimeout(() => setState("idle"), ok ? 5000 : 7000);
         }}
       >
         <CopyStateIcon state={state} />
