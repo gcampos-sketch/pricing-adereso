@@ -58,7 +58,9 @@
 .loss-sankey-control { min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
 .loss-sankey-control > span { font-size:10px; color:var(--muted); }
 .loss-sankey-control .tabs { display:flex; max-width:100%; flex-wrap:wrap; }
-.loss-sankey-control .tabs button { min-height:34px; padding:7px 12px; font-size:11px; white-space:normal; }
+.loss-sankey-control .tabs button {
+  min-height:34px; padding:7px 12px; border-radius:var(--radius-pill); font-size:11px; white-space:normal;
+}
 .loss-sankey-control .tabs button[data-active=true] { color:var(--brand-foreground); }
 .loss-sankey-control .tabs:not([data-liquid-active=true]) button[data-active=true] { background:var(--brand); }
 
