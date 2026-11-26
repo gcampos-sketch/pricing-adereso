@@ -110,16 +110,18 @@ test('a new quote starts with every available inbound channel unselected', () =>
   pricing.renderOpts();
   const inbound = [...channels.innerHTML.matchAll(/data-chan="([^"]+)" aria-pressed="([^"]+)"/g)];
   expect(inbound.map(match => match[1])).toEqual([
-    'whatsapp', 'x', 'webchat', 'correo', 'instagram', 'facebook', 'linkedin', 'tiktok', 'app_store', 'google_play',
+    'whatsapp', 'webchat', 'instagram', 'facebook', 'correo', 'linkedin', 'x', 'tiktok', 'app_store', 'google_play',
   ]);
   expect(inbound.every(match => match[2] === 'false')).toBe(true);
 });
 
-test('the whole outbound section appears only while Engage is active', () => {
+test('outbound channels remain disabled until Engage is active', () => {
   const { state, pricing, channels } = calculator();
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('data-chan="correo"');
-  expect(channels.innerHTML).not.toContain('Canales de salida');
+  expect(channels.innerHTML).toContain('Canales de salida');
+  expect(channels.innerHTML).toContain('Requiere Engage');
+  expect(channels.innerHTML).not.toContain('data-out=');
   state.engage = true;
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('Canales de salida');
@@ -127,7 +129,9 @@ test('the whole outbound section appears only while Engage is active', () => {
   expect(channels.innerHTML).toContain('data-out="wacall"');
   state.engage = false;
   pricing.renderOpts();
-  expect(channels.innerHTML).not.toContain('Canales de salida');
+  expect(channels.innerHTML).toContain('Canales de salida');
+  expect(channels.innerHTML).toContain('Requiere Engage');
+  expect(channels.innerHTML).not.toContain('data-out=');
   expect(channels.innerHTML).not.toContain('data-out=');
 });
 
@@ -152,8 +156,8 @@ test('existing customers can add outbound packs using contracted Desk and Studio
   const { state, pricing, channels } = calculator();
   Object.assign(state, { existing: true, desk: false, studio: false, engage: true });
   pricing.renderOpts();
-  expect(channels.innerHTML).toContain('Bolsa de llamadas por WhatsApp');
-  expect(channels.innerHTML).toContain('Bolsa de correo masivo');
+  expect(channels.innerHTML).toContain('WhatsApp Call');
+  expect(channels.innerHTML).toContain('Correo masivo');
   expect(channels.innerHTML).toContain('1.000 gratis/mes');
   expect(channels.innerHTML).not.toContain('Canales de entrada');
 
@@ -215,3 +219,5 @@ test('a voice upgrade credits only the selected voice pack, even when both are q
   state.voiceUpgrades['voice-human'].active = false;
   expect(pricing.outboundMonthly()).toBe(2186);
 });
+
+ test('communication mode keeps text and voice groups distinct without enabling unavailable voice',()=>{const {state,pricing,channels}=calculator();state.engage=true;state.communicationMode='text';pricing.renderOpts();expect(channels.innerHTML).toContain('data-out="correo"');expect(channels.innerHTML).not.toContain('data-out="wacall"');state.communicationMode='voice';pricing.renderOpts();expect(channels.innerHTML).toContain('data-out="wacall"');expect(channels.innerHTML).not.toContain('data-chan=');expect(channels.innerHTML).not.toContain('data-out="correo"');expect(channels.innerHTML).toContain('No disponible');state.communicationMode='both';pricing.renderOpts();expect(channels.innerHTML).toContain('data-out="wacall"');expect(channels.innerHTML).toContain('data-chan="correo"');});
