@@ -74,3 +74,22 @@ describe('pipeline analysis', () => {
     expect(graph.columns[2]?.nodes.at(-1)?.members).toHaveLength(4);
   });
 });
+
+test('keeps ads with the same Creative Analytics name separate and filters the exact route', () => {
+  const creative = { name: 'Automatización', format: 'Video' };
+  const deals = [
+    deal('1', { adId: '12312312345678901', creative, entries: { '173990327': '2026-03-02T12:00:00Z' } }),
+    deal('2', { adId: '12312312345678902', creative }),
+    deal('3', { adId: null }),
+  ];
+  const columns = pipelineColumns('Inbound', 'summary');
+  const graph = layoutPipelineFlow(deals, columns);
+  const sameName = graph.columns[0]!.nodes.filter(node => node.name === creative.name);
+  expect(sameName.map(node => [node.key, node.detail])).toEqual([
+    ['Anuncio Meta 12312312345678901', 'Video'], ['Anuncio Meta 12312312345678902', 'Video'],
+  ]);
+  const selected = new Set(sameName[0]!.members.map(row => row.id));
+  const route = layoutPipelineFlow(deals.filter(row => selected.has(row.id)), columns);
+  expect(route.links.every(link => link.members.length === 1 && link.members[0]?.id === '1')).toBe(true);
+  expect(route.columns.find(column => column.title === 'E8 Servicio iniciado')?.nodes[0]?.name).toBe('E8 Servicio iniciado');
+});

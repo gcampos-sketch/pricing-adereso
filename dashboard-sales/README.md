@@ -84,3 +84,15 @@ modo lectura y verifica su reconstrucción exacta; su resultado privado queda en
 `bun --env-file=.env.local scripts/publish-commercial-evidence.ts /ruta/privada` compila y valida las fuentes revisadas; `--publish` inserta la edición privada en `report_cache`, comprueba la escritura exacta y conserva las anteriores. Nunca incluir ese directorio ni su contenido en Git o Docker. La fecha original de captura permanece visible; las actividades sin deal comercial y los cuerpos de Calendar/Memory no se publican. La cobertura parcial y los cruces pendientes no se convierten en ausencia de reuniones ni evaluaciones resueltas. El reporte de Coaching v3 separa el estado actual de HubSpot del histórico corroborado, sin crear eventos al leer.
 
 La publicación de una edición no configura sincronización automática. La conexión nativa de Diio requiere sus credenciales de servidor y la de Calendar una autorización de servidor propia. No extraer credenciales de conectores ni reutilizar el permiso de Gmail. La edición publicada y verificada se conserva cuando una fuente está bloqueada; una nueva edición solo se anuncia después de validar y leer la escritura.
+
+### Metadata de Creative Analytics para Análisis de pipeline
+
+`PIPELINE_CREATIVE_CATALOG_JSON` admite un catálogo privado de objetos con los
+campos `id`, `name` y `format` de `meta.ads` de Creative Analytics. El ID de Meta
+se conserva como texto. El propietario del catálogo debe proporcionar esos tres
+campos, sin el resto del lote ni sus datos de CRM. Un formato vacío queda sin
+verificar. Configura el catálogo exclusivamente en el entorno del servidor de
+Dashboard Sales. El Hub consulta HubSpot para las conversiones y cruza únicamente
+por ID exacto. La carga del catálogo es manual y se debe actualizar al cambiar el
+inventario. Si falta, no valida o no contiene un ID, el Sankey conserva el negocio
+y muestra su ID cuando está disponible. Nunca versionar archivos del catálogo.

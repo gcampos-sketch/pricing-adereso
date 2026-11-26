@@ -43,6 +43,7 @@ export const isProspectingCandidate = (deal: Pick<PipelineDeal, 'motion' | 'sour
 
 export type RouteDetail = 'summary' | 'sdr' | 'sales' | 'activation';
 
+export type CreativeMetadata = { name: string; format: string };
 export type PipelineDeal = {
   id: string;
   name: string;
@@ -59,9 +60,10 @@ export type PipelineDeal = {
   role: string;
   campaign: string;
   adId: string | null;
+  creative?: CreativeMetadata;
   contactRead: boolean;
 };
-export type PipelineReport = { deals: PipelineDeal[]; readAt: string; undated: number };
+export type PipelineReport = { deals: PipelineDeal[]; readAt: string; undated: number; creativeCatalogStatus?: 'missing' | 'ready' | 'invalid' };
 
 export function nativeTime(value: string | null | undefined) {
   if (!value?.trim()) return NaN;
@@ -122,11 +124,13 @@ export function currentOutcome(deal: PipelineDeal) {
   return deal.stage === '1300101811' ? 'Lead perdido' : 'En SDR';
 }
 
-export const adLabel = (deal: PipelineDeal) => deal.adId ? `Anuncio Meta ${deal.adId}` : deal.contactRead ? 'Sin anuncio rastreado' : 'Lectura pendiente';
+export const adKey = (deal: PipelineDeal) => deal.adId ? `Anuncio Meta ${deal.adId}` : deal.contactRead ? 'Sin anuncio rastreado' : 'Lectura pendiente';
+export const adLabel = (deal: PipelineDeal) => deal.creative?.name || adKey(deal);
+export const creativeFormat = (deal: PipelineDeal) => deal.creative?.format || (deal.adId ? 'Formato sin verificar' : 'Sin anuncio identificado');
 export const meetingBooked = (deal: PipelineDeal) => hasStage(deal, '1025498163') || hasStage(deal, '1300101808');
 export const meetingHeld = (deal: PipelineDeal) => hasStage(deal, '1300101810') || hasStage(deal, '171385863');
 export const reachedCommercial = (deal: PipelineDeal) => deal.commercial || Object.keys(SALES_STAGES).some(id => hasStage(deal, id as StageId));
-export type FlowColumn = { title: string; value: (deal: PipelineDeal) => string; limit?: number };
+export type FlowColumn = { title: string; value: (deal: PipelineDeal) => string; label?: (deal: PipelineDeal) => string; detail?: (deal: PipelineDeal) => string; limit?: number };
 
 const stageColumn = (id: StageId): FlowColumn => ({
   title: STAGES[id], value: deal => hasStage(deal, id) ? STAGES[id] : 'Sin registro',
@@ -137,7 +141,7 @@ const labeledColumn = (title: string, test: (deal: PipelineDeal) => boolean): Fl
 export function pipelineColumns(view: View, detail: RouteDetail): FlowColumn[] {
   const industry = { title: 'Industria', value: (deal: PipelineDeal) => deal.industry, limit: 8 };
   const entry = view === 'Inbound'
-    ? [{ title: 'Anuncio rastreado', value: adLabel, limit: 8 }, industry]
+    ? [{ title: 'Anuncio rastreado', value: adKey, label: adLabel, detail: creativeFormat, limit: 8 }, industry]
     : view === 'Outbound'
       ? [industry, { title: 'Rol del contacto', value: (deal: PipelineDeal) => deal.role, limit: 8 },
         { title: 'Clasificación', value: (deal: PipelineDeal) => isProspectingCandidate(deal) ? 'Prospección SDR sin clasificar' : deal.motion }]
@@ -161,7 +165,7 @@ export function pipelineColumns(view: View, detail: RouteDetail): FlowColumn[] {
     stageColumn('1278792585'), stageColumn('1086544542'), stageColumn('173990327'), outcome];
 }
 
-export type FlowNode = { name: string; members: PipelineDeal[]; y: number; height: number; out: number; in: number };
+export type FlowNode = { key: string; name: string; detail?: string; members: PipelineDeal[]; y: number; height: number; out: number; in: number };
 export function layoutPipelineFlow(deals: PipelineDeal[], definitions: FlowColumn[]) {
   const columns = definitions.map(definition => {
     const buckets = new Map<string, PipelineDeal[]>();
@@ -173,14 +177,18 @@ export function layoutPipelineFlow(deals: PipelineDeal[], definitions: FlowColum
       buckets.set(value, members);
     }
     const groups = [...buckets].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'es'));
-    const nodes: FlowNode[] = groups.slice(0, definition.limit).map(([name, members]) => ({ name, members, y: 0, height: 0, out: 0, in: 0 }));
+    const nodes: FlowNode[] = groups.slice(0, definition.limit).map(([key, members]) => {
+      const deal = members[0]!;
+      return { key, name: definition.label?.(deal) ?? key, ...(definition.detail ? { detail: definition.detail(deal) } : {}),
+        members, y: 0, height: 0, out: 0, in: 0 };
+    });
     const remainder = definition.limit === undefined ? [] : groups.slice(definition.limit);
-    if (remainder.length) nodes.push({ name: `Otros valores (${remainder.length})`, members: remainder.flatMap(([, members]) => members), y: 0, height: 0, out: 0, in: 0 });
+    if (remainder.length) nodes.push({ key: JSON.stringify(remainder.map(([key]) => key)), name: `Otros valores (${remainder.length})`, members: remainder.flatMap(([, members]) => members), y: 0, height: 0, out: 0, in: 0 });
     for (const node of nodes) for (const member of node.members) index.set(member.id, node);
     return { title: definition.title, nodes, index };
   });
   const scale = 220 / Math.max(deals.length, 1);
-  const gap = 36;
+  const gap = definitions.some(column => column.detail) ? 50 : 36;
   const height = 268 + gap * Math.max(0, ...columns.map(column => column.nodes.length - 1));
   for (const column of columns) {
     let y = (height - 220 - gap * (column.nodes.length - 1)) / 2;

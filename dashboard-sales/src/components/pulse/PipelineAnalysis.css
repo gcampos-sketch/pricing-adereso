@@ -47,3 +47,8 @@
 .pipeline-analysis-row:hover { text-decoration: underline; }
 .pipeline-analysis-dialog { width: min(94vw, 980px); max-width: none; max-height: 83dvh; grid-template-rows: auto auto minmax(0, 1fr); }
 .pipeline-analysis-dialog .pipeline-analysis-table td, .pipeline-analysis-dialog .pipeline-analysis-table th { text-align: left; }
+.pipeline-analysis-route {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 10px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font-size: .82rem;
+}
+.pipeline-analysis-route span { color: var(--muted-foreground); }

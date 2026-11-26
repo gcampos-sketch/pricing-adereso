@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { getPipelineAnalysis } from '@/lib/pipeline-analysis.functions';
 import {
-  STAGES, adLabel, hasStage, isProspectingCandidate, layoutPipelineFlow, meetingBooked, meetingHeld, pipelineColumns,
+  STAGES, adKey, adLabel, creativeFormat, hasStage, isProspectingCandidate, layoutPipelineFlow, meetingBooked, meetingHeld, pipelineColumns,
   reachedCommercial, serviceToChurn, wasInService, wasLost, wasWon,
   type PipelineDeal, type PipelineReport, type RouteDetail, type StageId, type View,
 } from '@/lib/pipeline-analysis';
@@ -38,7 +38,8 @@ function options(deals: PipelineDeal[], value: (deal: PipelineDeal) => string) {
 
 const breakdowns = {
   industry: ['Industria', (deal: PipelineDeal) => deal.industry],
-  ad: ['Anuncio rastreado', adLabel],
+  ad: ['Anuncio rastreado', adKey],
+  format: ['Tipo de creativo', creativeFormat],
   campaign: ['Campaña', (deal: PipelineDeal) => deal.campaign],
   role: ['Rol del contacto', (deal: PipelineDeal) => deal.role],
   type: ['Tipo de deal', (deal: PipelineDeal) => deal.dealType],
@@ -47,6 +48,7 @@ const breakdowns = {
 type Breakdown = keyof typeof breakdowns;
 const segmentNames: Record<string, string> = { inbound: 'Inbound', outbound: 'Outbound', upsell: 'Upsell', crossSell: 'Cross sell' };
 const metrics = [
+  ['Deals', () => true],
   ['Agendadas', meetingBooked], ['Concretadas', meetingHeld], ['En Comercial', reachedCommercial],
   ['Valorizados E4', (deal: PipelineDeal) => hasStage(deal, '171385866')], ['Ganados', wasWon], ['Perdidos', wasLost],
   ['Llegaron a E8', wasInService], ['En servicio hoy', (deal: PipelineDeal) => deal.stage === '173990327'], ['Churn tras E8', serviceToChurn],
@@ -61,6 +63,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const [industry, setIndustry] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<Breakdown>('industry');
   const [focus, setFocus] = useState<string | null>(null);
+  const [origin, setOrigin] = useState<{ label: string; ids: Set<string> } | null>(null);
   const [drill, setDrill] = useState<Drill | null>(null);
   const returnFocus = useRef<Element | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -75,7 +78,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const industries = useMemo(() => options(bySource, deal => deal.industry), [bySource]);
   const scoped = useMemo(() => bySource.filter(deal => industry === null || deal.industry === industry), [bySource, industry]);
   const [groupLabel, groupBy] = breakdowns[breakdown];
-  const deals = useMemo(() => scoped.filter(deal => focus === null || groupBy(deal) === focus), [scoped, focus, groupBy]);
+  const deals = useMemo(() => scoped.filter(deal => (focus === null || groupBy(deal) === focus) && (!origin || origin.ids.has(deal.id))), [scoped, focus, groupBy, origin]);
   const graph = useMemo(() => layoutPipelineFlow(deals, pipelineColumns(view, route)), [deals, view, route]);
   const buckets = useMemo(() => {
     const groups = new Map<string, PipelineDeal[]>();
@@ -86,13 +89,16 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
       groups.set(name, rows);
     }
     const index = metrics.findIndex(([name]) => name === rankMetric);
-    return [...groups].map(([name, rows]) => {
+    return [...groups].map(([key, rows]) => {
+      const first = rows[0]!;
+      const name = breakdown === 'ad' ? adLabel(first) : key;
+      const detail = breakdown === 'ad' && first.adId ? [creativeFormat(first), first.creative ? first.adId : ''].filter(Boolean).join(' · ') : '';
       const counts = metrics.map(([, test]) => rows.filter(test).length);
       const rankCount = counts[index] ?? 0;
-      return { name, rows, counts, rankCount, rate: rankCount / rows.length };
+      return { key, name, detail, rows, counts, rankCount, rate: rankCount / rows.length };
     }).sort((a, b) => (rankByRate ? b.rate - a.rate : b.rankCount - a.rankCount) ||
       b.rows.length - a.rows.length || a.name.localeCompare(b.name, 'es'));
-  }, [scoped, groupBy, rankMetric, rankByRate]);
+  }, [scoped, breakdown, groupBy, rankMetric, rankByRate]);
 
   function open(title: string, members: PipelineDeal[], trigger: Element) {
     returnFocus.current = trigger;
@@ -102,13 +108,18 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const contactRead = deals.filter(deal => deal.contactRead).length;
   const unconfirmed = deals.filter(isProspectingCandidate).length;
   const ads = deals.filter(deal => deal.adId).length;
-  const width = graph.columns.length * 164;
-  const resetGroup = () => { setFocus(null); setExpanded(false); };
+  const enrichedAds = deals.filter(deal => deal.creative).length;
+  const firstWidth = view === 'Inbound' ? 232 : 164;
+  const width = firstWidth + (graph.columns.length - 1) * 164;
+  const columnX = (index: number) => index === 0 ? 0 : firstWidth + (index - 1) * 164;
+  const activeLabel = origin?.label ?? (focus && (buckets.find(row => row.key === focus)?.name ?? focus));
+  const clearRoute = () => { setFocus(null); setOrigin(null); };
+  const resetGroup = () => { clearRoute(); setExpanded(false); };
   return <section className="pipeline-analysis" aria-label="Sankey de pipeline comercial">
     <div className="pipeline-analysis-controls">
       <div className="tabs" role="group" aria-label="Origen de adquisición">
         {views.map(([key, label]) => <button type="button" className="tab" key={key} aria-pressed={view === key} data-active={view === key}
-          onClick={() => { setView(key); setSource(null); setIndustry(null); setBreakdown(key === 'Inbound' ? 'ad' : 'industry'); resetGroup(); }}>{label}</button>)}
+          onClick={() => { setView(key); setSource(null); setIndustry(null); setBreakdown(key === 'Inbound' ? 'ad' : 'industry'); setRankMetric(key === 'Inbound' ? 'Deals' : 'Ganados'); setRankByRate(false); resetGroup(); }}>{label}</button>)}
       </div>
       <div className="pipeline-analysis-filters">
         <label>Fuente de creación<select value={source === null ? '' : `source:${source}`} onChange={event => {
@@ -123,26 +134,32 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
     </div>
     <div className="pipeline-analysis-meta">
       <span>{rangeLabel} por fecha de creación · {number.format(deals.length)} deals · {formatDate.format(new Date(report.readAt))}</span>
-      {focus && <button type="button" className="tab" onClick={() => setFocus(null)}>Quitar filtro «{focus}»</button>}
+
       {view === 'Inbound' && <a href={creativeUrl} target="_blank" rel="noreferrer">Biblioteca de Creative Analytics ↗</a>}
     </div>
+    {activeLabel && <div className="pipeline-analysis-route" aria-live="polite">
+      <strong>Ruta de {activeLabel}</strong>
+      <span>{number.format(deals.length)} deals · {number.format(deals.filter(wasWon).length)} ganados · {number.format(deals.filter(wasInService).length)} llegaron a E8</span>
+      <button type="button" className="tab" onClick={event => open(`Ruta de ${activeLabel}`, deals, event.currentTarget)}>Ver deals de esta ruta</button>
+      <button type="button" className="tab" onClick={clearRoute}>Quitar filtro de ruta</button>
+    </div>}
     {view === 'Outbound' && <label className="pipeline-analysis-note">
       <input type="checkbox" checked={includeProspecting} onChange={event => {
         setIncludeProspecting(event.target.checked); setSource(null); setIndustry(null); resetGroup();
       }} /> Incluir prospección SDR sin clasificar{unconfirmed > 0 && ` · ${number.format(unconfirmed)} deals en esta vista`}
     </label>}
     {deals.length > 0 ? <>
-      <p className="pipeline-analysis-note">El ancho representa cantidad de deals. Cada columna muestra evidencia registrada del hito. Pulsa cualquier bloque o conexión para ver sus deals.</p>
+      <p className="pipeline-analysis-note">El ancho representa cantidad de deals. Cada columna muestra evidencia registrada del hito. Pulsa un bloque de origen para aislar su ruta completa. Las conexiones y los demás bloques abren el detalle de deals.</p>
       <div className="pipeline-analysis-scroll" role="region" tabIndex={0} aria-label="Sankey desplazable horizontalmente">
         <div style={{ minWidth: width }}>
-          <div className="pipeline-analysis-columns" style={{ gridTemplateColumns: `repeat(${graph.columns.length}, minmax(0, 1fr))` }}>
+          <div className="pipeline-analysis-columns" style={{ gridTemplateColumns: `${firstWidth}px repeat(${graph.columns.length - 1}, minmax(0, 1fr))` }}>
             {graph.columns.map(column => <span key={column.title}>{column.title}</span>)}
           </div>
           <svg viewBox={`0 0 ${width} ${graph.height}`} width="100%" style={{ display: 'block' }} aria-label="Flujos por hitos">
             {graph.links.map(({ depth, source: start, target, width: thickness, y1, y2, members }) => {
-              const x1 = depth * 164 + 24, x2 = x1 + 151, mid = (x1 + x2) / 2;
+              const x1 = columnX(depth) + 24, x2 = columnX(depth + 1) + 11, mid = (x1 + x2) / 2;
               const title = `${start.name} → ${target.name}`;
-              return <path key={JSON.stringify([depth, start.name, target.name])} className="pipeline-analysis-link" role="button" tabIndex={0}
+              return <path key={JSON.stringify([depth, start.key, target.key])} className="pipeline-analysis-link" role="button" tabIndex={0}
                 data-muted={start.name === 'Sin registro' || target.name === 'Sin registro'}
                 aria-label={`${title} · ${members.length} deals`}
                 d={`M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2} L${x2},${y2 + thickness} C${mid},${y2 + thickness} ${mid},${y1 + thickness} ${x1},${y1 + thickness} Z`}
@@ -151,19 +168,30 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
               </path>;
             })}
             {graph.columns.flatMap((column, index) => column.nodes.map(node => {
-              const x = index * 164 + 11;
+              const x = columnX(index) + 11;
               const y = node.y + node.height / 2;
               const title = `${column.title} · ${node.name}`;
+              const isOrigin = index === 0;
+              const isAd = view === 'Inbound' && isOrigin;
               const display = node.name.startsWith('Anuncio Meta ') ? node.name.slice('Anuncio Meta '.length) : node.name;
-              const label = display.length > 21 ? `${display.slice(0, 20)}…` : display;
-              return <g key={JSON.stringify([index, node.name])} className="pipeline-analysis-node" role="button" tabIndex={0}
-                data-muted={node.name === 'Sin registro'} aria-label={`${title} · ${node.members.length} deals`}
-                onClick={event => open(title, node.members, event.currentTarget)} onKeyDown={event => activate(event, () => open(title, node.members, event.currentTarget))}>
-                <title>{title} · {node.members.length} deals</title>
-                <rect x={x + 13} y={y - 17} width={136} height={34} rx="4" className="pipeline-analysis-label-bg" />
+              const max = isAd ? 32 : 21;
+              const label = display.length > max ? `${display.slice(0, max - 1)}…` : display;
+              const detail = node.detail && (node.detail.length > 25 ? `${node.detail.slice(0, 24)}…` : node.detail);
+              const action = (trigger: Element) => {
+                if (isOrigin) {
+                  setOrigin({ label: isAd && node.key !== node.name && node.key.startsWith('Anuncio Meta ') ? `${node.name} · ${node.key.slice(13)}` : node.name, ids: new Set(node.members.map(deal => deal.id)) });
+                  setRoute('summary');
+                } else open(title, node.members, trigger);
+              };
+              return <g key={JSON.stringify([index, node.key])} className="pipeline-analysis-node" role="button" tabIndex={0}
+                data-muted={node.name === 'Sin registro'} aria-label={`${isOrigin ? 'Ver ruta completa de ' : ''}${title}${node.detail ? ` · ${node.detail}` : ''} · ${node.members.length} deals`}
+                onClick={event => action(event.currentTarget)} onKeyDown={event => activate(event, () => action(event.currentTarget))}>
+                <title>{title}{node.detail && ` · ${node.detail}`}{isAd && node.key !== node.name && ` · ${node.key}`} · {node.members.length} deals</title>
+                <rect x={x + 13} y={y - (detail ? 22 : 17)} width={isAd ? 204 : 136} height={detail ? 44 : 34} rx="4" className="pipeline-analysis-label-bg" />
                 <rect x={x} y={node.y} width={13} height={Math.max(1, node.height)} rx="2" />
-                <text x={x + 19} y={y - 2}>{label}</text>
-                <text x={x + 19} y={y + 12} className="pipeline-analysis-count">{number.format(node.members.length)}</text>
+                <text x={x + 19} y={y - (detail ? 9 : 2)}>{label}</text>
+                {detail && <text x={x + 19} y={y + 4} className="pipeline-analysis-count">{detail}</text>}
+                <text x={x + 19} y={y + (detail ? 17 : 12)} className="pipeline-analysis-count">{number.format(node.members.length)}</text>
               </g>;
             }))}
           </svg>
@@ -172,6 +200,9 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
       <p className="pipeline-analysis-note">
         {contactRead < deals.length && `${number.format(deals.length - contactRead)} deals con lectura de contactos pendiente. `}
         {view === 'Inbound' && `${number.format(ads)}/${number.format(deals.length)} con ID de anuncio rastreado antes de su creación. `}
+        {view === 'Inbound' && ads > 0 && (report.creativeCatalogStatus === 'ready'
+          ? `${number.format(enrichedAds)}/${number.format(ads)} deals con anuncio cruzado con Creative Analytics. `
+          : 'Catálogo de Creative Analytics pendiente. Los anuncios rastreados se muestran por ID. ')}
         {report.undated > 0 && `${number.format(report.undated)} deals fuera de la cohorte por fecha de creación ausente o inválida.`}
       </p>
     </> : <p className="empty-state">No hay deals para estos filtros.{report.undated > 0 && ` Hay ${report.undated} registros con fecha de creación sin verificar en el alcance seleccionado.`}</p>}
@@ -180,24 +211,26 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
       <h3 className="pulse-h2">Conversión por segmento</h3>
       <div className="pipeline-analysis-filters">
         <label>Comparar por<select value={breakdown} onChange={event => { setBreakdown(event.target.value as Breakdown); resetGroup(); }}>
-          {Object.entries(breakdowns).map(([key, [label]]) => <option key={key} value={key}>{label}</option>)}</select></label>
-        <label>Ordenar por<select value={rankMetric} onChange={event => setRankMetric(event.target.value as typeof rankMetric)}>
+          {Object.entries(breakdowns).filter(([key]) => view === 'Inbound' || key !== 'format').map(([key, [label]]) => <option key={key} value={key}>{label}</option>)}</select></label>
+        <label>Ordenar por<select value={rankMetric} onChange={event => { const metric = event.target.value as typeof rankMetric; setRankMetric(metric); if (metric === 'Deals') setRankByRate(false); }}>
           {metrics.map(([label]) => <option key={label}>{label}</option>)}</select></label>
-        <label>Medida<select value={rankByRate ? 'rate' : 'count'} onChange={event => setRankByRate(event.target.value === 'rate')}>
+        <label>Medida<select disabled={rankMetric === 'Deals'} value={rankByRate ? 'rate' : 'count'} onChange={event => setRankByRate(event.target.value === 'rate')}>
           <option value="count">Cantidad</option><option value="rate">Porcentaje de la cohorte</option>
         </select></label>
       </div>
       {!!buckets.length && <div className="pipeline-analysis-scroll" tabIndex={0} role="region" aria-label="Tabla de conversión desplazable horizontalmente">
         <table className="pipeline-analysis-table">
-          <thead><tr><th scope="col">{groupLabel}</th><th scope="col">Deals</th>{metrics.map(([name]) => <th scope="col" key={name}>{name}</th>)}</tr></thead>
-          <tbody>{buckets.slice(0, expanded ? undefined : 10).map(({ name, rows, counts }) => <tr key={name} data-active={focus === name}>
-            <th scope="row"><button className="pipeline-analysis-row" type="button" aria-pressed={focus === name} onClick={() => setFocus(focus === name ? null : name)}>{name}</button></th>
+          <thead><tr><th scope="col">{groupLabel}</th><th scope="col">Deals</th>{metrics.slice(1).map(([name]) => <th scope="col" key={name}>{name}</th>)}</tr></thead>
+          <tbody>{buckets.slice(0, expanded ? undefined : 10).map(({ key, name, detail, rows, counts }) => <tr key={key} data-active={focus === key}>
+            <th scope="row"><button className="pipeline-analysis-row" type="button" aria-pressed={focus === key} onClick={() => { setOrigin(null); setFocus(focus === key ? null : key); setRoute('summary'); }}>{name}</button>{detail && <small>{detail}</small>}</th>
             <td><button className="pipeline-analysis-row" type="button" onClick={event => open(name, rows, event.currentTarget)}>{number.format(rows.length)}</button></td>
-            {metrics.map(([label, test], index) => <td key={label}>
-              {counts[index] ? <button className="pipeline-analysis-row" type="button" aria-label={`${name} · ${label} · ${counts[index]} deals`} onClick={event => open(`${name} · ${label}`, rows.filter(test), event.currentTarget)}>
-                {number.format(counts[index])} <small>{percent.format(counts[index] / rows.length)}</small>
-              </button> : '0'}
-            </td>)}
+            {metrics.slice(1).map(([label, test], index) => {
+              const count = counts[index + 1] ?? 0;
+              return <td key={label}>{count ? <button className="pipeline-analysis-row" type="button" aria-label={`${name} · ${label} · ${count} deals`}
+                onClick={event => open(`${name} · ${label}`, rows.filter(test), event.currentTarget)}>
+                {number.format(count)} <small>{percent.format(count / rows.length)}</small>
+              </button> : '0'}</td>;
+            })}
           </tr>)}</tbody>
         </table>
       </div>}
@@ -205,7 +238,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
       <details><summary>Cómo se calculan las conversiones</summary>
         <p>Los porcentajes usan todos los deals de la fila como base, incluidos los abiertos. Selecciona el nombre del grupo para seguir su recorrido en el Sankey.</p>
         <p>Se cuenta un deal por ID. El período usa la creación del deal. Las etapas usan su última entrada registrada o su etapa actual. Un deal puede tener un ganado histórico y una pérdida posterior. Churn tras E8 requiere ambas fechas en ese orden y Churn como etapa actual.</p>
-        <p>En inbound el anuncio se identifica por el ID de Meta del primer enlace rastreado del contacto asociado, con visita anterior o igual a la creación del deal. La biblioteca de Creative Analytics ofrece los nombres y creativos. En outbound el rol usa las etiquetas deal-contacto, con prioridad para los contactos marcados como Key Contact. La fuente Prospección SDR permite explorar negocios sin clasificación confirmada y conserva su etiqueta en el recorrido.</p>
+        <p>En inbound el anuncio se identifica por el ID de Meta del primer enlace rastreado del contacto asociado, con visita anterior o igual a la creación del deal. El nombre y el tipo se cruzan por ID exacto con el catálogo privado de Creative Analytics cuando está disponible. En outbound el rol usa las etiquetas deal-contacto, con prioridad para los contactos marcados como Key Contact. La fuente Prospección SDR permite explorar negocios sin clasificación confirmada y conserva su etiqueta en el recorrido.</p>
       </details>
     </div>
 
@@ -222,7 +255,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
             <tbody>{drill.deals.map(deal => <tr key={deal.id}>
               <th scope="row"><a href={`https://app.hubspot.com/contacts/23480943/record/0-3/${deal.id}?utm_source=hub_comercial&utm_medium=pipeline_analysis`} target="_blank" rel="noreferrer">{deal.name} ↗</a></th>
               <td>{deal.industry}</td><td>{deal.sourceLabel}</td><td>{STAGES[deal.stage as StageId] ?? 'Etapa sin clasificar'}</td>
-              <td>{deal.dealType}</td><td>{deal.motion === 'Inbound' ? adLabel(deal) : deal.role}</td>
+              <td>{deal.dealType}</td><td>{deal.motion === 'Inbound' ? adLabel(deal) : deal.role}{deal.creative && <small>{creativeFormat(deal)} · {deal.adId}</small>}</td>
             </tr>)}</tbody>
           </table>
         </div>
