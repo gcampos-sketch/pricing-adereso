@@ -10,7 +10,7 @@ import {
 import type { RoleFilter } from '@/lib/owner-roles';
 import './PipelineAnalysis.css';
 
-const creativeUrl = 'https://adereso-creative-analytics.adereso-grow-6775.chatgpt.site/';
+const hubSpotAdsUrl = 'https://app.hubspot.com/ads/23480943/';
 const number = new Intl.NumberFormat('es-CL');
 const percent = new Intl.NumberFormat('es-CL', { style: 'percent', maximumFractionDigits: 1 });
 const formatDate = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Coyhaique', dateStyle: 'medium', timeStyle: 'short' });
@@ -109,6 +109,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const unconfirmed = deals.filter(isProspectingCandidate).length;
   const ads = deals.filter(deal => deal.adId).length;
   const enrichedAds = deals.filter(deal => deal.creative).length;
+  const verifiedFormats = deals.filter(deal => deal.creative?.format).length;
   const firstWidth = view === 'Inbound' ? 232 : 164;
   const width = firstWidth + (graph.columns.length - 1) * 164;
   const columnX = (index: number) => index === 0 ? 0 : firstWidth + (index - 1) * 164;
@@ -135,7 +136,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
     <div className="pipeline-analysis-meta">
       <span>{rangeLabel} por fecha de creación · {number.format(deals.length)} deals · {formatDate.format(new Date(report.readAt))}</span>
 
-      {view === 'Inbound' && <a href={creativeUrl} target="_blank" rel="noreferrer">Biblioteca de Creative Analytics ↗</a>}
+      {view === 'Inbound' && <a href={hubSpotAdsUrl} target="_blank" rel="noreferrer">Anuncios en HubSpot ↗</a>}
     </div>
     {activeLabel && <div className="pipeline-analysis-route" aria-live="polite">
       <strong>Ruta de {activeLabel}</strong>
@@ -201,8 +202,8 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
         {contactRead < deals.length && `${number.format(deals.length - contactRead)} deals con lectura de contactos pendiente. `}
         {view === 'Inbound' && `${number.format(ads)}/${number.format(deals.length)} con ID de anuncio rastreado antes de su creación. `}
         {view === 'Inbound' && ads > 0 && (report.creativeCatalogStatus === 'ready'
-          ? `${number.format(enrichedAds)}/${number.format(ads)} deals con anuncio cruzado con Creative Analytics. `
-          : 'Catálogo de Creative Analytics pendiente. Los anuncios rastreados se muestran por ID. ')}
+          ? `${number.format(enrichedAds)}/${number.format(ads)} deals con nombre de anuncio. ${number.format(verifiedFormats)}/${number.format(ads)} con formato verificado. `
+          : 'Catálogo de anuncios pendiente. Los anuncios rastreados se muestran por ID. ')}
         {report.undated > 0 && `${number.format(report.undated)} deals fuera de la cohorte por fecha de creación ausente o inválida.`}
       </p>
     </> : <p className="empty-state">No hay deals para estos filtros.{report.undated > 0 && ` Hay ${report.undated} registros con fecha de creación sin verificar en el alcance seleccionado.`}</p>}
@@ -238,7 +239,7 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
       <details><summary>Cómo se calculan las conversiones</summary>
         <p>Los porcentajes usan todos los deals de la fila como base, incluidos los abiertos. Selecciona el nombre del grupo para seguir su recorrido en el Sankey.</p>
         <p>Se cuenta un deal por ID. El período usa la creación del deal. Las etapas usan su última entrada registrada o su etapa actual. Un deal puede tener un ganado histórico y una pérdida posterior. Churn tras E8 requiere ambas fechas en ese orden y Churn como etapa actual.</p>
-        <p>En inbound el anuncio se identifica por el ID de Meta del primer enlace rastreado del contacto asociado, con visita anterior o igual a la creación del deal. El nombre y el tipo se cruzan por ID exacto con el catálogo privado de Creative Analytics cuando está disponible. En outbound el rol usa las etiquetas deal-contacto, con prioridad para los contactos marcados como Key Contact. La fuente Prospección SDR permite explorar negocios sin clasificación confirmada y conserva su etiqueta en el recorrido.</p>
+        <p>En inbound el anuncio se identifica por el ID de Meta del primer enlace rastreado del contacto asociado, con visita anterior o igual a la creación del deal. El nombre y el formato se cruzan por ID exacto con el catálogo privado de anuncios. La vista previa de HubSpot permite verificar el formato. En outbound el rol usa las etiquetas deal-contacto, con prioridad para los contactos marcados como Key Contact. La fuente Prospección SDR permite explorar negocios sin clasificación confirmada y conserva su etiqueta en el recorrido.</p>
       </details>
     </div>
 
