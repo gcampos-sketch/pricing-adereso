@@ -4,6 +4,9 @@
 }
 .pipeline-analysis-controls { justify-content: space-between; }
 .pipeline-analysis-controls .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.pipeline-analysis-controls .tabs > .tab[data-active=true] {
+  background: var(--brand); color: var(--brand-foreground); border-radius: 999px;
+}
 .pipeline-analysis-filters label { display: grid; gap: 4px; font-size: .78rem; color: var(--muted-foreground); }
 .pipeline-analysis-filters select {
   min-height: 34px; max-width: min(245px, 80vw); padding: 4px 8px; border: 1px solid var(--border);
@@ -11,11 +14,11 @@
 }
 .pipeline-analysis-meta { align-items: center; font-size: .82rem; color: var(--muted-foreground); }
 .pipeline-analysis-meta a { margin-inline-start: auto; }
-.pipeline-analysis a, .pipeline-analysis-dialog a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.pipeline-analysis a, .pipeline-analysis-dialog a { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
 .pipeline-analysis-note { color: var(--muted-foreground); font-size: .8rem; margin: 0; }
 .pipeline-analysis-note:empty { display: none; }
 .pipeline-analysis-scroll { max-width: 100%; min-width: 0; overflow: auto; border: 1px solid var(--border); border-radius: 10px; }
-.pipeline-analysis-columns { display: grid; background: var(--muted); }
+.pipeline-analysis-columns { display: grid; background: var(--surface); }
 .pipeline-analysis-columns span { padding: 10px 11px; font-size: .78rem; font-weight: 650; }
 .pipeline-analysis-link { fill: oklch(64% .17 275 / .24); cursor: pointer; }
 .pipeline-analysis-link[data-muted=true] { fill: oklch(65% .05 260 / .17); }
@@ -25,7 +28,7 @@
 .pipeline-analysis-node[data-muted=true] rect { fill: oklch(58% .045 260); }
 .pipeline-analysis-node rect.pipeline-analysis-label-bg { fill: var(--background); fill-opacity: .92; }
 .pipeline-analysis-node:hover .pipeline-analysis-label-bg, .pipeline-analysis-node:focus-visible .pipeline-analysis-label-bg {
-  fill: var(--muted); stroke: var(--foreground); stroke-width: 1px;
+  fill: var(--elevated); stroke: var(--foreground); stroke-width: 1px;
 }
 .pipeline-analysis-node text { fill: var(--foreground); font-size: 11px; font-weight: 650; }
 .pipeline-analysis-node .pipeline-analysis-count { fill: var(--muted-foreground); font-size: 10px; font-weight: 500; }
@@ -36,11 +39,11 @@
 .pipeline-analysis-ranking > button { justify-self: start; }
 .pipeline-analysis-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
 .pipeline-analysis-table td, .pipeline-analysis-table th { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: right; }
-.pipeline-analysis-table thead { background: var(--muted); }
+.pipeline-analysis-table thead { background: var(--surface); }
 .pipeline-analysis-table th:first-child, .pipeline-analysis-table td:first-child { min-width: 148px; text-align: left; }
 .pipeline-analysis-table small { display: block; color: var(--muted-foreground); font-weight: 400; }
-.pipeline-analysis-table tr[data-active=true] { background: var(--muted); }
-.pipeline-analysis-row { cursor: pointer; color: var(--primary); text-align: inherit; }
+.pipeline-analysis-table tr[data-active=true] { background: var(--elevated); }
+.pipeline-analysis-row { cursor: pointer; color: var(--brand); text-align: inherit; }
 .pipeline-analysis-row:hover { text-decoration: underline; }
 .pipeline-analysis-dialog { width: min(94vw, 980px); max-width: none; max-height: 83dvh; grid-template-rows: auto auto minmax(0, 1fr); }
 .pipeline-analysis-dialog .pipeline-analysis-table td, .pipeline-analysis-dialog .pipeline-analysis-table th { text-align: left; }
