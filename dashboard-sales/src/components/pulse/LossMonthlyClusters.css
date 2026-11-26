@@ -7,8 +7,8 @@
   border-radius: 8px; background: var(--surface); color: var(--foreground); font: inherit; font-size: 13px;
 }
 .loss-monthly-clusters .loss-monthly-date { align-self: flex-start; margin: 0; }
-.loss-monthly-date button { font-size: 12px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
-.loss-monthly-date button[data-active="true"] { background: var(--brand); color: var(--brand-foreground); }
+.loss-monthly-date > .tab { min-height: 34px; padding: 7px 12px; font-size: 12px; }
+.loss-monthly-date:not([data-liquid-active="true"]) > .tab[data-active="true"] { background: var(--brand); }
 .loss-monthly-plot, .loss-monthly-table { overflow-x: auto; }
 .loss-monthly-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; list-style: none; padding: 0 0 0 3px; margin: 8px 0 12px; font-size: 12px; }
 .loss-monthly-legend li { display: inline-flex; align-items: center; gap: 6px; }
