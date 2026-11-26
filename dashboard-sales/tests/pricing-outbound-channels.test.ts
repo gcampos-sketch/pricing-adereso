@@ -18,6 +18,7 @@ function calculator() {
     desk: true,
     studio: true,
     scope: 'bolsa',
+    communicationMode: 'both',
     engage: false,
     out: { correo: false, wacall: false },
     callAttention: '',
@@ -28,7 +29,7 @@ function calculator() {
   };
   const channels = { innerHTML: '' };
   const pricing = runInNewContext(source + walletSources(hub).formulas + channelCatalog + channelRenderer
-    + ';({ emailOutboundPack, voicePack, VOICE_POOLS, selectedEmailPack, selectedVoicePools, outboundMonthly, waCalls, renderOpts })', {
+    + ';({ emailOutboundPack, voicePack, VOICE_POOLS, selectedEmailPack, selectedVoicePools, outboundMonthly, waCalls, sipOutboundActive, renderOpts })', {
     state,
     document: { getElementById: () => channels },
     paintIcons: () => {},
@@ -115,13 +116,13 @@ test('a new quote starts with every available inbound channel unselected', () =>
   expect(inbound.every(match => match[2] === 'false')).toBe(true);
 });
 
-test('outbound channels remain disabled until Engage is active', () => {
+test('WhatsApp and email outbound require Engage while SIP requires Studio', () => {
   const { state, pricing, channels } = calculator();
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('data-chan="correo"');
   expect(channels.innerHTML).toContain('Canales de salida');
   expect(channels.innerHTML).toContain('Requiere Engage');
-  expect(channels.innerHTML).not.toContain('data-out=');
+  expect(channels.innerHTML).not.toMatch(/data-out="(?:correo|whatsapp|wacall)"/);
   state.engage = true;
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('Canales de salida');
@@ -131,8 +132,8 @@ test('outbound channels remain disabled until Engage is active', () => {
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('Canales de salida');
   expect(channels.innerHTML).toContain('Requiere Engage');
-  expect(channels.innerHTML).not.toContain('data-out=');
-  expect(channels.innerHTML).not.toContain('data-out=');
+  expect(channels.innerHTML).not.toMatch(/data-out="(?:correo|whatsapp|wacall)"/);
+  expect(channels.innerHTML).toContain('data-out="sip"');
 });
 
 test('WhatsApp calls put an independent attention selector inside the selected card', () => {
@@ -180,7 +181,8 @@ test('existing customers can add outbound packs using contracted Desk and Studio
 
   state.engage = false;
   pricing.renderOpts();
-  expect(channels.innerHTML).toBe('');
+  expect(channels.innerHTML).toContain('data-out="sip"');
+  expect(channels.innerHTML).not.toContain('data-out="wacall"');
   expect(pricing.outboundMonthly()).toBe(0);
 });
 
@@ -220,4 +222,74 @@ test('a voice upgrade credits only the selected voice pack, even when both are q
   expect(pricing.outboundMonthly()).toBe(2186);
 });
 
- test('communication mode keeps text and voice groups distinct without enabling unavailable voice',()=>{const {state,pricing,channels}=calculator();state.engage=true;state.communicationMode='text';pricing.renderOpts();expect(channels.innerHTML).toContain('data-out="correo"');expect(channels.innerHTML).not.toContain('data-out="wacall"');state.communicationMode='voice';pricing.renderOpts();expect(channels.innerHTML).toContain('data-out="wacall"');expect(channels.innerHTML).not.toContain('data-chan=');expect(channels.innerHTML).not.toContain('data-out="correo"');expect(channels.innerHTML).toContain('No disponible');state.communicationMode='both';pricing.renderOpts();expect(channels.innerHTML).toContain('data-out="wacall"');expect(channels.innerHTML).toContain('data-chan="correo"');});
+test('channel mode starts unselected and reveals only the chosen groups', () => {
+  const { state, pricing, channels } = calculator();
+  state.engage = true;
+  state.communicationMode = runInNewContext(initialPricingState + ';INITIAL_STATE.communicationMode');
+  pricing.renderOpts();
+  expect([...channels.innerHTML.matchAll(/data-communication-mode="[^"]+" aria-pressed="false"/g)]).toHaveLength(3);
+  expect(channels.innerHTML).not.toContain('class="channel-panel"');
+
+  state.communicationMode = 'text';
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('data-out="correo"');
+  expect(channels.innerHTML).not.toMatch(/data-out="(?:sip|wacall)"/);
+
+  state.communicationMode = 'voice';
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('data-out="wacall"');
+  expect(channels.innerHTML).toContain('data-out="sip"');
+  expect(channels.innerHTML).not.toContain('data-chan=');
+  expect(channels.innerHTML).not.toContain('data-out="correo"');
+  expect(channels.innerHTML).toContain('No disponible');
+
+  state.communicationMode = 'both';
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('data-out="wacall"');
+  expect(channels.innerHTML).toContain('data-chan="correo"');
+});
+
+test('SIP saliente is independent of WhatsApp and its Meta wallet', () => {
+  const { state, pricing, channels } = calculator();
+  state.communicationMode = 'voice';
+  state.out.sip = true;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('data-out="sip" aria-pressed="true"');
+  expect(channels.innerHTML).toContain('Precio a confirmar');
+  expect(pricing.sipOutboundActive()).toBe(true);
+  expect(pricing.waCalls()).toBe(false);
+  expect(pricing.selectedVoicePools()).toHaveLength(0);
+  state.studio = false;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('Requiere Studio');
+  expect(pricing.sipOutboundActive()).toBe(false);
+});
+
+test('adding human minutes from the IA card preserves the selected IA volume', () => {
+  const { state } = calculator();
+  state.engage = true;
+  state.out.wacall = true;
+  state.callAttention = 'ai';
+  const volumeRenderer = hub.slice(hub.indexOf('function renderOutboundVolume()'), hub.indexOf('function updateOutboundQuantity('));
+  const volumeClick = hub.slice(hub.indexOf("document.getElementById('outVolume').addEventListener('click'"), hub.indexOf('function spotBlock()'));
+  const area = { innerHTML: '', addEventListener: (_: string, handle: (event: unknown) => void) => { click = handle; } };
+  let click: (event: unknown) => void = () => {};
+  const render = runInNewContext(source + volumeRenderer + volumeClick + ';renderOutboundVolume', {
+    state,
+    document: { getElementById: () => area, querySelector: () => null },
+    hasExistingDesk: () => false,
+    hasService: () => true,
+    outboundVolumeGrid: () => '',
+    renderOutboundQuote: () => {},
+    renderAll: () => render(),
+    refreshFlow: () => {},
+  });
+  render();
+  expect(area.innerHTML).toContain('data-add-human-voice');
+  click({ target: { closest: (selector: string) => selector === '[data-add-human-voice]' } });
+  expect(state.callAttention).toBe('both');
+  expect(state.voiceMinutes).toBe(12350);
+  expect(area.innerHTML).toContain('data-out-quote="voice-human"');
+  expect(area.innerHTML).toContain('data-out-quote="voice"');
+  expect(area.innerHTML).not.toContain('data-add-human-voice');
+});
