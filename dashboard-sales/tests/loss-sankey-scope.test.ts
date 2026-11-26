@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { isLossInbound, lossEntryDate, scopeLossSankey } from '../src/lib/loss-sankey-scope';
+import { isLossInbound, lossEntryDate, lossSankeyMonths, scopeLossSankey } from '../src/lib/loss-sankey-scope';
 import { buildLossSankey } from '../src/lib/loss-sankey';
 import type { InsightDeal } from '../src/lib/insights-types';
 const row = (id: string, entry: string | null, close: string, source = 'Form de Contacto Inbound') => ({ id, status: 'lost', lostEnteredAt: entry, closeDateValue: close, source, sourceLabel: source, ownerId: 'a', owner: 'Gonza', lostStage: 'E5', lostReason: 'Ghosting', amountValue: 100 } as InsightDeal);
@@ -46,4 +46,21 @@ test('warning cohort keeps all unassignable dates across available years, with n
   expect(result.missingDates.map(deal => deal.id)).toEqual(['missing', 'invalid']);
   expect(result.deals.map(deal => deal.id)).toEqual(['valid']);
   expect(result.missingDates[0]?.closeDateValue).toBe('');
+});
+
+test('monthly scope narrows the selected quarters in the same UTC calendar and honors the active date basis', () => {
+  const input = [
+    row('boundary', '2026-10-31T23:30:00-03:00', '2026-12-01'),
+    row('october', '2026-10-01', '2026-11-01'),
+    row('outside', '2026-09-30', '2026-09-30'),
+    row('undated', null, ''),
+  ];
+  expect(lossSankeyMonths(['2026-Q4', '2026-Q4', '2026-Q2', 'bad']))
+    .toEqual(['2026-04', '2026-05', '2026-06', '2026-10', '2026-11', '2026-12']);
+  const entry = scopeLossSankey(input, { ...base, month: '2026-11', basis: 'entry' });
+  expect(entry.deals.map(deal => deal.id)).toEqual(['boundary']);
+  expect(entry.periodDeals.map(deal => deal.id)).toEqual(['boundary', 'october']);
+  expect(entry.missingDates.map(deal => deal.id)).toEqual(['undated']);
+  expect(scopeLossSankey(input, { ...base, month: '2026-11', basis: 'close' }).deals.map(deal => deal.id)).toEqual(['october']);
+  expect(scopeLossSankey(input, { ...base, month: '2026-09', basis: 'entry' }).deals).toEqual([]);
 });

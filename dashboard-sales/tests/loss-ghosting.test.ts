@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { completedMeeting, ghostingMeetingWindow, ghostingMinimum, isGhostingLoss, type GhostingActivity } from "../src/lib/loss-ghosting";
+import { completedMeeting, GHOSTING_STATUS_ORDER, ghostingMeetingWindow, ghostingMinimum, groupGhostingDeals, isGhostingLoss, summarizeGhosting, type GhostingActivity } from "../src/lib/loss-ghosting";
 import { corroboratedLossTransition } from "../src/lib/loss-prior-score";
 
 const baseline: GhostingActivity = { calls: 2, whatsapp: 2, emails: 2, meetings: null, originStage: null };
@@ -74,4 +74,32 @@ test("only completed meetings from creation inclusive to loss entry exclusive co
   expect(completedMeeting({ hs_meeting_outcome: "COMPLETED" }, window)).toBeNull();
   expect(completedMeeting({ hs_meeting_start_time: created }, window)).toBeNull();
   expect(completedMeeting({ hs_meeting_start_time: lost }, window)).toBe(false);
+});
+
+
+test("ghosting groups put known shortfalls first and maintain order within each status", () => {
+  const deals = ["met", "unknown", "short1", "short2"].map(id => ({ id }));
+  const groups = groupGhostingDeals(deals, {
+    met: baseline,
+    short1: { ...baseline, calls: 0, whatsapp: null },
+    short2: { ...baseline, emails: 1 },
+  });
+  expect(GHOSTING_STATUS_ORDER.flatMap(status => groups[status].map(deal => deal.id)))
+    .toEqual(["short1", "short2", "unknown", "met"]);
+});
+
+test("ghosting summary uses verified values, includes zero and reports tied stages", () => {
+  const deals = ["a", "b", "c", "d", "a"].map(id => ({ id }));
+  const summary = summarizeGhosting(deals, {
+    a: { ...baseline, calls: 0, emails: 3, meetings: { completedIds: [], unverified: 0 }, originStage: "E5" },
+    b: { ...baseline, calls: 1, whatsapp: null, meetings: { completedIds: ["1"], unverified: 1 }, originStage: "E2" },
+    c: { ...baseline, calls: null, emails: null, meetings: { completedIds: ["2"], unverified: 0 } },
+  });
+  expect(summary.metrics.map(({ covered, median }) => [covered, median]))
+    .toEqual([[2, 0.5], [2, 2], [2, 2.5], [2, 0.5]]);
+  expect(summary.modalStages).toEqual(["E2", "E5"]);
+  expect(summary.stageFrequency).toBe(1);
+  expect(summary.stageCovered).toBe(2);
+  expect(summarizeGhosting(deals, {}).metrics.every(metric => metric.median === null)).toBe(true);
+  expect(summarizeGhosting(deals, {}).modalStages).toEqual([]);
 });

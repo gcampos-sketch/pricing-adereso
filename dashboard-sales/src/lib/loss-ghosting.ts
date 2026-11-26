@@ -25,6 +25,49 @@ export function ghostingMinimum(activity?: GhostingActivity) {
   return counts.some(count => count === null) ? "unknown" : "met";
 }
 
+export const GHOSTING_STATUS_ORDER = ["short", "unknown", "met"] as const;
+
+export function groupGhostingDeals<T extends { id: string }>(
+  deals: readonly T[],
+  evidence: Readonly<Record<string, GhostingActivity>> | undefined,
+) {
+  const groups: Record<ReturnType<typeof ghostingMinimum>, T[]> = { short: [], unknown: [], met: [] };
+  for (const deal of deals) groups[ghostingMinimum(evidence?.[deal.id])].push(deal);
+  return groups;
+}
+
+export function summarizeGhosting(
+  deals: readonly { id: string }[],
+  evidence: Readonly<Record<string, GhostingActivity>> | undefined,
+) {
+  const activities = [...new Set(deals.map(deal => deal.id))].map(id => evidence?.[id]);
+  const metrics = [
+    ...GHOSTING_CHANNELS.map(([channel, label]) => ({
+      label, counts: activities.map(activity => activity?.[channel]),
+    })),
+    { label: "Reuniones completadas", counts: activities.map(activity => {
+      const meetings = activity?.meetings;
+      return meetings?.unverified === 0 ? meetings.completedIds.length : null;
+    }) },
+  ].map(({ label, counts }) => {
+    const verified = counts.flatMap(count => typeof count === "number" && Number.isFinite(count) ? [count] : [])
+      .sort((a, b) => a - b);
+    const size = verified.length;
+    return { label, covered: size, median: size ? (verified[Math.floor((size - 1) / 2)]! + verified[Math.floor(size / 2)]!) / 2 : null };
+  });
+
+  const stages = new Map<string, number>();
+  for (const activity of activities) {
+    const stage = activity?.originStage;
+    if (stage) stages.set(stage, (stages.get(stage) ?? 0) + 1);
+  }
+  const stageCovered = [...stages.values()].reduce((total, count) => total + count, 0);
+  const stageFrequency = Math.max(0, ...stages.values());
+  const modalStages = [...stages].filter(([, count]) => count === stageFrequency)
+    .map(([stage]) => stage).sort((a, b) => a.localeCompare(b, "es"));
+  return { metrics, modalStages, stageCovered, stageFrequency };
+}
+
 type GhostingMeetingWindow = { created: number; lost: number };
 
 function activityTime(raw: string | null | undefined) {
