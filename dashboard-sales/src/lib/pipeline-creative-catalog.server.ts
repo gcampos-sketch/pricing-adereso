@@ -4,7 +4,7 @@ export function readPipelineCreativeCatalog(raw: string | undefined) {
   const ads = new Map<string, CreativeMetadata>();
   if (!raw?.trim()) return { ads, status: 'missing' as const };
   try {
-    // A metadata-only export of Creative Analytics' meta.ads, supplied on the server.
+    // Verified ad metadata supplied on the server.
     const rows: unknown = JSON.parse(raw);
     if (!Array.isArray(rows) || !rows.length) throw Error('Catálogo vacío.');
     for (const row of rows) {
