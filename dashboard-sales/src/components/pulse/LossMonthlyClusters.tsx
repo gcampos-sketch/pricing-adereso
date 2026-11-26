@@ -57,7 +57,7 @@ export function LossMonthlyClusters({ deals, periods, readAt, available, company
       </label>
     </div>
     <div className="tabs loss-monthly-date" role="group" aria-label="Fecha para agrupar los negocios por mes">
-      {dateChoices.map(([value, label]) => <button key={value} type="button" data-active={basis === value}
+      {dateChoices.map(([value, label]) => <button key={value} type="button" className="tab" data-active={basis === value}
         aria-pressed={basis === value} onClick={() => setBasis(value)}>{label}</button>)}
     </div>
 
