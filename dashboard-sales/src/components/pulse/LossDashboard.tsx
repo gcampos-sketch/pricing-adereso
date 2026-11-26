@@ -180,8 +180,8 @@ export function LossDashboard({ report, onRefresh, isRefreshing, tabs, role = "a
         scope: `${filters.ownerName} · ${sourceScope} · Rol ${role === "all" ? "Todos" : role} · Etapa ${stageFilter.join(", ") || "Todas"} · Sin período asignable; excluidos del Sankey`,
         deals,
       })}
-      onOpen={(title, deals, basis, reasonWords) => openDeals({
-        title, deals, reasonWords: Boolean(reasonWords), scope: `${scope} · ${basis === "entry" ? "Entrada a deal perdido" : "Fecha de cierre"}`,
+      onOpen={(title, deals, basis, reasonWords, monthLabel) => openDeals({
+        title, deals, reasonWords, scope: [scope, monthLabel, basis === "entry" ? "Entrada a deal perdido" : "Fecha de cierre"].filter(Boolean).join(" · "),
       })} />
 
     <LossMonthlyClusters deals={sankeyCandidates} periods={filters.periods} readAt={report.generatedAt}

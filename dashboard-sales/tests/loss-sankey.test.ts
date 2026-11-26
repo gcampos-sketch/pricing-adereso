@@ -60,3 +60,28 @@ test('grouping only uses the supplied master scope and never infers role from ow
   expect(buildLossSankey(rows.slice(0, 1), 'team').nodes.find(node => node.kind === 'owner')?.name).toBe('Sin equipo');
   expect(buildLossSankey([], 'team')).toEqual({ nodes: [], links: [], deals: [] });
 });
+
+test('activity grouping conserves deals and distinguishes verified zero from missing channel or changed loss date', () => {
+  const lostEnteredAt = '2026-11-01T12:00:00Z';
+  const enteredAt = Date.parse(lostEnteredAt);
+  const a = { ...row('a', 'Gonza', 'E5', 'Ghosting', 0), lostEnteredAt };
+  const b = { ...row('b', 'Gonza', 'E5', 'Ghosting', 200), lostEnteredAt };
+  const c = { ...row('c', 'Gonza', 'E5', 'Precio'), lostEnteredAt };
+  const zero = { emails: 0, communications: 0, calls: 0, meetings: 0 };
+  const evidence = {
+    a: { enteredAt, previousStage: 'Reunión concretada', counts: zero },
+    b: { enteredAt, previousStage: 'Reunión concretada', counts: { ...zero, emails: 4, communications: null } },
+    c: { enteredAt: enteredAt + 60_000, previousStage: 'E5', counts: zero },
+  };
+  const graph = buildLossSankey([a, a, b, c], 'activity', { evidence, channel: 'all' });
+  expect(graph.nodes.find(node => node.name === '0 actividades')?.deals).toEqual([a]);
+  expect(graph.nodes.find(node => node.name === 'Actividad sin verificar')?.deals).toEqual([b, c]);
+  expect(graph.nodes.find(node => node.name === 'Etapa sin verificar')?.deals).toEqual([c]);
+  for (const [source, target] of [['reason', 'stage'], ['stage', 'activity']]) {
+    const links = graph.links.filter(link => graph.nodes[link.source]!.kind === source && graph.nodes[link.target]!.kind === target);
+    expect(links.reduce((total, link) => total + link.value, 0)).toBe(3);
+    expect(links.reduce((total, link) => total + link.amount, 0)).toBe(300);
+  }
+  const emails = buildLossSankey([a, b, c], 'activity', { evidence, channel: 'emails' });
+  expect(emails.nodes.find(node => node.name === '3–5 actividades')?.deals).toEqual([b]);
+});

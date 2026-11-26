@@ -1,6 +1,6 @@
 import { AlertTriangle, Check, CircleHelp } from "lucide-react";
 import type { InsightDeal } from "@/lib/insights-types";
-import { GHOSTING_CHANNELS, GHOSTING_MINIMUM, GHOSTING_STATUS_LABELS, ghostingMinimum, type GhostingActivity } from "@/lib/loss-ghosting";
+import { GHOSTING_CHANNELS, GHOSTING_MINIMUM, GHOSTING_STATUS_LABELS, ghostingMinimum, summarizeGhosting, type GhostingActivity } from "@/lib/loss-ghosting";
 
 const unknownStage = "Etapa sin verificar";
 
@@ -33,6 +33,35 @@ export function LossGhostingOrigins({ deals, evidence, loading, onOpen }: {
           </li>;
         })}
       </ul>}
+  </section>;
+}
+
+export function LossGhostingSummary({ deals, evidence, loading }: {
+  deals: readonly InsightDeal[];
+  evidence: Readonly<Record<string, GhostingActivity>> | undefined;
+  loading: boolean;
+}) {
+  const { metrics, modalStages, stageCovered, stageFrequency } = summarizeGhosting(deals, evidence);
+  return <section className="loss-ghosting-summary" aria-label="Resumen de Ghosting">
+    <h3>Resumen de Ghosting</h3>
+    {loading ? <p role="status">Verificando historial en HubSpot…</p> : <>
+      <p>Mediana de actividades por deal</p>
+      <dl className="loss-ghosting-summary-metrics">
+        {metrics.map(({ label, median, covered }) => <div key={label}>
+          <dt>{label}</dt>
+          <dd><strong>{median?.toLocaleString("es-CL") ?? "—"}</strong><span>{covered} de {deals.length} verificados</span></dd>
+        </div>)}
+      </dl>
+      <div className="loss-ghosting-summary-stage">
+        <p>{modalStages.length > 1 ? "Etapas anteriores más frecuentes (empate)" : "Etapa anterior más frecuente"}</p>
+        <strong>{modalStages.length ? modalStages.join(" · ") : "Sin etapa verificada"}</strong>
+        {stageCovered > 0 && <small>{stageFrequency} de {stageCovered} con etapa verificada{modalStages.length > 1 ? " por cada etapa" : ""}{stageCovered < deals.length ? ` · ${deals.length - stageCovered} sin verificar` : ""}</small>}
+      </div>
+      <details className="loss-ghosting-stage-breakdown">
+        <summary>Ver distribución de etapas anteriores</summary>
+        <LossGhostingOrigins deals={deals} evidence={evidence} loading={false} />
+      </details>
+    </>}
   </section>;
 }
 
