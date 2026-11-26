@@ -1,5 +1,6 @@
 import type { DealDTO } from './pulse-types';
 import { quotaStats } from './quota-eligibility';
+import type { RoleFilter } from './owner-roles';
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim().replace(/[_\s-]+/g, ' ');
 const types = [
@@ -40,6 +41,54 @@ export function wonAcquisitionSource(deal: Pick<DealDTO, 'source'>) {
   if (['kam', 'kam cassper', 'kam adereso', 'kam adereso recuperacion', 'kam cassper recuperacion'].includes(source)) return 'kam';
   if (['account exec', 'ae adereso recuperacion', 'ae cassper', 'ae cassper recuperacion'].includes(source)) return 'ae';
   return 'other';
+}
+
+const wonSegments = [
+  { label: 'Inbound', role: 'AE' },
+  { label: 'Outbound', role: 'AE' },
+  { label: 'Cross sell', role: 'KAM' },
+  { label: 'Upsell', role: 'KAM' },
+] as const;
+
+const creationSourceLabels = new Map([
+  ['account exec', 'AE Adereso'],
+  ['ae adereso', 'AE Adereso'],
+  ['kam', 'KAM Adereso'],
+  ['kam adereso', 'KAM Adereso'],
+  ['customer success', 'CS Adereso'],
+  ['cs adereso', 'CS Adereso'],
+  ['prospeccion sdr', 'Prospección SDR Adereso'],
+  ['form de contacto inbound', 'Form de Contacto Inbound Adereso'],
+]);
+
+/** Uses the card's already scoped wins. Creation source is independent of segment. */
+export function wonComposition(deals: DealDTO[], role: RoleFilter) {
+  const segments = wonSegments
+    .filter(segment => role === 'all' || segment.role === role)
+    .map(({ label }) => ({
+      label,
+      deals: deals.filter(deal => deal.segment === label),
+    }));
+
+  if (role === 'all') return { segments, sources: [] };
+
+  const sources = new Map<string, DealDTO[]>();
+  const sourceDeals = role === 'KAM' ? segments.flatMap(segment => segment.deals) : deals;
+  for (const deal of sourceDeals) {
+    const raw = deal.source?.trim() ?? '';
+    const label = creationSourceLabels.get(normalize(raw)) ?? raw;
+    if (role === 'AE' && label !== 'AE Adereso') continue;
+    const sourceLabel = label || 'Sin fuente registrada';
+    const bucket = sources.get(sourceLabel) ?? [];
+    bucket.push(deal);
+    sources.set(sourceLabel, bucket);
+  }
+  return {
+    segments,
+    sources: Array.from(sources, ([label, deals]) => ({ label, deals })).sort(
+      (a, b) => b.deals.length - a.deals.length || a.label.localeCompare(b.label, 'es'),
+    ),
+  };
 }
 
 export type WonDistributionRow = { key: string; label: string; color: string; mrr: number; count: number; mrrShare: number | null; countShare: number; deals: DealDTO[] };

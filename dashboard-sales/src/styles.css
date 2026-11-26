@@ -5767,7 +5767,7 @@ body[data-report-navigation="embedded"] .filter-panel-compact { top: 76px; }
 .metric-chips .commission-factor-chip {gap:5px;min-height:22px;padding:2px 8px;border-color:var(--border-default);background:transparent;font-size:11px;line-height:1.3;}
 .metric-chips .commission-info {width:22px;height:22px;}
 .commission-factor-chip {display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:5px 12px;border:1px solid var(--border-subtle);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;cursor:pointer;}
-.commission-factor-chip:hover,.commission-factor-chip[data-state="open"] {border-color:var(--brand);background:var(--glass-track);}
+.commission-factor-chip:hover,.commission-factor-chip[aria-expanded="true"] {border-color:var(--brand);background:var(--glass-track);}
 .commission-factor-chip:focus-visible {outline:2px solid var(--brand);outline-offset:2px;}
 .commission-factor-chip > strong {color:var(--brand);font-variant-numeric:tabular-nums;}
 .commission-info {display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;}
@@ -5955,7 +5955,7 @@ button.won-exec-stat:hover { color:var(--brand); }
 .won-stage-popover { max-height:min(70dvh,var(--radix-popover-content-available-height,70dvh)); overflow-y:auto; }
 
 /* Only the Ganado card uses three aligned stage blocks and a secondary row. */
-.metric[data-chip-layout="won"] .metric-chips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:100%; margin-top:12px; }
+.metric[data-chip-layout="won"] .metric-chips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 10px; width:100%; margin-top:12px; }
 .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip { min-width:0; display:flex; }
 .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(-n+3) button.metric-chip { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:7px; width:100%; min-height:66px; border-radius:10px; padding:10px; white-space:normal; }
 .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(-n+3) .metric-chip-label { font-size:10px; line-height:1.3; }
@@ -5963,7 +5963,7 @@ button.won-exec-stat:hover { color:var(--brand); }
 .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(4) { grid-column:1 / 2; }
 .metric[data-chip-layout="won"] .metric-chips > .commission-inline { grid-column:2 / 4; justify-self:end; align-self:center; }
 .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(4) button.metric-chip { font-size:10px; }
-@media(max-width:500px) { .metric[data-chip-layout="won"] .metric-chips { gap:5px; } .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(-n+3) button.metric-chip { padding:8px 6px; } }
+@media(max-width:500px) { .metric[data-chip-layout="won"] .metric-chips { column-gap:8px; } .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(-n+3) button.metric-chip { padding:8px 6px; } }
 
 /* Results row: shared heading/value baseline; each card retains its own content. */
 .commercial-results > .metric { display:flex; flex-direction:column; align-items:stretch; justify-content:flex-start; padding:22px 20px 18px; border-top-width:4px; min-width:0; }
@@ -5988,7 +5988,6 @@ button.won-exec-stat:hover { color:var(--brand); }
 .quota-close-preview .quota-close-month { display:flex; flex-direction:column; align-items:flex-start; gap:5px; padding:9px 8px; min-width:0; }
 .quota-close-preview .quota-close-month strong { font-size:14px; text-align:left; white-space:nowrap; }
 .quota-close-preview .quota-close-total { margin-top:6px; padding-inline:4px; }
-.commercial-results .metric[data-chip-layout="won"] .metric-chips { gap:6px; margin-top:8px; }
 .commercial-results .metric[data-chip-layout="won"] .metric-chips > .won-stage-chip:nth-child(-n+3) button.metric-chip { min-height:60px; gap:5px; padding:8px; }
 @media(min-width:561px) and (max-width:900px) { .commercial-results > .metric:last-child { grid-column:1 / -1; } }
 /* Ganado keeps the attainment inside its existing bar in a neutral text color. */
@@ -6013,6 +6012,39 @@ button.won-exec-stat:hover { color:var(--brand); }
   padding-top:14px;
   border-top:1px dotted rgb(255 255 255 / .18);
 }
+
+.won-card-mix {
+  display:grid;
+  gap:12px;
+  width:100%;
+  margin-top:14px;
+  padding-top:12px;
+  border-top:1px solid var(--border-subtle);
+}
+.won-card-mix-row { display:grid; gap:7px; }
+.won-card-mix-label { color:var(--muted); font-size:11px; }
+.won-card-mix-chips { display:flex; flex-wrap:wrap; gap:8px; }
+.won-card-mix-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  max-width:100%;
+  padding:3px 8px;
+  border:1px solid var(--border-default);
+  border-radius:var(--radius-pill);
+  background:transparent;
+  color:var(--body);
+  font:inherit;
+  font-size:11px;
+  line-height:1.35;
+  text-align:left;
+  overflow-wrap:anywhere;
+}
+.won-card-mix-chip strong { font-variant-numeric:tabular-nums; }
+.won-card-mix-chip[data-empty] { color:var(--muted); }
+button.won-card-mix-chip { cursor:pointer; }
+button.won-card-mix-chip:hover { border-color:var(--brand); background:var(--glass-track); }
+button.won-card-mix-chip:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
 
 .won-mix-summary {background:linear-gradient(115deg,rgb(255 213 64 / .025),transparent 65%);}
 .won-mix-heading {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px;}
