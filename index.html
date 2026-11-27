@@ -482,20 +482,35 @@
   .out-packs .pill{border:1px solid var(--b-default);border-radius:var(--r3);padding:6px 10px;font:inherit;font-size:12px;color:var(--z300);cursor:pointer}
   .out-packs .pill:hover{border-color:var(--z400)}
   .out-packs .pill.on{border-color:var(--brand);color:var(--brand);background:rgba(255,213,64,.08)}
-  .pl-grid.out-volume{grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));margin-top:18px}
-  .out-volume .pl-card{padding:16px;gap:10px}.out-volume .pl-desc{line-height:1.55}
-  .out-volume .pl-card>label input[type=number]{width:100%;margin-top:5px}
-  .out-volume .pl-card{container-type:inline-size}
-  .out-volume .vgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  @container (min-width:420px){.out-volume .vgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-  .out-volume .vtile:not(.vtile-in),.out-volume .vtile-in .custom-volume-display{padding:12px 7px}
-  .out-volume .vtile .conv{font-size:18px;overflow-wrap:anywhere}
-  .out-volume .vtile .lbl{margin-bottom:0}
-  .out-volume label{font-size:13px;color:var(--z400)}
-  #s2 .head-links[hidden]{display:none}
+  #volArea{container:pricing-volume / inline-size}
+  .volume-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:16px}
+  #outVolume{display:contents}
+  #volArea .volume-box{container-type:inline-size;padding:clamp(14px,2vw,20px);gap:12px;border-radius:var(--r4)}
+  #volArea .volume-box[hidden]{display:none}
+  .volume-title{margin:0;font-family:var(--font-head);font-size:17px;font-weight:500;line-height:1.3}
+  .volume-box>.pl-desc{margin:0;line-height:1.5}
+  .volume-box>.head-links{margin:0}
+  .volume-box .vgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  @container (min-width:440px){.volume-box .vgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @container pricing-volume (min-width:902px){
+    .volume-layout:has(#conversationVolume:not([hidden])):has([data-volume-box="voice"]) [data-volume-box="email"]{grid-column:1/-1}
+  }
+  .volume-box .vtile:not(.vtile-in),.volume-box .vtile-in .custom-volume-display{padding:12px 7px}
+  .volume-box .vtile .conv{font-size:18px;overflow-wrap:anywhere}
+  .volume-box .vtile .lbl{margin-bottom:0;font-size:10px;overflow-wrap:anywhere}
+  .volume-box label{font-size:13px;color:var(--z400)}
+  .volume-box>label input[type=number]{width:100%;margin-top:5px}
+  #volumeWalletNote{margin:12px 0 0}
+  .volume-quote-rate{display:block}
+  .usage-overages{margin-top:18px;padding:clamp(15px,2.3vw,22px);border:1px solid var(--b-default);border-radius:var(--r4);background:var(--surface)}
+  .usage-overages h3{margin:0 0 12px}
+  .usage-overages dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px;margin:0}
+  .usage-overages dl>div{padding:12px 14px;border:1px solid var(--b-subtle);border-radius:var(--r3)}
+  .usage-overages dt{font-size:13px;font-weight:600}
+  .usage-overages dd{margin:5px 0 0;line-height:1.45}
+  .usage-overages small{display:block;margin-top:4px;color:var(--z400)}
   .out-quote{color:var(--z400);font-size:13px;line-height:1.6}
-  .conversation-plan{padding:16px;gap:12px;margin-bottom:16px}
-  .conversation-plan .pl-head{margin-bottom:0}
+  .conversation-plan{display:grid;gap:10px}
   .conversation-plan b,.conversation-plan label{font-size:14px}
   .conversation-plan input[type=number]{display:block;width:min(100%,300px);margin-top:5px}
   .conversation-plan .out-quote{margin:0}
@@ -8731,11 +8746,15 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
         <div class="level-head reveal">
           <div class="level-kicker">Nivel 2 · Volumen</div>
           <h2>¿Qué volumen necesitas al mes?</h2>
-          <p id="conversation-volume-copy">La bolsa de conversaciones cubre las consultas iniciadas por tus clientes. Las llamadas salientes y el correo masivo usan bolsas propias.</p>
-          <div class="head-links"><button class="pop-link" data-pop="conversacion"><span data-i="info" data-sz="16"></span> ¿Qué es una conversación?</button></div>
         </div>
-        <div id="volArea"></div>
-        <div id="outVolume"></div>
+        <div id="volArea">
+          <div class="volume-layout">
+            <section id="conversationVolume" class="pl-card volume-box" aria-labelledby="conversationVolumeTitle" hidden></section>
+            <div id="outVolume"></div>
+          </div>
+          <p id="volumeWalletNote" class="out-note" hidden>La billetera Adereso–Meta cubre el consumo de WhatsApp Call y el fee por separado.</p>
+          <div id="volumeSpot"></div>
+        </div>
         <div class="continue reveal"><button data-next="s4">Continuar a la billetera <span data-i="down"></span></button></div>
       </section>
 
@@ -8999,7 +9018,7 @@ const MODULES=[
  {k:'cassper',label:'Cassper',desc:'Recuperar ventas',icon:'search',color:'#FFD540'}, {k:'walletOnly',label:'Billetera Adereso–Meta',desc:'Solo recarga de billetera',icon:'card',color:'#25D366',existingOnly:true}, {k:'hhCustom',label:'HH custom',desc:'Horas de desarrollo a medida',icon:'clock',color:'#F5B942',existingOnly:true}
 ];
 
-const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',conversationPlans:{},voiceUpgrades:{},hasDeskContracted:true,hasStudioContracted:false,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,communicationMode:'',chan:{},out:{correo:false,whatsapp:false,wacall:false,sip:false},callAttention:'',sipCallAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailPlan:'free',emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
+const state={studioType:'agent',epA:[],deskInteg:false,existing:false,scope:'bolsa',conversationPlans:{},voiceUpgrades:{},hasDeskContracted:true,hasStudioContracted:false,bots:1,improve:false,walletOnly:false,hhCustom:false,hhQty:0,desk:true,studio:true,engage:false,cassper:false,whatsapp:false,xVolume:7000,communicationMode:'',chan:{},out:{correo:false,whatsapp:false,wacall:false,sip:false},callAttention:'',sipCallAttention:'',humanVoiceMinutes:2000,voiceMinutes:2000,emailQuantity:null,vol:2000,volMode:'tile',volCustom:0,spotQty:0,spotOpen:false,setupMode:'acompanada',setup:'inteligente',cassperPlan:'starter',cassperRecovered:0,wa:{country:'CL',marketing:0,utility:0,authentication:0,service:0,minutes:0,wallet:'no_recurrente',fee:null,svPer:4,svConvs:null,amount:0,amountSource:null,calcOpen:false},roiActive:{},roiAuto:{},roiAutoKey:{},roiVals:{},plansOpen:false,roiCost:null,roiCostTouched:false,portalView:'onboarding',portalWiz:2,qaFixed:{},term:'y1',prepay:false,extraAgents:0,agentPlans:[],agentTypes:[],agentModes:[],roiTicket:null,roiAlloc:{},botOnly:false,chanNew:false,spotDesk:true,spotStudio:true};
 const INITIAL_STATE=JSON.parse(JSON.stringify(state));
 /* Cada carga inicia una cotización nueva; retirar la antigua copia del navegador. */
 try{localStorage.removeItem('adereso_pricing_v1');}catch(e){}
@@ -9263,14 +9282,18 @@ const VOICE_POOLS=[
     tiers:[[2000,.18],[5000,.17],[10000,.16],[20000,.15],[35000,.14],[50000,.13],[100000,.12]]}
 ];
 const outboundCount=n=>n.toLocaleString('es-CL');
-const outboundRate=n=>n.toLocaleString('es-CL',{minimumFractionDigits:3,maximumFractionDigits:5});
+const outboundRate=(n,maximumFractionDigits=5)=>n.toLocaleString('es-CL',{minimumFractionDigits:3,maximumFractionDigits});
 const outboundMoney=n=>n.toLocaleString('es-CL',{minimumFractionDigits:2,maximumFractionDigits:2});
 function emailOutboundPack(quantity){
-  if(!Number.isSafeInteger(quantity)||quantity<1)return null;
-  if(quantity<=EMAIL_FREE_QUANTITY)return {quantity,baseTier:0,rate:0,monthly:0};
-  const [baseTier,base]=EMAIL_PACKS.findLast(([threshold])=>threshold<=quantity)||[0,0];
-  const rate=baseTier?base/baseTier:EMAIL_PACKS[0][1]/EMAIL_PACKS[0][0];
-  return {quantity,baseTier,rate,monthly:Math.round((base+(quantity-baseTier)*rate)*100)/100};
+  if(quantity===EMAIL_FREE_QUANTITY)return {quantity,monthly:0,overage:null};
+  const tier=EMAIL_PACKS.find(([threshold])=>threshold===quantity);
+  if(!tier)return null;
+  const [,monthly]=tier;
+  // El 15% se aplica solo a los envíos que superan el tramo contratado.
+  return {quantity,monthly,overage:Math.round(monthly/quantity*1.15*1e7)/1e7};
+}
+function emailOverageText(pack){
+  return pack.overage==null?'Requiere una bolsa pagada':'USD '+outboundRate(pack.overage,7)+' por envío adicional';
 }
 function voicePack(quantity,tiers){
   if(!Number.isSafeInteger(quantity)||quantity<MIN_VOICE_MINUTES)return null;
@@ -9305,7 +9328,7 @@ function voiceOutboundActive(){return !!voiceCallAttention()||sipOutboundActive(
 function emailOutboundActive(){return channelsAvailable()&&state.engage&&state.out.correo;}
 function selectedEmailPack(){
   if(!emailOutboundActive())return null;
-  return emailOutboundPack(state.emailPlan==='free'?EMAIL_FREE_QUANTITY:state.emailQuantity>EMAIL_FREE_QUANTITY?state.emailQuantity:null);
+  return emailOutboundPack(state.emailQuantity??EMAIL_FREE_QUANTITY);
 }
 function selectedVoicePools(){
   if(!voiceOutboundActive())return [];
@@ -9576,11 +9599,12 @@ function volGrid(cSel){
   return `<div class="vgrid">${tiles.join('')}${custom}</div>`;
 }
 function outboundVolumeGrid(key,unit,tiers,quantity){
-  const tiles=tiers.map(([value])=>volumeTile(value,unit,`data-out-pack="${key}" data-qty="${value}"`,value===quantity));
-  const custom=customVolumeTile({
+  const tiles=tiers.map(([value])=>volumeTile(value,key==='email'&&value===EMAIL_FREE_QUANTITY?'envíos gratis':unit,
+    `data-out-pack="${key}" data-qty="${value}"`,value===quantity));
+  const custom=key==='email'?'':customVolumeTile({
     unit,quantity:tiers.some(([value])=>value===quantity)?null:quantity,
     edit:`data-out-edit="${key}"`,input:`data-out-qty="${key}"`,
-    min:key==='email'?EMAIL_FREE_QUANTITY+1:MIN_VOICE_MINUTES,placeholder:key==='email'?35000:3000,id:`customVolumeHint-${key}`
+    min:MIN_VOICE_MINUTES,placeholder:3000,id:`customVolumeHint-${key}`
   });
   return `<div class="vgrid" role="group" aria-label="Bolsas de ${unit}" data-volume-unit="${unit}">${tiles.join('')}${custom}</div>`;
 }
@@ -9595,8 +9619,7 @@ function renderConversationPlan(){
   const product=CONVERSATION_PRODUCTS[plan.profile],addition=plan.profile==='desk'?'Studio':'Desk';
   const controls=(items,attr,selected,label)=>`<div class="out-packs" role="group" aria-label="${label}">${items.map(([key,text])=>`<button type="button" class="pill ${key===selected?'on':''}" ${attr}="${key}" aria-pressed="${key===selected}">${text}</button>`).join('')}</div>`;
   const showPay=plan.profile&&plan.profile!=='new'&&(!partial||plan.change==='increase');
-  return `<div class="pl-card conversation-plan">
-    <div class="pl-head"><span class="pl-name">Bolsa de conversaciones · ${CONVERSATION_PRODUCTS[target]}</span></div>
+  return `<div class="conversation-plan">
     <b>¿Qué tienes contratado hoy para tus conversaciones?</b>
     ${controls(choices,'data-conversation-profile',plan.profile,'Bolsa actual de conversaciones')}
     ${partial?`<b>Al sumar ${addition}, ¿quieres mantener o aumentar tus conversaciones mensuales?</b>
@@ -9615,26 +9638,26 @@ function updateConversationStatus(){
   status.textContent=quote?.pending||'';
 }
 function renderVol(){
-  const area=document.getElementById('volArea');
-  const conversations=hasService()&&scopeBag();
-  document.getElementById('conversation-volume-copy').hidden=!conversations;
-  document.querySelector('#s2 .head-links').hidden=!conversations;
+  const area=document.getElementById('conversationVolume'),spot=document.getElementById('volumeSpot');
+  const product=conversationTarget();
+  const conversations=!!product&&scopeBag();
   renderOutboundVolume();
-  if(!conversations){area.innerHTML='';return;}
+  area.hidden=!conversations;
+  if(!conversations){area.innerHTML='';spot.innerHTML='';return;}
   const plan=state.existing?conversationPlan():null;
   const partial=plan&&partialConversationPlan(plan);
   const showGrid=!plan||(plan.profile&&(!partial||plan.change==='increase'));
-  area.innerHTML=plan?renderConversationPlan():'';
-  if(showGrid){
-    if(plan)area.innerHTML+=`<h3 class="channel-heading">${plan.profile==='new'?'¿Cuántas conversaciones al mes quieres contratar?':'¿A cuántas conversaciones al mes quieres subir?'}</h3>`;
-    area.innerHTML+=volGrid(state.volMode==='custom');
-  }
-  if(showGrid||(partial&&plan.change==='keep')){
-    if(state.studio&&studioMultiplier()>1)area.innerHTML+=`<div class="note warn" style="margin-top:16px"><span data-i="info"></span><div><b>Studio sin Desk:</b> el agente IA va sin la mesa de ayuda humana; aplica un recargo sobre la bolsa.</div></div>`;
-    area.innerHTML+=`<div class="note" style="margin-top:16px"><span data-i="info"></span><div><b>¿Y si te pasas de la bolsa?</b> No se corta el servicio: cada conversación adicional se cobra como <b>conversación extra</b>.</div></div>`;
-    area.innerHTML+=spotBlock();
-  }
-  updateConversationStatus();paintIcons(area);
+  const includeSpot=showGrid||(partial&&plan.change==='keep');
+  const prompt=plan?`<p class="pl-desc">${plan.profile==='new'?'Elige las conversaciones mensuales a contratar.':'Elige el nuevo volumen mensual de conversaciones.'}</p>`:'';
+  const studioNote=includeSpot&&state.studio&&studioMultiplier()>1
+    ?'<div class="note warn"><span data-i="info"></span><div><b>Studio sin Desk:</b> se aplica un recargo sobre la bolsa.</div></div>':'';
+  area.innerHTML=`<h3 id="conversationVolumeTitle" class="volume-title">Conversaciones · ${CONVERSATION_PRODUCTS[product]}</h3>
+    <div class="head-links"><button type="button" class="pop-link" data-pop="conversacion"><span data-i="info" data-sz="16"></span> ¿Qué es una conversación?</button></div>
+    ${plan?renderConversationPlan():''}
+    ${showGrid?prompt+volGrid(state.volMode==='custom'):''}
+    ${studioNote}`;
+  spot.innerHTML=includeSpot?spotBlock():'';
+  updateConversationStatus();paintIcons(area);paintIcons(spot);
   applyReveal(area,'.vtile,.vcustom');
 }
 
@@ -9651,25 +9674,30 @@ function renderOutboundQuote(key){
       button.setAttribute('aria-pressed',String(selected));
       if(selected)customQuantity=null;
     });
-    syncCustomVolumeTile(grid.querySelector('.vtile-in'),grid.dataset.volumeUnit,customQuantity);
+    const custom=grid.querySelector('.vtile-in');
+    if(custom)syncCustomVolumeTile(custom,grid.dataset.volumeUnit,customQuantity);
   }
-  if(!pack){target.textContent=voice?'Ingresa una cantidad entera desde '+outboundCount(MIN_VOICE_MINUTES)+' minutos.':'Ingresa más de 1.000 envíos enteros.';return;}
-  const unit=voice?'min':'envío';
-  const detail=pack.rate?` · USD ${outboundRate(pack.rate)}/${unit}${voice?` · Excedente USD ${outboundRate(pack.overage)}/min`:''}`:'';
-  const better=outboundPackSuggestion(pack,voice?voice.tiers:EMAIL_PACKS,voice?q=>voicePack(q,voice.tiers):emailOutboundPack);
+  if(!pack){target.textContent=voice?'Ingresa una cantidad entera desde '+outboundCount(MIN_VOICE_MINUTES)+' minutos.':'Selecciona un tramo de correo masivo.';return;}
+  if(!voice){
+    target.innerHTML=`<strong>USD ${outboundMoney(pack.monthly)} / mes</strong>
+      <span class="volume-quote-rate">Sobre ${outboundCount(pack.quantity)} envíos · ${emailOverageText(pack)}</span>`;
+    return;
+  }
+  const detail=`<span class="volume-quote-rate">Excedente · USD ${outboundRate(pack.overage)} por minuto</span>`;
+  const better=outboundPackSuggestion(pack,voice.tiers,quantity=>voicePack(quantity,voice.tiers));
   if(voice?.upgrading&&voice.credit==null){target.textContent='Ingresa el precio mensual de esta bolsa de minutos.';return;}
   const price=voice?.upgrading
     ?`<strong>USD ${outboundMoney(voice.additional)} adicionales / mes</strong><div>Nueva bolsa USD ${outboundMoney(pack.monthly)} · Bolsa actual −USD ${outboundMoney(voice.credit)}</div>`
     :`<strong>USD ${outboundMoney(pack.monthly)} / mes</strong>`;
-  target.innerHTML=`${price}${detail}${better?`<div>Con ${outboundCount(better.quantity)} ${voice?'minutos':'envíos'} pagas USD ${outboundMoney(better.monthly)}/mes. <button class="linkbtn" type="button" data-out-pack="${key}" data-qty="${better.quantity}">Usar esa bolsa</button></div>`:''}`;
+  target.innerHTML=`${price}${detail}${better?`<div>Con ${outboundCount(better.quantity)} minutos pagas USD ${outboundMoney(better.monthly)}/mes. <button class="linkbtn" type="button" data-out-pack="${key}" data-qty="${better.quantity}">Usar esa bolsa</button></div>`:''}`;
 }
 function renderOutboundVolume(){
   const area=document.getElementById('outVolume');
-  const email=emailOutboundActive(),pools=selectedVoicePools(),paid=state.emailPlan==='paid';
-  area.innerHTML=(!email&&!pools.length)?'':`<div class="pl-grid out-volume">
-    ${pools.map(({key,label,product,quantity,tiers,upgrading,credit})=>`<div class="pl-card">
-      <div class="pl-head"><span class="pl-name">Bolsa de llamadas · ${label}</span></div>
-      <div class="pl-desc">Bolsa mensual de ${product} con compromiso de 12 meses.</div>
+  const email=selectedEmailPack(),pools=selectedVoicePools();
+  document.getElementById('volumeWalletNote').hidden=!voiceCallAttention();
+  area.innerHTML=`${pools.map(({key,label,product,quantity,tiers,upgrading,credit})=>`<section class="pl-card volume-box" data-volume-box="voice" aria-labelledby="volume-${key}">
+      <h3 id="volume-${key}" class="volume-title">Llamadas · ${label}</h3>
+      <p class="pl-desc">${product} · compromiso de 12 meses.</p>
       ${state.existing?`<div class="out-packs" role="group" aria-label="Contratación de ${label}">
         <button type="button" class="pill ${upgrading?'':'on'}" data-voice-plan="${key}" data-mode="new" aria-pressed="${!upgrading}">Agregar bolsa nueva</button>
         <button type="button" class="pill ${upgrading?'on':''}" data-voice-plan="${key}" data-mode="upgrade" aria-pressed="${upgrading}">Ampliar bolsa actual</button>
@@ -9677,28 +9705,26 @@ function renderOutboundVolume(){
       ${upgrading?`<label>¿Cuánto pagas hoy al mes por esta bolsa? (USD)<input type="number" data-voice-pay="${key}" min="0" step="0.01" value="${credit??''}" required></label>`:''}`:''}
       ${outboundVolumeGrid(key,'minutos',tiers,quantity)}
       <div class="out-quote" data-out-quote="${key}" aria-live="polite"></div>
-    </div>`).join('')}
-    ${email?`<div class="pl-card"><div class="pl-head"><span class="pl-name">Correo masivo saliente</span></div>
-      <div class="pl-desc">Hasta 1.000 envíos al mes incluidos. Sobre ese límite se cotiza el volumen completo de la bolsa, sin cobro por ticket.</div>
-      <div class="out-packs" role="group" aria-label="Plan de correo masivo">
-        <button class="pill ${paid?'':'on'}" type="button" data-email-plan="free" aria-pressed="${!paid}">Free · hasta 1.000</button>
-        <button class="pill ${paid?'on':''}" type="button" data-email-plan="paid" aria-pressed="${paid}">Agregar bolsa</button>
-      </div>
-      ${paid?outboundVolumeGrid('email','envíos',EMAIL_PACKS,state.emailQuantity):''}
+    </section>`).join('')}
+    ${emailOutboundActive()?`<section class="pl-card volume-box" data-volume-box="email" aria-labelledby="volume-email">
+      <h3 id="volume-email" class="volume-title">Correo masivo</h3>
+      <p class="pl-desc">Cada tramo indica el total de envíos incluidos al mes.</p>
+      ${outboundVolumeGrid('email','envíos',[[EMAIL_FREE_QUANTITY,0],...EMAIL_PACKS],email?.quantity)}
       <div class="out-quote" data-out-quote="email" aria-live="polite"></div>
-    </div>`:''}
-  </div>${voiceCallAttention()?'<p class="out-note" style="margin-top:10px">La billetera Adereso–Meta cubre el consumo de WhatsApp Call y el fee por separado.</p>':''}`;
+    </section>`:''}`;
   pools.forEach(pool=>renderOutboundQuote(pool.key));
-  if(email)renderOutboundQuote('email');
+  if(emailOutboundActive())renderOutboundQuote('email');
 }
 function updateOutboundQuantity(key,value){
   const voice=VOICE_POOLS.find(pool=>pool.key===key);
-  state[voice?.field||'emailQuantity']=value;
+  if(voice)state[voice.field]=value;
+  else if(key==='email'&&emailOutboundPack(value))state.emailQuantity=value;
+  else return;
   renderOutboundQuote(key);renderRail();renderSummary();renderRoi();
 }
 function selectedOutboundQuantity(key){
   const voice=VOICE_POOLS.find(pool=>pool.key===key);
-  return state[voice?.field||'emailQuantity'];
+  return voice?state[voice.field]:null;
 }
 document.getElementById('outVolume').addEventListener('focusout',e=>{
   const input=e.target.closest('[data-out-qty]');
@@ -9735,12 +9761,6 @@ document.getElementById('outVolume').addEventListener('click',e=>{
     state.voiceUpgrades[key]={...state.voiceUpgrades[key],active};
     renderOutboundVolume();renderSummary();renderRoi();
     document.querySelector(active?`[data-voice-pay="${key}"]`:`[data-voice-plan="${key}"][data-mode="new"]`)?.focus({preventScroll:true});
-    return;
-  }
-  const plan=e.target.closest('[data-email-plan]');
-  if(plan){
-    state.emailPlan=plan.dataset.emailPlan;renderOutboundVolume();renderRail();renderSummary();renderRoi();
-    document.querySelector(state.emailPlan==='paid'?'[data-out-edit="email"]':'[data-email-plan="free"]')?.focus({preventScroll:true});
     return;
   }
   const pick=e.target.closest('[data-out-pack]');
@@ -10046,6 +10066,7 @@ function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)par
 function selCassper(){return state.cassper?('Sí · '+casspPlan().name):'No';}
 
 function renderRail(){
+  const email=selectedEmailPack();
   const rec=`
     <div class="rstat"><div class="rl">Servicio</div><div class="rv rtxt">${selService()}</div></div>
     <div class="rstat"><div class="rl">Volumen</div><div class="rv rtxt">${selVol()}</div></div>
@@ -10053,7 +10074,7 @@ function renderRail(){
     <div class="rstat"><div class="rl">WhatsApp</div><div class="rv rtxt">${selWa()}</div></div>
     ${selectedVoicePools().map(({label,pack})=>`<div class="rstat"><div class="rl">${label}</div><div class="rv rtxt">${pack?outboundCount(pack.quantity)+' min/mes':'Por definir'}</div></div>`).join('')}
     ${sipOutboundActive()?`<div class="rstat"><div class="rl">SIP saliente</div><div class="rv rtxt">Precio por confirmar</div></div>`:''}
-    ${emailOutboundActive()?`<div class="rstat"><div class="rl">Correo masivo</div><div class="rv rtxt">${state.emailPlan==='free'?'Free · 1.000/mes':selectedEmailPack()?outboundCount(state.emailQuantity)+' envíos/mes':'Bolsa por definir'}</div></div>`:''}
+    ${emailOutboundActive()?`<div class="rstat"><div class="rl">Correo masivo</div><div class="rv rtxt">${email?.quantity===EMAIL_FREE_QUANTITY?'Free · 1.000/mes':email?outboundCount(email.quantity)+' envíos/mes':'Bolsa por definir'}</div></div>`:''}
     <div class="rstat"><div class="rl">Cassper</div><div class="rv rtxt">${selCassper()}</div></div>`;
   const rc=document.getElementById('railCard');
   if(rc){rc.innerHTML=`<h4>Tu selección</h4>${rec}
@@ -10078,22 +10099,45 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelect
 
 function outboundResultCard(key,pack,voice){
   const title=voice?'Bolsa de llamadas · '+voice.label:'Correo masivo saliente';
-  const free=!voice&&state.emailPlan==='free';
+  const free=!voice&&pack?.quantity===EMAIL_FREE_QUANTITY;
   const amount=voice?voice.additional:pack?.monthly;
   const quantity=pack?`${free?'Hasta ':''}${outboundCount(pack.quantity)} ${voice?'minutos':'envíos'}/mes`:'Volumen por definir';
-  const detail=pack?.rate?`<div class="rr"><span class="k">Tarifa del tramo</span><span class="v">USD ${outboundRate(pack.rate)}/${voice?'min':'envío'}</span></div>${voice?`<div class="rr"><span class="k">Minuto excedente</span><span class="v">USD ${outboundRate(pack.overage)}/min</span></div>`:''}`:'';
+  const detail=voice&&pack?`<div class="rr"><span class="k">Tarifa del tramo</span><span class="v">USD ${outboundRate(pack.rate)}/min</span></div>`:'';
   return `<div class="rcard" data-out-result="${key}"><span class="rlabel"><span data-i="coin" data-sz="14"></span>Mensual</span>
     <div class="rtitle">${title}</div>
     <div class="rbig"><span class="n">${amount!=null?outboundMoney(amount):'Por definir'}</span>${amount!=null?`<span class="u">USD/mes${voice?.upgrading?' adicionales':''}</span>`:''}</div>
     <div class="rr"><span class="k">${quantity}</span></div>
     ${voice?.credit!=null&&pack?`<div class="rr"><span class="k">Nueva bolsa</span><span class="v">${usd2(pack.monthly)}</span></div><div class="rr"><span class="k">Bolsa actual</span><span class="v">−${usd2(voice.credit)}</span></div>`:''}${detail}
-    <div class="pl-desc">${voice?'12 meses · '+voice.product+'.':'Envíos masivos sin cobro por ticket.'}</div>
+    <div class="pl-desc">${voice?'12 meses · '+voice.product+'.':'Bolsa mensual de envíos.'}</div>
     <button type="button" class="pop-link" data-goto="s2">Editar volumen</button>
   </div>`;
+}
+function usageOverageSummary(conversation,voicePools,email){
+  const rows=[];
+  const row=(key,label,value,unit,detail='')=>`<div data-usage-overage="${key}">
+    <dt>${label}</dt><dd><strong>${value}</strong><small>${unit}</small>${detail?`<small>${detail}</small>`:''}</dd></div>`;
+  if(conversation){
+    const product=conversation.split?'Desk + Studio':conversation.desk!=null?'Desk':'Studio';
+    const detail=conversation.split?`Desk USD ${outboundRate(conversation.desk,6)} · Studio USD ${outboundRate(conversation.studio,6)}`:'';
+    rows.push(row('conversations','Conversaciones · '+product,'USD '+outboundRate(conversation.total,6),'Por conversación adicional',detail));
+  }
+  voicePools.forEach(({key,label,pack})=>{
+    if(pack)rows.push(row(key,'Llamadas · '+label,'USD '+outboundRate(pack.overage),'Por minuto adicional'));
+  });
+  if(email){
+    rows.push(email.overage==null
+      ?row('email','Correo masivo','Requiere una bolsa pagada',`Sobre ${outboundCount(email.quantity)} envíos al mes`)
+      :row('email','Correo masivo','USD '+outboundRate(email.overage,7),'Por envío adicional'));
+  }
+  return rows.length?`<section class="usage-overages" aria-labelledby="usageOveragesTitle">
+    <h3 id="usageOveragesTitle" class="volume-title">Excedentes por uso</h3>
+    <dl>${rows.join('')}</dl>
+  </section>`:'';
 }
 function renderSummary(){renderTerm();
   const voicePools=selectedVoicePools(),voiceIncomplete=voicePools.some(({additional})=>additional==null);
   const conversations=conversationQuote(),conversationIncomplete=!!conversations?.pending;
+  const email=selectedEmailPack();
   const copyButton=document.getElementById('copyBtn');
   if(copyButton)copyButton.disabled=voiceIncomplete||conversationIncomplete;
   const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
@@ -10114,14 +10158,11 @@ function renderSummary(){renderTerm();
   mTable+=`<div class="rr"><span class="k">Volumen contratado</span><span class="v">${volNow.toLocaleString('es-CL')} conv</span></div>`;
   const mTitle=!state.studio?'Mesa de ayuda':(soloStudio?'Agente IA (sin Desk)':'Bolsa de conversaciones');
   if(extraAgentsN()>0)mTable+=`<div class="rr"><span class="k">Agentes IA extra <small class="xsplit">${extraAgentsN()} × USD ${BOT_MANT*studioMultiplier()} mantención · setup por confirmar</small></span><span class="v">${usd(extraAgentsMant())}</span></div>`;
-  const xt=scopeBag()?extraTicket():null;
-  /* la conversación extra queda a la vista en la tarjeta; el resto del desglose va al popup de detalle */
-  let xRow='';
-  if(xt){
-    const xp=`<span style="color:var(--brand);font-weight:500">${usd3(xt.total)} c/u</span>`;
-    const xv=xt.split?`${xp}<small class="xsplit">Desk ${usd3(xt.desk)} + Studio ${usd3(xt.studio)}</small>`:`${xp}<small class="xsplit">${xt.desk!=null?'Desk':'Studio'}</small>`;
-    xRow=`<div class="rxtra">${scopeBag()&&(withIA||state.desk)?`<div class="rr"><span class="k">Incluye</span><span class="v">${volNow.toLocaleString('es-CL')} conv./mes</span></div>`:''}<div class="rr"><span class="k">Conversación extra</span><span class="v">${xv}</span></div>${state.existing?'':'<div class="rr sim-link-row"><button class="pop-link" type="button" data-pop="simx"><span><span data-i="chart" data-sz="14"></span></span><span><b>¿Pagar extras o subir de bolsa?</b><small>Simula cuál le conviene según su volumen</small></span><i>→</i></button></div>'}</div>`;
-  }
+  const xt=scopeBag()&&conversationTarget()&&!conversationIncomplete?extraTicket():null;
+  const xRow=xt?`<div class="rxtra">
+    <div class="rr"><span class="k">Incluye</span><span class="v">${volNow.toLocaleString('es-CL')} conv./mes</span></div>
+    ${state.existing?'':'<div class="rr sim-link-row"><button class="pop-link" type="button" data-pop="simx"><span><span data-i="chart" data-sz="14"></span></span><span><b>¿Pagar extras o subir de bolsa?</b><small>Simula cuál le conviene según su volumen</small></span><i>→</i></button></div>'}
+  </div>`:'';
   const cTxt=`<span class="rchip"><span data-i="clock" data-sz="12"></span>Contrato a ${term().lbl}</span>`;
   let mDesc=(!state.studio?'Plataforma omnicanal.':(soloStudio?'Agente con IA, sin mesa de ayuda humana.':'Plataforma omnicanal + agente con IA.'));
   let conversationRows='';
@@ -10148,6 +10189,7 @@ function renderSummary(){renderTerm();
     if(state.improve)t+=`<div class="rr"><span class="k">Mejora del agente actual <small class="xsplit">solo setup</small></span><span class="v">Sin mensualidad</span></div>`;
     mTable=t;
   }
+  if(xt)mTable+=`<div class="rr"><span class="k">Conversación extra</span><span class="v">USD ${outboundRate(xt.total,6)} c/u</span></div>`;
   if(termAdj()!==0){const mb=monthlyBase();mTable+=`<div class="rr"><span class="k">Plazo ${term().lbl}${state.prepay&&term().pre!=null?' + pago anticipado':''} <small class="xsplit">${termTxt()}</small></span><span class="v" style="color:${termAdj()<0?'var(--success)':'var(--danger)'}">${termAdj()<0?'−':'+'}${usd(Math.abs(m-mb))}</span></div>`;}
   const mensualCard=`
     <div class="rcard"><span class="rlabel"><span data-i="coin" data-sz="14"></span>${state.existing?'Upsell mensual':'Mensual'}</span>
@@ -10274,7 +10316,8 @@ function renderSummary(){renderTerm();
   document.getElementById('sumCard').innerHTML=`
     ${conversationIncomplete?`<div class="note warn" style="margin-bottom:12px" role="status"><span data-i="info"></span><div>${conversations.pending} <button type="button" class="linkbtn" data-goto="s2">Ir a Volumen</button></div></div>`:''}
     ${voiceIncomplete?`<div class="note warn" style="margin-bottom:12px" role="status"><span data-i="info"></span><div>Completa las bolsas de minutos en <button type="button" class="linkbtn" data-goto="s2">Volumen</button> para completar la cotización de llamadas.</div></div>`:''}
-    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${voicePools.map(pool=>outboundResultCard(pool.key,pool.pack,pool)).join('')}${sipCard}${emailOutboundActive()?outboundResultCard('email',selectedEmailPack()):''}${spotCard}${cassperCard}${voiceIncomplete?'':prepagoCard}${implVisible()?pagoCard:''}${hhCard}</div>`;
+    <div class="result-cards">${hasService()&&!improveOnly()?mensualCard:''}${xCard}${voicePools.map(pool=>outboundResultCard(pool.key,pool.pack,pool)).join('')}${sipCard}${emailOutboundActive()?outboundResultCard('email',email):''}${spotCard}${cassperCard}${voiceIncomplete?'':prepagoCard}${implVisible()?pagoCard:''}${hhCard}</div>
+    ${usageOverageSummary(xt,voicePools,email)}`;
   paintIcons(document.getElementById('sumCard'));
   alignCards();
   applyReveal(document.getElementById('sumCard'),'.rcard');
@@ -10695,7 +10738,7 @@ document.getElementById('roiArea').addEventListener('input',e=>{
 /* nav */
 const KICK={s0:'Lo que paga hoy',s1:'Servicios',sc:'Canales',s2:'Volumen',s3:'Implementación',s4:'Billetera Adereso–Meta',sp:'Plazo de contrato'};
 const NEXTLABEL={s1:'Continuar a servicios',sc:'Continuar a canales',s2:'Continuar al volumen',s3:'Continuar a implementación',s4:'Continuar a la billetera',sp:'Continuar al plazo del contrato',s5:'Ver resumen',s6:'Ver el retorno de la inversión',s7:'Ver el proceso comercial',s8:'Conocer el portal cliente'};
-function volumeVisible(){return (hasService()&&scopeBag())||voiceOutboundActive()||emailOutboundActive();}
+function volumeVisible(){return (!!conversationTarget()&&scopeBag())||voiceOutboundActive()||emailOutboundActive();}
 function activeSections(){return SECTIONS.filter(id=>id!=='sp'&&(id!=='s0'||state.existing)&&(id!=='sc'||channelsAvailable())&&(id!=='s2'||volumeVisible())&&(id!=='s3'||implVisible())&&(id!=='s4'||waActive())&&(id!=='sp'||hasService()));}
 function buildNav(){
   const secs=activeSections();
@@ -11011,14 +11054,16 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
   const impl=iaSetup()?(allRapid()?'Rápida · paquetizado con mejores prácticas (Shopify/VTEX/Magento) — Gratis':(agentsN()>1?Array.from({length:agentsN()},(_,i)=>(agentType(i)==='flow'?'Flow ':'Agent ')+(i+1)+': '+(agentMode(i)==='paquetizado'?'Rápida':SETUP[agentPlan(i)].name+' (acompañada)')).join(' · ')+' — '+usd(s):(agentType(0)==='flow'?'Flow · ':'')+SETUP[state.setup].name+' (acompañada) — '+usd(s))):(deskInteg()?'Onboarding Desk sin costo + integraciones · '+SETUP[state.setup].name+' — '+usd(s):'Onboarding Desk (capacitación por rol, conexión de canales; sin integraciones) — Gratis');
   const L=['COTIZACIÓN ADERESO','─────────────────────'];
   if(hasService()){L.push('Servicio: '+selService());L.push('Volumen: '+selVol());L.push(state.existing?('Upsell mensual (cliente vigente): +'+usd(m)+'/mes'+(state.scope!=='bolsa'?' · incluye '+botsN()+' bot(s) nuevo(s) × USD '+(BOT_MANT*studioMultiplier()):'')+(state.improve?' · mejora del agente actual: solo setup':'')):('Mensual (contrato a '+term().lbl+(state.prepay&&term().pre!=null?', pago anticipado':'')+'): '+usd(m)+'/mes'+(termAdj()?' · '+termTxt():'')));if(xCost()>0){L.push('Canal X — mensualidad: USD '+xMoney(xCost())+'/mes · bolsa propia de '+xVolume().toLocaleString('es-CL')+' conversaciones/mes');L.push('Canal X — bolsa base: USD '+X_PRICE+'/mes por '+X_MSGS.toLocaleString('es-CL')+' conversaciones');if(xBagAdded()>0)L.push('Canal X — ampliación contratada: '+xBagAdded().toLocaleString('es-CL')+' × USD '+X_BAG_RATE.toFixed(3)+' = USD '+xMoney(xBagAddedCost())+'/mes');L.push('Canal X — ticket extra fuera de su bolsa contratada: USD '+X_EXTRA.toFixed(4)+' c/u, según consumo');}if(state.spotQty>0&&spotUnit())L.push('Bolsa spot (compra única): '+state.spotQty.toLocaleString('es-CL')+' conv × '+usd3(spotUnit().total)+' = '+usd(spotCost()));
-    const xt=extraTicket();if(xt)L.push('Conversación extra fuera de bolsa: '+usd3(xt.total)+' c/u'+(xt.split?' (Desk '+usd3(xt.desk)+' + Studio '+usd3(xt.studio)+')':''));}
+    const xt=scopeBag()&&conversationTarget()?extraTicket():null;if(xt)L.push('Conversación extra fuera de bolsa: USD '+outboundRate(xt.total,6)+' c/u'+(xt.split?' (Desk '+outboundRate(xt.desk,6)+' + Studio '+outboundRate(xt.studio,6)+')':''));}
   if(conversations?.credit!=null)L.push('Bolsa de conversaciones · '+CONVERSATION_PRODUCTS[conversationPlan().profile]+': nueva '+usd2(conversations.replacement)+'/mes · bolsa actual −'+usd2(conversations.credit)+'/mes');
   const email=selectedEmailPack();
-  voicePools.forEach(({label,pack,credit,additional})=>L.push('Bolsa de llamadas · '+label+': '+outboundCount(pack.quantity)+' min/mes · USD '+outboundMoney(additional)+'/mes'+(credit!=null?' adicionales (nueva '+usd2(pack.monthly)+' · bolsa actual −'+usd2(credit)+')':'')+' · 12 meses'));
+  voicePools.forEach(({label,pack,credit,additional})=>L.push('Bolsa de llamadas · '+label+': '+outboundCount(pack.quantity)+' min/mes · USD '+outboundMoney(additional)+'/mes'+(credit!=null?' adicionales (nueva '+usd2(pack.monthly)+' · bolsa actual −'+usd2(credit)+')':'')+' · 12 meses · Minuto extra USD '+outboundRate(pack.overage)));
   const sip=sipOutboundActive();
   if(voiceCallAttention())L.push('WhatsApp Call saliente · '+CALL_ATTENTION_LABELS[voiceCallAttention()]+': consumo Meta en la billetera.');
   if(sip)L.push('Llamada SIP saliente · '+CALL_ATTENTION_LABELS[voiceCallAttention('sip')]+': precio por confirmar según la configuración de telefonía.');
-  if(emailOutboundActive())L.push('Correo masivo: '+(email?(state.emailPlan==='free'?'Free · hasta ':'')+outboundCount(email.quantity)+' envíos/mes · USD '+outboundMoney(email.monthly)+'/mes':'volumen por definir')+' · sin cobro por ticket');
+  if(emailOutboundActive())L.push('Correo masivo: '+(email
+    ?(email.quantity===EMAIL_FREE_QUANTITY?'Free · hasta ':'')+outboundCount(email.quantity)+' envíos/mes · USD '+outboundMoney(email.monthly)+'/mes · Excedente: '+emailOverageText(email)
+    :'volumen por definir'));
   if(iaSetup())L.push('Implementación: '+impl+' (pago único)');
   if(state.cassper)L.push('Cassper: '+casspPlan().name+' ('+casspPlan().credits.toLocaleString('es-CL')+' CR) — '+(cM===0?'Gratis':usd(cM)+'/mes')+(CASSPER_SUCCESS!=null?' + success fee '+CASSPER_SUCCESS+'%'+(cSucc>0?' (~'+usd(cSucc)+'/mes est.)':''):' + success fee por confirmar'));
   if(waActive()){const ws=walletSplit();L.push('Billetera Adereso–Meta ('+waP().name+', '+(state.wa.wallet==='recurrente'?'recurrente ':'spot ')+walFee()+'%'+'): '+(ws.total>0?'recarga '+usd(ws.total)+' (saldo Meta '+usd(ws.meta)+' + fee '+usd(ws.fee)+')'+(walletIsEstimate()?' · estimado':''):'monto a definir'));}
@@ -11433,7 +11478,7 @@ document.getElementById('custSeg')?.addEventListener('click',e=>{const b=e.targe
   /* cliente nuevo parte con Desk + Studio; cliente vigente parte de cero para que el KAM elija */
   state.desk=!ex;state.studio=!ex;state.engage=false;state.cassper=false;state.whatsapp=false;state.walletOnly=false;state.hhCustom=false;state.scope='bolsa';state.bots=1;state.improve=false;state.chanNew=false;state.extraAgents=0;state.deskInteg=false;state.wa.fee=null;
   state.conversationPlans={};state.voiceUpgrades={};
-  state.chan={...INITIAL_STATE.chan};state.out={...INITIAL_STATE.out};state.communicationMode=INITIAL_STATE.communicationMode;state.callAttention=INITIAL_STATE.callAttention;state.sipCallAttention=INITIAL_STATE.sipCallAttention;state.humanVoiceMinutes=INITIAL_STATE.humanVoiceMinutes;state.voiceMinutes=INITIAL_STATE.voiceMinutes;state.emailPlan=INITIAL_STATE.emailPlan;state.emailQuantity=INITIAL_STATE.emailQuantity;
+  state.chan={...INITIAL_STATE.chan};state.out={...INITIAL_STATE.out};state.communicationMode=INITIAL_STATE.communicationMode;state.callAttention=INITIAL_STATE.callAttention;state.sipCallAttention=INITIAL_STATE.sipCallAttention;state.humanVoiceMinutes=INITIAL_STATE.humanVoiceMinutes;state.voiceMinutes=INITIAL_STATE.voiceMinutes;state.emailQuantity=INITIAL_STATE.emailQuantity;
   if(!state.roiCostTouched)state.roiCost=null;renderMods();renderAll();refreshFlow();
   state.existing?setActive('s0'):computeActive();});
 /* panel de cliente vigente: alcance y bots nuevos */

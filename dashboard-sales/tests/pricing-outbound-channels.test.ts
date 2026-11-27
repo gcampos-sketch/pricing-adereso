@@ -21,8 +21,6 @@ function calculator() {
     communicationMode: 'both',
     engage: false,
     out: { ...initial.out },
-    emailPlan: 'free',
-    emailQuantity: 35000,
     humanVoiceMinutes: 7500,
     voiceMinutes: 12350,
   };
@@ -38,14 +36,19 @@ function calculator() {
   return { state, pricing, channels };
 }
 
-test('outbound email switches from Free to the published paid tiers', () => {
+test('mass email accepts exact tiers and applies a 15% surcharge to extra sends', () => {
   const { pricing } = calculator();
-  expect(pricing.emailOutboundPack(1000).monthly).toBe(0);
-  expect(pricing.emailOutboundPack(1001).monthly).toBe(2.90);
-  for (const [quantity, monthly] of [[10000, 29], [20000, 49], [50000, 89], [100000, 139], [250000, 279], [500000, 499], [1000000, 990]]) {
-    expect(pricing.emailOutboundPack(quantity).monthly).toBe(monthly);
+  expect(pricing.emailOutboundPack(1000)).toEqual({ quantity: 1000, monthly: 0, overage: null });
+  for (const quantity of [null, 999, 1001, 35000, 1000001]) {
+    expect(pricing.emailOutboundPack(quantity)).toBeNull();
   }
-  expect(pricing.emailOutboundPack(35000)).toMatchObject({ baseTier: 20000, monthly: 85.75 });
+  for (const [quantity, monthly, overage] of [
+    [10000, 29, .003335], [20000, 49, .0028175], [50000, 89, .002047],
+    [100000, 139, .0015985], [250000, 279, .0012834],
+    [500000, 499, .0011477], [1000000, 990, .0011385],
+  ]) {
+    expect(pricing.emailOutboundPack(quantity)).toEqual({ quantity, monthly, overage });
+  }
 });
 
 test('human and IA voice use independent volume tiers and overage rates', () => {
@@ -96,8 +99,10 @@ test('mass email is priced only when explicitly selected under Engage', () => {
   expect(pricing.selectedEmailPack()).toBeNull();
   state.out.correo = true;
   expect(pricing.selectedEmailPack()).toMatchObject({ quantity: 1000, monthly: 0 });
-  state.emailPlan = 'paid';
-  expect(pricing.outboundMonthly()).toBe(85.75);
+  state.emailQuantity = 20000;
+  expect(pricing.outboundMonthly()).toBe(49);
+  state.emailQuantity = 35000;
+  expect(pricing.selectedEmailPack()).toBeNull();
   state.engage = false;
   expect(pricing.outboundMonthly()).toBe(0);
 });
@@ -173,8 +178,8 @@ test('existing customers can add outbound packs using contracted Desk and Studio
 
   state.out.correo = true;
   expect(pricing.selectedEmailPack()).toMatchObject({ quantity: 1000, monthly: 0 });
-  state.emailPlan = 'paid';
-  expect(pricing.outboundMonthly()).toBe(85.75);
+  state.emailQuantity = 20000;
+  expect(pricing.outboundMonthly()).toBe(49);
 
   state.out.wacall = true;
   state.callAttention = 'both';
@@ -186,7 +191,7 @@ test('existing customers can add outbound packs using contracted Desk and Studio
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('<option value="both" selected');
   expect(pricing.selectedVoicePools()).toHaveLength(2);
-  expect(pricing.outboundMonthly()).toBe(2271.75);
+  expect(pricing.outboundMonthly()).toBe(2235);
 
   state.engage = false;
   pricing.renderOpts();
@@ -195,13 +200,13 @@ test('existing customers can add outbound packs using contracted Desk and Studio
   expect(pricing.outboundMonthly()).toBe(0);
 });
 
-test('outbound packs reuse the volume tiles and support a selected custom amount per pack', () => {
+test('voice packs are customizable and email displays only fixed choices', () => {
   const gridSource = hub.slice(hub.indexOf('function volumeTile('), hub.indexOf('function conversationNumber('));
   const tiles = runInNewContext(source + gridSource + `;
     ({
       human: outboundVolumeGrid('voice-human', 'minutos', VOICE_POOLS[0].tiers, 3000),
       ai: outboundVolumeGrid('voice', 'minutos', VOICE_POOLS[1].tiers, 5000),
-      email: outboundVolumeGrid('email', 'envíos', EMAIL_PACKS, null)
+      email: outboundVolumeGrid('email', 'envíos', [[EMAIL_FREE_QUANTITY, 0], ...EMAIL_PACKS], 1000)
     })
   `);
   expect(tiles.human).toContain('class="vtile vtile-in sel"');
@@ -209,8 +214,9 @@ test('outbound packs reuse the volume tiles and support a selected custom amount
   expect(tiles.human).toContain('data-out-qty="voice-human" min="2000"');
   expect(tiles.ai).toContain('data-out-pack="voice" data-qty="5000" aria-pressed="true"');
   expect(tiles.ai).toContain('Otra cantidad');
-  expect(tiles.email).toContain('data-out-qty="email" min="1001"');
-  expect(tiles.email).toContain('customVolumeHint-email');
+  expect([...tiles.email.matchAll(/data-out-pack="email"/g)]).toHaveLength(8);
+  expect(tiles.email).toContain('data-out-pack="email" data-qty="1000" aria-pressed="true"');
+  expect(tiles.email).not.toMatch(/data-out-edit|data-out-qty|Otra cantidad/);
 });
 
 test('private email and Studio price tables stay outside the public Meta wallet', () => {
@@ -291,10 +297,11 @@ test('voice and inbound conversation volume start with the 2,000 tiles selected'
   const gridSource = hub.slice(hub.indexOf('function volumeTile('), hub.indexOf('function conversationNumber('));
   const volumeRenderer = hub.slice(hub.indexOf('function renderOutboundVolume()'), hub.indexOf('function updateOutboundQuantity('));
   const area = { innerHTML: '' };
+  const walletNote = { hidden: false };
   const { volGrid, renderOutboundVolume } = runInNewContext(source + gridSource + volumeRenderer + ';({ volGrid, renderOutboundVolume })', {
     state,
     TILES: [2000, 3000],
-    document: { getElementById: () => area },
+    document: { getElementById: (id: string) => id === 'volumeWalletNote' ? walletNote : area },
     hasExistingDesk: () => false,
     hasService: () => true,
     renderOutboundQuote: () => {},
@@ -302,6 +309,31 @@ test('voice and inbound conversation volume start with the 2,000 tiles selected'
   renderOutboundVolume();
   expect(area.innerHTML).toContain('data-out-pack="voice-human" data-qty="2000" aria-pressed="true"');
   expect(area.innerHTML).toContain('data-out-pack="voice" data-qty="2000" aria-pressed="true"');
-  expect(area.innerHTML).not.toContain('Billetera Adereso–Meta');
+  expect(walletNote.hidden).toBe(true);
   expect(volGrid(state.volMode === 'custom')).toContain('data-vol="2000" aria-pressed="true"');
+});
+
+test('the summary shows selected overages independently and explains the Free limit', () => {
+  const summary = hub.slice(hub.indexOf('function usageOverageSummary('), hub.indexOf('function renderSummary('));
+  const markup = runInNewContext(source + summary + `;({
+    all: usageOverageSummary({ split: true, desk: .10051, studio: .122245, total: .222755 }, [
+      { ...VOICE_POOLS[0], pack: voicePack(2000, VOICE_POOLS[0].tiers) },
+      { ...VOICE_POOLS[1], pack: voicePack(2000, VOICE_POOLS[1].tiers) }
+    ], emailOutboundPack(10000)),
+    desk: usageOverageSummary({ split: false, desk: .1005, studio: null, total: .1005 }, [], null),
+    studio: usageOverageSummary({ split: false, desk: null, studio: .1222, total: .1222 }, [], null),
+    free: usageOverageSummary(null, [], emailOutboundPack(1000))
+  })`);
+  expect(markup.all).toContain('Conversaciones · Desk + Studio');
+  expect(markup.all).toContain('USD 0,222755');
+  expect(markup.all).toContain('USD 0,0345');
+  expect(markup.all).toContain('USD 0,207');
+  expect(markup.all).toContain('USD 0,003335');
+  expect(markup.all).toContain('Por envío adicional');
+  expect(markup.desk).toContain('Conversaciones · Desk');
+  expect(markup.desk).not.toContain('Studio');
+  expect(markup.studio).toContain('Conversaciones · Studio');
+  expect(markup.studio).not.toContain('Desk');
+  expect(markup.free).toContain('Requiere una bolsa pagada');
+  expect(markup.free).toContain('Sobre 1.000 envíos al mes');
 });
