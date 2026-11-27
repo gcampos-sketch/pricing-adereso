@@ -326,6 +326,7 @@
   @media(max-width:640px){section.lvl{padding:20px 16px 16px;border-radius:18px}}
   section.lvl.dim{opacity:.32;filter:blur(2px)}
   @media(prefers-reduced-motion:reduce){section.lvl.dim{filter:none;opacity:.5}}
+  #sc.dim:has(.continue[hidden]){filter:none;opacity:1}
   /* asentamiento tipo líquido al acomodarse en un nivel */
   section.lvl:first-of-type{padding-top:22px}
   .hero{padding:12px 0 26px;margin-bottom:4px}
@@ -11095,6 +11096,8 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
 const topbar=document.querySelector('.topbar');let _sc=false,_spy=false;
 function computeActive(){
   const secs=activeSections();if(!secs.length)return;
+  const atBottom=window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4;
+  if(channelModePending()&&window.scrollY>0&&atBottom){setActive('sc');return;}
   /* arriba del todo manda la primera sección (Nivel 0 para cliente vigente), aunque la siguiente quede más al centro */
   {const f=document.getElementById(secs[0]);if(f&&f.getBoundingClientRect().bottom>window.innerHeight*0.42){setActive(secs[0]);return;}}
   /* la siguiente sección se enfoca recién cuando su borde superior sube al 38% de la pantalla:
@@ -11103,7 +11106,7 @@ function computeActive(){
   secs.forEach(id=>{const el=document.getElementById(id);if(!el||el.classList.contains('hidden'))return;
     if(el.getBoundingClientRect().top<=line)best=id;});
   /* al final de la página manda la última sección visible, aunque no alcance a subir hasta la línea */
-  if(window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4){const vis=secs.filter(id=>{const el=document.getElementById(id);return el&&!el.classList.contains('hidden');});if(vis.length)best=vis[vis.length-1];}
+  if(atBottom){const vis=secs.filter(id=>{const el=document.getElementById(id);return el&&!el.classList.contains('hidden');});if(vis.length)best=vis[vis.length-1];}
   setActive(best);
 }
 function onScroll(){
