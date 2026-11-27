@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-  contactRole, creationPeriod, currentOutcome, isProspectingCandidate, layoutPipelineFlow, meetingBooked, meetingHeld,
+  contactRole, creationPeriod, currentOutcome, inboundAdCoverage, isProspectingCandidate, layoutPipelineFlow, meetingBooked, meetingHeld,
   pipelineColumns, serviceToChurn, trackedMetaAd, wasWon, type PipelineDeal,
 } from '../src/lib/pipeline-analysis';
 
@@ -92,4 +92,35 @@ test('keeps ads with the same Creative Analytics name separate and filters the e
   const route = layoutPipelineFlow(deals.filter(row => selected.has(row.id)), columns);
   expect(route.links.every(link => link.members.length === 1 && link.members[0]?.id === '1')).toBe(true);
   expect(route.columns.find(column => column.title === 'E8 Servicio iniciado')?.nodes[0]?.name).toBe('E8 Servicio iniciado');
+});
+
+
+test('Inbound coverage keeps unattributed and unread deals visible outside the ad ranking', () => {
+  const rows = [
+    deal('1', { adId: '100', creative: { name: 'Creativo', format: 'Video' } }),
+    deal('2', { adId: '200', creative: { name: 'Otro creativo', format: '' } }),
+    deal('3', { adId: '300' }),
+    deal('4'),
+    deal('5', { contactRead: false }),
+  ];
+  const coverage = inboundAdCoverage(rows);
+  expect(coverage.tracked.map(row => row.id)).toEqual(['1', '2', '3']);
+  expect(coverage).toMatchObject({ untracked: 1, pending: 1, named: 2, formatted: 1 });
+});
+
+test('compact Inbound conserves every deal and distinguishes a win, a loss and recorded service', () => {
+  const rows = [
+    deal('1', { adId: '100', stage: '173990327' }),
+    deal('2', { adId: '100', stage: '171385869', entries: { '174677684': '2026-02-01T12:00:00Z' } }),
+    deal('3', { adId: '200', stage: '171385869' }),
+    deal('4', { stage: '171385866' }),
+  ];
+  const compact = layoutPipelineFlow(rows, pipelineColumns('Inbound', 'compact'), true);
+  expect(compact.columns.map(column => column.title)).toEqual(['Anuncio rastreado', 'Reunión concretada', 'Resultado comercial', 'Servicio E8']);
+  expect(compact.columns[2]!.nodes.map(node => node.name).sort()).toEqual([
+    'Ganado registrado', 'Ganado y pérdida registrada', 'Pérdida registrada', 'Sin cierre registrado',
+  ]);
+  expect(compact.columns[3]!.nodes.find(node => node.name === 'Llegó a E8')?.members.map(row => row.id)).toEqual(['1']);
+  for (const column of compact.columns) expect(column.nodes.flatMap(node => node.members.map(row => row.id)).sort()).toEqual(['1', '2', '3', '4']);
+  expect(pipelineColumns('Inbound', 'summary').length).toBeGreaterThan(compact.columns.length);
 });
