@@ -7,6 +7,7 @@ import {
   reachedCommercial, serviceToChurn, wasInService, wasLost, wasWon,
   type PipelineDeal, type PipelineReport, type RouteDetail, type StageId, type View,
 } from '@/lib/pipeline-analysis';
+import { layoutPipelineTrace, pipelineTraceIds, selectPipelineTrace, type PipelineTrace } from '@/lib/pipeline-trace';
 import type { RoleFilter } from '@/lib/owner-roles';
 import { CopyDealLinksButton } from './CopyControls';
 import './PipelineAnalysis.css';
@@ -89,7 +90,8 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const [industry, setIndustry] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<Breakdown>('industry');
   const [focus, setFocus] = useState<string | null>(null);
-  const [origin, setOrigin] = useState<{ key: string; label: string; ids: Set<string> } | null>(null);
+  const [paths, setPaths] = useState<PipelineTrace>([]);
+  const [addPath, setAddPath] = useState(false);
   const [drill, setDrill] = useState<Drill | null>(null);
   const returnFocus = useRef<Element | null>(null);
   const graphHeading = useRef<HTMLHeadingElement>(null);
@@ -111,8 +113,12 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const adRanking = isInbound && (breakdown === 'ad' || breakdown === 'format' || breakdown === 'campaign');
   const rankingDeals = adRanking ? coverage.tracked : scoped;
   const [groupLabel, groupBy] = breakdowns[breakdown];
-  const deals = useMemo(() => scoped.filter(deal => (focus === null || groupBy(deal) === focus) && (!origin || origin.ids.has(deal.id))), [scoped, focus, groupBy, origin]);
+  const deals = useMemo(() => scoped.filter(deal => focus === null || groupBy(deal) === focus), [scoped, focus, groupBy]);
   const graph = useMemo(() => layoutPipelineFlow(deals, pipelineColumns(view, route), compact), [deals, view, route, compact]);
+  const traceIds = useMemo(() => pipelineTraceIds(paths), [paths]);
+  const trace = useMemo(() => paths.length ? layoutPipelineTrace(graph, traceIds) : null, [graph, paths.length, traceIds]);
+  const tracedDeals = deals.filter(deal => traceIds.has(deal.id));
+  const currentPath = paths.at(-1);
   const buckets = useMemo(() => {
     const groups = new Map<string, PipelineDeal[]>();
     for (const deal of rankingDeals) {
@@ -143,8 +149,21 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
   const nextWidth = compact ? 180 : 164;
   const width = firstWidth + (graph.columns.length - 1) * nextWidth;
   const columnX = (index: number) => index === 0 ? 0 : firstWidth + (index - 1) * nextWidth;
-  const activeLabel = origin?.label ?? (focus && (buckets.find(row => row.key === focus)?.name ?? focus));
-  const clearRoute = () => { setFocus(null); setOrigin(null); };
+  const activeLabel = focus && (buckets.find(row => row.key === focus)?.name ?? focus);
+  const clearTrace = () => { setPaths([]); setAddPath(false); };
+  const clearRoute = () => { setFocus(null); clearTrace(); };
+  const selectTrace = (key: string, label: string, members: PipelineDeal[]) => {
+    setPaths(previous => selectPipelineTrace(previous, { key, label, ids: new Set(members.map(deal => deal.id)) }, addPath));
+    setAddPath(false);
+  };
+  const traceLink = (link: (typeof graph.links)[number]) =>
+    selectTrace(edgeKey(link), `${link.source.name} → ${link.target.name}`, link.members);
+  const edgeKey = ({ depth, source, target }: (typeof graph.links)[number]) =>
+    JSON.stringify([graph.columns[depth]?.title, source.key, graph.columns[depth + 1]?.title, target.key]);
+  const ribbon = ({ depth, width: thickness, y1, y2 }: (typeof graph.links)[number]) => {
+    const x1 = columnX(depth) + 24, x2 = columnX(depth + 1) + 11, mid = (x1 + x2) / 2;
+    return `M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2} L${x2},${y2 + thickness} C${mid},${y2 + thickness} ${mid},${y1 + thickness} ${x1},${y1 + thickness} Z`;
+  };
   const resetGroup = () => { clearRoute(); setExpanded(false); };
   const dismissRoute = () => { clearRoute(); if (isInbound) setRoute('compact'); };
   const focusGraph = () => requestAnimationFrame(() => graphHeading.current?.focus());
@@ -175,12 +194,12 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
     {buckets.length ? <div className="pipeline-analysis-scroll" tabIndex={0} role="region" aria-label="Tabla de conversión desplazable horizontalmente">
       <table className="pipeline-analysis-table" data-inbound-ranking={isInbound || undefined}>
         <thead><tr><th scope="col">{groupLabel}</th><th scope="col">Deals</th>{orderedMetrics.map(([name]) => <th scope="col" key={name}>{isInbound && name === 'Llegaron a E8' ? 'Llegaron a servicio (E8)' : name}</th>)}</tr></thead>
-        <tbody>{buckets.slice(0, expanded ? undefined : rowLimit).map(({ key, name, detail, rows, counts }) => <tr key={key} data-active={focus === key || origin?.key === key}>
-          <th scope="row"><button className="pipeline-analysis-row" type="button" aria-pressed={focus === key || origin?.key === key}
+        <tbody>{buckets.slice(0, expanded ? undefined : rowLimit).map(({ key, name, detail, rows, counts }) => <tr key={key} data-active={focus === key}>
+          <th scope="row"><button className="pipeline-analysis-row" type="button" aria-pressed={focus === key}
             aria-label={isInbound ? `Ver ruta de ${name}${rows[0]?.adId && breakdown === 'ad' ? ` · ID ${rows[0].adId}` : ''}` : undefined}
             onClick={() => {
-              if (focus === key || origin?.key === key) { dismissRoute(); return; }
-              setOrigin(null); setFocus(key); setRoute('summary'); if (isInbound) focusGraph();
+              if (focus === key) { dismissRoute(); return; }
+              clearTrace(); setFocus(key); setRoute('summary'); if (isInbound) focusGraph();
             }}>{name}</button>{detail && <small>{detail}</small>}</th>
           <td><button className="pipeline-analysis-row" type="button" onClick={event => open(name, rows, event.currentTarget)}>{number.format(rows.length)}</button></td>
           {orderedMetrics.map(([label, test]) => {
@@ -260,25 +279,51 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
       }} /> Incluir prospección SDR sin clasificar{unconfirmed > 0 && ` · ${number.format(unconfirmed)} deals en esta vista`}
     </label>}
     {deals.length > 0 ? <>
-      <p className="pipeline-analysis-note">El ancho representa cantidad de deals. Selecciona un origen para abrir su recorrido completo y un bloque o conexión posterior para ver sus deals.</p>
+      <p className="pipeline-analysis-note">{addPath
+        ? 'Selecciona una barra o un flujo para empezar otro recorrido.'
+        : trace
+          ? 'Selecciona otro punto del recorrido para acotarlo. Vuelve a pulsar un punto marcado para quitarlo.'
+          : 'Selecciona una barra o un flujo para iluminar el recorrido de sus deals.'}</p>
+      {trace && <div className="pipeline-analysis-route pipeline-analysis-trace-controls">
+        <strong role="status">{number.format(tracedDeals.length)} deals resaltados · {number.format(tracedDeals.filter(wasWon).length)} ganados · {number.format(tracedDeals.filter(wasInService).length)} llegaron a servicio</strong>
+        <div className="pipeline-analysis-trace-actions">
+          <button type="button" className="tab" onClick={event => open('Deals del recorrido resaltado', tracedDeals, event.currentTarget)}>Ver deals de la traza</button>
+          <button type="button" className="tab" aria-pressed={addPath} onClick={() => setAddPath(!addPath)}>{addPath ? 'Cancelar nuevo camino' : 'Añadir otro camino'}</button>
+          {compact && <button type="button" className="tab" onClick={() => setRoute('summary')}>Recorrido completo</button>}
+          <button type="button" className="tab" onClick={clearTrace}>Limpiar trazado</button>
+        </div>
+        <ul aria-label="Caminos resaltados">
+          {paths.map((path, index) => {
+            const label = path.map(point => point.label).join(' · ');
+            return <li key={index}><span>{label}</span>
+              {paths.length > 1 && <button type="button" className="tab" aria-label={`Quitar camino ${index + 1}: ${label}`}
+                onClick={() => { setPaths(paths.filter((_, position) => position !== index)); setAddPath(false); }}>×</button>}
+            </li>;
+          })}
+        </ul>
+      </div>}
       <div className="pipeline-analysis-scroll" role="region" tabIndex={0} aria-label="Sankey desplazable horizontalmente">
         <div className="pipeline-analysis-flow" style={{ minWidth: width }}>
           <div className="pipeline-analysis-columns" style={{ gridTemplateColumns: `${100 * firstWidth / width}% repeat(${graph.columns.length - 1}, minmax(0, 1fr))` }}>
             {graph.columns.map(column => <span key={column.title}>{column.title}</span>)}
           </div>
-          <svg viewBox={`0 0 ${width} ${graph.height}`} width="100%" style={{ display: 'block' }} aria-label="Flujos por hitos">
-            {graph.links.map(({ depth, source: start, target, width: thickness, y1, y2, members }) => {
-              const x1 = columnX(depth) + 24, x2 = columnX(depth + 1) + 11, mid = (x1 + x2) / 2;
+          <svg viewBox={`0 0 ${width} ${graph.height}`} width="100%" style={{ display: 'block' }} aria-label="Flujos por hitos" data-tracing={Boolean(trace)}>
+            {graph.links.map(link => {
+              const { source: start, target, members } = link;
+              const key = edgeKey(link);
               const title = `${start.name} → ${target.name}`;
-              return <path key={JSON.stringify([depth, start.key, target.key])} className="pipeline-analysis-link" role="button" tabIndex={0}
+              const action = () => traceLink(link);
+              return <path key={key} className="pipeline-analysis-link" role="button" tabIndex={0}
                 data-tone={isInbound ? flowTone(target.name) ?? flowTone(start.name) : undefined}
                 data-muted={!isInbound && (start.name === 'Sin registro' || target.name === 'Sin registro')}
-                aria-label={`${title} · ${members.length} deals`}
-                d={`M${x1},${y1} C${mid},${y1} ${mid},${y2} ${x2},${y2} L${x2},${y2 + thickness} C${mid},${y2 + thickness} ${mid},${y1 + thickness} ${x1},${y1 + thickness} Z`}
-                onClick={event => open(title, members, event.currentTarget)} onKeyDown={event => activate(event, () => open(title, members, event.currentTarget))}>
+                aria-label={`${title} · ${members.length} deals`} aria-pressed={currentPath?.some(point => point.key === key) ?? false}
+                d={ribbon(link)}
+                onClick={action} onKeyDown={event => activate(event, action)}>
                 <title>{title} · {members.length} deals</title>
               </path>;
             })}
+            {trace?.links.map(link => <path key={edgeKey(link)} className="pipeline-analysis-traced-link"
+              data-tone={flowTone(link.target.name) ?? flowTone(link.source.name)} d={ribbon(link)} aria-hidden="true" onClick={() => traceLink(link)} />)}
             {graph.columns.flatMap((column, index) => column.nodes.map(node => {
               const x = columnX(index) + 11;
               const y = node.y + node.height / 2;
@@ -293,23 +338,21 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
               const adInfo = adId && first ? ` · ${creativeFormat(first)} · ID ${adId}` : '';
               const labelTop = isAd ? -19 : -17;
               const boxHeight = isAd ? 54 : 34;
-              const action = (trigger: Element) => {
-                if (isOrigin) {
-                  setOrigin({ key: node.key, label: adId ? `${node.name} · ID ${adId}` : node.name, ids: new Set(node.members.map(deal => deal.id)) });
-                  setRoute('summary');
-                  if (isInbound) focusGraph();
-                } else open(title, node.members, trigger);
-              };
-              return <g key={JSON.stringify([index, node.key])} className="pipeline-analysis-node" role="button" tabIndex={0}
-                data-tone={isInbound ? flowTone(node.name) : undefined} data-muted={!isInbound && node.name === 'Sin registro'} aria-label={`${isOrigin ? 'Ver ruta completa de ' : ''}${title}${adInfo} · ${node.members.length} deals`}
-                onClick={event => action(event.currentTarget)} onKeyDown={event => activate(event, () => action(event.currentTarget))}>
+              const key = JSON.stringify([column.title, node.key]);
+              const tracedCount = trace?.counts.get(node);
+              const action = () => selectTrace(key, node.name, node.members);
+              return <g key={key} className="pipeline-analysis-node" role="button" tabIndex={0}
+                data-tone={isInbound ? flowTone(node.name) : undefined} data-muted={!isInbound && node.name === 'Sin registro'}
+                data-outside-trace={tracedCount === 0} aria-pressed={currentPath?.some(point => point.key === key) ?? false}
+                aria-label={`${title}${adInfo} · ${node.members.length} deals${tracedCount ? ` · ${tracedCount} resaltados` : ''}`}
+                onClick={action} onKeyDown={event => activate(event, action)}>
                 <title>{title}{adInfo} · {node.members.length} deals</title>
                 <rect x={x + 13} y={y - boxHeight / 2} width={isAd ? 252 : 136} height={boxHeight} rx="4" className="pipeline-analysis-label-bg" />
                 <rect x={x} y={node.y} width={13} height={Math.max(1, node.height)} rx="2" />
                 <text x={x + 19} y={isAd ? y + labelTop + 5 : y - 2}>{label.map((line, lineIndex) =>
                   <tspan key={lineIndex} x={x + 19} dy={lineIndex ? 13 : 0}>{line}</tspan>)}</text>
                 {detail && <text x={x + 19} y={y + 12} className="pipeline-analysis-count">{detail}</text>}
-                <text x={x + 19} y={y + (isAd ? (detail ? 23 : 15) : 12)} className="pipeline-analysis-count">{number.format(node.members.length)}{isAd ? ' deals' : ''}</text>
+                <text x={x + 19} y={y + (isAd ? (detail ? 23 : 15) : 12)} className="pipeline-analysis-count">{tracedCount ? `${number.format(tracedCount)} de ${number.format(node.members.length)}` : number.format(node.members.length)}{isAd ? ' deals' : ''}</text>
               </g>;
             }))}
           </svg>

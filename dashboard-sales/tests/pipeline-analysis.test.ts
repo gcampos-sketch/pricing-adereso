@@ -3,6 +3,7 @@ import {
   contactRole, creationPeriod, currentOutcome, inboundAdCoverage, isProspectingCandidate, layoutPipelineFlow, meetingBooked, meetingHeld,
   pipelineColumns, serviceToChurn, trackedMetaAd, wasWon, type PipelineDeal,
 } from '../src/lib/pipeline-analysis';
+import { layoutPipelineTrace, pipelineTraceIds, selectPipelineTrace } from '../src/lib/pipeline-trace';
 
 const deal = (id: string, overrides: Partial<PipelineDeal> = {}): PipelineDeal => ({
   id, name: id, stage: '171385866', entries: {}, commercial: true, createdAt: '2026-01-03T12:00:00Z',
@@ -123,4 +124,39 @@ test('compact Inbound conserves every deal and distinguishes a win, a loss and r
   expect(compact.columns[3]!.nodes.find(node => node.name === 'Llegó a E8')?.members.map(row => row.id)).toEqual(['1']);
   for (const column of compact.columns) expect(column.nodes.flatMap(node => node.members.map(row => row.id)).sort()).toEqual(['1', '2', '3', '4']);
   expect(pipelineColumns('Inbound', 'summary').length).toBeGreaterThan(compact.columns.length);
+});
+
+describe('pipeline trace', () => {
+  const point = (key: string, ...ids: string[]) => ({ key, label: key, ids: new Set(ids) });
+
+  test('intersects successive points and unions separate paths without double counting', () => {
+    const source = point('Formulario', '1', '2');
+    const industry = point('Retail', '1', '3');
+    const first = selectPipelineTrace([], source, false);
+    const refined = selectPipelineTrace(first, industry, false);
+    expect([...pipelineTraceIds(refined)]).toEqual(['1']);
+    expect([...pipelineTraceIds(selectPipelineTrace(refined, industry, false))]).toEqual(['1', '2']);
+    expect([...pipelineTraceIds(selectPipelineTrace(refined, point('Otro recorrido', '3'), false))]).toEqual(['3']);
+    expect([...pipelineTraceIds(selectPipelineTrace(refined, industry, true))]).toEqual(['1', '3']);
+  });
+
+  test('draws only matching deals at a shared node and keeps their ribbon continuous', () => {
+    const deals = [
+      deal('1', { sourceLabel: 'Formulario', industry: 'Retail' }),
+      deal('2', { sourceLabel: 'Referido', industry: 'Salud' }),
+    ];
+    const graph = layoutPipelineFlow(deals, [
+      { title: 'Fuente', value: row => row.sourceLabel },
+      { title: 'Reunión', value: () => 'Agendada' },
+      { title: 'Industria', value: row => row.industry },
+    ]);
+    const shared = graph.columns[1]!.nodes[0]!;
+    const trace = layoutPipelineTrace(graph, new Set(['1']));
+    expect(trace.counts.get(shared)).toBe(1);
+    expect(trace.links.map(({ source, target }) => [source.name, target.name])).toEqual([
+      ['Formulario', 'Agendada'], ['Agendada', 'Retail'],
+    ]);
+    expect(trace.links[0]!.width).toBe(shared.height / 2);
+    expect(trace.links[0]!.y2).toBe(trace.links[1]!.y1);
+  });
 });
