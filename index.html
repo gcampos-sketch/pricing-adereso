@@ -483,7 +483,7 @@
   .out-packs .pill:hover{border-color:var(--z400)}
   .out-packs .pill.on{border-color:var(--brand);color:var(--brand);background:rgba(255,213,64,.08)}
   #volArea{container:pricing-volume / inline-size}
-  .volume-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:16px}
+  .volume-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));gap:16px}
   #outVolume{display:contents}
   #volArea .volume-box{container-type:inline-size;padding:clamp(14px,2vw,20px);gap:12px;border-radius:var(--r4)}
   #volArea .volume-box[hidden]{display:none}
@@ -492,12 +492,17 @@
   .volume-box>.head-links{margin:0}
   .volume-box .vgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   @container (min-width:440px){.volume-box .vgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-  @container pricing-volume (min-width:902px){
-    .volume-layout:has(#conversationVolume:not([hidden])):has([data-volume-box="voice"]) [data-volume-box="email"]{grid-column:1/-1}
+  @container pricing-volume (707px <= width < 948px){
+    .volume-layout:has(#conversationVolume:not([hidden])):has([data-volume-box="voice"]):has([data-volume-box="email"]){grid-template-columns:repeat(2,minmax(0,1fr))}
   }
   .volume-box .vtile:not(.vtile-in),.volume-box .vtile-in .custom-volume-display{padding:12px 7px}
   .volume-box .vtile .conv{font-size:18px;overflow-wrap:anywhere}
   .volume-box .vtile .lbl{margin-bottom:0;font-size:10px;overflow-wrap:anywhere}
+  @container (max-width:220px){
+    .volume-box .vtile:not(.vtile-in),.volume-box .vtile-in .custom-volume-display{padding-inline:4px}
+    .volume-box .vtile .conv{font-size:16px}
+    .volume-box .vtile .lbl{font-size:9px;letter-spacing:.05em}
+  }
   .volume-box label{font-size:13px;color:var(--z400)}
   .volume-box>label input[type=number]{width:100%;margin-top:5px}
   #volumeWalletNote{margin:12px 0 0}
@@ -9594,7 +9599,8 @@ function syncCustomVolumeTile(box,unit,quantity){
   button.querySelector('.custom-volume-check').hidden=!selected;
 }
 function volGrid(cSel){
-  const tiles=TILES.slice(0,7).map(quantity=>volumeTile(quantity,'conversaciones',`data-vol="${quantity}"`,!cSel&&quantity===state.vol));
+  const tiles=TILES.slice(0,7).map(quantity=>volumeTile(quantity,'conv./mes',
+    `aria-label="${outboundCount(quantity)} conversaciones al mes" data-vol="${quantity}"`,!cSel&&quantity===state.vol));
   const custom=customVolumeTile({unit:'conversaciones',quantity:cSel?state.volCustom:null,edit:'data-vol-edit',input:'data-vol-custom',min:2000,placeholder:30000,id:'customVolumeHint'});
   return `<div class="vgrid">${tiles.join('')}${custom}</div>`;
 }
@@ -9651,10 +9657,11 @@ function renderVol(){
   const prompt=plan?`<p class="pl-desc">${plan.profile==='new'?'Elige las conversaciones mensuales a contratar.':'Elige el nuevo volumen mensual de conversaciones.'}</p>`:'';
   const studioNote=includeSpot&&state.studio&&studioMultiplier()>1
     ?'<div class="note warn"><span data-i="info"></span><div><b>Studio sin Desk:</b> se aplica un recargo sobre la bolsa.</div></div>':'';
-  area.innerHTML=`<h3 id="conversationVolumeTitle" class="volume-title">Conversaciones · ${CONVERSATION_PRODUCTS[product]}</h3>
-    <div class="head-links"><button type="button" class="pop-link" data-pop="conversacion"><span data-i="info" data-sz="16"></span> ¿Qué es una conversación?</button></div>
+  area.innerHTML=`<h3 id="conversationVolumeTitle" class="volume-title">Conversaciones</h3>
+    <p class="pl-desc">${CONVERSATION_PRODUCTS[product]}</p>
     ${plan?renderConversationPlan():''}
     ${showGrid?prompt+volGrid(state.volMode==='custom'):''}
+    <div class="head-links"><button type="button" class="pop-link" data-pop="conversacion"><span data-i="info" data-sz="16"></span> ¿Qué es una conversación?</button></div>
     ${studioNote}`;
   spot.innerHTML=includeSpot?spotBlock():'';
   updateConversationStatus();paintIcons(area);paintIcons(spot);
@@ -9708,7 +9715,7 @@ function renderOutboundVolume(){
     </section>`).join('')}
     ${emailOutboundActive()?`<section class="pl-card volume-box" data-volume-box="email" aria-labelledby="volume-email">
       <h3 id="volume-email" class="volume-title">Correo masivo</h3>
-      <p class="pl-desc">Cada tramo indica el total de envíos incluidos al mes.</p>
+      <p class="pl-desc">Envíos mensuales por tramo.</p>
       ${outboundVolumeGrid('email','envíos',[[EMAIL_FREE_QUANTITY,0],...EMAIL_PACKS],email?.quantity)}
       <div class="out-quote" data-out-quote="email" aria-live="polite"></div>
     </section>`:''}`;
