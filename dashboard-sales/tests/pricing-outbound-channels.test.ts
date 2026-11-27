@@ -8,7 +8,7 @@ const source = hub.slice(hub.indexOf('const EMAIL_FREE_QUANTITY='), hub.indexOf(
 
 const initialPricingState = hub.slice(hub.indexOf('const state={'), hub.indexOf('/* Hub navigation persistence:'));
 const channelCatalog = hub.slice(hub.indexOf('const CHANNELS='), hub.indexOf('const SECTIONS='));
-const channelRenderer = hub.slice(hub.indexOf('function renderOpts()'), hub.indexOf("document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]')"));
+const channelRenderer = hub.slice(hub.indexOf('function renderOpts()'), hub.indexOf('function volumeTile('));
 
 function calculator() {
   const initial = runInNewContext(initialPricingState + ';INITIAL_STATE');
@@ -253,6 +253,8 @@ test('channel mode reveals the chosen groups in consistent direction and type or
   expect(headings()).toEqual(['Canales de entrada', 'Texto', 'Canales de salida', 'Texto']);
   expect(channels.innerHTML).toContain('data-out="correo"');
   expect(channels.innerHTML).not.toMatch(/data-out="(?:sip|wacall)"/);
+  expect(channels.innerHTML).toContain('</section></div><p class="channel-development out-note"><strong>En desarrollo</strong><span>Google My Business · Mercado Libre</span>');
+  expect(channels.innerHTML).not.toMatch(/data-chan="(?:gmb|meli)"/);
 
   state.communicationMode = 'voice';
   pricing.renderOpts();
@@ -263,7 +265,8 @@ test('channel mode reveals the chosen groups in consistent direction and type or
   expect(channels.innerHTML).toContain('data-out="sip"');
   expect(channels.innerHTML).not.toContain('data-chan=');
   expect(channels.innerHTML).not.toContain('data-out="correo"');
-  expect(channels.innerHTML).toContain('No disponible');
+  expect([...channels.innerHTML.matchAll(/class="chan soon" disabled><span class="chan-status">En desarrollo<\/span>/g)]).toHaveLength(2);
+  expect(channels.innerHTML).not.toContain('channel-development');
 
   state.communicationMode = 'both';
   pricing.renderOpts();
