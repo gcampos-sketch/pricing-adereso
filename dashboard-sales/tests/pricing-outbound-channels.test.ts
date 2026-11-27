@@ -20,8 +20,7 @@ function calculator() {
     scope: 'bolsa',
     communicationMode: 'both',
     engage: false,
-    out: { correo: false, wacall: false },
-    callAttention: '',
+    out: { ...initial.out },
     emailPlan: 'free',
     emailQuantity: 35000,
     humanVoiceMinutes: 7500,
@@ -52,12 +51,12 @@ test('outbound email switches from Free to the published paid tiers', () => {
 test('human and IA voice use independent volume tiers and overage rates', () => {
   const { pricing } = calculator();
   const [human, ai] = pricing.VOICE_POOLS;
-  for (const quantity of [null, 0, -1, 1.5, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+  for (const quantity of [null, 0, -1, 1, 1.5, 1250, 1999, 2000.5, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
     expect(pricing.voicePack(quantity, human.tiers)).toBeNull();
     expect(pricing.voicePack(quantity, ai.tiers)).toBeNull();
   }
   for (const [quantity, humanMonthly, aiMonthly] of [
-    [1, .03, .18], [1250, 37.5, 225], [1999, 59.97, 359.82], [2000, 60, 360],
+    [2000, 60, 360],
     [4999, 149.97, 899.82], [5000, 140, 850], [10000, 260, 1600], [20000, 480, 3000],
     [35000, 805, 4900], [50000, 1100, 6500], [100000, 2000, 12000], [125000, 2500, 15000],
   ]) {
@@ -68,30 +67,27 @@ test('human and IA voice use independent volume tiers and overage rates', () => 
   expect(pricing.voicePack(12350, ai.tiers)).toMatchObject({ baseTier: 10000, rate: .16, monthly: 1976, overage: .184 });
 });
 
-test('each selected call mode requires the corresponding pack in addition to Meta', () => {
+test('any call mode quotes both shared packs at or above the 2,000-minute floor', () => {
   const { state, pricing } = calculator();
   expect(pricing.selectedVoicePools()).toHaveLength(0);
   state.engage = true;
   state.out.wacall = true;
-  state.callAttention = 'human';
-  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human']);
-  expect(pricing.outboundMonthly()).toBe(210);
-  expect(pricing.waCalls()).toBe(true);
-  state.callAttention = 'ai';
-  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['ai']);
-  expect(pricing.outboundMonthly()).toBe(1976);
-  state.callAttention = 'both';
-  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human','ai']);
+  for (const attention of ['human', 'ai', 'both']) {
+    state.callAttention = attention;
+    expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human', 'ai']);
+    expect(pricing.outboundMonthly()).toBe(2186);
+    expect(pricing.waCalls()).toBe(true);
+  }
+  state.out.sip = true;
   expect(pricing.outboundMonthly()).toBe(2186);
-  state.humanVoiceMinutes = 1000;
-  expect(pricing.selectedVoicePools()[0].pack.monthly).toBe(30);
-  expect(pricing.outboundMonthly()).toBe(2006);
-  state.humanVoiceMinutes = 0;
+  state.humanVoiceMinutes = 1999;
   expect(pricing.selectedVoicePools()[0].pack).toBeNull();
   state.engage = false;
+  expect(pricing.selectedVoicePools()).toHaveLength(2);
+  expect(pricing.waCalls()).toBe(false);
+  state.communicationMode = 'text';
   expect(pricing.selectedVoicePools()).toHaveLength(0);
   expect(pricing.outboundMonthly()).toBe(0);
-  expect(pricing.waCalls()).toBe(false);
 });
 
 test('mass email is priced only when explicitly selected under Engage', () => {
@@ -116,7 +112,7 @@ test('a new quote starts with every available inbound channel unselected', () =>
   expect(inbound.every(match => match[2] === 'false')).toBe(true);
 });
 
-test('WhatsApp and email outbound require Engage while SIP requires Studio', () => {
+test('WhatsApp and email outbound require Engage and SIP can use Desk or Studio', () => {
   const { state, pricing, channels } = calculator();
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('data-chan="correo"');
@@ -134,9 +130,16 @@ test('WhatsApp and email outbound require Engage while SIP requires Studio', () 
   expect(channels.innerHTML).toContain('Requiere Engage');
   expect(channels.innerHTML).not.toMatch(/data-out="(?:correo|whatsapp|wacall)"/);
   expect(channels.innerHTML).toContain('data-out="sip"');
+  state.desk = false;
+  state.studio = false;
+  state.hasStudioContracted = true;
+  state.existing = true;
+  state.hasDeskContracted = false;
+  pricing.renderOpts();
+  expect(channels.innerHTML).toContain('data-out="sip"');
 });
 
-test('WhatsApp calls put an independent attention selector inside the selected card', () => {
+test('WhatsApp and SIP put independent attention selectors inside their selected cards', () => {
   const { state, pricing, channels } = calculator();
   state.engage = true;
   pricing.renderOpts();
@@ -144,13 +147,19 @@ test('WhatsApp calls put an independent attention selector inside the selected c
   state.out.wacall = true;
   state.callAttention = 'both';
   pricing.renderOpts();
-  const card = channels.innerHTML.match(/<div class="chan on paid call-channel">([\s\S]+?)<\/div>/)?.[1] ?? '';
-  expect(card).toMatch(/data-out="wacall"[\s\S]+?<\/button>[\s\S]+?<select data-call-attention>/);
-  expect(card).toContain('<option value="both" selected');
+  state.out.sip = true;
+  state.sipCallAttention = 'human';
+  pricing.renderOpts();
+  const cards = [...channels.innerHTML.matchAll(/<div class="chan on paid call-channel">([\s\S]+?)<\/div>/g)];
+  expect(cards).toHaveLength(2);
+  expect(cards[0][1]).toMatch(/data-out="wacall"[\s\S]+?<select data-call-attention="wacall">/);
+  expect(cards[0][1]).toContain('<option value="both" selected');
+  expect(cards[1][1]).toMatch(/data-out="sip"[\s\S]+?<select data-call-attention="sip">/);
+  expect(cards[1][1]).toContain('<option value="human" selected');
   state.studio = false;
   pricing.renderOpts();
   expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
-  expect(channels.innerHTML).toContain('<option value="human" selected');
+  expect(channels.innerHTML.match(/<option value="human" selected/g)).toHaveLength(2);
 });
 
 test('existing customers can add outbound packs using contracted Desk and Studio', () => {
@@ -172,7 +181,7 @@ test('existing customers can add outbound packs using contracted Desk and Studio
   expect(pricing.waCalls()).toBe(true);
   pricing.renderOpts();
   expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
-  expect(pricing.selectedVoicePools()).toHaveLength(1);
+  expect(pricing.selectedVoicePools()).toHaveLength(2);
   state.hasStudioContracted = true;
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('<option value="both" selected');
@@ -197,7 +206,7 @@ test('outbound packs reuse the volume tiles and support a selected custom amount
   `);
   expect(tiles.human).toContain('class="vtile vtile-in sel"');
   expect(tiles.human).toContain('Bolsa personalizada: 3.000 minutos');
-  expect(tiles.human).toContain('data-out-qty="voice-human" min="1"');
+  expect(tiles.human).toContain('data-out-qty="voice-human" min="2000"');
   expect(tiles.ai).toContain('data-out-pack="voice" data-qty="5000" aria-pressed="true"');
   expect(tiles.ai).toContain('Otra cantidad');
   expect(tiles.email).toContain('data-out-qty="email" min="1001"');
@@ -255,41 +264,36 @@ test('SIP saliente is independent of WhatsApp and its Meta wallet', () => {
   state.out.sip = true;
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('data-out="sip" aria-pressed="true"');
-  expect(channels.innerHTML).toContain('Precio a confirmar');
+  expect(channels.innerHTML).toContain('precio a confirmar');
   expect(pricing.sipOutboundActive()).toBe(true);
   expect(pricing.waCalls()).toBe(false);
-  expect(pricing.selectedVoicePools()).toHaveLength(0);
+  expect(pricing.selectedVoicePools()).toHaveLength(2);
   state.studio = false;
   pricing.renderOpts();
-  expect(channels.innerHTML).toContain('Requiere Studio');
+  expect(channels.innerHTML).toContain('<option value="human" selected');
+  expect(pricing.sipOutboundActive()).toBe(true);
+  state.desk = false;
   expect(pricing.sipOutboundActive()).toBe(false);
 });
 
-test('adding human minutes from the IA card preserves the selected IA volume', () => {
+test('voice and inbound conversation volume start with the 2,000 tiles selected', () => {
   const { state } = calculator();
-  state.engage = true;
-  state.out.wacall = true;
-  state.callAttention = 'ai';
+  const initial = runInNewContext(initialPricingState + ';INITIAL_STATE');
+  Object.assign(state, initial, { communicationMode: 'both', out: { ...initial.out, sip: true } });
+  const gridSource = hub.slice(hub.indexOf('function volumeTile('), hub.indexOf('function conversationNumber('));
   const volumeRenderer = hub.slice(hub.indexOf('function renderOutboundVolume()'), hub.indexOf('function updateOutboundQuantity('));
-  const volumeClick = hub.slice(hub.indexOf("document.getElementById('outVolume').addEventListener('click'"), hub.indexOf('function spotBlock()'));
-  const area = { innerHTML: '', addEventListener: (_: string, handle: (event: unknown) => void) => { click = handle; } };
-  let click: (event: unknown) => void = () => {};
-  const render = runInNewContext(source + volumeRenderer + volumeClick + ';renderOutboundVolume', {
+  const area = { innerHTML: '' };
+  const { volGrid, renderOutboundVolume } = runInNewContext(source + gridSource + volumeRenderer + ';({ volGrid, renderOutboundVolume })', {
     state,
-    document: { getElementById: () => area, querySelector: () => null },
+    TILES: [2000, 3000],
+    document: { getElementById: () => area },
     hasExistingDesk: () => false,
     hasService: () => true,
-    outboundVolumeGrid: () => '',
     renderOutboundQuote: () => {},
-    renderAll: () => render(),
-    refreshFlow: () => {},
   });
-  render();
-  expect(area.innerHTML).toContain('data-add-human-voice');
-  click({ target: { closest: (selector: string) => selector === '[data-add-human-voice]' } });
-  expect(state.callAttention).toBe('both');
-  expect(state.voiceMinutes).toBe(12350);
-  expect(area.innerHTML).toContain('data-out-quote="voice-human"');
-  expect(area.innerHTML).toContain('data-out-quote="voice"');
-  expect(area.innerHTML).not.toContain('data-add-human-voice');
+  renderOutboundVolume();
+  expect(area.innerHTML).toContain('data-out-pack="voice-human" data-qty="2000" aria-pressed="true"');
+  expect(area.innerHTML).toContain('data-out-pack="voice" data-qty="2000" aria-pressed="true"');
+  expect(area.innerHTML).not.toContain('Billetera Adereso–Meta');
+  expect(volGrid(state.volMode === 'custom')).toContain('data-vol="2000" aria-pressed="true"');
 });
