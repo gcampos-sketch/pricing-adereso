@@ -231,8 +231,9 @@ test('a voice upgrade credits only the selected voice pack, even when both are q
   expect(pricing.outboundMonthly()).toBe(2186);
 });
 
-test('channel mode starts unselected and reveals only the chosen groups', () => {
+test('channel mode reveals the chosen groups in consistent direction and type order', () => {
   const { state, pricing, channels } = calculator();
+  const headings = () => [...channels.innerHTML.matchAll(/<h[34][^>]*>([^<]+)<\/h[34]>/g)].map(([, title]) => title);
   state.engage = true;
   state.communicationMode = runInNewContext(initialPricingState + ';INITIAL_STATE.communicationMode');
   pricing.renderOpts();
@@ -241,11 +242,15 @@ test('channel mode starts unselected and reveals only the chosen groups', () => 
 
   state.communicationMode = 'text';
   pricing.renderOpts();
+  expect(headings()).toEqual(['Canales de entrada', 'Texto', 'Canales de salida', 'Texto']);
   expect(channels.innerHTML).toContain('data-out="correo"');
   expect(channels.innerHTML).not.toMatch(/data-out="(?:sip|wacall)"/);
 
   state.communicationMode = 'voice';
   pricing.renderOpts();
+  expect(headings()).toEqual([
+    'Canales de entrada', 'Llamadas', 'Canales de salida', 'Llamadas',
+  ]);
   expect(channels.innerHTML).toContain('data-out="wacall"');
   expect(channels.innerHTML).toContain('data-out="sip"');
   expect(channels.innerHTML).not.toContain('data-chan=');
@@ -254,6 +259,9 @@ test('channel mode starts unselected and reveals only the chosen groups', () => 
 
   state.communicationMode = 'both';
   pricing.renderOpts();
+  expect(headings()).toEqual([
+    'Canales de entrada', 'Texto', 'Llamadas', 'Canales de salida', 'Texto', 'Llamadas',
+  ]);
   expect(channels.innerHTML).toContain('data-out="wacall"');
   expect(channels.innerHTML).toContain('data-chan="correo"');
 });

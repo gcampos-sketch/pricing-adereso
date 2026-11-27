@@ -9483,8 +9483,8 @@ function renderOpts(){
   if(showGrid){
     const text=showText?group('Texto',`in-grid${ex?' chan-grid-ex':''}`,CHANNELS.filter(c=>!c.soon).map(inChip).join(''),
       `<p class="out-note" style="margin:10px 0 0"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>${soonBox(CHANNELS,'in')}`):'';
-    const voice=showVoice?group('Voz entrante','channel-pair',unavailable(call)+unavailable(sip)):'';
-    inbound=panel('channels-inbound','Canales de entrada','Dónde recibirás las consultas.',text+voice);
+    const calls=showVoice?group('Llamadas','channel-pair',unavailable(call)+unavailable(sip)):'';
+    inbound=panel('channels-inbound','Canales de entrada','Dónde recibirás las consultas.',text+calls);
   }
   const outChip=(c)=>{
     if(!state.engage&&c.k!=='sip')return unavailable(c,'Requiere Engage');
@@ -9506,14 +9506,14 @@ function renderOpts(){
     {k:'whatsapp',label:'Plantillas WhatsApp',color:'#25D366',tag:'Pago / mensaje'},
     {k:'correo',label:'Correo masivo',color:'#FFD540',tag:outboundCount(EMAIL_FREE_QUANTITY)+' gratis/mes'}
   ].map(outChip).join('')):'';
-  const outboundVoice=showVoice?group('Voz saliente','channel-pair',
+  const outboundCalls=showVoice?group('Llamadas','channel-pair',
     outChip({...call,tag:'Pago / minuto'})+outChip({...sip,tag:'Telefonía'}),
     (voiceOutboundActive()?'<p class="out-note" style="margin:10px 0 0">Para llamar, Humano requiere Desk e IA requiere Studio. Los canales comparten una bolsa de llamadas humanas y una de llamadas IA.</p>':'')+
     (sipOutboundActive()?'<p class="out-note" style="margin:10px 0 0">Telefonía SIP: precio a confirmar según la configuración.</p>':'')):'';
   const description=state.engage?'Elige los canales desde los que iniciarás el contacto.':
     'WhatsApp y correo masivo requieren Engage en <button type="button" class="linkbtn" data-goto="s1">Servicios</button>.';
-  const outbound=panel('channels-outbound','Canales de salida',description,outboundText+outboundVoice);
-  html+=mode==='voice'?outbound+inbound:inbound+outbound;
+  const outbound=panel('channels-outbound','Canales de salida',description,outboundText+outboundCalls);
+  html+=inbound+outbound;
   el.innerHTML=html;paintIcons(el);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]');if(!b)return;const box=b.closest('.soon-box'),on=!box.classList.contains('open');
