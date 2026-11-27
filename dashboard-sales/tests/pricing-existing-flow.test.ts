@@ -88,3 +88,23 @@ test('raising the quota credits only the replaced product while billing the new 
  run.setState({vol:5000});
  expect(run('conversationQuote().pending')).toBe('El nuevo volumen debe superar al actual.');
 });
+
+test('SSPP expansion supports estimating the current bag and quoting distinct product volumes',()=>{
+ const run=setup({existing:true,upsell:{splitVolumes:true,deskVolume:5000,studioVolume:10000},
+  conversationPlans:{both:{profile:'desk',change:'increase',volume:2000,basis:'volume'}}});
+ expect(run('conversationQuote()')).toMatchObject({replacement:399,credit:199,addition:1129,delta:1329});
+ run.setState({upsell:{splitVolumes:true,deskVolume:15000,studioVolume:1000}});
+ expect(run('conversationQuote().pending')).toContain('2.000');
+ run.setState({conversationPlans:{both:{profile:'desk',change:'keep',volume:5000}}});
+ expect(run('conversationQuote()')).toMatchObject({addition:659,delta:659});
+});
+
+test('SSPP pack references reject non-increasing upgrades and cap the product credit',()=>{
+ const start=html.indexOf('const positiveInteger=');
+ const end=html.indexOf('function upsellEmail(',start);
+ const ctx={state:{upsell:{plans:{email:{increase:true,basis:'volume',quantity:10000},gpt:{increase:true,pay:120}}}}};
+ const run=(expr:string)=>runInNewContext(html.slice(start,end)+';'+expr,ctx);
+ expect(run("upsellPack('email',29,10000,()=>29,1000).pending")).toContain('superar');
+ expect(run("upsellPack('email',49,20000,()=>29,1000)")).toEqual({monthly:20,credit:29});
+ expect(run("upsellPack('gpt',100,2000,()=>0)")).toEqual({monthly:0,credit:100});
+});
