@@ -8825,6 +8825,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
           <p>Propuesta armada con el cliente. Valores en USD.</p>
         </div>
         <div id="sumCard"></div>
+        <button type="button" class="pop-link" id="copyBtn" hidden><span data-i="copy" data-sz="16"></span> Copiar cotización</button>
         <div class="continue reveal"><button data-next="s6">Ver el retorno de la inversión <span data-i="down"></span></button></div>
       </section>
 
@@ -10443,7 +10444,10 @@ function renderSummary(){renderTerm();
   const addonRows=state.upsell?upsellRows():[];
   const addonCards=addonRows.map(({label,value,once,detail})=>`<div class="rcard"><span class="rlabel">${once?'Pago único':'Mensual'}</span><div class="rtitle">${label}</div><div class="rbig"><span class="n">${outboundMoney(value)}</span><span class="u">USD${once?'':'/mes'}</span></div>${detail?'<p class="pl-desc">'+detail+'</p>':''}</div>`).join('');
   const copyButton=document.getElementById('copyBtn');
-  if(copyButton)copyButton.disabled=voiceIncomplete||conversationIncomplete||!!addonIssue;
+  if(copyButton){
+    copyButton.hidden=!state.upsell||!UPSELL_GROUPS.some(([,keys])=>keys.some(upsellSelected));
+    copyButton.disabled=voiceIncomplete||conversationIncomplete||!!addonIssue;
+  }
   const m=monthly(),s=setupCost(),meta=metaEst(),sp=SETUP[state.setup];
   const cM=casspM(),cSucc=casspSuccessEst();
   const withIA=iaSetup();
