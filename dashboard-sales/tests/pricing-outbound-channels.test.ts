@@ -372,3 +372,46 @@ test('the quote reveals downstream steps after choosing a channel mode', () => {
   expect(flow.activeSections()).toContain('s4');
   expect(flow.activeSections()).not.toContain('s2');
 });
+
+test('revealing downstream steps keeps Canales active until navigation leaves it', () => {
+  const sections = {
+    s1: { top: 170, bottom: 580 },
+    sc: { top: 600, bottom: 1500 },
+    s2: { top: 1520, bottom: 1800 },
+  };
+  const activated: string[] = [];
+  const window = { innerHeight: 960, scrollY: 172 };
+  const document = {
+    documentElement: { scrollHeight: 3200 },
+    getElementById: (id: keyof typeof sections) => ({
+      getBoundingClientRect: () => sections[id],
+      classList: { contains: () => false },
+    }),
+  };
+  const source = hub.slice(hub.indexOf('function computeActive(){'), hub.indexOf('function onScroll(){'));
+  const ctx = {
+    window, document, state: { communicationMode: 'both' },
+    activeSections: () => Object.keys(sections), channelModePending: () => false,
+    setActive: (id: string) => activated.push(id), channelSelectionScrollY: 172,
+  };
+  const compute = () => runInNewContext(source + 'computeActive();', ctx);
+  compute();
+  window.scrollY = 212;
+  sections.sc.top = 560;
+  compute();
+  expect(activated).toEqual(['sc', 'sc']);
+
+  window.scrollY = 120;
+  compute();
+  expect(activated.at(-1)).toBe('s1');
+  expect(ctx.channelSelectionScrollY).toBeNull();
+
+  ctx.channelSelectionScrollY = 172;
+  window.scrollY = 1300;
+  sections.s1.bottom = -540;
+  sections.sc.top = -528;
+  sections.s2.top = 220;
+  compute();
+  expect(activated.at(-1)).toBe('s2');
+  expect(ctx.channelSelectionScrollY).toBeNull();
+});
