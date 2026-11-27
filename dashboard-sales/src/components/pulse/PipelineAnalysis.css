@@ -43,6 +43,9 @@
 .pipeline-analysis-row { cursor: pointer; color: var(--brand); text-align: inherit; }
 .pipeline-analysis-row:hover { text-decoration: underline; }
 .pipeline-analysis-dialog { width: min(94vw, 980px); max-width: none; max-height: 83dvh; grid-template-rows: auto auto minmax(0, 1fr); }
+.pipeline-analysis-dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-inline-end: 24px; }
+.pipeline-analysis-dialog-heading .deal-links-copy { align-self: center; margin: 0; }
+.pipeline-analysis-dialog-heading h2 { min-width: 0; overflow-wrap: anywhere; }
 .pipeline-analysis-dialog .pipeline-analysis-table td, .pipeline-analysis-dialog .pipeline-analysis-table th { text-align: left; }
 .pipeline-analysis-route {
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 10px;

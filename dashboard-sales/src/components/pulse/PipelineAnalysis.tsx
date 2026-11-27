@@ -8,9 +8,11 @@ import {
   type PipelineDeal, type PipelineReport, type RouteDetail, type StageId, type View,
 } from '@/lib/pipeline-analysis';
 import type { RoleFilter } from '@/lib/owner-roles';
+import { CopyDealLinksButton } from './CopyControls';
 import './PipelineAnalysis.css';
 
 const hubSpotAdsUrl = 'https://app.hubspot.com/ads/23480943/';
+const dealUrl = (id: string) => `https://app.hubspot.com/contacts/23480943/record/0-3/${id}?utm_source=hub_comercial&utm_medium=pipeline_analysis`;
 const number = new Intl.NumberFormat('es-CL');
 const percent = new Intl.NumberFormat('es-CL', { style: 'percent', maximumFractionDigits: 1 });
 const formatDate = new Intl.DateTimeFormat('es-CL', { timeZone: 'America/Coyhaique', dateStyle: 'medium', timeStyle: 'short' });
@@ -327,13 +329,19 @@ export function PipelineAnalysisView({ report, rangeLabel, segment }: { report: 
         const trigger = returnFocus.current;
         if (trigger?.isConnected && (trigger instanceof HTMLElement || trigger instanceof SVGElement)) { event.preventDefault(); trigger.focus(); }
       }}>
-        <DialogTitle>{drill.title}</DialogTitle>
+        <div className="pipeline-analysis-dialog-heading">
+          <DialogTitle>{drill.title}</DialogTitle>
+          <CopyDealLinksButton
+            title="Copiar lista de deals"
+            getDeals={() => drill.deals.map(deal => ({ name: deal.name, url: dealUrl(deal.id) }))}
+          />
+        </div>
         <DialogDescription>{number.format(drill.deals.length)} deals de la cohorte · {rangeLabel}</DialogDescription>
         <div className="pipeline-analysis-scroll" tabIndex={0} role="region" aria-label="Negocios incluidos">
           <table className="pipeline-analysis-table">
             <thead><tr>{['Deal', 'Industria', 'Fuente', 'Etapa actual', 'Tipo', 'Anuncio / rol'].map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead>
             <tbody>{drill.deals.map(deal => <tr key={deal.id}>
-              <th scope="row"><a href={`https://app.hubspot.com/contacts/23480943/record/0-3/${deal.id}?utm_source=hub_comercial&utm_medium=pipeline_analysis`} target="_blank" rel="noreferrer">{deal.name} ↗</a></th>
+              <th scope="row"><a href={dealUrl(deal.id)} target="_blank" rel="noreferrer">{deal.name} ↗</a></th>
               <td>{deal.industry}</td><td>{deal.sourceLabel}</td><td>{STAGES[deal.stage as StageId] ?? 'Etapa sin clasificar'}</td>
               <td>{deal.dealType}</td><td>{deal.motion === 'Inbound' ? adLabel(deal) : deal.role}{deal.creative && <small>{creativeFormat(deal)} · {deal.adId}</small>}</td>
             </tr>)}</tbody>
