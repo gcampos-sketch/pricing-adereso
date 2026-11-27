@@ -449,25 +449,37 @@
   .channel-mode small{margin-top:2px;color:var(--z400);font-size:11px;line-height:1.35}
   .channel-mode:focus-visible,.channel-panel .chan:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
   .channel-panels{display:grid;gap:12px;margin-top:12px;align-items:start}
-  .channel-panel{container-type:inline-size;min-width:0;padding:clamp(12px,2vw,17px);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4)}
+  .channel-panel{min-width:0;padding:clamp(12px,2vw,17px);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4)}
   @container channel-options (min-width:660px){
-    .channel-panels:has(>.channel-panel+.channel-panel){grid-template-columns:repeat(2,minmax(0,1fr))}
-    .channel-panels:has(>.channel-panel+.channel-panel):has(.in-grid){grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+    .channel-panels:has(> .channel-panel + .channel-panel){
+      grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;row-gap:0
+    }
+    .channel-panels:has(> .channel-panel + .channel-panel):has(.in-grid){grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+    .channel-panels:has(> .channel-panel + .channel-panel) > .channel-panel{
+      display:grid;grid-template-rows:subgrid;grid-row:span 2
+    }
+    .channel-panels:has(> .channel-panel + .channel-panel):has(> .channel-panel > .channel-group + .channel-group) > .channel-panel{
+      grid-row:span 3
+    }
   }
-  @container (min-width:350px){.chan-grid.in-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-  @container (min-width:440px){.chan-grid.in-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
   .channel-heading{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin:0 0 5px}
-  .channel-panel>.out-note{margin-bottom:10px}
+  .channel-panel-head>.out-note{margin-bottom:10px}
   .channel-group+.channel-group{margin-top:12px;padding-top:12px;border-top:1px solid var(--b-subtle)}
   .channel-group h4{margin:0 0 7px;color:var(--z400);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
   .channel-group .out-note{margin:8px 0 0}
-  .chan-grid.channel-pair,.chan-grid.soon-grid{max-width:370px}
-  .channel-panel .chan{min-width:0;padding:25px 6px 10px;gap:6px;text-align:center}
+  .channel-panel .chan-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,94px),1fr))}
+  @container channel-options (min-width:660px){
+    .channel-panel .chan-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,100px),100px))}
+  }
+  .channel-panel .chan{min-width:0;height:126px;padding:24px 5px 8px;gap:6px;justify-content:center;text-align:center}
+  .channel-panel .chan.call-channel{justify-content:flex-start;padding-top:22px;gap:4px}
+  .channel-panel .chan-lbl{line-height:1.2}
   .channel-panel .chan-logo svg{width:26px;height:26px}
   .channel-panel .soon-tg{gap:8px;padding:7px 8px}
+  .channel-panel .soon-grid{padding-inline:0}
   .channel-panel .soon-txt{white-space:normal;overflow-wrap:anywhere}
   .channel-panel :is(.chan-pago,.chan-free){top:5px;right:5px}
-  .channel-panel .in-grid :is(.chan-pago,.chan-free){inset-inline:0;width:max-content;margin-inline:auto;padding-inline:3px;font-size:8px;letter-spacing:.02em;white-space:nowrap}
+  .channel-panel :is(.chan-pago,.chan-free){inset-inline:0;width:max-content;margin-inline:auto;padding-inline:3px;font-size:8px;letter-spacing:.02em;white-space:nowrap}
   #optWa .channel-panel .chan:not(.on):not(.soon){opacity:1}
   #optWa .channel-panel .chan:not(.on):not(.soon) .chan-lbl{color:var(--z300)}
   #optWa .channel-panel .chan:not(.on):not(.soon) .chan-logo{filter:none}
@@ -476,8 +488,8 @@
   #optWa .channel-panel .chan.soon .chan-status{position:absolute;inset:0 0 auto;padding:4px;background:var(--glass);color:var(--text,#fff);font-size:10px;text-align:center}
   @container channel-options (max-width:560px){.channel-mode{flex-direction:column;justify-content:flex-start;gap:5px;padding:9px 5px;text-align:center}}
   .call-channel-toggle{display:flex;flex-direction:column;align-items:center;gap:inherit;width:100%;padding:0;border:0;background:none;cursor:pointer}
-  .call-channel label{display:grid;width:100%;gap:5px;text-align:left;color:var(--z300);font-size:12px}
-  .call-channel select{width:100%;min-width:0;padding:6px;border:1px solid var(--b-default);border-radius:var(--r3);background:var(--surface);color:#fff;font:inherit;color-scheme:dark}
+  .call-channel label{display:grid;width:100%;gap:3px;text-align:left;color:var(--z300);font-size:11px}
+  .call-channel select{width:100%;min-width:0;padding:5px 2px;border:1px solid var(--b-default);border-radius:var(--r3);background:var(--surface);color:#fff;font:inherit;font-size:11px;color-scheme:dark}
   .call-channel select:focus{outline:none}
   .call-channel select:focus-visible{border-color:var(--z400);background:var(--elevated)}
   .call-channel-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
@@ -9519,7 +9531,7 @@ function renderOpts(){
   const sip={k:'sip',icon:'voip',label:'Llamada SIP',color:'var(--brand)'};
   const call={k:'wacall',label:'WhatsApp Call',color:'#25D366'};
   const group=(title,gridClass,tiles,note='')=>`<div class="channel-group"><h4>${title}</h4><div class="chan-grid ${gridClass}">${tiles}</div>${note}</div>`;
-  const panel=(id,title,description,groups)=>`<section class="channel-panel" aria-labelledby="${id}"><h3 id="${id}" class="channel-heading">${title}</h3><p class="out-note">${description}</p>${groups}</section>`;
+  const panel=(id,title,description,groups)=>`<section class="channel-panel" aria-labelledby="${id}"><header class="channel-panel-head"><h3 id="${id}" class="channel-heading">${title}</h3><p class="out-note">${description}</p></header>${groups}</section>`;
   /* cliente vigente: primero se pregunta si mantiene sus canales o conecta nuevos; el selector aparece solo si conecta nuevos */
   const ex=state.existing,showGrid=hasService()&&(!ex||state.chanNew);
   let html=`<div class="channel-modes ${mode?'':'is-first'}" role="group" aria-labelledby="channel-mode-title">${COMMUNICATION_MODES.map(({key,label,hint,icon})=>`
