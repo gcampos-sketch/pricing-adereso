@@ -9351,7 +9351,8 @@ function selectedEmailPack(){
 }
 function selectedVoicePools(){
   if(!voiceOutboundActive())return [];
-  return VOICE_POOLS
+  const {ai}=voiceAttentionAvailability();
+  return VOICE_POOLS.filter(pool=>ai||pool.kind==='human')
     .map(pool=>{
       const quantity=state[pool.field],pack=voicePack(quantity,pool.tiers);
       const upgrade=state.existing?state.voiceUpgrades[pool.key]:null;
@@ -9541,10 +9542,10 @@ function renderOpts(){
     const calls=showVoice?group('Llamadas','channel-pair',unavailable(call)+unavailable(sip)):'';
     inbound=panel('channels-inbound','Canales de entrada','Dónde recibirás las consultas.',text+calls);
   }
+  const {human,ai}=voiceAttentionAvailability();
   const outChip=(c)=>{
     if(!state.engage&&c.k!=='sip')return unavailable(c,'Requiere Engage');
     const isCall=c.k==='wacall'||c.k==='sip';
-    const {human,ai}=voiceAttentionAvailability();
     if(isCall&&!human&&!ai)return unavailable(c,'Requiere Desk o Studio');
     const on=!!state.out[c.k],badge=priceBadge(c.tag,c.k!=='correo');
     if(isCall&&on){
@@ -9552,7 +9553,7 @@ function renderOpts(){
       const choices=[['human',human],['ai',ai],['both',human&&ai]];
       return `<div class="chan on paid call-channel">
         ${badge}<button type="button" class="call-channel-toggle" data-out="${c.k}" aria-pressed="true">${logo(c)}</button>
-        <label>¿Quién llama?<select data-call-attention="${c.k}">${choices.map(([key,available])=>`<option value="${key}" ${attention===key?'selected':''} ${available?'':'disabled'}>${CALL_ATTENTION_LABELS[key]}</option>`).join('')}</select></label>
+        <label>¿Quién llama?<select data-call-attention="${c.k}">${choices.filter(([,available])=>available).map(([key])=>`<option value="${key}" ${attention===key?'selected':''}>${CALL_ATTENTION_LABELS[key]}</option>`).join('')}</select></label>
       </div>`;
     }
     return `<button type="button" class="chan ${on?'on':''} paid" data-out="${c.k}" aria-pressed="${on}">${badge}${logo(c)}</button>`;
@@ -9563,7 +9564,7 @@ function renderOpts(){
   ].map(outChip).join('')):'';
   const outboundCalls=showVoice?group('Llamadas','channel-pair',
     outChip({...call,tag:'Pago / minuto'})+outChip({...sip,tag:'Telefonía'}),
-    (voiceOutboundActive()?'<p class="out-note">Para llamar, Humano requiere Desk e IA requiere Studio. Los canales comparten una bolsa de llamadas humanas y una de llamadas IA.</p>':'')+
+    (voiceOutboundActive()?`<p class="out-note">${ai?'Para llamar, Humano requiere Desk e IA requiere Studio. Los canales comparten una bolsa de llamadas humanas y una de llamadas IA.':'Los canales comparten una bolsa de llamadas humanas de Desk.'}</p>`:'')+
     (sipOutboundActive()?'<p class="out-note">Telefonía SIP: precio a confirmar según la configuración.</p>':'')):'';
   const description=state.engage?'Elige los canales desde los que iniciarás el contacto.':
     'WhatsApp y correo masivo requieren Engage en <button type="button" class="linkbtn" data-goto="s1">Servicios</button>.';
