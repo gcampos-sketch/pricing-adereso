@@ -435,10 +435,8 @@
   .chan-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:20px 0 12px}
   .chan-title{font-family:var(--font-head);font-size:15px;color:#fff;font-weight:500}
   .chan-hint{font-size:12px;color:var(--z500)}
-  .chan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  @media(min-width:560px){.chan-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
-  /* En escritorio, Entrada usa dos filas de cinco. Salida y Próximamente conservan tarjetas compactas. */
-  @media(min-width:900px){.chan-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}.chan-grid.in-grid{grid-template-columns:repeat(5,minmax(0,1fr))}.chan-grid .chan{padding:34px 8px 18px;gap:12px}.chan-grid .chan-lbl{font-size:13px}.chan-grid .chan-logo svg{width:32px;height:32px}.chan-grid .chan-pago,.chan-grid .chan-free{top:8px;right:8px;font-size:9px;padding:2px 6px}}
+  #optWa{container:channel-options / inline-size}
+  .chan-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .channel-modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
   .channel-mode{display:flex;align-items:center;gap:10px;padding:12px;text-align:left;color:var(--z300);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r3);font:inherit;cursor:pointer}
   .channel-modes.is-first .channel-mode{border-color:rgba(255,213,64,.36);background:rgba(255,213,64,.04)}
@@ -449,18 +447,33 @@
   .channel-mode b{font-family:var(--font-head);font-weight:600}
   .channel-mode small{margin-top:2px;color:var(--z400);font-size:11px;line-height:1.35}
   .channel-mode:focus-visible,.channel-panel .chan:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-  .channel-panel{margin-top:14px;padding:clamp(14px,2.3vw,22px);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4)}
+  .channel-panels{display:grid;gap:12px;margin-top:12px;align-items:start}
+  .channel-panel{container-type:inline-size;min-width:0;padding:clamp(12px,2vw,17px);background:var(--surface);border:1px solid var(--b-default);border-radius:var(--r4)}
+  @container channel-options (min-width:660px){
+    .channel-panels:has(>.channel-panel+.channel-panel){grid-template-columns:repeat(2,minmax(0,1fr))}
+    .channel-panels:has(>.channel-panel+.channel-panel):has(.in-grid){grid-template-columns:minmax(0,3fr) minmax(0,2fr)}
+  }
+  @container (min-width:350px){.chan-grid.in-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  @container (min-width:440px){.chan-grid.in-grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
   .channel-heading{font-family:var(--font-head);font-weight:500;font-size:16px;color:#fff;margin:0 0 5px}
-  .channel-group+.channel-group{margin-top:16px;padding-top:16px;border-top:1px solid var(--b-subtle)}
-  .channel-group h4{margin:0 0 9px;color:var(--z400);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
-  .chan-grid.channel-pair{grid-template-columns:repeat(2,minmax(0,1fr));max-width:370px;align-items:stretch}
+  .channel-panel>.out-note{margin-bottom:10px}
+  .channel-group+.channel-group{margin-top:12px;padding-top:12px;border-top:1px solid var(--b-subtle)}
+  .channel-group h4{margin:0 0 7px;color:var(--z400);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  .channel-group .out-note{margin:8px 0 0}
+  .chan-grid.channel-pair,.chan-grid.soon-grid{max-width:370px}
+  .channel-panel .chan{min-width:0;padding:25px 6px 10px;gap:6px;text-align:center}
+  .channel-panel .chan-logo svg{width:26px;height:26px}
+  .channel-panel .soon-tg{gap:8px;padding:7px 8px}
+  .channel-panel .soon-txt{white-space:normal;overflow-wrap:anywhere}
+  .channel-panel :is(.chan-pago,.chan-free){top:5px;right:5px}
+  .channel-panel .in-grid :is(.chan-pago,.chan-free){inset-inline:0;width:max-content;margin-inline:auto;padding-inline:3px;font-size:8px;letter-spacing:.02em;white-space:nowrap}
   #optWa .channel-panel .chan:not(.on):not(.soon){opacity:1}
   #optWa .channel-panel .chan:not(.on):not(.soon) .chan-lbl{color:var(--z300)}
   #optWa .channel-panel .chan:not(.on):not(.soon) .chan-logo{filter:none}
   #optWa .channel-panel .chan:not(.on):not(.soon):hover{border-color:var(--z400)}
   #optWa .channel-panel .chan.on{border-color:var(--brand);background:rgba(255,213,64,.07)}
   #optWa .channel-panel .chan.soon .chan-status{position:absolute;inset:0 0 auto;padding:4px;background:var(--glass);color:var(--text,#fff);font-size:10px;text-align:center}
-  @media(max-width:560px){.channel-mode{flex-direction:column;justify-content:flex-start;gap:5px;padding:9px 5px;text-align:center}.channel-panel .chan-lbl{text-align:center}}
+  @container channel-options (max-width:560px){.channel-mode{flex-direction:column;justify-content:flex-start;gap:5px;padding:9px 5px;text-align:center}}
   .call-channel-toggle{display:flex;flex-direction:column;align-items:center;gap:inherit;width:100%;padding:0;border:0;background:none;cursor:pointer}
   .call-channel label{display:grid;width:100%;gap:5px;text-align:left;color:var(--z300);font-size:12px}
   .call-channel select{width:100%;min-width:0;padding:6px;border:1px solid var(--b-default);border-radius:var(--r3);background:var(--surface);color:#fff;font:inherit;color-scheme:dark}
@@ -9477,12 +9490,12 @@ function renderOpts(){
     </div>`;
   /* los canales que vienen pronto van en un desplegable aparte, cerrado por defecto, para mostrarlos solo si hace falta */
   const soonBox=(list,id)=>{const s=list.filter(c=>c.soon);if(!s.length)return '';const open=!!(state.soonOpen||{})[id];
-    return `<div class="soon-box ${open?'open':''}"><button type="button" class="soon-tg" data-soon-tg="${id}" aria-expanded="${open}"><span class="soon-badge">Próximamente</span><span class="soon-txt">${s.length} canal${s.length>1?'es':''} en camino · ${s.map(c=>c.label).join(', ')}</span><span class="soon-chev"><span data-i="down" data-sz="15"></span></span></button>
+    return `<div class="soon-box ${open?'open':''}"><button type="button" class="soon-tg" data-soon-tg="${id}" aria-expanded="${open}"><span class="soon-badge">Próximamente</span><span class="soon-txt">${s.length} canal${s.length>1?'es':''} · ${s.map(c=>c.label).join(', ')}</span><span class="soon-chev"><span data-i="down" data-sz="15"></span></span></button>
       <div class="soon-b"><div class="soon-in"><div class="chan-grid soon-grid">${s.map(inChip).join('')}</div></div></div></div>`;};
   let inbound='';
   if(showGrid){
     const text=showText?group('Texto',`in-grid${ex?' chan-grid-ex':''}`,CHANNELS.filter(c=>!c.soon).map(inChip).join(''),
-      `<p class="out-note" style="margin:10px 0 0"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>${soonBox(CHANNELS,'in')}`):'';
+      `<p class="out-note"><b>Correo:</b> recibe y responde mensajes sin cargo por correo. También puedes iniciar un correo individual desde Desk de forma manual, sin cargo por envío.</p>${soonBox(CHANNELS,'in')}`):'';
     const calls=showVoice?group('Llamadas','channel-pair',unavailable(call)+unavailable(sip)):'';
     inbound=panel('channels-inbound','Canales de entrada','Dónde recibirás las consultas.',text+calls);
   }
@@ -9508,12 +9521,12 @@ function renderOpts(){
   ].map(outChip).join('')):'';
   const outboundCalls=showVoice?group('Llamadas','channel-pair',
     outChip({...call,tag:'Pago / minuto'})+outChip({...sip,tag:'Telefonía'}),
-    (voiceOutboundActive()?'<p class="out-note" style="margin:10px 0 0">Para llamar, Humano requiere Desk e IA requiere Studio. Los canales comparten una bolsa de llamadas humanas y una de llamadas IA.</p>':'')+
-    (sipOutboundActive()?'<p class="out-note" style="margin:10px 0 0">Telefonía SIP: precio a confirmar según la configuración.</p>':'')):'';
+    (voiceOutboundActive()?'<p class="out-note">Para llamar, Humano requiere Desk e IA requiere Studio. Los canales comparten una bolsa de llamadas humanas y una de llamadas IA.</p>':'')+
+    (sipOutboundActive()?'<p class="out-note">Telefonía SIP: precio a confirmar según la configuración.</p>':'')):'';
   const description=state.engage?'Elige los canales desde los que iniciarás el contacto.':
     'WhatsApp y correo masivo requieren Engage en <button type="button" class="linkbtn" data-goto="s1">Servicios</button>.';
   const outbound=panel('channels-outbound','Canales de salida',description,outboundText+outboundCalls);
-  html+=inbound+outbound;
+  html+=`<div class="channel-panels">${inbound}${outbound}</div>`;
   el.innerHTML=html;paintIcons(el);
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-soon-tg]');if(!b)return;const box=b.closest('.soon-box'),on=!box.classList.contains('open');
