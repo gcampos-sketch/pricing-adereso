@@ -11051,6 +11051,8 @@ document.getElementById('roiArea').addEventListener('input',e=>{
 });
 
 /* nav */
+// Adding the downstream sections removes the previous bottom-of-page exception for Canales.
+let channelSelectionScrollY=null;
 const KICK={s0:'Contrato actual',s1:'Servicios',sc:'Canales',s2:'Volumen',s3:'Implementación',s4:'Billetera Adereso–Meta',sp:'Plazo de contrato'};
 const NEXTLABEL={s1:'Continuar a servicios',sc:'Continuar a canales',s2:'Continuar al volumen',s3:'Continuar a implementación',s4:'Continuar a la billetera',sp:'Continuar al plazo del contrato',s5:'Ver resumen',s6:'Ver el retorno de la inversión',s7:'Ver el proceso comercial',s8:'Conocer el portal cliente'};
 function volumeVisible(){return !channelModePending()&&(conversationVolumeVisible()||voiceOutboundActive()||emailOutboundActive());}
@@ -11134,6 +11136,8 @@ document.getElementById('optWa').addEventListener('click',e=>{
   const mode=e.target.closest('[data-communication-mode]')?.dataset.communicationMode;
   if(mode){
     if(mode===state.communicationMode)return;
+    channelSelectionScrollY=window.scrollY;
+    _glide++;
     state.communicationMode=mode;
     if(mode==='text'){
       state.out.wacall=false;
@@ -11148,6 +11152,7 @@ document.getElementById('optWa').addEventListener('click',e=>{
     if(!walletManual())state.wa.amount=Math.round((metaEst()||0)*100)/100;
     renderAll();refreshFlow();
     document.querySelector('[data-communication-mode="'+mode+'"]')?.focus({preventScroll:true});
+    if(window.scrollY!==channelSelectionScrollY)window.scrollTo({top:channelSelectionScrollY,behavior:'instant'});
     return;
   }
   const cm=e.target.closest('[data-chanmode]');if(cm){state.chanNew=cm.dataset.chanmode==='new';renderAll();refreshFlow();return;}
@@ -11350,6 +11355,7 @@ document.getElementById('sumCard').addEventListener('click',e=>{
 /* Scroll guiado más pausado que el nativo: duración según distancia, ease in-out, se corta si el usuario scrollea */
 let _glide=0;
 function glideTo(y){
+  channelSelectionScrollY=null;
   const from=window.scrollY,max=document.documentElement.scrollHeight-window.innerHeight;
   const to=Math.max(0,Math.min(max,y)),d=to-from;
   if(prefersReduced||Math.abs(d)<2){window.scrollTo({top:to,behavior:'instant'});return;}
@@ -11410,8 +11416,12 @@ function computeActive(){
   const secs=activeSections();if(!secs.length)return;
   const atBottom=window.innerHeight+window.scrollY>=document.documentElement.scrollHeight-4;
   if(channelModePending()&&window.scrollY>0&&atBottom){setActive('sc');return;}
+  const channelsIndex=secs.indexOf('sc');
+  if(channelSelectionScrollY!==null&&(!state.communicationMode||channelsIndex<0||window.scrollY<channelSelectionScrollY-1)){
+    channelSelectionScrollY=null;
+  }
   /* arriba del todo manda la primera sección (Nivel 0 para cliente vigente), aunque la siguiente quede más al centro */
-  {const f=document.getElementById(secs[0]);if(f&&f.getBoundingClientRect().bottom>window.innerHeight*0.42){setActive(secs[0]);return;}}
+  if(channelSelectionScrollY===null){const f=document.getElementById(secs[0]);if(f&&f.getBoundingClientRect().bottom>window.innerHeight*0.42){setActive(secs[0]);return;}}
   /* la siguiente sección se enfoca recién cuando su borde superior sube al 38% de la pantalla:
      así lo que estás mirando no se difumina apenas asoma la próxima por abajo */
   const line=window.innerHeight*0.38;let best=secs[0];
@@ -11419,6 +11429,11 @@ function computeActive(){
     if(el.getBoundingClientRect().top<=line)best=id;});
   /* al final de la página manda la última sección visible, aunque no alcance a subir hasta la línea */
   if(atBottom){const vis=secs.filter(id=>{const el=document.getElementById(id);return el&&!el.classList.contains('hidden');});if(vis.length)best=vis[vis.length-1];}
+  if(channelSelectionScrollY!==null){
+    const index=secs.indexOf(best);
+    if(index<channelsIndex)best='sc';
+    else if(index>channelsIndex)channelSelectionScrollY=null;
+  }
   setActive(best);
 }
 function onScroll(){
