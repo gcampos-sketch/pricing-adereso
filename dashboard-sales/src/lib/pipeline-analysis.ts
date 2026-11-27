@@ -41,7 +41,7 @@ export type View = 'all' | Motion;
 export const isProspectingCandidate = (deal: Pick<PipelineDeal, 'motion' | 'source'>) =>
   deal.motion === 'Sin clasificar' && isSdrProspectingSource(deal.source);
 
-export type RouteDetail = 'summary' | 'sdr' | 'sales' | 'activation';
+export type RouteDetail = 'compact' | 'summary' | 'sdr' | 'sales' | 'activation';
 
 export type CreativeMetadata = { name: string; format: string };
 export type PipelineDeal = {
@@ -127,6 +127,14 @@ export function currentOutcome(deal: PipelineDeal) {
 export const adKey = (deal: PipelineDeal) => deal.adId ? `Anuncio Meta ${deal.adId}` : deal.contactRead ? 'Sin anuncio rastreado' : 'Lectura pendiente';
 export const adLabel = (deal: PipelineDeal) => deal.creative?.name || adKey(deal);
 export const creativeFormat = (deal: PipelineDeal) => deal.creative?.format || (deal.adId ? 'Formato sin verificar' : 'Sin anuncio identificado');
+export function inboundAdCoverage(deals: PipelineDeal[]) {
+  const tracked = deals.filter(deal => deal.adId !== null);
+  const pending = deals.filter(deal => !deal.adId && !deal.contactRead).length;
+  return { tracked, pending, untracked: deals.length - tracked.length - pending,
+    named: tracked.filter(deal => deal.creative?.name).length,
+    formatted: tracked.filter(deal => deal.creative?.format).length };
+}
+
 export const meetingBooked = (deal: PipelineDeal) => hasStage(deal, '1025498163') || hasStage(deal, '1300101808');
 export const meetingHeld = (deal: PipelineDeal) => hasStage(deal, '1300101810') || hasStage(deal, '171385863');
 export const reachedCommercial = (deal: PipelineDeal) => deal.commercial || Object.keys(SALES_STAGES).some(id => hasStage(deal, id as StageId));
@@ -147,6 +155,18 @@ export function pipelineColumns(view: View, detail: RouteDetail): FlowColumn[] {
         { title: 'Clasificación', value: (deal: PipelineDeal) => isProspectingCandidate(deal) ? 'Prospección SDR sin clasificar' : deal.motion }]
       : [{ title: 'Origen', value: (deal: PipelineDeal) => deal.motion },
         { title: 'Fuente de creación', value: (deal: PipelineDeal) => deal.sourceLabel, limit: 8 }, industry];
+  const result = { title: 'Resultado comercial', value: (deal: PipelineDeal) => {
+    if (wasWon(deal) && wasLost(deal)) return 'Ganado y pérdida registrada';
+    if (wasWon(deal)) return 'Ganado registrado';
+    if (wasLost(deal)) return 'Pérdida registrada';
+    return 'Sin cierre registrado';
+  } };
+  if (view === 'Inbound' && detail === 'compact') return [
+    { title: 'Anuncio rastreado', value: adKey, label: adLabel, detail: creativeFormat, limit: 5 },
+    labeledColumn('Reunión concretada', meetingHeld),
+    result,
+    { title: 'Servicio E8', value: deal => wasInService(deal) ? 'Llegó a E8' : 'E8 sin registro' },
+  ];
   const outcome = { title: 'Estado actual', value: currentOutcome };
   const sdr = ['1307029105', '1025498163', '1300101807', '1300101808', '1300101809', '1300101810', '1301196893', '1300101811'] as const;
   const sales = ['1144383754', '171385863', '171385864', '173996363', '1181334581', '171385866', '171385867', '1245768029'] as const;
@@ -156,17 +176,12 @@ export function pipelineColumns(view: View, detail: RouteDetail): FlowColumn[] {
   if (detail === 'activation') return [...entry, stageColumn('174677684'), ...activation.map(stageColumn), outcome];
   return [...entry, labeledColumn('Reunión agendada', meetingBooked), labeledColumn('Reunión concretada', meetingHeld),
     labeledColumn('Pipeline Comercial', reachedCommercial), stageColumn('171385866'),
-    { title: 'Resultado comercial', value: deal => {
-      if (wasWon(deal) && wasLost(deal)) return 'Ganado y pérdida registrada';
-      if (wasWon(deal)) return 'Ganado registrado';
-      if (wasLost(deal)) return 'Pérdida registrada';
-      return 'Sin cierre registrado';
-    } },
+    result,
     stageColumn('1278792585'), stageColumn('1086544542'), stageColumn('173990327'), outcome];
 }
 
 export type FlowNode = { key: string; name: string; detail?: string; members: PipelineDeal[]; y: number; height: number; out: number; in: number };
-export function layoutPipelineFlow(deals: PipelineDeal[], definitions: FlowColumn[]) {
+export function layoutPipelineFlow(deals: PipelineDeal[], definitions: FlowColumn[], compact = false) {
   const columns = definitions.map(definition => {
     const buckets = new Map<string, PipelineDeal[]>();
     const index = new Map<string, FlowNode>();
@@ -187,11 +202,12 @@ export function layoutPipelineFlow(deals: PipelineDeal[], definitions: FlowColum
     for (const node of nodes) for (const member of node.members) index.set(member.id, node);
     return { title: definition.title, nodes, index };
   });
-  const scale = 220 / Math.max(deals.length, 1);
-  const gap = definitions.some(column => column.detail) ? 50 : 36;
-  const height = 268 + gap * Math.max(0, ...columns.map(column => column.nodes.length - 1));
+  const area = compact ? 144 : 220;
+  const scale = area / Math.max(deals.length, 1);
+  const gap = definitions.some(column => column.detail) ? 58 : 36;
+  const height = area + 64 + gap * Math.max(0, ...columns.map(column => column.nodes.length - 1));
   for (const column of columns) {
-    let y = (height - 220 - gap * (column.nodes.length - 1)) / 2;
+    let y = (height - area - gap * (column.nodes.length - 1)) / 2;
     for (const node of column.nodes) {
       node.y = y;
       node.height = node.members.length * scale;
