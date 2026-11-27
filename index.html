@@ -11389,8 +11389,13 @@ document.getElementById('copyBtn')?.addEventListener('click',()=>{
   if(sip)L.push('Totales pendientes de confirmar el precio de SIP saliente.');
   else if(emailOutboundActive()&&!email)L.push('Totales pendientes: completa las bolsas seleccionadas.');
   else{
-    const recurring=roiDefaultCost(),once=s+spotCost()+(state.upsell?upsellRows().filter(row=>row.once).reduce((sum,row)=>sum+row.value,0):0);
-    L.push('Inversión primer mes: '+usd(once+recurring+(meta||0)+cSucc)+(meta==null?' (+ Meta por confirmar)':''),'Valor contrato 12 meses: '+usd(recurring*12+once));
+    const recurring=roiDefaultCost();
+    if(state.upsell){
+      const once=s+spotCost()+upsellRows().filter(row=>row.once).reduce((sum,row)=>sum+row.value,0);
+      L.push('Mensualidad adicional Adereso: '+usd2(recurring),'Pagos únicos Adereso: '+usd2(once),'Valor servicios Adereso a 12 meses: '+usd2(recurring*12+once));
+    }else{
+      L.push('Inversión primer mes: '+usd(s+recurring+(meta||0)+cSucc)+(meta==null?' (+ Meta por confirmar)':''),'Valor contrato 12 meses: '+usd(recurring*12+s));
+    }
   }
   navigator.clipboard.writeText(L.join('\n')).then(()=>{const b=document.getElementById('copyBtn'),o=b.innerHTML;b.innerHTML='<span data-i="check"></span>Copiado';paintIcons(b);setTimeout(()=>{b.innerHTML=o;paintIcons(b);},1600);});
 });
