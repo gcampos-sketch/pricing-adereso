@@ -8915,6 +8915,7 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
 const ICONS={
   robot:'<path d="M12 3v2M9 13v-1M15 13v-1"/><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9 16h6"/>',
   msg:'<path d="M8 9h8M8 13h5"/><path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-5l-5 3v-3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3z"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/>',
   phone:'<path d="M7 3H4a1 1 0 0 0-1 1 17 17 0 0 0 17 17 1 1 0 0 0 1-1v-3l-5-2-2 2a13 13 0 0 1-7-7l2-2-2-5z"/>',
   layers:'<path d="m12 3 9 5-9 5-9-5 9-5zM3 12l9 5 9-5M3 16l9 5 9-5"/>',
   mega:'<path d="M18 8a3 3 0 0 1 0 6"/><path d="M3 10v4a1 1 0 0 0 1 1h3l7 5V4L7 9H4a1 1 0 0 0-1 1z"/>',
@@ -9429,7 +9430,7 @@ const UPSELL_GROUPS=[
 const UPSELL_MODULES=Object.fromEntries([
   ...MODULES.filter(module=>['desk','studio','cassper','hhCustom','walletOnly'].includes(module.k)),
   {k:'licenses',label:'Licencias Desk adicionales',desc:'Recurrentes o spot',icon:'msg',color:'#fff'},
-  {k:'gpt',label:'Bolsa GPT',desc:'Mensajes de IA al mes',icon:'robot',color:'#186EFA'},
+  {k:'gpt',label:'Bolsa GPT',desc:'Mensajes de IA al mes',icon:'cpu',color:'#186EFA'},
   {k:'spot',label:'Bolsa spot',desc:'Conversaciones adicionales · pago único',icon:'bolt',color:'#FFD540'},
   {k:'email',label:'Correo masivo',desc:'1.000 envíos gratis al mes o bolsa de envíos',icon:'mail',color:'#FFD540'},
   {k:'calls',label:'Bolsa de llamadas',desc:'Minutos humanos o con IA · consumo aparte',icon:'phone',color:'#FFD540'},
@@ -9669,7 +9670,7 @@ function renderMods(){/* «Desarrollo agente IA»: en cliente nuevo va encendido
     const tick='';
     return `<button class="${cls}" data-mod="${m.k}" aria-pressed="${Boolean(state.upsell?upsellSelected(m.k):state[m.k])}" ${m.soon||m.locked?'aria-disabled="true"':''}>
       ${tag}${tick}
-      <span class="mod-ico"><span data-i="${m.icon}" data-sz="26" style="color:${m.color}"></span></span>
+      <span class="mod-ico">${m.k==='x'?'<span class="x-glyph" aria-hidden="true">𝕏</span>':`<span data-i="${m.icon}" data-sz="26" style="color:${m.color}"></span>`}</span>
       <span class="mod-txt"><span class="mod-label">${m.label}</span><span class="mod-desc">${m.k==='botOnly'?`${studioType()==='flow'?'Flow':'Agente'} nuevo · USD ${BOT_MANT*studioMultiplier()}/mes + setup`:(state.existing&&m.k==='engage'?'Agrega bolsas de llamadas y correo masivo':(!state.existing&&m.descNew)?m.descNew:m.desc)}</span>${m.bag?'<span class="mod-bag" title="'+m.bagTip+'">'+((!state.existing&&m.bagNew)?m.bagNew:m.bag)+'</span>':''}</span>${m.k==='desk'&&!state.upsell?'<span class="mod-users" title="Usuarios ilimitados">Usuarios <b>∞</b></span>':''}${m.k==='studio'&&state.studio?(state.existing?modStudioType():modAgents()):''}${state.existing&&state[m.k]&&(m.k==='botOnly'||m.k==='improve')?modStudioType():''}${(m.k==='botOnly'&&state.existing&&state.botOnly)?modBots():''}
     </button>`;
   };
