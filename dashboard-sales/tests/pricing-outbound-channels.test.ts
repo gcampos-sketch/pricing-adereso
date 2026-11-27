@@ -337,3 +337,33 @@ test('the summary shows selected overages independently and explains the Free li
   expect(markup.free).toContain('Requiere una bolsa pagada');
   expect(markup.free).toContain('Sobre 1.000 envíos al mes');
 });
+
+test('the quote reveals downstream steps after choosing a channel mode', () => {
+  const { state } = calculator();
+  const navigation = hub.slice(hub.indexOf('function volumeVisible()'), hub.indexOf('function buildNav('));
+  const flow = runInNewContext(source + navigation + ';({ activeSections, volumeVisible })', {
+    state,
+    SECTIONS: ['s0', 's1', 'sc', 's2', 's4', 's3', 'sp', 's5', 's6', 's7', 's8'],
+    hasService: () => state.desk || state.studio,
+    hasExistingDesk: () => state.existing && state.hasDeskContracted,
+    conversationTarget: () => state.desk ? 'desk' : state.studio ? 'studio' : '',
+    scopeBag: () => true,
+    implVisible: () => state.desk || state.studio,
+    waActive: () => state.walletOnly,
+  });
+
+  state.communicationMode = '';
+  expect(flow.activeSections()).toEqual(['s1', 'sc']);
+  expect(flow.volumeVisible()).toBe(false);
+  for (const mode of ['text', 'voice', 'both']) {
+    state.communicationMode = mode;
+    expect(flow.activeSections()).toContain('s2');
+    expect(flow.activeSections()).toContain('s5');
+  }
+
+  Object.assign(state, { communicationMode: '', existing: true, desk: false, studio: false });
+  expect(flow.activeSections()).toEqual(['s0', 's1', 'sc']);
+  state.walletOnly = true;
+  expect(flow.activeSections()).toContain('s4');
+  expect(flow.activeSections()).not.toContain('s2');
+});

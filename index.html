@@ -8743,11 +8743,11 @@ button.tier:hover{border-color:rgba(255,255,255,.22)}
           <p>Primero elige el tipo de comunicación para ver sus canales.</p>
         </div>
         <div id="optWa"></div>
-        <div class="continue reveal"><button data-next="s2">Continuar al volumen <span data-i="down"></span></button></div>
+        <div class="continue reveal" hidden><button data-next="s2">Continuar al volumen <span data-i="down"></span></button></div>
       </section>
 
       <!-- 3 · VOLUMEN -->
-      <section class="lvl" id="s2" data-title="Volumen">
+      <section class="lvl hidden" id="s2" data-title="Volumen">
         <div class="level-head reveal">
           <div class="level-kicker">Nivel 2 · Volumen</div>
           <h2>¿Qué volumen necesitas al mes?</h2>
@@ -9313,6 +9313,11 @@ function outboundPackSuggestion(pack,tiers,priceAt){
     .sort((a,b)=>a.monthly-b.monthly||a.quantity-b.quantity)[0]||null;
 }
 function channelsAvailable(){return hasService()||(state.existing&&(state.engage||hasExistingDesk()||state.hasStudioContracted));}
+function channelModePending(){
+  if(state.communicationMode||!channelsAvailable())return false;
+  return hasService()||state.engage||!(state.walletOnly||state.hhCustom||state.cassper);
+}
+function conversationVolumeVisible(){return !!state.communicationMode&&!!conversationTarget()&&scopeBag();}
 function voiceAttentionAvailability(){
   return {
     human:state.desk||hasExistingDesk(),
@@ -9646,7 +9651,7 @@ function updateConversationStatus(){
 function renderVol(){
   const area=document.getElementById('conversationVolume'),spot=document.getElementById('volumeSpot');
   const product=conversationTarget();
-  const conversations=!!product&&scopeBag();
+  const conversations=conversationVolumeVisible();
   renderOutboundVolume();
   area.hidden=!conversations;
   if(!conversations){area.innerHTML='';spot.innerHTML='';return;}
@@ -10073,21 +10078,25 @@ function selWa(){if(!waActive())return 'No';const parts=[];if(state.whatsapp)par
 function selCassper(){return state.cassper?('Sí · '+casspPlan().name):'No';}
 
 function renderRail(){
-  const email=selectedEmailPack();
+  const email=selectedEmailPack(),pending=channelModePending();
+  const destination=pending?'sc':'s5',action=pending?'Elegir canales':'Ver resultado';
   const rec=`
     <div class="rstat"><div class="rl">Servicio</div><div class="rv rtxt">${selService()}</div></div>
-    <div class="rstat"><div class="rl">Volumen</div><div class="rv rtxt">${selVol()}</div></div>
+    ${pending?'':`<div class="rstat"><div class="rl">Volumen</div><div class="rv rtxt">${selVol()}</div></div>`}
     <div class="rstat"><div class="rl">Implementación</div><div class="rv rtxt">${selImpl()}</div></div>
-    <div class="rstat"><div class="rl">WhatsApp</div><div class="rv rtxt">${selWa()}</div></div>
+    ${pending?'':`<div class="rstat"><div class="rl">WhatsApp</div><div class="rv rtxt">${selWa()}</div></div>`}
     ${selectedVoicePools().map(({label,pack})=>`<div class="rstat"><div class="rl">${label}</div><div class="rv rtxt">${pack?outboundCount(pack.quantity)+' min/mes':'Por definir'}</div></div>`).join('')}
     ${sipOutboundActive()?`<div class="rstat"><div class="rl">SIP saliente</div><div class="rv rtxt">Precio por confirmar</div></div>`:''}
     ${emailOutboundActive()?`<div class="rstat"><div class="rl">Correo masivo</div><div class="rv rtxt">${email?.quantity===EMAIL_FREE_QUANTITY?'Free · 1.000/mes':email?outboundCount(email.quantity)+' envíos/mes':'Bolsa por definir'}</div></div>`:''}
     <div class="rstat"><div class="rl">Cassper</div><div class="rv rtxt">${selCassper()}</div></div>`;
   const rc=document.getElementById('railCard');
   if(rc){rc.innerHTML=`<h4>Tu selección</h4>${rec}
-    <div class="rail-actions"><button class="btn btn-primary btn-block" data-next="s5">Ver resultado <span data-i="down"></span></button></div>
+    <div class="rail-actions"><button class="btn btn-primary btn-block" data-next="${destination}">${action} <span data-i="down"></span></button></div>
     <p class="rail-hint">El precio se revela en el resultado final.</p>`;paintIcons(rc);}
-  document.getElementById('mMonthly').innerHTML=hasService()?`${selService()} <span>· ${selVol()}</span>`:(state.cassper?`Cassper <span>· ${casspPlan().name}</span>`:state.engage?'Engage':'Sin servicios');
+  const mobileAction=document.querySelector('#mrail [data-next]');
+  mobileAction.dataset.next=destination;
+  mobileAction.textContent=action;
+  document.getElementById('mMonthly').innerHTML=hasService()?`${selService()}${pending?'':` <span>· ${selVol()}</span>`}`:(state.cassper?`Cassper <span>· ${casspPlan().name}</span>`:state.engage?'Engage':'Sin servicios');
   document.getElementById('mDetail').innerHTML=rec;
 }
 
@@ -10745,21 +10754,19 @@ document.getElementById('roiArea').addEventListener('input',e=>{
 /* nav */
 const KICK={s0:'Lo que paga hoy',s1:'Servicios',sc:'Canales',s2:'Volumen',s3:'Implementación',s4:'Billetera Adereso–Meta',sp:'Plazo de contrato'};
 const NEXTLABEL={s1:'Continuar a servicios',sc:'Continuar a canales',s2:'Continuar al volumen',s3:'Continuar a implementación',s4:'Continuar a la billetera',sp:'Continuar al plazo del contrato',s5:'Ver resumen',s6:'Ver el retorno de la inversión',s7:'Ver el proceso comercial',s8:'Conocer el portal cliente'};
-function volumeVisible(){return (!!conversationTarget()&&scopeBag())||voiceOutboundActive()||emailOutboundActive();}
-function activeSections(){return SECTIONS.filter(id=>id!=='sp'&&(id!=='s0'||state.existing)&&(id!=='sc'||channelsAvailable())&&(id!=='s2'||volumeVisible())&&(id!=='s3'||implVisible())&&(id!=='s4'||waActive())&&(id!=='sp'||hasService()));}
-function buildNav(){
-  const secs=activeSections();
+function volumeVisible(){return !channelModePending()&&(conversationVolumeVisible()||voiceOutboundActive()||emailOutboundActive());}
+function activeSections(){
+  if(channelModePending())return state.existing?['s0','s1','sc']:['s1','sc'];
+  return SECTIONS.filter(id=>id!=='sp'&&(id!=='s0'||state.existing)&&(id!=='sc'||channelsAvailable())&&(id!=='s2'||volumeVisible())&&(id!=='s3'||implVisible())&&(id!=='s4'||waActive()));
+}
+function buildNav(secs){
   document.getElementById('secnav').innerHTML=secs.map((id,i)=>{const t=document.getElementById(id).dataset.title;return `<button class="snav" data-goto="${id}" title="${t}"><span class="num">${i+(state.existing?0:1)}</span><span class="snav-t">${t}</span></button>`;}).join('');
 }
 function refreshFlow(){
-  document.getElementById('sc').classList.toggle('hidden',!channelsAvailable());
-  document.getElementById('s2').classList.toggle('hidden',!volumeVisible());
-  document.getElementById('s3').classList.toggle('hidden',!implVisible());
-  document.getElementById('s0').classList.toggle('hidden',!state.existing);
-  document.getElementById('s4').classList.toggle('hidden',!waActive());
-  document.getElementById('sp').classList.add('hidden');
   const secs=activeSections();
-  buildNav();
+  SECTIONS.forEach(id=>document.getElementById(id).classList.toggle('hidden',!secs.includes(id)));
+  document.querySelector('#sc .continue').hidden=channelModePending();
+  buildNav(secs);
   secs.forEach((id,i)=>{const sec=document.getElementById(id);const k=sec.querySelector('.level-kicker');if(k&&KICK[id])k.textContent='Nivel '+(i+(state.existing?0:1))+' · '+KICK[id];
     const btn=sec.querySelector('.continue button');const nx=secs[i+1];if(btn&&nx){btn.dataset.next=nx;btn.innerHTML=(NEXTLABEL[nx]||'Continuar')+' <span data-i="down"></span>';paintIcons(btn);}});
   /* al cambiar opciones cambian las alturas: recalcula qué nivel está enfocado para no dejar difuminado el que estás viendo */
@@ -10796,7 +10803,7 @@ function snFlow(){_snRaf=0;
     el.style.setProperty('--f',f.toFixed(3));el.classList.toggle('lit',f>0);el.classList.toggle('half',f>=.6);});}
 function snQueue(){if(!_snRaf)_snRaf=requestAnimationFrame(snFlow);}
 window.addEventListener('scroll',snQueue,{passive:true});window.addEventListener('resize',snQueue);
-function nextVisibleFrom(id){const secs=activeSections();if(secs.includes(id))return id;const all=SECTIONS.indexOf(id);for(let j=all+1;j<SECTIONS.length;j++){if(secs.includes(SECTIONS[j]))return SECTIONS[j];}return 's5';}
+function nextVisibleFrom(id){const secs=activeSections();if(secs.includes(id))return id;const all=SECTIONS.indexOf(id);for(let j=all+1;j<SECTIONS.length;j++){if(secs.includes(SECTIONS[j]))return SECTIONS[j];}return channelModePending()?'sc':'s5';}
 
 /* events */
 document.getElementById('modgrid').addEventListener('click',e=>{
@@ -11503,7 +11510,7 @@ function exRefresh(){if(!state.roiCostTouched)state.roiCost=null;renderMods();re
   state.bots=Math.max(1,Math.round(+f.value||1));exRefresh();
 }));
 document.getElementById('hhFoot')?.addEventListener('input',e=>{const f=e.target.closest('[data-hh]');if(!f)return;state.hhQty=Math.max(0,Math.round(+f.value||0));renderRail();renderSummary();});
-buildNav();renderMods();renderAll();refreshFlow();paintIcons();setActive('s1');observeReveals();renderPortal();
+renderMods();renderAll();refreshFlow();paintIcons();setActive('s1');observeReveals();renderPortal();
 /* Proceso comercial: cascada de iluminación izq→der al entrar en vista */
 (function(){const pt=document.querySelector('.proc-track');if(!pt)return;if(prefersReduced){pt.classList.add('lit');return;}
   const io=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){pt.classList.remove('lit');void pt.offsetWidth;pt.classList.add('lit');}else{pt.classList.remove('lit');}});},{threshold:0.35});
