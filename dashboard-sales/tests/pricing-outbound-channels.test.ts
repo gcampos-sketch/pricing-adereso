@@ -163,8 +163,10 @@ test('WhatsApp and SIP put independent attention selectors inside their selected
   expect(cards[1][1]).toContain('<option value="human" selected');
   state.studio = false;
   pricing.renderOpts();
-  expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
+  expect(channels.innerHTML).not.toMatch(/<option value="(?:ai|both)"/);
   expect(channels.innerHTML.match(/<option value="human" selected/g)).toHaveLength(2);
+  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human']);
+  expect(pricing.outboundMonthly()).toBe(210);
 });
 
 test('existing customers can add outbound packs using contracted Desk and Studio', () => {
@@ -185,8 +187,8 @@ test('existing customers can add outbound packs using contracted Desk and Studio
   state.callAttention = 'both';
   expect(pricing.waCalls()).toBe(true);
   pricing.renderOpts();
-  expect(channels.innerHTML).toMatch(/<option value="ai"\s+disabled>/);
-  expect(pricing.selectedVoicePools()).toHaveLength(2);
+  expect(channels.innerHTML).not.toMatch(/<option value="(?:ai|both)"/);
+  expect(pricing.selectedVoicePools().map(({ kind }: { kind: string }) => kind)).toEqual(['human']);
   state.hasStudioContracted = true;
   pricing.renderOpts();
   expect(channels.innerHTML).toContain('<option value="both" selected');
